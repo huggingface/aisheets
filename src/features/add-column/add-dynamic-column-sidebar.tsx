@@ -36,8 +36,8 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
         type: type.value,
         kind: "dynamic",
         process: {
-          modelName: "HF Model",
-          prompt: "Prompt Example",
+          modelName: "Qwen/Qwen2.5-72B-Instruct",
+          prompt: "Generate a random tweet about flowers",
           offset: 0,
           limit: Number(rowsToGenerate.value),
         },

@@ -15,20 +15,47 @@ interface DynamicDataResponse {
   error?: string;
 }
 
+import { textGeneration } from "@huggingface/inference";
+
+
 export const createDynamicData = async (
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   dynamic: DynamicData,
 ): Promise<DynamicDataResponse[]> => {
-  return Promise.resolve([
-    {
-      value:
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore",
-    },
-    {
-      value:
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore",
-    },
-  ]);
+
+  const { modelName, prompt, limit } = dynamic;
+  
+  const values = [];
+  for (let i = 0; i < limit; i++) {
+    try {
+      const response = await textGeneration({
+        model: modelName,
+        inputs: prompt,
+        accessToken: process.env.HF_TOKEN, // From user access token
+        parameters: {
+          return_full_text: false,
+          temperature: 0.7,
+          seed: i,
+        },
+      });
+      values.push({
+        value: response.generated_text,
+      });
+    } catch (e) {
+      if (e instanceof Error) {
+        values.push({
+          value: "",
+          error: e.message,
+        });
+      } else {
+        values.push({
+          value: "",
+          error: "Unknown error",
+        });
+      }
+    }
+  }
+  return Promise.all(values);
 };
 
 export const useAddColumnUseCase = () =>

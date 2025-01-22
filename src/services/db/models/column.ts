@@ -1,4 +1,9 @@
 import { isDev } from "@builder.io/qwik";
+import type {
+  Association,
+  HasManyCreateAssociationMixin,
+  NonAttribute,
+} from "sequelize";
 import {
   type CreationOptional,
   DataTypes,
@@ -7,9 +12,11 @@ import {
   Model,
 } from "sequelize";
 import { db } from "~/services/db";
+import { ColumnCellModel } from "~/services/db/models/cell";
+import { ProcessModel } from "~/services/db/models/process";
 
 //Review the path
-import { type ColumnKind, type ColumnType } from "~/state";
+import { type Cell, type ColumnKind, type ColumnType } from "~/state";
 
 export class ColumnModel extends Model<
   InferAttributes<ColumnModel>,
@@ -19,6 +26,17 @@ export class ColumnModel extends Model<
   declare name: string;
   declare type: ColumnType;
   declare kind: ColumnKind;
+
+  declare cells: NonAttribute<Cell[]>;
+
+  declare createCell: HasManyCreateAssociationMixin<
+    ColumnCellModel,
+    "columnId"
+  >;
+
+  declare static associations: {
+    cells: Association<ColumnModel, ColumnCellModel>;
+  };
 }
 
 ColumnModel.init(
@@ -46,5 +64,15 @@ ColumnModel.init(
     modelName: "Column",
   },
 );
+
+ColumnModel.hasMany(ColumnCellModel, {
+  sourceKey: "id",
+  foreignKey: "columnId",
+  as: "cells",
+});
+
+ColumnModel.hasOne(ProcessModel, {
+  sourceKey: "id",
+});
 
 await ColumnModel.sync({ alter: isDev });

@@ -2,6 +2,8 @@ import { isDev } from "@builder.io/qwik";
 import consola from "consola";
 import { Sequelize } from "sequelize";
 
+// https://sequelize.org/docs/v6/other-topics/typescript/
+
 export const db = new Sequelize({
   storage: "./.data/db.sqlite",
   dialect: "sqlite",

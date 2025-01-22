@@ -1,4 +1,5 @@
 import { isDev } from "@builder.io/qwik";
+import type { ForeignKey, NonAttribute } from "sequelize";
 import {
   type CreationOptional,
   DataTypes,
@@ -7,16 +8,19 @@ import {
   Model,
 } from "sequelize";
 import { db } from "~/services/db";
+import type { ColumnModel } from "~/services/db/models/column";
 
 export class ColumnCellModel extends Model<
   InferAttributes<ColumnCellModel>,
   InferCreationAttributes<ColumnCellModel>
 > {
   declare id: CreationOptional<string>;
-  declare columnId: string;
-  declare rowIdx: number;
+  declare idx: number;
   declare value: string;
   declare error?: string;
+
+  declare columnId?: ForeignKey<ColumnModel["id"]>;
+  declare column?: NonAttribute<ColumnModel>;
 }
 
 ColumnCellModel.init(
@@ -30,12 +34,12 @@ ColumnCellModel.init(
       type: DataTypes.UUIDV4,
       allowNull: false,
     },
-    rowIdx: {
+    idx: {
       type: DataTypes.INTEGER,
       allowNull: false,
     },
     value: {
-      type: DataTypes.JSONB,
+      type: DataTypes.STRING,
       allowNull: false,
     },
     error: {

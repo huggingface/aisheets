@@ -1,6 +1,5 @@
 import { server$ } from "@builder.io/qwik-city";
 import { addColumn } from "~/services";
-import { addCell } from "~/services/repository/cell";
 import { type CreateColumn, type Column } from "~/state";
 
 interface DynamicData {
@@ -69,7 +68,6 @@ export const useAddColumnUseCase = () =>
     });
 
     const cells = [];
-
     if (kind === "dynamic") {
       const { limit, modelName, offset, prompt } = process!;
 
@@ -83,10 +81,8 @@ export const useAddColumnUseCase = () =>
       for (let i = 0; i < data.length; i++) {
         const row = data[i];
 
-        const cell = await addCell({
-          columnId: column.id,
-          error: row.error,
-          rowIdx: i,
+        const cell = await column.createCell({
+          idx: i,
           value: row.value,
         });
 
@@ -100,7 +96,7 @@ export const useAddColumnUseCase = () =>
         kind: column.kind,
         cells: cells.map((cell) => ({
           id: cell.id,
-          idx: cell.rowIdx,
+          idx: cell.idx,
           value: cell.value,
           error: cell.error,
         })),

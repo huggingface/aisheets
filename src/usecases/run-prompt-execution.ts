@@ -1,4 +1,4 @@
-import { textGeneration } from '@huggingface/inference';
+import { chatCompletion } from '@huggingface/inference';
 import mustache from 'mustache';
 
 export interface PromptExecutionParams {
@@ -9,13 +9,12 @@ export interface PromptExecutionParams {
 }
 
 export interface PromptExecutionResponse {
-  value: string;
+  value?: string;
   error?: string;
 }
 
 const promptTemplate = `
 Generate a new response based on the following instruction. Be clear and concise in the response and do not generate any introductory text. Only the response is required.
-
 ## Instruction:
 {{instruction}}
 
@@ -46,33 +45,24 @@ export const runPromptExecution = async ({
     });
 
     try {
-      const response = await textGeneration({
+      const response = await chatCompletion({
         model: modelName,
-        inputs: finalPrompt,
-        // From user access token currentUser.accessToken
-        accessToken:
-          process.env.HF_TOKEN,
-        parameters: {
-          return_full_text: false,
-          seed: i,
-        },
+        messages: [{ role: 'user', content: finalPrompt }],
+        accessToken: process.env.HF_TOKEN,
+        seed: i,
       });
-      values.push({
-        value: response.generated_text,
-      });
+
+      values.push({ value: response.choices[0].message.content });
     } catch (e) {
+      let error: string;
       if (e instanceof Error) {
-        values.push({
-          value: '',
-          error: e.message,
-        });
+        error = e.message;
       } else {
-        values.push({
-          value: '',
-          error: 'Unknown error',
-        });
+        error = JSON.stringify(e);
       }
+      values.push({ error });
     }
   }
+
   return Promise.all(values);
 };

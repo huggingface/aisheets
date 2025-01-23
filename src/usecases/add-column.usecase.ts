@@ -6,7 +6,7 @@ import { runPromptExecution } from '~/usecases/run-prompt-execution';
 
 export const useAddColumnUseCase = () =>
   server$(async (newColum: CreateColumn): Promise<Column> => {
-    const { name, type, kind, process } = newColum;
+    const { name, type, kind, executionProcess } = newColum;
 
     const column = await addColumn(
       {
@@ -14,26 +14,31 @@ export const useAddColumnUseCase = () =>
         type,
         kind,
       },
-      process,
+      executionProcess,
     );
 
     if (kind === 'dynamic') {
-      const data = await runPromptExecution({
-        modelName: process!.modelName,
-        instruction: process!.prompt,
-        limit: process!.limit,
-        offset: process!.offset,
-      });
+      const { limit, offset, modelName, prompt } = executionProcess!;
 
-      await Promise.all(
-        data.map((cell, idx) =>
-          column.addCell({
-            idx,
-            value: cell.value,
-            error: cell.error,
-          }),
-        ),
-      );
+      const examples: string[] = [];
+      for (let i = offset; i < limit + offset; i++) {
+        const response = await runPromptExecution({
+          accessToken: process.env.HF_TOKEN,
+          modelName,
+          instruction: prompt,
+          examples,
+        });
+
+        await column.addCell({
+          idx: i,
+          value: response.value,
+          error: response.error,
+        });
+
+        if (response.value) {
+          examples.push(response.value);
+        }
+      }
     } else {
       // Iterate based on quantity of rows.
       for (let idx = 0; idx < 2; idx++) {

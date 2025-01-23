@@ -4,39 +4,36 @@ import { runPromptExecution } from '~/usecases/run-prompt-execution';
 const testModelName = 'meta-llama/Llama-2-7b-chat-hf';
 const testPrompt = 'Generate a title for a blog post about cats';
 
-test('should generate one single value', async () => {
+const accessToken =
+  process.env.HF_TOKEN || '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';
+
+test('should generate a value', async () => {
   const result = await runPromptExecution({
+    accessToken,
     modelName: testModelName,
     instruction: testPrompt,
-    offset: 0,
-    limit: 1,
   });
 
-  expect(result).toHaveLength(1);
-  expect(result[0].error).toBeUndefined();
-  expect(result[0].value).toBeDefined();
-  expect(result[0].value).not.toContain(testPrompt);
+  expect(result.error).toBeUndefined();
+  expect(result.value).toBeDefined();
+  expect(result.value).not.toContain(testPrompt);
 });
 
 test('should generate 3 different values with the same prompt', async () => {
+  const examples = [
+    'Title: Cats are the best',
+    'About our Feline friends',
+    'The best cats in the world',
+  ];
+
   const result = await runPromptExecution({
-    modelName: 'meta-llama/Llama-2-7b-chat-hf',
+    accessToken,
+    modelName: testModelName,
     instruction: testPrompt,
-    offset: 0,
-    limit: 3,
+    examples,
   });
 
-  expect(result).toHaveLength(3);
-
-  expect(result[1].error).toBeUndefined();
-  expect(result[0].error).toBeUndefined();
-  expect(result[2].error).toBeUndefined();
-
-  expect(result[0].value).toBeDefined();
-  expect(result[1].value).toBeDefined();
-  expect(result[2].value).toBeDefined();
-
-  expect(result[0].value).not.toEqual(result[1].value);
-  expect(result[0].value).not.toEqual(result[2].value);
-  expect(result[1].value).not.toEqual(result[2].value);
+  expect(result.error).toBeUndefined();
+  expect(result.value).toBeDefined();
+  expect(examples).not.toContain(result.value);
 });

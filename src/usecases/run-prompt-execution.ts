@@ -8,12 +8,24 @@ export interface PromptExecutionParams {
   offset: number;
 }
 
+export interface PromptExecutionParamsV2 {
+  accessToken?: string;
+  modelName: string;
+  instruction: string;
+  examples?: string[];
+}
+
 export interface PromptExecutionResponse {
   value?: string;
   error?: string;
 }
 
-const promptTemplate = `
+const promptForResponseFromScratch = (
+  instruction: string,
+  examples?: string[],
+): string => {
+  return mustache.render(
+    `
 Generate a new response based on the following instruction. Be clear and concise in the response and do not generate any introductory text. Only the response is required.
 ## Instruction:
 {{instruction}}
@@ -25,44 +37,33 @@ Find a way to generate the new response that is not similar to the examples belo
 {{/examples}}
 
 ## Response:
-`;
+`,
+    { instruction, examples: examples?.join('\n- ') },
+  );
+};
 
 export const runPromptExecution = async ({
+  accessToken,
   modelName,
   instruction,
-  limit,
-  offset,
-}: PromptExecutionParams): Promise<PromptExecutionResponse[]> => {
-  const values = [];
-  for (let i = offset; i < limit + offset; i++) {
-    // Mustache template rendering
-    const finalPrompt = mustache.render(promptTemplate, {
-      instruction: instruction,
-      examples: values
-        .filter((v) => v.error !== null)
-        .map((v) => v.value)
-        .join('\n- '),
+  examples,
+}: PromptExecutionParamsV2): Promise<PromptExecutionResponse> => {
+  const inputPrompt = promptForResponseFromScratch(instruction, examples);
+
+  try {
+    const response = await chatCompletion({
+      model: modelName,
+      messages: [{ role: 'user', content: inputPrompt }],
+      accessToken: accessToken,
     });
-
-    try {
-      const response = await chatCompletion({
-        model: modelName,
-        messages: [{ role: 'user', content: finalPrompt }],
-        accessToken: process.env.HF_TOKEN,
-        seed: i,
-      });
-
-      values.push({ value: response.choices[0].message.content });
-    } catch (e) {
-      let error: string;
-      if (e instanceof Error) {
-        error = e.message;
-      } else {
-        error = JSON.stringify(e);
-      }
-      values.push({ error });
+    return { value: response.choices[0].message.content };
+  } catch (e) {
+    let error: string;
+    if (e instanceof Error) {
+      error = e.message;
+    } else {
+      error = JSON.stringify(e);
     }
+    return { error };
   }
-
-  return Promise.all(values);
 };

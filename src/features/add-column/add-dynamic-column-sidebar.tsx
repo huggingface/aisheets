@@ -18,8 +18,9 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
 
     const type = useSignal<NonNullable<ColumnType>>('text');
     const name = useSignal('');
-    const rowsToGenerate = useSignal('10');
+    const rowsToGenerate = useSignal('3');
     const prompt = useSignal('');
+    const modelName = useSignal('meta-llama/Llama-2-7b-chat-hf');
 
     useTask$(({ track }) => {
       track(isOpenAddDynamicColumnSidebar);
@@ -27,7 +28,8 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
       type.value = 'text';
       name.value = '';
       prompt.value = '';
-      rowsToGenerate.value = '10';
+      modelName.value = 'meta-llama/Llama-2-7b-chat-hf';
+      rowsToGenerate.value = '3';
     });
 
     const onCreate = $(() => {
@@ -38,8 +40,8 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
         type: type.value,
         kind: 'dynamic',
         process: {
-          modelName: "Qwen/Qwen2.5-72B-Instruct",
-          prompt: "Generate a random tweet about flowers",
+          modelName: modelName.value,
+          prompt: prompt.value,
           offset: 0,
           limit: Number(rowsToGenerate.value),
         },
@@ -91,6 +93,25 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
 
               <Label for="column-prompt">Prompt template</Label>
               <Textarea id="column-prompt" bind:value={prompt} />
+
+              <Label for="column-model">
+                Model name. Available models in the{' '}
+                <a
+                  href="https://huggingface.co/playground"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="text-blue-500 underline hover:text-blue-700"
+                >
+                  huggingface playground
+                </a>
+              </Label>
+              <Input
+                id="column-model"
+                class="h-10"
+                value="meta-llama/Llama-2-7b-chat-hf"
+                placeholder="Enter the HF model name"
+                bind:value={modelName}
+              />
 
               <Label for="column-rows">Rows generated</Label>
               <Input

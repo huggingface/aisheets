@@ -51,7 +51,7 @@ export const runPromptExecution = async ({
         inputs: finalPrompt,
         // From user access token currentUser.accessToken
         accessToken:
-          process.env.HF_TOKEN || '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',
+          process.env.HF_TOKEN,
         parameters: {
           return_full_text: false,
           seed: i,

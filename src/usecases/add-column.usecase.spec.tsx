@@ -32,7 +32,7 @@ test('should save 10 cells', async () => {
     name: 'name',
     type: 'text',
     kind: 'dynamic',
-    process: {
+    executionProcess: {
       limit: 10,
       modelName: 'modelName',
       offset: 0,

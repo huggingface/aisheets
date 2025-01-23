@@ -1,2 +1,2 @@
-export * from "./use-modals";
-export * from "./provider";
+export * from './provider';
+export * from './use-modals';

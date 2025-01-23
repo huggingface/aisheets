@@ -1,7 +1,7 @@
-import { $, component$, type PropsOf } from "@builder.io/qwik";
-import { cn } from "@qwik-ui/utils";
+import { $, component$, type PropsOf } from '@builder.io/qwik';
+import { cn } from '@qwik-ui/utils';
 
-type TextareaProps = PropsOf<"textarea"> & {
+type TextareaProps = PropsOf<'textarea'> & {
   error?: string;
 };
 
@@ -10,7 +10,7 @@ export const Textarea = component$<TextareaProps>(
     id,
     name,
     error,
-    ["bind:value"]: valueSig,
+    ['bind:value']: valueSig,
     value,
     onInput$,
     ...props
@@ -26,7 +26,7 @@ export const Textarea = component$<TextareaProps>(
             valueSig ? $((__, el) => (valueSig.value = el.value)) : onInput$
           }
           class={cn(
-            "[&::-webkit-scrollbar-track]:bg-blue flex min-h-[60px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
+            '[&::-webkit-scrollbar-track]:bg-blue flex min-h-[60px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50',
             props.class,
           )}
           id={textareaId}

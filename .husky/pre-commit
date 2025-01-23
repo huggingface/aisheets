@@ -1,0 +1,4 @@
+npm run fmt
+npm run lint
+
+git update-index --again

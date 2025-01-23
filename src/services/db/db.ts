@@ -1,15 +1,17 @@
-import { isDev } from "@builder.io/qwik";
-import consola from "consola";
-import { Sequelize } from "sequelize";
+import { isDev } from '@builder.io/qwik';
+import consola from 'consola';
+import { Sequelize } from 'sequelize';
 
 // https://sequelize.org/docs/v6/other-topics/typescript/
 
+const isTest = process.env.NODE_ENV === 'test';
+
 export const db = new Sequelize({
-  storage: "./.data/db.sqlite",
-  dialect: "sqlite",
+  storage: isTest ? ':memory:' : './.data/db.sqlite',
+  dialect: 'sqlite',
   logging: (sql) => {
     if (isDev) {
-      consola.info(sql.replace("Executing (default):", "🛢️:"));
+      consola.info(sql.replace('Executing (default):', '🛢️:'));
     }
   },
 });
@@ -17,14 +19,14 @@ export const db = new Sequelize({
 //TODO: Move to start up method
 try {
   await db.authenticate();
-  consola.success("🔌 Connection has been established successfully.");
+  consola.success('🔌 Connection has been established successfully.');
 } catch (error) {
-  consola.error("❌ Unable to connect to the database:", error);
+  consola.error('❌ Unable to connect to the database:', error);
 }
 
 try {
   await db.sync();
-  consola.success("🔁 Database synchronized");
+  consola.success('🔁 Database synchronized');
 } catch (error) {
-  consola.error("❌ Failed to synchronize database", error);
+  consola.error('❌ Failed to synchronize database', error);
 }

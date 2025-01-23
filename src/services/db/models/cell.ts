@@ -1,14 +1,15 @@
-import { isDev } from "@builder.io/qwik";
-import type { ForeignKey, NonAttribute } from "sequelize";
+import { isDev } from '@builder.io/qwik';
+import type { ForeignKey, NonAttribute } from 'sequelize';
 import {
   type CreationOptional,
   DataTypes,
   type InferAttributes,
   type InferCreationAttributes,
   Model,
-} from "sequelize";
-import { db } from "~/services/db";
-import type { ColumnModel } from "~/services/db/models/column";
+} from 'sequelize';
+
+import { db } from '~/services/db';
+import type { ColumnModel } from '~/services/db/models/column';
 
 export class ColumnCellModel extends Model<
   InferAttributes<ColumnCellModel>,
@@ -17,9 +18,9 @@ export class ColumnCellModel extends Model<
   declare id: CreationOptional<string>;
   declare idx: number;
   declare value: string;
-  declare error?: string;
+  declare error: string;
 
-  declare columnId?: ForeignKey<ColumnModel["id"]>;
+  declare columnId?: ForeignKey<ColumnModel['id']>;
   declare column?: NonAttribute<ColumnModel>;
 }
 
@@ -44,12 +45,12 @@ ColumnCellModel.init(
     },
     error: {
       type: DataTypes.STRING,
-      allowNull: true,
+      allowNull: false,
     },
   },
   {
     sequelize: db,
-    modelName: "Cell",
+    modelName: 'Cell',
   },
 );
 

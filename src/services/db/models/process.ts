@@ -1,12 +1,15 @@
-import { isDev } from "@builder.io/qwik";
+import { isDev } from '@builder.io/qwik';
 import {
   type CreationOptional,
   DataTypes,
+  type ForeignKey,
   type InferAttributes,
   type InferCreationAttributes,
   Model,
-} from "sequelize";
-import { db } from "~/services/db";
+} from 'sequelize';
+
+import { db } from '~/services/db';
+import type { ColumnModel } from '~/services/db/models/column';
 
 export class ProcessModel extends Model<
   InferAttributes<ProcessModel>,
@@ -14,9 +17,10 @@ export class ProcessModel extends Model<
 > {
   declare id: CreationOptional<string>;
   declare prompt: string;
+  declare modelName: string;
   declare offset: number;
   declare limit: number;
-  declare columnId: string;
+  declare columnId: ForeignKey<ColumnModel['id']>;
 }
 
 ProcessModel.init(
@@ -25,6 +29,10 @@ ProcessModel.init(
       type: DataTypes.UUIDV4,
       defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
+    },
+    modelName: {
+      type: DataTypes.STRING,
+      allowNull: false,
     },
     prompt: {
       type: DataTypes.STRING,
@@ -45,7 +53,7 @@ ProcessModel.init(
   },
   {
     sequelize: db,
-    modelName: "Process",
+    modelName: 'Process',
   },
 );
 

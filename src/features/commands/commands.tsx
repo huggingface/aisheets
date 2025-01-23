@@ -1,4 +1,4 @@
-import { component$ } from "@builder.io/qwik";
+import { component$ } from '@builder.io/qwik';
 import {
   TbColumnInsertRight,
   TbColumns3,
@@ -7,13 +7,14 @@ import {
   TbFold,
   TbPlayerPlay,
   TbRefresh,
-} from "@qwikest/icons/tablericons";
-import { Button, Popover, Select, buttonVariants } from "~/components/ui";
-import { useModals } from "~/components/hooks/modals/use-modals";
-import { useColumnsStore } from "~/state";
+} from '@qwikest/icons/tablericons';
+
+import { useModals } from '~/components/hooks/modals/use-modals';
+import { Button, buttonVariants, Popover, Select } from '~/components/ui';
+import { useColumnsStore } from '~/state';
 
 export const Commands = component$(() => {
-  const { openAddColumnModal } = useModals("addColumnModal");
+  const { openAddColumnModal } = useModals('addColumnModal');
 
   const { state: columns } = useColumnsStore();
 
@@ -23,8 +24,8 @@ export const Commands = component$(() => {
         <Popover.Root flip={false} gutter={8} floating="bottom-start">
           <Popover.Trigger
             class={buttonVariants({
-              look: "ghost",
-              size: "sm",
+              look: 'ghost',
+              size: 'sm',
             })}
           >
             <div class="flex items-center gap-1 font-light">
@@ -58,8 +59,8 @@ export const Commands = component$(() => {
             hideIcon
             look="ghost"
             class={buttonVariants({
-              look: "ghost",
-              size: "sm",
+              look: 'ghost',
+              size: 'sm',
             })}
           >
             <div class="flex items-center gap-1 font-light">
@@ -89,8 +90,8 @@ export const Commands = component$(() => {
         <Popover.Root flip={false} gutter={8} floating="bottom-start">
           <Popover.Trigger
             class={buttonVariants({
-              look: "ghost",
-              size: "sm",
+              look: 'ghost',
+              size: 'sm',
             })}
           >
             <div class="flex items-center gap-1 font-light">

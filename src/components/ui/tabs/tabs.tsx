@@ -1,6 +1,6 @@
-import { Slot, component$, type PropsOf } from "@builder.io/qwik";
-import { Tabs as HeadlessTabs } from "@qwik-ui/headless";
-import { cn } from "@qwik-ui/utils";
+import { component$, type PropsOf, Slot } from '@builder.io/qwik';
+import { Tabs as HeadlessTabs } from '@qwik-ui/headless';
+import { cn } from '@qwik-ui/utils';
 
 const Root = (props: PropsOf<typeof HeadlessTabs.Root>) => (
   <HeadlessTabs.Root
@@ -16,7 +16,7 @@ const List = component$<PropsOf<typeof HeadlessTabs.List>>((props) => {
     <HeadlessTabs.List
       {...props}
       class={cn(
-        "inline-flex items-center justify-center rounded-lg border-base bg-muted p-1 text-muted-foreground shadow-sm",
+        'inline-flex items-center justify-center rounded-lg border-base bg-muted p-1 text-muted-foreground shadow-sm',
         props.class,
       )}
     >
@@ -30,7 +30,7 @@ const Tab = component$<PropsOf<typeof HeadlessTabs.Tab>>((props) => {
     <HeadlessTabs.Tab
       {...props}
       class={cn(
-        "inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-2 font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=selected]:border-base data-[state=selected]:bg-background data-[state=selected]:text-foreground data-[state=selected]:shadow-inner",
+        'inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-2 font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=selected]:border-base data-[state=selected]:bg-background data-[state=selected]:text-foreground data-[state=selected]:shadow-inner',
         props.class,
       )}
     >
@@ -44,7 +44,7 @@ const Panel = component$<PropsOf<typeof HeadlessTabs.Panel>>((props) => {
     <HeadlessTabs.Panel
       {...props}
       class={cn(
-        "mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+        'mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
         props.class,
       )}
     >

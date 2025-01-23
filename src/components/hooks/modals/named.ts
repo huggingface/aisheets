@@ -1,5 +1,6 @@
-import { type QRL, type Signal } from "@builder.io/qwik";
-import { type ID } from "~/components/hooks/modals/config";
+import type { QRL, Signal } from '@builder.io/qwik';
+
+import type { ID } from '~/components/hooks/modals/config';
 
 type Modal<N extends string> = {
   [K in `isOpen${Capitalize<N>}`]: Signal<boolean>;

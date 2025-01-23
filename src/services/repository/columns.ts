@@ -1,6 +1,6 @@
-import { type InferCreationAttributes } from "sequelize";
-import { ColumnModel } from "~/services/db/models/column";
-import { type Column } from "~/state";
+import { ColumnModel } from '~/services/db/models/column';
+import { ProcessModel } from '~/services/db/models/process';
+import type { Cell, Column, Process } from '~/state';
 
 export const getAllColumns = async (): Promise<Column[]> => {
   const columns = await ColumnModel.findAll({
@@ -22,7 +22,40 @@ export const getAllColumns = async (): Promise<Column[]> => {
 };
 
 export const addColumn = async (
-  column: Omit<InferCreationAttributes<ColumnModel>, "id">,
+  column: Omit<Column, 'id' | 'cells'>,
+  process?: Process,
 ) => {
-  return ColumnModel.create(column);
+  const cells: Cell[] = [];
+
+  const addedColumn = await ColumnModel.create(column);
+
+  if (process) {
+    ProcessModel.create({
+      limit: process.limit,
+      modelName: process.modelName,
+      offset: process.offset,
+      prompt: process.prompt,
+      columnId: addedColumn.id,
+    });
+  }
+
+  const handler = {
+    addCell: async (cell: Omit<Cell, 'id'>) => {
+      const newbie = await addedColumn.createCell({
+        idx: cell.idx,
+        value: cell.value ?? '',
+        error: cell.error ?? '',
+      });
+
+      cells.push(newbie);
+    },
+    id: addedColumn.id,
+    name: addedColumn.name,
+    type: addedColumn.type,
+    kind: addedColumn.kind,
+    cells,
+    process,
+  };
+
+  return handler;
 };

@@ -1,0 +1,9 @@
+{
+	"css.lint.unknownAtRules": "ignore",
+	"cSpell.words": ["qwik", "Argilla", "qwikest", "tablericons"],
+	"editor.codeActionsOnSave": {
+		"source.fixAll": "always",
+		"source.organizeImports.biome": "explicit"
+	},
+	"editor.defaultFormatter": "biomejs.biome"
+}

@@ -1,31 +1,33 @@
-import { $, component$, type QRL, useSignal, useTask$ } from "@builder.io/qwik";
+import { $, component$, type QRL, useSignal, useTask$ } from '@builder.io/qwik';
+import { LuCheck } from '@qwikest/icons/lucide';
+import { TbX } from '@qwikest/icons/tablericons';
 
-import { LuCheck } from "@qwikest/icons/lucide";
-import { TbX } from "@qwikest/icons/tablericons";
-import { Sidebar, Button, Input, Label, Select, Textarea } from "~/components";
-
-import { type CreateColumn, type ColumnType } from "~/state";
-import { useModals } from "~/components/hooks/modals/use-modals";
+import { Button, Input, Label, Select, Sidebar, Textarea } from '~/components';
+import { useModals } from '~/components/hooks/modals/use-modals';
+import type { ColumnType, CreateColumn } from '~/state';
 
 interface SidebarProps {
   onCreateColumn: QRL<(createColumn: CreateColumn) => void>;
 }
 
-const outputType = ["text", "array", "number", "boolean", "object"];
+const outputType = ['text', 'array', 'number', 'boolean', 'object'];
 export const AddDynamicColumnSidebar = component$<SidebarProps>(
   ({ onCreateColumn }) => {
     const { isOpenAddDynamicColumnSidebar, closeAddDynamicColumnSidebar } =
-      useModals("addDynamicColumnSidebar");
+      useModals('addDynamicColumnSidebar');
 
-    const type = useSignal<NonNullable<ColumnType>>("text");
-    const name = useSignal("");
-    const rowsToGenerate = useSignal("10");
+    const type = useSignal<NonNullable<ColumnType>>('text');
+    const name = useSignal('');
+    const rowsToGenerate = useSignal('10');
+    const prompt = useSignal('');
 
     useTask$(({ track }) => {
-      track(() => type);
+      track(isOpenAddDynamicColumnSidebar);
 
-      type.value = "text";
-      name.value = "";
+      type.value = 'text';
+      name.value = '';
+      prompt.value = '';
+      rowsToGenerate.value = '10';
     });
 
     const onCreate = $(() => {
@@ -34,7 +36,7 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
       const column: CreateColumn = {
         name: name.value,
         type: type.value,
-        kind: "dynamic",
+        kind: 'dynamic',
         process: {
           modelName: "Qwen/Qwen2.5-72B-Instruct",
           prompt: "Generate a random tweet about flowers",
@@ -88,7 +90,7 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
               </Select.Root>
 
               <Label for="column-prompt">Prompt template</Label>
-              <Textarea id="column-prompt" />
+              <Textarea id="column-prompt" bind:value={prompt} />
 
               <Label for="column-rows">Rows generated</Label>
               <Input

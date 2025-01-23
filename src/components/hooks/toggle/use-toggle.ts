@@ -1,4 +1,4 @@
-import { $, useSignal } from "@builder.io/qwik";
+import { $, useSignal } from '@builder.io/qwik';
 
 /**
  * Custom hook that provides a toggle functionality.

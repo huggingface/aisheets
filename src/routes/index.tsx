@@ -1,11 +1,11 @@
-import { component$ } from "@builder.io/qwik";
-import { type DocumentHead } from "@builder.io/qwik-city";
+import { component$ } from '@builder.io/qwik';
+import type { DocumentHead } from '@builder.io/qwik-city';
 
-import { Table } from "~/components";
-import { AddColumn, Commands } from "~/features";
-import { useHome } from "~/routes/useHome";
+import { Table } from '~/components';
+export { useColumnsLoader } from '~/state';
+import { AddColumn, Commands } from '~/features';
 
-export { useColumnsLoader } from "~/state";
+import { useHome } from '~/routes/useHome';
 
 export default component$(() => {
   const { columns, onCreateColumn } = useHome();
@@ -22,11 +22,11 @@ export default component$(() => {
 });
 
 export const head: DocumentHead = {
-  title: "Argilla - V3",
+  title: 'Argilla - V3',
   meta: [
     {
-      name: "description",
-      content: "Argilla - V3",
+      name: 'description',
+      content: 'Argilla - V3',
     },
   ],
 };

@@ -1,2 +1,2 @@
-export * from "./toggle";
-export * from "./modals";
+export * from './modals';
+export * from './toggle';

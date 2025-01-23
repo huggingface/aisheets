@@ -1,4 +1,4 @@
-import { component$, type QRL, useSignal, $ } from "@builder.io/qwik";
+import { $, component$, type QRL, useSignal } from '@builder.io/qwik';
 import {
   TbAlignJustified,
   TbBraces,
@@ -8,19 +8,13 @@ import {
   TbKeyboard,
   TbToggleLeft,
   TbX,
-} from "@qwikest/icons/tablericons";
+} from '@qwikest/icons/tablericons';
 
-import { Button, Modal } from "~/components";
-
-import {
-  type CreateColumn,
-  type Column,
-  type ColumnType,
-  type ColumnKind,
-} from "~/state";
-import { useModals } from "~/components/hooks/modals/use-modals";
-import { AddDynamicColumnSidebar } from "~/features/add-column/add-dynamic-column-sidebar";
-import { AddStaticColumnSidebar } from "~/features/add-column/add-static-column-sidebar";
+import { Button, Modal } from '~/components';
+import { useModals } from '~/components/hooks/modals/use-modals';
+import { AddDynamicColumnSidebar } from '~/features/add-column/add-dynamic-column-sidebar';
+import { AddStaticColumnSidebar } from '~/features/add-column/add-static-column-sidebar';
+import type { Column, ColumnKind, ColumnType, CreateColumn } from '~/state';
 
 interface Props {
   onCreateColumn: QRL<(createColumn: CreateColumn) => void>;
@@ -28,28 +22,28 @@ interface Props {
 
 export const AddColumn = component$<Props>(({ onCreateColumn }) => {
   const { isOpenAddColumnModal, closeAddColumnModal } =
-    useModals("addColumnModal");
-  const { openAddDynamicColumnSidebar } = useModals("addDynamicColumnSidebar");
-  const { openAddStaticColumnSidebar } = useModals("addStaticColumnSidebar");
+    useModals('addColumnModal');
+  const { openAddDynamicColumnSidebar } = useModals('addDynamicColumnSidebar');
+  const { openAddStaticColumnSidebar } = useModals('addStaticColumnSidebar');
 
-  const columnType = useSignal<Column["type"]>("text");
+  const columnType = useSignal<Column['type']>('text');
 
   const openSidebar = $((type: ColumnType, kind: ColumnKind) => {
     closeAddColumnModal();
 
     columnType.value = type;
 
-    if (kind === "dynamic") return openAddDynamicColumnSidebar();
+    if (kind === 'dynamic') return openAddDynamicColumnSidebar();
 
     openAddStaticColumnSidebar();
   });
 
   const openDynamicSidebar = $((type: ColumnType) =>
-    openSidebar(type, "dynamic"),
+    openSidebar(type, 'dynamic'),
   );
 
   const openStaticSidebar = $((type: ColumnType) =>
-    openSidebar(type, "static"),
+    openSidebar(type, 'static'),
   );
 
   return (
@@ -69,7 +63,7 @@ export const AddColumn = component$<Props>(({ onCreateColumn }) => {
               size="md"
               look="ghost"
               class="flex justify-start text-left text-sm hover:bg-blue-200"
-              onClick$={() => openStaticSidebar("text")}
+              onClick$={() => openStaticSidebar('text')}
             >
               <span class="mr-2 flex h-8 w-8 items-center justify-center rounded-full bg-gray-300">
                 <TbAlignJustified />
@@ -80,7 +74,7 @@ export const AddColumn = component$<Props>(({ onCreateColumn }) => {
               size="md"
               look="ghost"
               class="flex justify-start text-left text-sm hover:bg-rose-100"
-              onClick$={() => openStaticSidebar("number")}
+              onClick$={() => openStaticSidebar('number')}
             >
               <span class="mr-2 flex h-8 w-8 items-center justify-center rounded-full bg-gray-300">
                 <TbHash />
@@ -91,7 +85,7 @@ export const AddColumn = component$<Props>(({ onCreateColumn }) => {
               size="md"
               look="ghost"
               class="flex justify-start text-left text-sm hover:bg-lime-100"
-              onClick$={() => openStaticSidebar("boolean")}
+              onClick$={() => openStaticSidebar('boolean')}
             >
               <span class="mr-2 flex h-8 w-8 items-center justify-center rounded-full bg-gray-300">
                 <TbToggleLeft />
@@ -102,7 +96,7 @@ export const AddColumn = component$<Props>(({ onCreateColumn }) => {
               size="md"
               look="ghost"
               class="flex justify-start text-left text-sm hover:bg-yellow-100"
-              onClick$={() => openStaticSidebar("object")}
+              onClick$={() => openStaticSidebar('object')}
             >
               <span class="mr-2 flex h-8 w-8 items-center justify-center rounded-full bg-gray-300">
                 <TbBraces />
@@ -113,7 +107,7 @@ export const AddColumn = component$<Props>(({ onCreateColumn }) => {
               size="md"
               look="ghost"
               class="flex justify-start text-left text-sm hover:bg-indigo-300"
-              onClick$={() => openStaticSidebar("array")}
+              onClick$={() => openStaticSidebar('array')}
             >
               <span class="mr-2 flex h-8 w-8 items-center justify-center rounded-full bg-gray-300">
                 <TbBrackets />
@@ -140,7 +134,7 @@ export const AddColumn = component$<Props>(({ onCreateColumn }) => {
               size="md"
               look="ghost"
               class="flex justify-start text-left text-sm hover:bg-blue-300"
-              onClick$={() => openDynamicSidebar("text")}
+              onClick$={() => openDynamicSidebar('text')}
             >
               <span class="mr-2 flex h-8 w-8 items-center justify-center rounded-full bg-purple-300">
                 <TbKeyboard />

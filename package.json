@@ -6,9 +6,7 @@
   },
   "engines-annotation": "Mostly required by sharp which needs a Node-API v9 compatible runtime",
   "private": true,
-  "trustedDependencies": [
-    "sharp"
-  ],
+  "trustedDependencies": ["sharp"],
   "trustedDependencies-annotation": "Needed for bun to allow running install scripts",
   "type": "module",
   "scripts": {
@@ -20,15 +18,20 @@
     "deploy": "echo 'Run \"npm run qwik add\" to install a server adapter'",
     "dev": "vite --mode ssr",
     "dev.debug": "node --inspect-brk ./node_modules/vite/bin/vite.js --mode ssr --force",
-    "fmt": "prettier --write .",
-    "fmt.check": "prettier --check .",
-    "lint": "eslint \"src/**/*.ts*\"",
+    "lint": "biome lint . --write ",
+    "lint.check": "biome lint .",
+    "fmt": "biome format . --write",
+    "fmt.check": "biome format .",
     "preview": "qwik build preview && vite preview --open",
     "serve": "node server/entry.express",
     "start": "vite --open --mode ssr",
-    "qwik": "qwik"
+    "test": "vitest",
+    "test.unit.ui": "vitest --ui",
+    "qwik": "qwik",
+    "prepare": "husky"
   },
   "devDependencies": {
+    "@biomejs/biome": "1.9.4",
     "@builder.io/qwik": "^1.12.0",
     "@builder.io/qwik-city": "^1.12.0",
     "@qwik-ui/headless": "^0.6.4",
@@ -41,25 +44,23 @@
     "@types/node": "20.14.11",
     "@typescript-eslint/eslint-plugin": "7.16.1",
     "@typescript-eslint/parser": "7.16.1",
+    "@vitest/ui": "^0.34.6",
     "autoprefixer": "^10.4.19",
     "class-variance-authority": "^0.7.0",
     "compression": "^1.7.4",
     "dotenv": "^16.3.2",
-    "eslint": "^8.57.0",
-    "eslint-plugin-qwik": "^1.12.0",
+    "husky": "^9.1.7",
     "nx": "^20.3.1",
     "postcss": "^8.4.39",
-    "prettier": "3.3.3",
-    "prettier-plugin-tailwindcss": "^0.5.4",
     "qwik-ui": "^0.2.0",
     "tailwindcss": "^3.4.6",
     "tailwindcss-animate": "^1.0.7",
     "typescript": "5.4.5",
     "undici": "*",
     "vite": "5.3.5",
-    "vite-tsconfig-paths": "^4.2.1"
+    "vite-tsconfig-paths": "^4.2.1",
+    "vitest": "^0.34.6"
   },
-  "nx": {},
   "dependencies": {
     "@huggingface/inference": "^3.0.0",
     "consola": "^3.4.0",
@@ -68,11 +69,6 @@
     "sqlite3": "^5.1.7"
   },
   "pnpm": {
-    "onlyBuiltDependencies": [
-      "esbuild",
-      "nx",
-      "sharp",
-      "sqlite3"
-    ]
+    "onlyBuiltDependencies": ["esbuild", "nx", "sharp", "sqlite3"]
   }
 }

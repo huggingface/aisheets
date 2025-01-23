@@ -1,11 +1,10 @@
-import { $, component$, type QRL, useSignal, useTask$ } from "@builder.io/qwik";
+import { $, component$, type QRL, useSignal, useTask$ } from '@builder.io/qwik';
+import { LuCheck } from '@qwikest/icons/lucide';
+import { TbX } from '@qwikest/icons/tablericons';
 
-import { LuCheck } from "@qwikest/icons/lucide";
-import { TbX } from "@qwikest/icons/tablericons";
-import { Sidebar, Button, Input, Label, Select } from "~/components";
-
-import { type CreateColumn, type ColumnType } from "~/state";
-import { useModals } from "~/components/hooks/modals/use-modals";
+import { Button, Input, Label, Select, Sidebar } from '~/components';
+import { useModals } from '~/components/hooks/modals/use-modals';
+import type { ColumnType, CreateColumn } from '~/state';
 
 interface SidebarProps {
   type: ColumnType;
@@ -15,17 +14,17 @@ interface SidebarProps {
 export const AddStaticColumnSidebar = component$<SidebarProps>(
   ({ onCreateColumn, type }) => {
     const { isOpenAddStaticColumnSidebar, closeAddStaticColumnSidebar } =
-      useModals("addStaticColumnSidebar");
+      useModals('addStaticColumnSidebar');
 
-    const types = ["text", "array", "number", "boolean", "object"];
+    const types = ['text', 'array', 'number', 'boolean', 'object'];
     const newType = useSignal<ColumnType>(type);
-    const name = useSignal("");
+    const name = useSignal('');
 
     useTask$(({ track }) => {
       track(() => type);
 
       newType.value = type;
-      name.value = "";
+      name.value = '';
     });
 
     const onSave = $(() => {
@@ -35,7 +34,7 @@ export const AddStaticColumnSidebar = component$<SidebarProps>(
       onCreateColumn({
         name: name.value,
         type: newType.value,
-        kind: "static",
+        kind: 'static',
       });
     });
 

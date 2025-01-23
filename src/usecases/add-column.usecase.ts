@@ -1,6 +1,7 @@
-import { server$ } from "@builder.io/qwik-city";
-import { addColumn } from "~/services";
-import { type CreateColumn, type Column } from "~/state";
+import { server$ } from '@builder.io/qwik-city';
+
+import { addColumn } from '~/services';
+import type { Column, CreateColumn } from '~/state';
 
 interface DynamicData {
   modelName: string;
@@ -18,8 +19,7 @@ import { textGeneration } from "@huggingface/inference";
 
 
 export const createDynamicData = async (
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  dynamic: DynamicData,
+  _dynamic: DynamicData,
 ): Promise<DynamicDataResponse[]> => {
 
   const { modelName, prompt, limit } = dynamic;
@@ -61,53 +61,56 @@ export const useAddColumnUseCase = () =>
   server$(async (newColum: CreateColumn): Promise<Column> => {
     const { name, type, kind, process } = newColum;
 
-    const column = await addColumn({
-      name,
-      type,
-      kind,
-    });
+    const column = await addColumn(
+      {
+        name,
+        type,
+        kind,
+      },
+      process,
+    );
 
-    const cells = [];
-    if (kind === "dynamic") {
-      const { limit, modelName, offset, prompt } = process!;
+    if (kind === 'dynamic') {
+      const data = await createDynamicData(process!);
 
-      const data = await createDynamicData({
-        prompt,
-        modelName,
-        limit,
-        offset,
-      });
-
-      for (let i = 0; i < data.length; i++) {
-        const row = data[i];
-
-        const cell = await column.createCell({
-          idx: i,
-          value: row.value,
+      await Promise.all(
+        data.map((cell, idx) =>
+          column.addCell({
+            idx,
+            value: cell.value,
+            error: cell.error,
+          }),
+        ),
+      );
+    } else {
+      // Iterate based on quantity of rows.
+      for (let idx = 0; idx < 2; idx++) {
+        await column.addCell({
+          idx,
+          value: '',
+          error: '',
         });
-
-        cells.push(cell);
       }
-
-      return {
-        id: column.id,
-        name: column.name,
-        type: column.type,
-        kind: column.kind,
-        cells: cells.map((cell) => ({
-          id: cell.id,
-          idx: cell.idx,
-          value: cell.value,
-          error: cell.error,
-        })),
-        process: {
-          modelName,
-          prompt,
-          offset,
-          limit,
-        },
-      };
     }
 
-    throw new Error("Not implemented static column creation");
+    return {
+      id: column.id,
+      name: column.name,
+      type: column.type,
+      kind: column.kind,
+      cells: column.cells.map((cell) => ({
+        id: cell.id,
+        idx: cell.idx,
+        value: cell.value,
+        error: cell.error,
+      })),
+      process: column.process
+        ? {
+            modelName: column.process.modelName,
+            prompt: column.process.prompt,
+            limit: column.process.limit,
+            offset: column.process.offset,
+          }
+        : undefined,
+    };
   });

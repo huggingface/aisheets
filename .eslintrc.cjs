@@ -14,13 +14,13 @@ module.exports = {
   parserOptions: {
     tsconfigRootDir: __dirname,
     project: ["./tsconfig.json"],
-    ecmaVersion: 2021,
+    ecmaVersion: "latest",
     sourceType: "module",
     ecmaFeatures: {
       jsx: true,
     },
   },
-  plugins: ["@typescript-eslint"],
+  plugins: ["@typescript-eslint", "simple-import-sort"],
   rules: {
     "@typescript-eslint/no-explicit-any": "off",
     "@typescript-eslint/explicit-module-boundary-types": "off",
@@ -40,5 +40,8 @@ module.exports = {
     "@typescript-eslint/no-unnecessary-condition": "warn",
 
     "qwik/loader-location": "off",
+
+    "simple-import-sort/imports": "error",
+    "simple-import-sort/exports": "error",
   },
 };

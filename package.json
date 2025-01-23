@@ -6,7 +6,9 @@
   },
   "engines-annotation": "Mostly required by sharp which needs a Node-API v9 compatible runtime",
   "private": true,
-  "trustedDependencies": ["sharp"],
+  "trustedDependencies": [
+    "sharp"
+  ],
   "trustedDependencies-annotation": "Needed for bun to allow running install scripts",
   "type": "module",
   "scripts": {
@@ -41,6 +43,7 @@
     "@types/compression": "^1.7.2",
     "@types/eslint": "8.56.10",
     "@types/express": "^4.17.19",
+    "@types/mustache": "^4.2.5",
     "@types/node": "20.14.11",
     "@typescript-eslint/eslint-plugin": "7.16.1",
     "@typescript-eslint/parser": "7.16.1",
@@ -65,10 +68,16 @@
     "@huggingface/inference": "^3.0.0",
     "consola": "^3.4.0",
     "express": "4.20.0",
+    "mustache": "^4.2.0",
     "sequelize": "^6.37.5",
     "sqlite3": "^5.1.7"
   },
   "pnpm": {
-    "onlyBuiltDependencies": ["esbuild", "nx", "sharp", "sqlite3"]
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "nx",
+      "sharp",
+      "sqlite3"
+    ]
   }
 }

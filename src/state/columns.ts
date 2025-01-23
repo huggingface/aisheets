@@ -23,7 +23,7 @@ export interface CreateColumn {
   name: string;
   type: ColumnType;
   kind: ColumnKind;
-  process?: Process;
+  executionProcess?: Process;
 }
 
 export type Cell = {

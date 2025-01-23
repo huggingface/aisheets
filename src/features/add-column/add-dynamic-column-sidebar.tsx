@@ -39,7 +39,7 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
         name: name.value,
         type: type.value,
         kind: 'dynamic',
-        process: {
+        executionProcess: {
           modelName: modelName.value,
           prompt: prompt.value,
           offset: 0,

@@ -2,60 +2,7 @@ import { server$ } from '@builder.io/qwik-city';
 
 import { addColumn } from '~/services';
 import type { Column, CreateColumn } from '~/state';
-
-interface DynamicData {
-  modelName: string;
-  prompt: string;
-  limit: number;
-  offset: number;
-}
-
-interface DynamicDataResponse {
-  value: string;
-  error?: string;
-}
-
-import { textGeneration } from "@huggingface/inference";
-
-
-export const createDynamicData = async (
-  _dynamic: DynamicData,
-): Promise<DynamicDataResponse[]> => {
-
-  const { modelName, prompt, limit } = dynamic;
-  
-  const values = [];
-  for (let i = 0; i < limit; i++) {
-    try {
-      const response = await textGeneration({
-        model: modelName,
-        inputs: prompt,
-        accessToken: process.env.HF_TOKEN, // From user access token
-        parameters: {
-          return_full_text: false,
-          temperature: 0.7,
-          seed: i,
-        },
-      });
-      values.push({
-        value: response.generated_text,
-      });
-    } catch (e) {
-      if (e instanceof Error) {
-        values.push({
-          value: "",
-          error: e.message,
-        });
-      } else {
-        values.push({
-          value: "",
-          error: "Unknown error",
-        });
-      }
-    }
-  }
-  return Promise.all(values);
-};
+import { runPromptExecution } from '~/usecases/run-prompt-execution';
 
 export const useAddColumnUseCase = () =>
   server$(async (newColum: CreateColumn): Promise<Column> => {
@@ -71,7 +18,12 @@ export const useAddColumnUseCase = () =>
     );
 
     if (kind === 'dynamic') {
-      const data = await createDynamicData(process!);
+      const data = await runPromptExecution({
+        modelName: process!.modelName,
+        instruction: process!.prompt,
+        limit: process!.limit,
+        offset: process!.offset,
+      });
 
       await Promise.all(
         data.map((cell, idx) =>

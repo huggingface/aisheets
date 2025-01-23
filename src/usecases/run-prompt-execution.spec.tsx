@@ -4,8 +4,7 @@ import { runPromptExecution } from '~/usecases/run-prompt-execution';
 const testModelName = 'meta-llama/Llama-2-7b-chat-hf';
 const testPrompt = 'Generate a title for a blog post about cats';
 
-const accessToken =
-  process.env.HF_TOKEN || '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';
+const accessToken = process.env.HF_TOKEN;
 
 test('should generate a value', async () => {
   const result = await runPromptExecution({

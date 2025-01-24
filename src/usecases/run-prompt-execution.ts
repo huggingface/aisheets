@@ -2,13 +2,6 @@ import { chatCompletion } from '@huggingface/inference';
 import mustache from 'mustache';
 
 export interface PromptExecutionParams {
-  modelName: string;
-  instruction: string;
-  limit: number;
-  offset: number;
-}
-
-export interface PromptExecutionParamsV2 {
   accessToken?: string;
   modelName: string;
   instruction: string;
@@ -47,7 +40,7 @@ export const runPromptExecution = async ({
   modelName,
   instruction,
   examples,
-}: PromptExecutionParamsV2): Promise<PromptExecutionResponse> => {
+}: PromptExecutionParams): Promise<PromptExecutionResponse> => {
   const inputPrompt = promptForResponseFromScratch(instruction, examples);
 
   try {

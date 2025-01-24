@@ -62,6 +62,8 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
 
     props['bind:value'].value = inputValue.value;
 
+    if (popover.options.length === 0) return;
+
     const matchedVariables = props.variables.filter((variable) =>
       inputValue.value.includes(`{{${variable.name}}}`),
     );
@@ -177,52 +179,65 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
 
   return (
     <div class="relative">
-      <Textarea
-        ref={textarea}
-        class="w-full h-40 p-2 border border-gray-300 rounded"
-        onInput$={(event) =>
-          handleTextInput(event.target as HTMLTextAreaElement)
-        }
-        onKeyDown$={(event: KeyboardEvent) => {
-          if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
-            updateBracketsSelectorPosition(event.target as HTMLTextAreaElement);
-          }
-        }}
-        onClick$={(event) =>
-          handleTextInput(event.target as HTMLTextAreaElement)
-        }
-        value={inputValue.value}
-      />
+      {popover.options.length === 0 && (
+        <Textarea
+          ref={textarea}
+          class="w-full h-40 p-2 border border-gray-300 rounded"
+          bind:value={inputValue}
+        />
+      )}
+      {popover.options.length > 0 && (
+        <>
+          <Textarea
+            ref={textarea}
+            class="w-full h-40 p-2 border border-gray-300 rounded"
+            onInput$={(event) =>
+              handleTextInput(event.target as HTMLTextAreaElement)
+            }
+            onKeyDown$={(event: KeyboardEvent) => {
+              if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+                updateBracketsSelectorPosition(
+                  event.target as HTMLTextAreaElement,
+                );
+              }
+            }}
+            onClick$={(event) =>
+              handleTextInput(event.target as HTMLTextAreaElement)
+            }
+            value={inputValue.value}
+          />
 
-      <Select.Root bind:open={popOverVisible} loop={true} autoFocus={true}>
-        <Select.Trigger
-          ref={firstOption}
-          look="headless"
-          hideIcon
-          class="absolute bg-white border border-gray-300 p-2 rounded shadow-lg focus:outline-none"
-          style={{
-            left: `${popover.position.x + 20}px`,
-            top: `${popover.position.y}px`,
-          }}
-        >
-          <TbBraces />
-        </Select.Trigger>
-        <Select.Popover>
-          {popover.options.map((variable) => (
-            <Select.Item
-              key={variable}
-              onClick$={() => handleOptionClick(variable)}
-              onKeyDown$={(event: KeyboardEvent) => {
-                if (event.key === 'Enter') {
-                  handleOptionClick(variable);
-                }
+          <Select.Root bind:open={popOverVisible} loop={true} autoFocus={true}>
+            <Select.Trigger
+              ref={firstOption}
+              look="headless"
+              hideIcon
+              class="absolute bg-white border border-gray-300 p-2 rounded shadow-lg focus:outline-none"
+              style={{
+                left: `${popover.position.x + 20}px`,
+                top: `${popover.position.y}px`,
               }}
             >
-              <Select.ItemLabel>{variable}</Select.ItemLabel>
-            </Select.Item>
-          ))}
-        </Select.Popover>
-      </Select.Root>
+              <TbBraces />
+            </Select.Trigger>
+            <Select.Popover>
+              {popover.options.map((variable) => (
+                <Select.Item
+                  key={variable}
+                  onClick$={() => handleOptionClick(variable)}
+                  onKeyDown$={(event: KeyboardEvent) => {
+                    if (event.key === 'Enter') {
+                      handleOptionClick(variable);
+                    }
+                  }}
+                >
+                  <Select.ItemLabel>{variable}</Select.ItemLabel>
+                </Select.Item>
+              ))}
+            </Select.Popover>
+          </Select.Root>
+        </>
+      )}
     </div>
   );
 });

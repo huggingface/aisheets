@@ -21,8 +21,11 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
     const name = useSignal('');
     const rowsToGenerate = useSignal('10');
     const prompt = useSignal('');
+    const columnsReferences = useSignal<string[]>([]);
 
-    const onSelectedVariables = $((variables: any) => {});
+    const onSelectedVariables = $((variables: { id: string }[]) => {
+      columnsReferences.value = variables.map((v) => v.id);
+    });
 
     useTask$(({ track }) => {
       track(isOpenAddDynamicColumnSidebar);
@@ -43,6 +46,7 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
         process: {
           modelName: 'HF Model',
           prompt: prompt.value,
+          columnsReferences: columnsReferences.value,
           offset: 0,
           limit: Number(rowsToGenerate.value),
         },
@@ -95,10 +99,7 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
               <Label for="column-prompt">Prompt template</Label>
               <TemplateTextArea
                 bind:value={prompt}
-                variables={[
-                  { id: 'variable1', name: 'Variable 1' },
-                  { id: 'variable2', name: 'Variable 2' },
-                ]}
+                variables={[]}
                 onSelectedVariables={onSelectedVariables}
               />
 

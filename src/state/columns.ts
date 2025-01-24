@@ -1,7 +1,7 @@
 import {
   $,
-  createContextId,
   type Signal,
+  createContextId,
   useContext,
   useContextProvider,
 } from '@builder.io/qwik';
@@ -15,6 +15,7 @@ export type ColumnKind = 'static' | 'dynamic';
 export interface Process {
   modelName: string;
   prompt: string;
+  columnsReferences: string[];
   offset: number;
   limit: number;
 }

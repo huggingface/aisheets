@@ -23,7 +23,7 @@ export const useAddColumnUseCase = () =>
       const examples: string[] = [];
       for (let i = offset; i < limit + offset; i++) {
         const response = await runPromptExecution({
-          accessToken: process.env.HF_TOKEN,
+          accessToken: process.env.HF_TOKEN, // TODO: reading from sharedMap is not working.
           modelName,
           instruction: prompt,
           examples,

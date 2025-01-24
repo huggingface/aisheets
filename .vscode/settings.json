@@ -2,8 +2,11 @@
 	"css.lint.unknownAtRules": "ignore",
 	"cSpell.words": ["qwik", "Argilla", "qwikest", "tablericons"],
 	"editor.codeActionsOnSave": {
-		"source.fixAll": "always",
+		"source.fixAll": "explicit",
 		"source.organizeImports.biome": "explicit"
 	},
-	"editor.defaultFormatter": "biomejs.biome"
+	"editor.defaultFormatter": "biomejs.biome",
+	"[jsonc]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	}
 }

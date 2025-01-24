@@ -28,7 +28,7 @@
     }
   },
   "files": {
-    "include": ["./src"]
+    "include": ["./src/**/*"]
   },
   "formatter": {
     "enabled": true,

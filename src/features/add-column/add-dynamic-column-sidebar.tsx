@@ -1,11 +1,21 @@
-import { $, type QRL, component$, useSignal, useTask$ } from '@builder.io/qwik';
+import {
+  $,
+  type QRL,
+  component$,
+  useSignal,
+  useTask$,
+  useVisibleTask$,
+} from '@builder.io/qwik';
 import { LuCheck } from '@qwikest/icons/lucide';
 import { TbX } from '@qwikest/icons/tablericons';
 
 import { Button, Input, Label, Select, Sidebar, Textarea } from '~/components';
 import { useModals } from '~/components/hooks/modals/use-modals';
-import { TemplateTextArea } from '~/features/add-column/components/template-textarea';
-import type { ColumnType, CreateColumn } from '~/state';
+import {
+  TemplateTextArea,
+  type Variable,
+} from '~/features/add-column/components/template-textarea';
+import { type ColumnType, type CreateColumn, useColumnsStore } from '~/state';
 
 interface SidebarProps {
   onCreateColumn: QRL<(createColumn: CreateColumn) => void>;
@@ -16,24 +26,32 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
   ({ onCreateColumn }) => {
     const { isOpenAddDynamicColumnSidebar, closeAddDynamicColumnSidebar } =
       useModals('addDynamicColumnSidebar');
+    const { state: columns } = useColumnsStore();
 
     const type = useSignal<NonNullable<ColumnType>>('text');
     const name = useSignal('');
     const rowsToGenerate = useSignal('10');
     const prompt = useSignal('');
+    const variables = useSignal<Variable[]>([]);
     const columnsReferences = useSignal<string[]>([]);
 
     const onSelectedVariables = $((variables: { id: string }[]) => {
       columnsReferences.value = variables.map((v) => v.id);
     });
 
-    useTask$(({ track }) => {
+    useVisibleTask$(({ track }) => {
       track(isOpenAddDynamicColumnSidebar);
 
       type.value = 'text';
       name.value = '';
       prompt.value = '';
       rowsToGenerate.value = '10';
+      columnsReferences.value = [];
+
+      variables.value = columns.value.map((c) => ({
+        id: c.id,
+        name: c.name,
+      }));
     });
 
     const onCreate = $(() => {
@@ -99,7 +117,7 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
               <Label for="column-prompt">Prompt template</Label>
               <TemplateTextArea
                 bind:value={prompt}
-                variables={[]}
+                variables={variables}
                 onSelectedVariables={onSelectedVariables}
               />
 

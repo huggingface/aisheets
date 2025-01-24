@@ -11,14 +11,14 @@ import { TbBraces } from '@qwikest/icons/tablericons';
 import { Select, Textarea } from '~/components';
 import { nextTick } from '~/components/hooks/tick';
 
-interface Variable {
+export interface Variable {
   id: string;
   name: string;
 }
 
 interface TemplateTextAreaProps {
   ['bind:value']: Signal<string>;
-  variables: Variable[];
+  variables: Signal<Variable[]>;
   onSelectedVariables: QRL<(variables: Variable[]) => void>;
 }
 
@@ -31,7 +31,6 @@ interface Popover {
 export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
   const textarea = useSignal<HTMLTextAreaElement | undefined>();
   const firstOption = useSignal<HTMLDivElement | undefined>();
-  const inputValue = useSignal('');
   const popOverVisible = useSignal(false);
 
   const popover = useStore<Popover>({
@@ -40,7 +39,11 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
     lineHeight: 0,
   });
 
-  useVisibleTask$(() => {
+  useVisibleTask$(({ track }) => {
+    track(props['bind:value']);
+
+    if (props['bind:value'].value !== '') return;
+
     if (textarea.value) {
       const verticalPadding = 10;
       popover.lineHeight =
@@ -51,21 +54,28 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
         verticalPadding +
         window.scrollY;
 
-      popover.position.y = popover.lineHeight;
+      popover.position = {
+        x: 0,
+        y: popover.lineHeight,
+      };
     }
 
-    popover.options = props.variables.map((variable) => variable.name);
+    popover.options = props.variables.value.map((variable) => variable.name);
   });
 
   useVisibleTask$(({ track }) => {
-    track(inputValue);
+    track(props.variables);
 
-    props['bind:value'].value = inputValue.value;
+    popover.options = props.variables.value.map((variable) => variable.name);
+  });
+
+  useVisibleTask$(({ track }) => {
+    track(props['bind:value']);
 
     if (popover.options.length === 0) return;
 
-    const matchedVariables = props.variables.filter((variable) =>
-      inputValue.value.includes(`{{${variable.name}}}`),
+    const matchedVariables = props.variables.value.filter((variable) =>
+      props['bind:value'].value.includes(`{{${variable.name}}}`),
     );
 
     props.onSelectedVariables(matchedVariables);
@@ -73,8 +83,8 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
 
   const getCursorPosition = $((textarea: HTMLTextAreaElement) => {
     const cursorPosition = textarea.selectionStart || 0;
-    const textBeforeCursor = inputValue.value.slice(0, cursorPosition);
-    const textAfterCursor = inputValue.value.slice(cursorPosition);
+    const textBeforeCursor = props['bind:value'].value.slice(0, cursorPosition);
+    const textAfterCursor = props['bind:value'].value.slice(cursorPosition);
 
     const lastOpeningBracketIndex = textBeforeCursor.lastIndexOf('{{');
     const lastClosingBracketIndex = textAfterCursor.lastIndexOf('}}');
@@ -129,7 +139,7 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
   });
 
   const handleTextInput = $(async (textarea: HTMLTextAreaElement) => {
-    inputValue.value = textarea.value;
+    props['bind:value'].value = textarea.value;
 
     const {
       isInMiddleOfBrackets,
@@ -142,7 +152,7 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
       const removedInconsistentBrackets =
         textBeforeCursor.slice(0, -2) + textAfterCursor;
 
-      textarea.value = inputValue.value = removedInconsistentBrackets;
+      textarea.value = props['bind:value'].value = removedInconsistentBrackets;
       return;
     }
 
@@ -170,7 +180,7 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
         ? textBeforeCursor.replace(/\{\{[^}]*$/, `{{${options}}}`)
         : textBeforeCursor + `{{${options}}}`) + textAfterCursor;
 
-    inputValue.value = updatedValue;
+    props['bind:value'].value = updatedValue;
 
     nextTick(() => {
       handleTextInput(textarea.value!);
@@ -183,7 +193,7 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
         <Textarea
           ref={textarea}
           class="w-full h-40 p-2 border border-gray-300 rounded"
-          bind:value={inputValue}
+          bind:value={props['bind:value']}
         />
       )}
       {popover.options.length > 0 && (
@@ -204,7 +214,7 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
             onClick$={(event) =>
               handleTextInput(event.target as HTMLTextAreaElement)
             }
-            value={inputValue.value}
+            value={props['bind:value'].value}
           />
 
           <Select.Root bind:open={popOverVisible} loop={true} autoFocus={true}>

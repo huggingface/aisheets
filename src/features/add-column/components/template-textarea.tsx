@@ -148,7 +148,7 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
       textAfterCursor,
     } = await getCursorPosition(textarea);
 
-    if (isInMiddleOfBrackets) {
+    if (isInMiddleOfBrackets && isRequestingVariable) {
       const removedInconsistentBrackets =
         textBeforeCursor.slice(0, -2) + textAfterCursor;
 
@@ -212,7 +212,9 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
               }
             }}
             onClick$={(event) =>
-              handleTextInput(event.target as HTMLTextAreaElement)
+              updateBracketsSelectorPosition(
+                event.target as HTMLTextAreaElement,
+              )
             }
             value={props['bind:value'].value}
           />

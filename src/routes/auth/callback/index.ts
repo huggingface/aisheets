@@ -34,7 +34,7 @@ export const onGet = async ({
   try {
     cookie.delete(sessionCode);
 
-    const token = await hub.oauthHandleRedirect({
+    const auth = await hub.oauthHandleRedirect({
       codeVerifier,
       nonce,
       redirectedUrl: url.href,
@@ -42,7 +42,7 @@ export const onGet = async ({
 
     cookie.delete('session');
 
-    cookie.set('session', token, {
+    cookie.set('session', auth, {
       secure: true,
       httpOnly: true,
       path: '/',

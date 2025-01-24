@@ -10,9 +10,8 @@ import { useSession } from '~/state/session';
 
 export { useColumnsLoader, useSession } from '~/state';
 
-const HF_TOKEN = process.env.HF_TOKEN;
-
 // See https://huggingface.co/docs/hub/en/spaces-oauth
+const HF_TOKEN = process.env.HF_TOKEN;
 const CLIENT_ID = process.env.OAUTH_CLIENT_ID;
 
 export const onGet = async ({
@@ -59,10 +58,21 @@ export const onGet = async ({
 
   if (HF_TOKEN) {
     const userInfo = await hub.whoAmI({ accessToken: HF_TOKEN });
-    sharedMap.set('session', {
+    const auth = {
       accessToken: HF_TOKEN,
       userInfo,
+    };
+
+    cookie.delete('session');
+
+    cookie.set('session', auth, {
+      secure: true,
+      httpOnly: true,
+      path: '/',
     });
+
+    sharedMap.set('session', auth);
+
     return next();
   }
 

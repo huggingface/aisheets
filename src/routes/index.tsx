@@ -10,7 +10,10 @@ import { useSession } from '~/state/session';
 
 export { useColumnsLoader, useSession } from '~/state';
 
-const CLIENT_ID = import.meta.env.VITE_CLIENT_ID;
+const HF_TOKEN = process.env.HF_TOKEN;
+
+// See https://huggingface.co/docs/hub/en/spaces-oauth
+const CLIENT_ID = process.env.OAUTH_CLIENT_ID;
 
 export const onGet = async ({
   cookie,
@@ -24,34 +27,46 @@ export const onGet = async ({
     return next();
   }
 
-  const sessionCode = crypto.randomUUID();
+  if (CLIENT_ID) {
+    const sessionCode = crypto.randomUUID();
 
-  const authData = {
-    state: sessionCode,
-    clientId: CLIENT_ID,
-    redirectUrl: `${url.origin}/auth/callback/`,
-    localStorage: {
-      codeVerifier: undefined,
-      nonce: undefined,
-    },
-  };
+    const authData = {
+      state: sessionCode,
+      clientId: CLIENT_ID,
+      redirectUrl: `${url.origin}/auth/callback/`,
+      localStorage: {
+        codeVerifier: undefined,
+        nonce: undefined,
+      },
+    };
 
-  const loginUrl = await hub.oauthLoginUrl(authData);
+    const loginUrl = await hub.oauthLoginUrl(authData);
 
-  cookie.set(
-    sessionCode,
-    {
-      codeVerifier: authData.localStorage.codeVerifier!,
-      nonce: authData.localStorage.nonce!,
-    },
-    {
-      secure: true,
-      httpOnly: true,
-      path: '/auth/callback',
-    },
-  );
+    cookie.set(
+      sessionCode,
+      {
+        codeVerifier: authData.localStorage.codeVerifier!,
+        nonce: authData.localStorage.nonce!,
+      },
+      {
+        secure: true,
+        httpOnly: true,
+        path: '/auth/callback',
+      },
+    );
+    throw redirect(303, loginUrl);
+  }
 
-  throw redirect(303, loginUrl);
+  if (HF_TOKEN) {
+    const userInfo = await hub.whoAmI({ accessToken: HF_TOKEN });
+    sharedMap.set('session', {
+      accessToken: HF_TOKEN,
+      userInfo,
+    });
+    return next();
+  }
+
+  throw Error('Missing HF_TOKEN or OAUTH_CLIENT_ID');
 };
 
 export default component$(() => {

@@ -1,9 +1,10 @@
-import { $, component$, type QRL, useSignal, useTask$ } from '@builder.io/qwik';
+import { $, type QRL, component$, useSignal, useTask$ } from '@builder.io/qwik';
 import { LuCheck } from '@qwikest/icons/lucide';
 import { TbX } from '@qwikest/icons/tablericons';
 
 import { Button, Input, Label, Select, Sidebar, Textarea } from '~/components';
 import { useModals } from '~/components/hooks/modals/use-modals';
+import { TemplateTextArea } from '~/features/add-column/components/template-textarea';
 import type { ColumnType, CreateColumn } from '~/state';
 
 interface SidebarProps {
@@ -20,6 +21,8 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
     const name = useSignal('');
     const rowsToGenerate = useSignal('10');
     const prompt = useSignal('');
+
+    const onSelectedVariables = $((variables: any) => {});
 
     useTask$(({ track }) => {
       track(isOpenAddDynamicColumnSidebar);
@@ -90,7 +93,14 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
               </Select.Root>
 
               <Label for="column-prompt">Prompt template</Label>
-              <Textarea id="column-prompt" bind:value={prompt} />
+              <TemplateTextArea
+                bind:value={prompt}
+                variables={[
+                  { id: 'variable1', name: 'Variable 1' },
+                  { id: 'variable2', name: 'Variable 2' },
+                ]}
+                onSelectedVariables={onSelectedVariables}
+              />
 
               <Label for="column-rows">Rows generated</Label>
               <Input

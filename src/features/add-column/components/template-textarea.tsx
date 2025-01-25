@@ -198,9 +198,19 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
       )}
       {popover.options.length > 0 && (
         <>
+          <div
+            class="absolute top-0 left-0 w-full h-full whitespace-pre-wrap break-words text-transparent pointer-events-none overflow-hidden text-base leading-6 p-2"
+            aria-hidden="true"
+          >
+            <Highlights
+              text={props['bind:value'].value}
+              variables={popover.options}
+            />
+          </div>
+
           <Textarea
             ref={textarea}
-            class="w-full h-40 p-2 border border-gray-300 rounded"
+            class="w-full h-40 p-2 border border-gray-300 overflow-hidden text-base leading-6"
             onInput$={(event) =>
               handleTextInput(event.target as HTMLTextAreaElement)
             }
@@ -251,5 +261,25 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
         </>
       )}
     </div>
+  );
+});
+
+export const Highlights = component$<{
+  text: string;
+  variables: string[];
+}>(({ text, variables }) => {
+  const highlightWord = 'resaltar'; // Palabra que deseas resaltar.
+  const escapedWord = highlightWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const regex = new RegExp(`(${escapedWord})`, 'gi');
+  const parts = text.split(regex);
+
+  return parts.map((part) =>
+    regex.test(part) ? (
+      <span key={part} class="bg-red-200 bg-opacity-60">
+        {part}
+      </span>
+    ) : (
+      part
+    ),
   );
 });

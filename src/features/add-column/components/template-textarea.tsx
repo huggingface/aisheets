@@ -47,12 +47,8 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
     if (textarea.value) {
       const verticalPadding = 10;
       popover.lineHeight =
-        Number.parseInt(
-          getComputedStyle(textarea.value).lineHeight || '20',
-          10,
-        ) +
-        verticalPadding +
-        window.scrollY;
+        Number.parseInt(getComputedStyle(textarea.value).lineHeight || '20') +
+        verticalPadding;
 
       popover.position = {
         x: 0,
@@ -139,6 +135,9 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
   });
 
   const handleTextInput = $(async (textarea: HTMLTextAreaElement) => {
+    textarea.style.height = 'auto';
+    textarea.style.height = `${textarea.scrollHeight}px`;
+
     props['bind:value'].value = textarea.value;
 
     const {
@@ -199,7 +198,7 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
       {popover.options.length > 0 && (
         <>
           <div
-            class="absolute top-0 left-0 w-full h-full whitespace-pre-wrap break-words text-transparent pointer-events-none overflow-hidden text-base leading-6 p-2"
+            class="absolute top-0 left-0 w-full h-full whitespace-pre-wrap break-words text-transparent pointer-events-none overflow-hidden text-base p-2"
             aria-hidden="true"
           >
             <Highlights
@@ -210,7 +209,7 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
 
           <Textarea
             ref={textarea}
-            class="w-full h-40 p-2 border border-gray-300 overflow-hidden text-base leading-6"
+            class="w-full h-full min-h-40 resize-none overflow-hidden p-2 border border-gray-300 text-base"
             onInput$={(event) =>
               handleTextInput(event.target as HTMLTextAreaElement)
             }
@@ -268,14 +267,19 @@ export const Highlights = component$<{
   text: string;
   variables: string[];
 }>(({ text, variables }) => {
-  const highlightWord = 'resaltar'; // Palabra que deseas resaltar.
-  const escapedWord = highlightWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const regex = new RegExp(`(${escapedWord})`, 'gi');
+  const highlightWords = variables.map((variable) => `{{${variable}}}`);
+  const escapedWords = highlightWords.map((word) =>
+    word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
+  );
+  const regex = new RegExp(`(${escapedWords.join('|')})`, 'gi');
   const parts = text.split(regex);
 
   return parts.map((part) =>
     regex.test(part) ? (
-      <span key={part} class="bg-red-200 bg-opacity-60">
+      <span
+        key={part}
+        class="bg-gray-300 bg-opacity-60 pb-1 pr-[1px] rounded-[4px]"
+      >
         {part}
       </span>
     ) : (

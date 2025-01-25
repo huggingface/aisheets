@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@huggingface/inference':
+        specifier: ^3.0.0
+        version: 3.0.0
       '@huggingface/hub':
         specifier: ^1.0.0
         version: 1.0.0
@@ -17,6 +20,9 @@ importers:
       express:
         specifier: 4.20.0
         version: 4.20.0
+      mustache:
+        specifier: ^4.2.0
+        version: 4.2.0
       sequelize:
         specifier: ^6.37.5
         version: 6.37.5(sqlite3@5.1.7)
@@ -54,6 +60,9 @@ importers:
       '@types/express':
         specifier: ^4.17.19
         version: 4.17.21
+      '@types/mustache':
+        specifier: ^4.2.5
+        version: 4.2.5
       '@types/node':
         specifier: 20.14.11
         version: 20.14.11
@@ -369,9 +378,12 @@ packages:
   '@gar/promisify@1.1.3':
     resolution: {integrity: sha512-k2Ty1JcVojjJFwrg/ThKi2ujJ7XNLYaFGNB/bWT9wGR+oSMJHMa5w+CUq6p/pVrKeNNgA7pCqEcjSnHVoqJQFw==}
 
+  '@huggingface/inference@3.0.0':
+    resolution: {integrity: sha512-Jqbny7LnesUBpPyus5sEw5gdD3DXrP1IoiQUHGJSD2yzvUSr+XRIH9gBdx9HarL44/P7R8zUwS3hjcEcpqFFig==}
+    engines: {node: '>=18'}
+    
   '@huggingface/hub@1.0.0':
     resolution: {integrity: sha512-IZ3fJ4WJ4iOghZkHWaKJY+XZJK9xAbaSIziY+OQcYtxnlcXo01/ibe2y2JjdsIhfzmYpxvov7F1qHoj2ek7tWQ==}
-    engines: {node: '>=18'}
 
   '@huggingface/tasks@0.13.16':
     resolution: {integrity: sha512-2kniw63zvyBOPzMWGMbLvTLJkUHhr+nRcvh/qC5g3AfHdqCjs22+6CsUgSKFn2wnEAoJV3W6GiOUAPud4kMxFA==}
@@ -819,6 +831,9 @@ packages:
 
   '@types/ms@0.7.34':
     resolution: {integrity: sha512-nG96G3Wp6acyAgJqGasjODb+acrI7KltPiRxzHPXnP3NgI28bpQDRv53olbqGXbfcgF5aiiHmO3xpwEpS5Ld9g==}
+
+  '@types/mustache@4.2.5':
+    resolution: {integrity: sha512-PLwiVvTBg59tGFL/8VpcGvqOu3L4OuveNvPi0EYbWchRdEVP++yRUXJPFl+CApKEq13017/4Nf7aQ5lTtHUNsA==}
 
   '@types/node@20.14.11':
     resolution: {integrity: sha512-kprQpL8MMeszbz6ojB5/tU8PLN4kesnN8Gjzw349rDlNgsSzg90lAVj3llK99Dh7JON+t9AuscPPFW6mPbTnSA==}
@@ -2275,6 +2290,10 @@ packages:
   ms@2.1.3:
     resolution: {integrity: sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==}
 
+  mustache@4.2.0:
+    resolution: {integrity: sha512-71ippSywq5Yb7/tVYyGbkBggbU8H3u5Rz56fH60jGFgr8uHwxs+aSKeqmluIVzM0m0kB7xQjKS6qPfd0b2ZoqQ==}
+    hasBin: true
+
   mz@2.7.0:
     resolution: {integrity: sha512-z81GNO7nnYMEhrGh9LeymoE4+Yr0Wn5McHIZMK5cfQCl+NDX08sCZgUc9/6MHni9IWuFLm1Z3HTCXu2z9fN62Q==}
 
@@ -3451,6 +3470,10 @@ snapshots:
   '@gar/promisify@1.1.3':
     optional: true
 
+  '@huggingface/inference@3.0.0':
+    dependencies:
+      '@huggingface/tasks': 0.13.16
+
   '@huggingface/hub@1.0.0':
     dependencies:
       '@huggingface/tasks': 0.13.16
@@ -3859,6 +3882,8 @@ snapshots:
   '@types/mime@1.3.5': {}
 
   '@types/ms@0.7.34': {}
+
+  '@types/mustache@4.2.5': {}
 
   '@types/node@20.14.11':
     dependencies:
@@ -5665,6 +5690,8 @@ snapshots:
   ms@2.0.0: {}
 
   ms@2.1.3: {}
+
+  mustache@4.2.0: {}
 
   mz@2.7.0:
     dependencies:

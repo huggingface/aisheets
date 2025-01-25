@@ -30,7 +30,7 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
 
     const type = useSignal<NonNullable<ColumnType>>('text');
     const name = useSignal('');
-    const rowsToGenerate = useSignal('10');
+    const rowsToGenerate = useSignal('3');
     const prompt = useSignal('');
     const variables = useSignal<Variable[]>([]);
     const columnsReferences = useSignal<string[]>([]);
@@ -38,6 +38,7 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
     const onSelectedVariables = $((variables: { id: string }[]) => {
       columnsReferences.value = variables.map((v) => v.id);
     });
+    const modelName = useSignal('meta-llama/Llama-2-7b-chat-hf');
 
     useVisibleTask$(({ track }) => {
       track(isOpenAddDynamicColumnSidebar);
@@ -45,7 +46,8 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
       type.value = 'text';
       name.value = '';
       prompt.value = '';
-      rowsToGenerate.value = '10';
+      modelName.value = 'meta-llama/Llama-2-7b-chat-hf';
+      rowsToGenerate.value = '3';
       columnsReferences.value = [];
 
       variables.value = columns.value.map((c) => ({
@@ -61,8 +63,8 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
         name: name.value,
         type: type.value,
         kind: 'dynamic',
-        process: {
-          modelName: 'HF Model',
+        executionProcess: {
+          modelName: modelName.value,
           prompt: prompt.value,
           columnsReferences: columnsReferences.value,
           offset: 0,
@@ -119,6 +121,25 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
                 bind:value={prompt}
                 variables={variables}
                 onSelectedVariables={onSelectedVariables}
+              />
+
+              <Label for="column-model" class="flex gap-1">
+                Model name. Available models in the
+                <a
+                  href="https://huggingface.co/playground"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="text-blue-500 underline hover:text-blue-700"
+                >
+                  huggingface playground
+                </a>
+              </Label>
+              <Input
+                id="column-model"
+                class="h-10"
+                value="meta-llama/Llama-2-7b-chat-hf"
+                placeholder="Enter the HF model name"
+                bind:value={modelName}
               />
 
               <Label for="column-rows">Rows generated</Label>

@@ -1,14 +1,25 @@
-import { component$, type Signal, useStore, useTask$ } from '@builder.io/qwik';
+import {
+  $,
+  type Signal,
+  component$,
+  useOn,
+  useSignal,
+  useStore,
+  useTask$,
+  useVisibleTask$,
+} from '@builder.io/qwik';
 import {
   TbAlignJustified,
   TbBraces,
   TbBrackets,
-  TbToggleLeft,
   TbHash,
   TbSparkles,
+  TbToggleLeft,
 } from '@qwikest/icons/tablericons';
+import { Input } from '~/components/ui/input/input';
+import { Textarea } from '~/components/ui/textarea/textarea';
 
-import type { Column, ColumnKind, ColumnType } from '~/state';
+import type { Cell, Column, ColumnKind, ColumnType } from '~/state';
 
 interface Props {
   columns: Signal<Column[]>;
@@ -102,6 +113,21 @@ const TableHeader = component$<{ columns: Column[] }>(({ columns }) => (
 const TableBody = component$<{ columns: Column[] }>(({ columns }) => {
   const rowCount = columns[0]?.cells.length || 0;
 
+  const getCell = (column: Column, rowIndex: number): Cell => {
+    const cell = column.cells[rowIndex];
+
+    if (!cell) {
+      return {
+        id: `${column.id}-${rowIndex}`,
+        value: '',
+        error: 'No data',
+        idx: rowIndex,
+      };
+    }
+
+    return cell;
+  };
+
   return (
     <tbody>
       {Array.from({ length: rowCount }).map((_, rowIndex) => (
@@ -110,23 +136,83 @@ const TableBody = component$<{ columns: Column[] }>(({ columns }) => {
             <input type="checkbox" />
           </td>
           {columns.map((column) => {
-            const cell = column.cells[rowIndex];
-            return (
-              <td
-                class="cursor-pointer text-wrap border-2 border-purple-200 px-2"
-                key={`${column.id}-${rowIndex}`}
-              >
-                {cell.value}
-                {cell.error && (
-                  <span style={{ color: 'red', marginLeft: '8px' }}>
-                    ⚠ {cell.error}
-                  </span>
-                )}
-              </td>
-            );
+            const cell = getCell(column, rowIndex);
+
+            return <TableCell key={cell.id} cell={cell} />;
           })}
         </tr>
       ))}
     </tbody>
+  );
+});
+
+const TableCell = component$<{ cell: Cell }>(({ cell }) => {
+  const isEditing = useSignal(false);
+  const originalValue = useSignal(cell.value);
+  const newCellValue = useSignal(cell.value);
+
+  const elementRef = useSignal<HTMLElement>();
+  const editCellValueInput = useSignal<HTMLElement>();
+
+  useOn(
+    'click',
+    $((event) => {
+      const target = event.target as HTMLElement;
+      if (elementRef.value && !elementRef.value.contains(target)) {
+        isEditing.value = false;
+      }
+    }),
+  );
+
+  useTask$(({ track }) => {
+    track(isEditing);
+
+    if (isEditing.value) {
+      originalValue.value = cell.value;
+
+      newCellValue.value = originalValue.value;
+
+      editCellValueInput.value?.focus();
+    }
+  });
+
+  const onUpdateCell = $(() => {
+    originalValue.value = newCellValue.value;
+
+    isEditing.value = false;
+  });
+
+  if (isEditing.value) {
+    return (
+      <td
+        ref={elementRef}
+        class="cursor-pointer text-wrap border-2 border-purple-200 px-2"
+      >
+        <Textarea
+          ref={editCellValueInput}
+          bind:value={newCellValue}
+          onKeyUp$={(e) => {
+            if (e.key === 'Enter' && e.altKey) {
+              onUpdateCell();
+            }
+          }}
+        />
+      </td>
+    );
+  }
+
+  return (
+    <td
+      class="cursor-pointer text-wrap border-2 border-purple-200 px-2"
+      onDblClick$={() => {
+        isEditing.value = true;
+      }}
+    >
+      {originalValue.value ? (
+        originalValue.value
+      ) : (
+        <span class="text-red-500 ml-2">⚠ {cell.error}</span>
+      )}
+    </td>
   );
 });

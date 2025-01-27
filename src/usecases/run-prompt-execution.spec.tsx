@@ -36,3 +36,21 @@ test('should generate 3 different values with the same prompt', async () => {
   expect(result.value).toBeDefined();
   expect(examples).not.toContain(result.value);
 });
+
+test('should genenrate a value based on a data object', async () => {
+  const data = {
+    title: 'Cats are very cute',
+  };
+  const prompt =
+    'Describe the title following title in 3 sentences:\n{{title}}';
+
+  const result = await runPromptExecution({
+    accessToken,
+    modelName: testModelName,
+    instruction: prompt,
+    data,
+  });
+
+  expect(result.error).toBeUndefined();
+  expect(result.value).toBeDefined();
+});

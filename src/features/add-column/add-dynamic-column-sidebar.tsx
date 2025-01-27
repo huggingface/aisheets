@@ -32,13 +32,13 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
     const name = useSignal('');
     const rowsToGenerate = useSignal('3');
     const prompt = useSignal('');
-    const modelName = useSignal('meta-llama/Llama-2-7b-chat-hf');
     const variables = useSignal<Variable[]>([]);
     const columnsReferences = useSignal<string[]>([]);
 
     const onSelectedVariables = $((variables: { id: string }[]) => {
       columnsReferences.value = variables.map((v) => v.id);
     });
+    const modelName = useSignal('meta-llama/Llama-2-7b-chat-hf');
 
     useVisibleTask$(({ track }) => {
       track(isOpenAddDynamicColumnSidebar);
@@ -122,8 +122,8 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
                 onSelectedVariables={onSelectedVariables}
               />
 
-              <Label for="column-model">
-                Model name. Available models in the{' '}
+              <Label for="column-model" class="flex gap-1">
+                Model name. Available models in the
                 <a
                   href="https://huggingface.co/playground"
                   target="_blank"

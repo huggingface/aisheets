@@ -1,12 +1,17 @@
-import { server$ } from '@builder.io/qwik-city';
+import { type RequestEventBase, server$ } from '@builder.io/qwik-city';
 
 import { addColumn } from '~/services';
 import { getRowCells } from '~/services/repository';
-import type { Column, CreateColumn } from '~/state';
+import { type Column, type CreateColumn, useServerSession } from '~/state';
 import { runPromptExecution } from '~/usecases/run-prompt-execution';
 
 export const useAddColumnUseCase = () =>
-  server$(async (newColum: CreateColumn): Promise<Column> => {
+  server$(async function (
+    this: RequestEventBase<QwikCityPlatform>,
+    newColum: CreateColumn,
+  ): Promise<Column> {
+    const session = useServerSession(this);
+
     const { name, type, kind, executionProcess } = newColum;
 
     const column = await addColumn(
@@ -25,7 +30,7 @@ export const useAddColumnUseCase = () =>
       const examples: string[] = [];
       for (let i = offset; i < limit + offset; i++) {
         const args = {
-          accessToken: process.env.HF_TOKEN, // TODO: reading from sharedMap is not working.
+          accessToken: session.token,
           modelName,
           examples,
           instruction: prompt,
@@ -80,6 +85,7 @@ export const useAddColumnUseCase = () =>
       process: column.process
         ? {
             modelName: column.process.modelName,
+            columnsReferences: column.process.columnsReferences,
             prompt: column.process.prompt,
             limit: column.process.limit,
             offset: column.process.offset,

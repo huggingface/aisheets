@@ -1,6 +1,7 @@
 import { server$ } from '@builder.io/qwik-city';
 
 import { addColumn } from '~/services';
+import { getRowCells } from '~/services/repository';
 import type { Column, CreateColumn } from '~/state';
 import { runPromptExecution } from '~/usecases/run-prompt-execution';
 
@@ -18,16 +19,31 @@ export const useAddColumnUseCase = () =>
     );
 
     if (kind === 'dynamic') {
-      const { limit, offset, modelName, prompt } = executionProcess!;
+      const { limit, offset, modelName, prompt, columnsReferences } =
+        executionProcess!;
 
       const examples: string[] = [];
       for (let i = offset; i < limit + offset; i++) {
-        const response = await runPromptExecution({
+        const args = {
           accessToken: process.env.HF_TOKEN, // TODO: reading from sharedMap is not working.
           modelName,
-          instruction: prompt,
           examples,
-        });
+          instruction: prompt,
+          data: {},
+        };
+
+        const data: object = {};
+        if (columnsReferences && columnsReferences.length > 0) {
+          const rowCells = await getRowCells({
+            rowIdx: i,
+            columns: columnsReferences,
+          });
+          args.data = Object.fromEntries(
+            rowCells.map((cell) => [cell.column!.name, cell.value]),
+          );
+        }
+
+        const response = await runPromptExecution(args);
 
         await column.addCell({
           idx: i,

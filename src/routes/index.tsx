@@ -1,4 +1,4 @@
-import { component$ } from '@builder.io/qwik';
+import { component$, isDev } from '@builder.io/qwik';
 import {
   type DocumentHead,
   type RequestEvent,
@@ -53,7 +53,7 @@ export const onGet = async ({
       },
       {
         secure: true,
-        httpOnly: true,
+        httpOnly: !isDev,
         path: '/auth/callback',
       },
     );
@@ -61,21 +61,25 @@ export const onGet = async ({
   }
 
   if (HF_TOKEN) {
-    const userInfo = await hub.whoAmI({ accessToken: HF_TOKEN });
-    const auth = {
-      accessToken: HF_TOKEN,
-      userInfo,
+    const userInfo = (await hub.whoAmI({ accessToken: HF_TOKEN })) as any;
+
+    const session = {
+      token: HF_TOKEN,
+      user: {
+        name: userInfo.name,
+        picture: userInfo.avatarUrl,
+      },
     };
 
     cookie.delete('session');
 
-    cookie.set('session', auth, {
+    cookie.set('session', session, {
       secure: true,
-      httpOnly: true,
+      httpOnly: !isDev,
       path: '/',
     });
 
-    sharedMap.set('session', auth);
+    sharedMap.set('session', session);
 
     return next();
   }

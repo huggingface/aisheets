@@ -5,7 +5,6 @@ interface Session {
   token: string;
   user: {
     name: string;
-    email: string;
     picture: string;
   };
 }
@@ -15,6 +14,10 @@ export const useServerSession = (request: RequestEventBase): Session => {
     throw new Error('useServerSession must be used on the server.');
 
   const session = request.sharedMap.get('session')!;
+  
+  if (!session) {
+    throw new Error('session is undefined');
+  }
 
   return {
     token: session.accessToken,

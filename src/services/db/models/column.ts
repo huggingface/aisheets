@@ -73,6 +73,10 @@ ColumnModel.hasMany(ColumnCellModel, {
   foreignKey: 'columnId',
   as: 'cells',
 });
+ColumnCellModel.belongsTo(ColumnModel, {
+  foreignKey: 'columnId',
+  as: 'column',
+});
 
 ColumnCellModel.belongsTo(ColumnModel, {
   foreignKey: 'columnId',

@@ -22,6 +22,9 @@ export class ColumnCellModel extends Model<
   declare error?: string;
   declare validated: CreationOptional<boolean>;
 
+  declare createdAt: NonAttribute<Date>;
+  declare updatedAt: NonAttribute<Date>;
+
   declare columnId: ForeignKey<ColumnModel['id']>;
   declare column?: NonAttribute<ColumnModel>;
 

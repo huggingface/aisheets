@@ -1,6 +1,5 @@
 import {
   $,
-  type Signal,
   component$,
   useOn,
   useSignal,
@@ -19,13 +18,15 @@ import { useModals } from '~/components/hooks';
 import { Textarea } from '~/components/ui/textarea/textarea';
 import { RunExecutionSidebar } from '~/features/run-execution/run-execution-sidebar';
 
-import type { Cell, Column, ColumnKind, ColumnType } from '~/state';
+import {
+  type Cell,
+  type Column,
+  type ColumnKind,
+  type ColumnType,
+  useColumnsStore,
+} from '~/state';
 import { useReRunExecution } from '~/usecases/run-execution.usecase';
 import { useValidateCellUseCase } from '~/usecases/validate-cell.usecase';
-
-interface Props {
-  columns: Signal<Column[]>;
-}
 
 const Icons: Record<Column['type'], any> = {
   text: TbAlignJustified,
@@ -44,7 +45,9 @@ const ColumnIcon = component$<{ type: ColumnType; kind: ColumnKind }>(
   },
 );
 
-export const Table = component$<Props>(({ columns }) => {
+export const Table = component$(() => {
+  const { state: columns } = useColumnsStore();
+
   const state = useStore<{
     selectedColumns: Record<string, number[] | undefined>;
     selectedRows: string[];
@@ -80,16 +83,19 @@ export const Table = component$<Props>(({ columns }) => {
   return (
     <div class="overflow-x-auto">
       <table class="min-w-full bg-white text-sm">
-        <TableHeader columns={columns.value} />
-        <TableBody columns={columns.value} />
+        <TableHeader />
+        <TableBody />
       </table>
     </div>
   );
 });
 
-const TableHeader = component$<{ columns: Column[] }>(({ columns }) => {
+const TableHeader = component$(() => {
+  const { state: columns, replaceCell } = useColumnsStore();
   const runExecution = useReRunExecution();
-  const { openRunExecutionSidebar } = useModals('runExecutionSidebar');
+  const { openRunExecutionSidebar, closeRunExecutionSidebar } = useModals(
+    'runExecutionSidebar',
+  );
   const selectedColumnForExecution = useSignal<Column>();
 
   const handleHeaderClick = $((columnSelected: Column) => {
@@ -98,8 +104,14 @@ const TableHeader = component$<{ columns: Column[] }>(({ columns }) => {
     openRunExecutionSidebar();
   });
 
-  const onRunExecution = $((columnId: string) => {
-    runExecution(columnId);
+  const onRunExecution = $(async (columnId: string) => {
+    closeRunExecutionSidebar();
+
+    const response = await runExecution(columnId);
+
+    for await (const { cell } of response) {
+      replaceCell(cell);
+    }
   });
 
   return (
@@ -109,7 +121,7 @@ const TableHeader = component$<{ columns: Column[] }>(({ columns }) => {
           <input type="checkbox" />
         </th>
 
-        {columns.map((column) => (
+        {columns.value.map((column) => (
           <th
             key={column.id}
             class="bg-purple-200 text-left font-light hover:bg-purple-50"
@@ -125,6 +137,7 @@ const TableHeader = component$<{ columns: Column[] }>(({ columns }) => {
           </th>
         ))}
       </tr>
+
       <RunExecutionSidebar
         column={selectedColumnForExecution}
         onRunExecution={onRunExecution}
@@ -133,8 +146,9 @@ const TableHeader = component$<{ columns: Column[] }>(({ columns }) => {
   );
 });
 
-const TableBody = component$<{ columns: Column[] }>(({ columns }) => {
-  const rowCount = columns[0]?.cells.length || 0;
+const TableBody = component$(() => {
+  const { state: columns } = useColumnsStore();
+  const rowCount = columns.value[0]?.cells.length || 0;
 
   const getCell = (column: Column, rowIndex: number): Cell => {
     const cell = column.cells[rowIndex];
@@ -145,6 +159,8 @@ const TableBody = component$<{ columns: Column[] }>(({ columns }) => {
         value: '',
         error: 'No data',
         validated: false,
+        columnId: column.id,
+        updatedAt: new Date(),
         idx: rowIndex,
       };
     }
@@ -159,10 +175,12 @@ const TableBody = component$<{ columns: Column[] }>(({ columns }) => {
           <td class="max-w-6 border px-2 py-2 text-center">
             <input type="checkbox" />
           </td>
-          {columns.map((column) => {
+          {columns.value.map((column) => {
             const cell = getCell(column, rowIndex);
 
-            return <TableCell key={cell.id} cell={cell} />;
+            return (
+              <TableCell key={`${cell.id}-${cell.updatedAt}`} cell={cell} />
+            );
           })}
         </tr>
       ))}

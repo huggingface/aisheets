@@ -36,6 +36,7 @@ export const onGet = async ({
     const authData = {
       state: sessionCode,
       clientId: CLIENT_ID,
+      scopes: 'inference-api',
       redirectUrl: `${url.origin}/auth/callback/`,
       localStorage: {
         codeVerifier: undefined,
@@ -91,14 +92,14 @@ export const useSession = routeLoader$(useServerSession);
 
 export default component$(() => {
   const session = useSession();
-  const { columns, onCreateColumn } = useHome();
+  const { onCreateColumn } = useHome();
 
   return (
     <div class="mx-auto px-4 pt-2">
       <h2>Hello {session.value.user.name} 👋</h2>
       <Commands />
 
-      <Table columns={columns} />
+      <Table />
 
       <AddColumn onCreateColumn={onCreateColumn} />
     </div>

@@ -1,13 +1,13 @@
 import { type RequestEventBase, server$ } from '@builder.io/qwik-city';
 import { getColumnById, updateCell } from '~/services';
-import { type Column, useServerSession } from '~/state';
+import { useServerSession } from '~/state';
 import { runPromptExecution } from '~/usecases/run-prompt-execution';
 
 export const useReRunExecution = () =>
-  server$(async function (
+  server$(async function* (
     this: RequestEventBase<QwikCityPlatform>,
     columnId: string,
-  ): Promise<Column> {
+  ) {
     const session = useServerSession(this);
     const column = await getColumnById(columnId);
 
@@ -35,9 +35,12 @@ export const useReRunExecution = () =>
 
       cell.value = response.value;
       cell.error = response.error;
+      cell.updatedAt = new Date();
 
       await updateCell(cell);
-    }
 
-    return column;
+      yield {
+        cell,
+      };
+    }
   });

@@ -7,7 +7,7 @@ import type { Column } from '~/state';
 
 interface SidebarProps {
   column: Signal<Column | undefined>;
-  onRunExecution: QRL<(columnId: string) => void>;
+  onRunExecution: QRL<(columnId: string) => Promise<void>>;
 }
 
 export const RunExecutionSidebar = component$<SidebarProps>(
@@ -16,8 +16,8 @@ export const RunExecutionSidebar = component$<SidebarProps>(
       'runExecutionSidebar',
     );
 
-    const runExecution = $(() => {
-      onRunExecution(column.value!.id);
+    const runExecution = $(async () => {
+      await onRunExecution(column.value!.id);
     });
 
     if (!column.value) return null;

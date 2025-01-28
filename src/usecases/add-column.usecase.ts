@@ -37,7 +37,6 @@ export const useAddColumnUseCase = () =>
           data: {},
         };
 
-        const data: object = {};
         if (columnsReferences && columnsReferences.length > 0) {
           const rowCells = await getRowCells({
             rowIdx: i,
@@ -81,6 +80,7 @@ export const useAddColumnUseCase = () =>
         idx: cell.idx,
         value: cell.value,
         error: cell.error,
+        validated: cell.validated,
       })),
       process: column.process
         ? {

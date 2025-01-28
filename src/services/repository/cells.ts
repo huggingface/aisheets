@@ -1,6 +1,7 @@
 import { Op } from 'sequelize';
 import { ColumnCellModel } from '~/services/db/models/cell';
 import { ColumnModel } from '~/services/db/models/column';
+import type { Cell } from '~/state';
 
 interface GetRowCellsParams {
   rowIdx: number;
@@ -25,6 +26,6 @@ export const getRowCells = async ({
   return cells;
 };
 
-export const updateCell = async (id: string, value: string) => {
-  await ColumnCellModel.update({ value }, { where: { id } });
+export const updateCell = async (cell: Partial<Cell>) => {
+  await ColumnCellModel.update({ ...cell }, { where: { id: cell.id! } });
 };

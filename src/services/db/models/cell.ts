@@ -20,6 +20,7 @@ export class ColumnCellModel extends Model<
   declare idx: number;
   declare value?: string;
   declare error?: string;
+  declare validated: CreationOptional<boolean>;
 
   declare columnId: ForeignKey<ColumnModel['id']>;
   declare column?: NonAttribute<ColumnModel>;
@@ -51,6 +52,10 @@ ColumnCellModel.init(
     error: {
       type: DataTypes.STRING,
       allowNull: true,
+    },
+    validated: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
     },
   },
   {

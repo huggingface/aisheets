@@ -7,10 +7,13 @@ interface EditCell {
   value: string;
 }
 
-export const useUpdateCellUseCase = () =>
+export const useValidateCellUseCase = () =>
   server$(async (editCell: EditCell): Promise<boolean> => {
     try {
-      await updateCell(editCell.id, editCell.value);
+      await updateCell({
+        ...editCell,
+        validated: true,
+      });
     } catch (error) {
       return false;
     }

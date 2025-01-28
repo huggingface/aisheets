@@ -6,7 +6,6 @@ import {
   useSignal,
   useStore,
   useTask$,
-  useVisibleTask$,
 } from '@builder.io/qwik';
 import {
   TbAlignJustified,
@@ -16,11 +15,13 @@ import {
   TbSparkles,
   TbToggleLeft,
 } from '@qwikest/icons/tablericons';
-import { Input } from '~/components/ui/input/input';
+import { useModals } from '~/components/hooks';
 import { Textarea } from '~/components/ui/textarea/textarea';
+import { RunExecutionSidebar } from '~/features/run-execution/run-execution-sidebar';
 
 import type { Cell, Column, ColumnKind, ColumnType } from '~/state';
-import { useUpdateCellUseCase } from '~/usecases/update-column.usecase';
+import { useReRunExecution } from '~/usecases/run-execution.usecase';
+import { useValidateCellUseCase } from '~/usecases/validate-cell.usecase';
 
 interface Props {
   columns: Signal<Column[]>;
@@ -86,30 +87,51 @@ export const Table = component$<Props>(({ columns }) => {
   );
 });
 
-const TableHeader = component$<{ columns: Column[] }>(({ columns }) => (
-  <thead>
-    <tr>
-      <th class="max-w-8 border bg-gray-50 px-2 py-2 text-center hover:bg-sky-100">
-        <input type="checkbox" />
-      </th>
+const TableHeader = component$<{ columns: Column[] }>(({ columns }) => {
+  const runExecution = useReRunExecution();
+  const { openRunExecutionSidebar } = useModals('runExecutionSidebar');
+  const selectedColumnForExecution = useSignal<Column>();
 
-      {columns.map((column) => (
-        <th
-          key={column.id}
-          class="bg-purple-200 text-left font-light hover:bg-purple-50"
-        >
-          <div class="flex flex-row items-center justify-between">
-            <div class="flex w-full items-center gap-1 px-2">
-              <ColumnIcon type={column.type} kind={column.kind} />
-              {column.name}
-            </div>
-            <div class="h-8  w-2 cursor-col-resize" />
-          </div>
+  const handleHeaderClick = $((columnSelected: Column) => {
+    selectedColumnForExecution.value = columnSelected;
+
+    openRunExecutionSidebar();
+  });
+
+  const onRunExecution = $((columnId: string) => {
+    runExecution(columnId);
+  });
+
+  return (
+    <thead>
+      <tr>
+        <th class="max-w-8 border bg-gray-50 px-2 py-2 text-center hover:bg-sky-100">
+          <input type="checkbox" />
         </th>
-      ))}
-    </tr>
-  </thead>
-));
+
+        {columns.map((column) => (
+          <th
+            key={column.id}
+            class="bg-purple-200 text-left font-light hover:bg-purple-50"
+            onDblClick$={() => handleHeaderClick(column)}
+          >
+            <div class="flex flex-row items-center justify-between">
+              <div class="flex w-full items-center gap-1 px-2">
+                <ColumnIcon type={column.type} kind={column.kind} />
+                {column.name}
+              </div>
+              <div class="h-8  w-2 cursor-col-resize" />
+            </div>
+          </th>
+        ))}
+      </tr>
+      <RunExecutionSidebar
+        column={selectedColumnForExecution}
+        onRunExecution={onRunExecution}
+      />
+    </thead>
+  );
+});
 
 const TableBody = component$<{ columns: Column[] }>(({ columns }) => {
   const rowCount = columns[0]?.cells.length || 0;
@@ -122,6 +144,7 @@ const TableBody = component$<{ columns: Column[] }>(({ columns }) => {
         id: `${column.id}-${rowIndex}`,
         value: '',
         error: 'No data',
+        validated: false,
         idx: rowIndex,
       };
     }
@@ -155,7 +178,7 @@ const TableCell = component$<{ cell: Cell }>(({ cell }) => {
   const elementRef = useSignal<HTMLElement>();
   const editCellValueInput = useSignal<HTMLElement>();
 
-  const updateCell = useUpdateCellUseCase();
+  const validateCell = useValidateCellUseCase();
 
   useOn(
     'click',
@@ -182,8 +205,9 @@ const TableCell = component$<{ cell: Cell }>(({ cell }) => {
   const onUpdateCell = $(async () => {
     originalValue.value = newCellValue.value;
 
-    await updateCell({
+    await validateCell({
       id: cell.id,
+
       value: newCellValue.value!,
     });
 

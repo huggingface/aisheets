@@ -3,13 +3,12 @@ import {
   type QRL,
   component$,
   useSignal,
-  useTask$,
   useVisibleTask$,
 } from '@builder.io/qwik';
 import { LuCheck } from '@qwikest/icons/lucide';
 import { TbX } from '@qwikest/icons/tablericons';
 
-import { Button, Input, Label, Select, Sidebar, Textarea } from '~/components';
+import { Button, Input, Label, Select, Sidebar } from '~/components';
 import { useModals } from '~/components/hooks/modals/use-modals';
 import {
   TemplateTextArea,

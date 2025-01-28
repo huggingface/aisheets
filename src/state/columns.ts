@@ -30,6 +30,7 @@ export interface CreateColumn {
 export type Cell = {
   id: string;
   idx: number;
+  validated: boolean;
   value?: string;
   error?: string;
 };

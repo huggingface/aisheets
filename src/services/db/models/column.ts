@@ -16,7 +16,7 @@ import { db } from '~/services/db';
 import { ColumnCellModel } from '~/services/db/models/cell';
 import { ProcessModel } from '~/services/db/models/process';
 //Review the path
-import type { Cell, ColumnKind, ColumnType } from '~/state';
+import type { Cell, ColumnKind, ColumnType, Process } from '~/state';
 
 export class ColumnModel extends Model<
   InferAttributes<ColumnModel>,
@@ -26,8 +26,8 @@ export class ColumnModel extends Model<
   declare name: string;
   declare type: ColumnType;
   declare kind: ColumnKind;
-  // declare datasetId: ForeignKey<DatasetModel["id"]>;
 
+  declare process: NonAttribute<Process>;
   declare cells: NonAttribute<Cell[]>;
 
   declare createCell: HasManyCreateAssociationMixin<
@@ -37,6 +37,7 @@ export class ColumnModel extends Model<
 
   declare static associations: {
     cells: Association<ColumnModel, ColumnCellModel>;
+    process: Association<ColumnModel, ProcessModel>;
   };
 }
 
@@ -60,10 +61,6 @@ ColumnModel.init(
       type: DataTypes.STRING,
       allowNull: false,
     },
-    // datasetId: {
-    //   type: DataTypes.UUIDV4,
-    //   allowNull: false,
-    // },
   },
   {
     sequelize: db,
@@ -76,6 +73,7 @@ ColumnModel.hasMany(ColumnCellModel, {
   foreignKey: 'columnId',
   as: 'cells',
 });
+
 ColumnCellModel.belongsTo(ColumnModel, {
   foreignKey: 'columnId',
   as: 'column',
@@ -83,6 +81,8 @@ ColumnCellModel.belongsTo(ColumnModel, {
 
 ColumnModel.hasOne(ProcessModel, {
   sourceKey: 'id',
+  foreignKey: 'columnId',
+  as: 'process',
 });
 
 await ColumnModel.sync({ alter: isDev });

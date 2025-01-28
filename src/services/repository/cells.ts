@@ -24,3 +24,7 @@ export const getRowCells = async ({
 
   return cells;
 };
+
+export const updateCell = async (id: string, value: string) => {
+  await ColumnCellModel.update({ value }, { where: { id } });
+};

@@ -20,6 +20,7 @@ import { Input } from '~/components/ui/input/input';
 import { Textarea } from '~/components/ui/textarea/textarea';
 
 import type { Cell, Column, ColumnKind, ColumnType } from '~/state';
+import { useUpdateCellUseCase } from '~/usecases/update-column.usecase';
 
 interface Props {
   columns: Signal<Column[]>;
@@ -154,6 +155,8 @@ const TableCell = component$<{ cell: Cell }>(({ cell }) => {
   const elementRef = useSignal<HTMLElement>();
   const editCellValueInput = useSignal<HTMLElement>();
 
+  const updateCell = useUpdateCellUseCase();
+
   useOn(
     'click',
     $((event) => {
@@ -176,8 +179,13 @@ const TableCell = component$<{ cell: Cell }>(({ cell }) => {
     }
   });
 
-  const onUpdateCell = $(() => {
+  const onUpdateCell = $(async () => {
     originalValue.value = newCellValue.value;
+
+    await updateCell({
+      id: cell.id,
+      value: newCellValue.value!,
+    });
 
     isEditing.value = false;
   });

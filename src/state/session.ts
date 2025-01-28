@@ -14,17 +14,16 @@ export const useServerSession = (request: RequestEventBase): Session => {
     throw new Error('useServerSession must be used on the server.');
 
   const session = request.sharedMap.get('session')!;
-  
+
   if (!session) {
     throw new Error('session is undefined');
   }
 
   return {
-    token: session.accessToken,
+    token: session.token,
     user: {
-      name: session.userInfo.name,
-      email: session.userInfo.email,
-      picture: session.userInfo.picture,
+      name: session.user.name,
+      picture: session.user.picture,
     },
   };
 };

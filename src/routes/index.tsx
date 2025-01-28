@@ -1,4 +1,4 @@
-import { component$ } from '@builder.io/qwik';
+import { component$, isDev } from '@builder.io/qwik';
 import {
   type DocumentHead,
   type RequestEvent,
@@ -53,7 +53,7 @@ export const onGet = async ({
       },
       {
         secure: true,
-        httpOnly: true,
+        httpOnly: !isDev,
         path: '/auth/callback',
       },
     );
@@ -71,7 +71,7 @@ export const onGet = async ({
 
     cookie.set('session', auth, {
       secure: true,
-      httpOnly: true,
+      httpOnly: !isDev,
       path: '/',
     });
 

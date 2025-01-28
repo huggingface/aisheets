@@ -1,3 +1,4 @@
+import { isDev } from '@builder.io/qwik';
 import type { RequestEvent } from '@builder.io/qwik-city';
 import * as hub from '@huggingface/hub';
 
@@ -44,7 +45,7 @@ export const onGet = async ({
 
     cookie.set('session', auth, {
       secure: true,
-      httpOnly: true,
+      httpOnly: !isDev,
       path: '/',
     });
   } catch (e) {

@@ -1,11 +1,17 @@
-import { server$ } from '@builder.io/qwik-city';
+import { type RequestEventBase, server$ } from '@builder.io/qwik-city';
 
 import { addColumn } from '~/services';
-import type { Column, CreateColumn } from '~/state';
+import { getRowCells } from '~/services/repository';
+import { type Column, type CreateColumn, useServerSession } from '~/state';
 import { runPromptExecution } from '~/usecases/run-prompt-execution';
 
 export const useAddColumnUseCase = () =>
-  server$(async (newColum: CreateColumn): Promise<Column> => {
+  server$(async function (
+    this: RequestEventBase<QwikCityPlatform>,
+    newColum: CreateColumn,
+  ): Promise<Column> {
+    const session = useServerSession(this);
+
     const { name, type, kind, executionProcess } = newColum;
 
     const column = await addColumn(
@@ -18,16 +24,31 @@ export const useAddColumnUseCase = () =>
     );
 
     if (kind === 'dynamic') {
-      const { limit, offset, modelName, prompt } = executionProcess!;
+      const { limit, offset, modelName, prompt, columnsReferences } =
+        executionProcess!;
 
       const examples: string[] = [];
       for (let i = offset; i < limit + offset; i++) {
-        const response = await runPromptExecution({
-          accessToken: process.env.HF_TOKEN, // TODO: reading from sharedMap is not working.
+        const args = {
+          accessToken: session.token,
           modelName,
-          instruction: prompt,
           examples,
-        });
+          instruction: prompt,
+          data: {},
+        };
+
+        const data: object = {};
+        if (columnsReferences && columnsReferences.length > 0) {
+          const rowCells = await getRowCells({
+            rowIdx: i,
+            columns: columnsReferences,
+          });
+          args.data = Object.fromEntries(
+            rowCells.map((cell) => [cell.column!.name, cell.value]),
+          );
+        }
+
+        const response = await runPromptExecution(args);
 
         await column.addCell({
           idx: i,
@@ -64,6 +85,7 @@ export const useAddColumnUseCase = () =>
       process: column.process
         ? {
             modelName: column.process.modelName,
+            columnsReferences: column.process.columnsReferences,
             prompt: column.process.prompt,
             limit: column.process.limit,
             offset: column.process.offset,

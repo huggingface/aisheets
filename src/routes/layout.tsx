@@ -13,12 +13,6 @@ export const onGet: RequestHandler = async ({
     staleWhileRevalidate: 60 * 60 * 24 * 7,
     maxAge: 5,
   });
-
-  const session = cookie.get('session');
-
-  if (session) {
-    sharedMap.set('session', session.json());
-  }
 };
 
 export default component$(() => {

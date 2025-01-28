@@ -49,7 +49,6 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
       modelName.value = 'meta-llama/Llama-2-7b-chat-hf';
       rowsToGenerate.value = '3';
       columnsReferences.value = [];
-
       variables.value = columns.value.map((c) => ({
         id: c.id,
         name: c.name,

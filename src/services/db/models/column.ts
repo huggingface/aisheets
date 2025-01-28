@@ -76,6 +76,10 @@ ColumnModel.hasMany(ColumnCellModel, {
   foreignKey: 'columnId',
   as: 'cells',
 });
+ColumnCellModel.belongsTo(ColumnModel, {
+  foreignKey: 'columnId',
+  as: 'column',
+});
 
 ColumnModel.hasOne(ProcessModel, {
   sourceKey: 'id',

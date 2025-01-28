@@ -34,6 +34,7 @@ test('should save 10 cells', async () => {
     kind: 'dynamic',
     executionProcess: {
       limit: 10,
+      columnsReferences: [],
       modelName: 'modelName',
       offset: 0,
       prompt: 'prompt',

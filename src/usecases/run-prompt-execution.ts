@@ -76,7 +76,7 @@ export const runPromptExecution = async ({
     const response = await chatCompletion({
       model: modelName,
       messages: [{ role: 'user', content: inputPrompt }],
-      accessToken: accessToken,
+      accessToken,
     });
     return { value: response.choices[0].message.content };
   } catch (e) {

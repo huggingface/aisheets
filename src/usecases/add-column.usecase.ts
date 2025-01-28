@@ -29,7 +29,6 @@ export const useAddColumnUseCase = () =>
 
       const examples: string[] = [];
       for (let i = offset; i < limit + offset; i++) {
-        
         const args = {
           accessToken: session.token,
           modelName,

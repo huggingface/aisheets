@@ -41,9 +41,17 @@ export const onGet = async ({
       redirectedUrl: url.href,
     });
 
+    const session = {
+      token: auth.accessToken,
+      user: {
+        name: auth.userInfo.name,
+        picture: auth.userInfo.picture,
+      },
+    };
+
     cookie.delete('session');
 
-    cookie.set('session', auth, {
+    cookie.set('session', session, {
       secure: true,
       httpOnly: !isDev,
       path: '/',

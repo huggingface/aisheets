@@ -6,12 +6,10 @@ interface CreateDatasetParams {
 }
 
 export const getOrCreateDataset = async ({
-  username,
-}: { username: string }): Promise<DatasetModel> => {
+  createdBy,
+}: { createdBy: string }): Promise<DatasetModel> => {
   const dataset = await DatasetModel.findOne({
-    where: {
-      createdBy: username,
-    },
+    where: { createdBy },
   });
 
   if (dataset) {
@@ -20,7 +18,7 @@ export const getOrCreateDataset = async ({
 
   return await createDataset({
     name: 'Default Dataset',
-    createdBy: username,
+    createdBy,
   });
 };
 

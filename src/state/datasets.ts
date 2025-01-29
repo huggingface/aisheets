@@ -24,7 +24,7 @@ export const loadDatasetsFromServer = server$(async function (
   this: RequestEventBase<QwikCityPlatform>,
 ): Promise<Dataset[]> {
   const session = useServerSession(this);
-  const dataset = await getOrCreateDataset({ username: session.user.name });
+  const dataset = await getOrCreateDataset({ createdBy: session.user.name });
 
   return [
     {

@@ -1,4 +1,4 @@
-import { $, component$, useSignal, useStore, useTask$ } from '@builder.io/qwik';
+import { component$, useStore, useTask$ } from '@builder.io/qwik';
 import {
   TbAlignJustified,
   TbBraces,
@@ -7,20 +7,15 @@ import {
   TbSparkles,
   TbToggleLeft,
 } from '@qwikest/icons/tablericons';
-import { useModals } from '~/components/hooks';
-import { Skeleton } from '~/components/ui/skeleton/skeleton';
-import { Textarea } from '~/components/ui/textarea/textarea';
-import { RunExecutionSidebar } from '~/features/run-execution/run-execution-sidebar';
+import { TableBody } from '~/components/ui/table/table-body';
+import { TableHeader } from '~/components/ui/table/table-header';
 
 import {
-  type Cell,
   type Column,
   type ColumnKind,
   type ColumnType,
   useColumnsStore,
 } from '~/state';
-import { useReRunExecution } from '~/usecases/run-execution.usecase';
-import { useValidateCellUseCase } from '~/usecases/validate-cell.usecase';
 
 const Icons: Record<Column['type'], any> = {
   text: TbAlignJustified,
@@ -29,7 +24,7 @@ const Icons: Record<Column['type'], any> = {
   object: TbBraces,
   array: TbBrackets,
 };
-const ColumnIcon = component$<{ type: ColumnType; kind: ColumnKind }>(
+export const ColumnIcon = component$<{ type: ColumnType; kind: ColumnKind }>(
   ({ type, kind }) => {
     if (kind === 'dynamic') return <TbSparkles />;
 
@@ -81,186 +76,5 @@ export const Table = component$(() => {
         <TableBody />
       </table>
     </div>
-  );
-});
-
-const TableHeader = component$(() => {
-  const { state: columns, replaceCell } = useColumnsStore();
-  const runExecution = useReRunExecution();
-  const { openRunExecutionSidebar, closeRunExecutionSidebar } = useModals(
-    'runExecutionSidebar',
-  );
-  const selectedColumnForExecution = useSignal<Column>();
-
-  const handleHeaderClick = $((columnSelected: Column) => {
-    selectedColumnForExecution.value = columnSelected;
-
-    openRunExecutionSidebar();
-  });
-
-  const onRunExecution = $(async (columnId: string) => {
-    closeRunExecutionSidebar();
-
-    const response = await runExecution(columnId);
-
-    for await (const { cell } of response) {
-      replaceCell(cell);
-    }
-  });
-
-  return (
-    <thead>
-      <tr>
-        <th class="max-w-8 border bg-gray-50 px-2 py-2 text-center hover:bg-sky-100">
-          <input type="checkbox" />
-        </th>
-
-        {columns.value.map((column) => (
-          <th
-            key={column.id}
-            class="bg-purple-200 text-left font-light hover:bg-purple-50"
-            onDblClick$={() => handleHeaderClick(column)}
-          >
-            <div class="flex flex-row items-center justify-between">
-              <div class="flex w-full items-center gap-1 px-2">
-                <ColumnIcon type={column.type} kind={column.kind} />
-                {column.name}
-              </div>
-              <div class="h-8  w-2 cursor-col-resize" />
-            </div>
-          </th>
-        ))}
-      </tr>
-
-      <RunExecutionSidebar
-        column={selectedColumnForExecution}
-        onRunExecution={onRunExecution}
-      />
-    </thead>
-  );
-});
-
-const TableBody = component$(() => {
-  const { state: columns } = useColumnsStore();
-  const rowCount = columns.value[0]?.cells.length || 0;
-
-  const getCell = (column: Column, rowIndex: number): Cell => {
-    const cell = column.cells[rowIndex];
-
-    if (!cell) {
-      return {
-        id: `${column.id}-${rowIndex}`,
-        value: '',
-        error: '',
-        validated: false,
-        columnId: column.id,
-        updatedAt: new Date(),
-        idx: rowIndex,
-      };
-    }
-
-    return cell;
-  };
-
-  return (
-    <tbody>
-      {Array.from({ length: rowCount }).map((_, rowIndex) => (
-        <tr key={rowIndex} class="hover:bg-gray-100">
-          <td class="max-w-6 border px-2 py-2 text-center">
-            <input type="checkbox" />
-          </td>
-          {columns.value.map((column) => {
-            const cell = getCell(column, rowIndex);
-
-            return (
-              <TableCell key={`${cell.id}-${cell.updatedAt}`} cell={cell} />
-            );
-          })}
-        </tr>
-      ))}
-    </tbody>
-  );
-});
-
-const TableCell = component$<{ cell: Cell }>(({ cell }) => {
-  const isEditing = useSignal(false);
-  const originalValue = useSignal(cell.value);
-  const newCellValue = useSignal(cell.value);
-
-  const elementRef = useSignal<HTMLElement>();
-  const editCellValueInput = useSignal<HTMLElement>();
-
-  const validateCell = useValidateCellUseCase();
-
-  useTask$(({ track }) => {
-    track(isEditing);
-
-    if (isEditing.value) {
-      originalValue.value = cell.value;
-
-      newCellValue.value = originalValue.value;
-
-      editCellValueInput.value?.focus();
-    }
-  });
-
-  const onUpdateCell = $(async () => {
-    originalValue.value = newCellValue.value;
-
-    await validateCell({
-      id: cell.id,
-
-      value: newCellValue.value!,
-    });
-
-    isEditing.value = false;
-  });
-
-  if (!cell.value && !cell.error) {
-    return (
-      <td class="border-2 border-purple-200 px-2">
-        <div class="flex flex-col gap-2">
-          <Skeleton class="h-6 w-full" />
-          <Skeleton class="h-3 w-full" />
-          <Skeleton class="h-3 w-full" />
-          <Skeleton class="h-3 w-full" />
-          <Skeleton class="h-3 w-full" />
-        </div>
-      </td>
-    );
-  }
-
-  if (isEditing.value) {
-    return (
-      <td
-        ref={elementRef}
-        class="cursor-pointer text-wrap border-2 border-purple-200 px-2"
-      >
-        <Textarea
-          ref={editCellValueInput}
-          bind:value={newCellValue}
-          onKeyUp$={(e) => {
-            if (e.key === 'Enter' && e.altKey) {
-              onUpdateCell();
-            }
-          }}
-        />
-      </td>
-    );
-  }
-
-  return (
-    <td
-      class="cursor-pointer text-wrap border-2 border-purple-200 px-2"
-      onDblClick$={() => {
-        isEditing.value = true;
-      }}
-    >
-      {originalValue.value ? (
-        originalValue.value
-      ) : (
-        <span class="text-red-500 ml-2">⚠ {cell.error}</span>
-      )}
-    </td>
   );
 });

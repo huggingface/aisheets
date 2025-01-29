@@ -1,15 +1,6 @@
-import {
-  $,
-  type Signal,
-  createContextId,
-  useContext,
-  useContextProvider,
-  useSignal,
-} from '@builder.io/qwik';
-import { routeLoader$ } from '@builder.io/qwik-city';
+import { $, useContext, useSignal, useTask$ } from '@builder.io/qwik';
 
-import { getAllColumns } from '~/services';
-import type { Dataset } from '~/state/datasets';
+import { type Dataset, datasetsContext } from '~/state/datasets';
 
 export type ColumnType = 'text' | 'array' | 'number' | 'boolean' | 'object';
 export type ColumnKind = 'static' | 'dynamic';
@@ -47,14 +38,21 @@ export interface Column {
   dataset: Omit<Dataset, 'columns'>;
 }
 
-const columnContext = createContextId<Signal<Column[]>>('column.context');
-
-export const useLoadColumns = async (columns: Column[]) => {
-  useContextProvider(columnContext, useSignal(columns));
-};
-
 export const useColumnsStore = () => {
-  const columns = useContext(columnContext);
+  const dataset = useContext(datasetsContext);
+  const columns = useSignal(dataset.value.columns);
+
+  useTask$(({ track }) => {
+    track(columns);
+
+    dataset.value.columns = [...columns.value];
+  });
+
+  useTask$(({ track }) => {
+    track(dataset);
+
+    columns.value = [...dataset.value.columns];
+  });
 
   return {
     state: columns,

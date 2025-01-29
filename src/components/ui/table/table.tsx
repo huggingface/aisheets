@@ -15,6 +15,7 @@ import {
   TbToggleLeft,
 } from '@qwikest/icons/tablericons';
 import { useModals } from '~/components/hooks';
+import { Skeleton } from '~/components/ui/skeleton/skeleton';
 import { Textarea } from '~/components/ui/textarea/textarea';
 import { RunExecutionSidebar } from '~/features/run-execution/run-execution-sidebar';
 
@@ -157,7 +158,7 @@ const TableBody = component$(() => {
       return {
         id: `${column.id}-${rowIndex}`,
         value: '',
-        error: 'No data',
+        error: '',
         validated: false,
         columnId: column.id,
         updatedAt: new Date(),
@@ -231,6 +232,20 @@ const TableCell = component$<{ cell: Cell }>(({ cell }) => {
 
     isEditing.value = false;
   });
+
+  if (!cell.value && !cell.error) {
+    return (
+      <td class="border-2 border-purple-200 px-2">
+        <div class="flex flex-col gap-2">
+          <Skeleton class="h-6 w-full" />
+          <Skeleton class="h-3 w-full" />
+          <Skeleton class="h-3 w-full" />
+          <Skeleton class="h-3 w-full" />
+          <Skeleton class="h-3 w-full" />
+        </div>
+      </td>
+    );
+  }
 
   if (isEditing.value) {
     return (

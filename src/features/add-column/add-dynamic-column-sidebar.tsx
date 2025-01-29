@@ -155,14 +155,6 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
 
               <Label for="column-model" class="flex gap-1">
                 Model
-                <a
-                  href="https://huggingface.co/playground"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="text-blue-500 underline hover:text-blue-700"
-                >
-                  (View in HF playground)
-                </a>
               </Label>
               <Select.Root id="column-model" bind:value={modelName}>
                 <Select.Trigger class="bg-background border-input">

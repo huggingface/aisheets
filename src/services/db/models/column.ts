@@ -1,6 +1,7 @@
 import { isDev } from '@builder.io/qwik';
 import type {
   Association,
+  ForeignKey,
   HasManyCreateAssociationMixin,
   NonAttribute,
 } from 'sequelize';
@@ -14,9 +15,11 @@ import {
 
 import { db } from '~/services/db';
 import { ColumnCellModel } from '~/services/db/models/cell';
+import type { DatasetModel } from '~/services/db/models/dataset';
 import { ProcessModel } from '~/services/db/models/process';
+import type { Cell, ColumnKind, ColumnType, Dataset } from '~/state';
+
 //Review the path
-import type { Cell, ColumnKind, ColumnType } from '~/state';
 
 export class ColumnModel extends Model<
   InferAttributes<ColumnModel>,
@@ -26,8 +29,9 @@ export class ColumnModel extends Model<
   declare name: string;
   declare type: ColumnType;
   declare kind: ColumnKind;
-  // declare datasetId: ForeignKey<DatasetModel["id"]>;
+  declare datasetId: ForeignKey<DatasetModel['id']>;
 
+  declare dataset: NonAttribute<Dataset>;
   declare cells: NonAttribute<Cell[]>;
 
   declare createCell: HasManyCreateAssociationMixin<
@@ -37,13 +41,14 @@ export class ColumnModel extends Model<
 
   declare static associations: {
     cells: Association<ColumnModel, ColumnCellModel>;
+    dataset: Association<ColumnModel, DatasetModel>;
   };
 }
 
 ColumnModel.init(
   {
     id: {
-      type: DataTypes.UUIDV4,
+      type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
@@ -60,10 +65,10 @@ ColumnModel.init(
       type: DataTypes.STRING,
       allowNull: false,
     },
-    // datasetId: {
-    //   type: DataTypes.UUIDV4,
-    //   allowNull: false,
-    // },
+    datasetId: {
+      type: DataTypes.UUID,
+      allowNull: false,
+    },
   },
   {
     sequelize: db,

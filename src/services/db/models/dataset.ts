@@ -20,10 +20,9 @@ export class DatasetModel extends Model<
 > {
   declare id: CreationOptional<string>;
   declare name: string;
+  declare createdBy: string;
 
   declare columns: NonAttribute<Column[]>;
-
-  // declare createColumn: HasManyCreateAssociationMixin<ColumnModel, "datasetId">;
 
   declare static associations: {
     columns: Association<DatasetModel, ColumnModel>;
@@ -33,11 +32,15 @@ export class DatasetModel extends Model<
 DatasetModel.init(
   {
     id: {
-      type: DataTypes.UUIDV4,
+      type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
     name: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    createdBy: {
       type: DataTypes.STRING,
       allowNull: false,
     },
@@ -52,6 +55,12 @@ DatasetModel.hasMany(ColumnModel, {
   sourceKey: 'id',
   foreignKey: 'datasetId',
   as: 'columns',
+});
+
+ColumnModel.belongsTo(DatasetModel, {
+  targetKey: 'id',
+  foreignKey: 'datasetId',
+  as: 'dataset',
 });
 
 await DatasetModel.sync({ alter: isDev });

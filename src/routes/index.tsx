@@ -12,7 +12,7 @@ import { useHome } from '~/routes/useHome';
 import * as hub from '@huggingface/hub';
 import { useServerSession } from '~/state/session';
 
-export { useColumnsLoader } from '~/state';
+export { useColumnsLoader, useDatasetsLoader } from '~/state';
 
 // See https://huggingface.co/docs/hub/en/spaces-oauth
 const HF_TOKEN = process.env.HF_TOKEN;

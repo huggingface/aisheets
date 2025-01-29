@@ -3,6 +3,7 @@ import {
   createContextId,
   useContext,
   useContextProvider,
+  useSignal,
 } from '@builder.io/qwik';
 import {
   type RequestEventBase,
@@ -19,10 +20,17 @@ export interface Dataset {
 }
 
 const datasetsContext = createContextId<Signal<Dataset[]>>('datasets.context');
+export const useLoadDatasets = () => {
+  const datasets = useDatasetsLoader();
 
-export const loadDatasetsFromServer = server$(async function (
+  useContextProvider(datasetsContext, datasets);
+
+  return datasets;
+};
+
+export const useDatasetsLoader = routeLoader$<Dataset[]>(async function (
   this: RequestEventBase<QwikCityPlatform>,
-): Promise<Dataset[]> {
+) {
   const session = useServerSession(this);
   const dataset = await getOrCreateDataset({ createdBy: session.user.name });
 
@@ -35,28 +43,15 @@ export const loadDatasetsFromServer = server$(async function (
   ];
 });
 
-export const useLoadDatasets = () => {
-  const datasets = useDatasetsLoader();
-
-  useContextProvider(datasetsContext, datasets);
-
-  return datasets;
-};
-
-export const useDatasetsLoader = routeLoader$<Dataset[]>(async () =>
-  loadDatasetsFromServer(),
-);
-
 export const useDatasetsStore = () => {
   const datasets = useContext(datasetsContext);
+  const activeDataset = useSignal(datasets.value[0]);
 
   return {
     state: datasets,
-    getCurrentDataset: () => {
-      return datasets.value[0];
-    },
+    activeDataset,
     setDatasets: (newDatasets: Dataset[]) => {
-      datasets.value = newDatasets;
+      datasets.value = [...newDatasets];
     },
   };
 };

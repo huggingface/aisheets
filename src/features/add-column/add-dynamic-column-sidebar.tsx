@@ -1,9 +1,11 @@
 import {
   $,
   type QRL,
+  Resource,
   component$,
+  useResource$,
   useSignal,
-  useVisibleTask$,
+  useTask$,
 } from '@builder.io/qwik';
 import { LuCheck } from '@qwikest/icons/lucide';
 import { TbX } from '@qwikest/icons/tablericons';
@@ -20,13 +22,16 @@ interface SidebarProps {
   onCreateColumn: QRL<(createColumn: CreateColumn) => void>;
 }
 
+const MODEL_URL =
+  'https://huggingface.co/api/models?other=text-generation-inference&inference=warm';
+const DEFAULT_MODEL = 'google/gemma-2-2b-it';
+
 interface HFModel {
   id: string;
+  tags?: string[];
 }
 
 const outputType = ['text', 'array', 'number', 'boolean', 'object'];
-const DEFAULT_MODEL = 'google/gemma-2-2b-it';
-
 export const AddDynamicColumnSidebar = component$<SidebarProps>(
   ({ onCreateColumn }) => {
     const { isOpenAddDynamicColumnSidebar, closeAddDynamicColumnSidebar } =
@@ -44,10 +49,8 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
       columnsReferences.value = variables.map((v) => v.id);
     });
     const modelName = useSignal(DEFAULT_MODEL);
-    const models = useSignal<HFModel[]>([]);
-    const isLoadingModels = useSignal(true);
 
-    useVisibleTask$(({ track }) => {
+    useTask$(({ track }) => {
       track(isOpenAddDynamicColumnSidebar);
 
       type.value = 'text';
@@ -62,27 +65,31 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
       }));
     });
 
-    useTask$(async () => {
-      try {
-        const response = await fetch(
-          'https://huggingface.co/api/models?other=text-generation-inference&inference=warm',
-        );
-        const data = await response.json();
+    const loadModels = useResource$(async ({ track, cleanup }) => {
+      track(isOpenAddDynamicColumnSidebar);
 
-        models.value = data
-          .filter((model: any) =>
-            model.tags?.includes('text-generation-inference'),
-          )
-          .map((model: any) => ({
-            id: model.id,
-          }));
+      if (!isOpenAddDynamicColumnSidebar) return Promise.resolve([]);
 
-        if (!models.value.find((model) => model.id === DEFAULT_MODEL)) {
-          modelName.value = models.value[0]?.id || DEFAULT_MODEL;
-        }
-      } finally {
-        isLoadingModels.value = false;
+      const controller = new AbortController();
+      cleanup(() => controller.abort());
+
+      const response = await fetch(MODEL_URL, {
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch models');
       }
+
+      const data = (await response.json()) as HFModel[];
+
+      return data
+        .filter((model: any) =>
+          model.tags?.includes('text-generation-inference'),
+        )
+        .map((model: any) => ({
+          id: model.id,
+        }));
     });
 
     const onCreate = $(() => {
@@ -129,6 +136,7 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
               />
 
               <Label for="column-output-type">Output type</Label>
+
               <Select.Root id="column-output-type" bind:value={type}>
                 <Select.Trigger>
                   <Select.DisplayValue />
@@ -155,30 +163,34 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
               <Label for="column-model" class="flex gap-1">
                 Model
               </Label>
-              <Select.Root id="column-model" bind:value={modelName}>
-                <Select.Trigger class="bg-background border-input">
-                  <Select.DisplayValue />
-                </Select.Trigger>
-                <Select.Popover class="bg-background border border-border max-h-[200px] overflow-y-auto top-[100%] bottom-auto">
-                  {isLoadingModels.value ? (
-                    <Select.Item class="text-foreground hover:bg-accent">
-                      <Select.ItemLabel>Loading models...</Select.ItemLabel>
-                    </Select.Item>
-                  ) : (
-                    models.value.map((model) => (
-                      <Select.Item
-                        key={model.id}
-                        class="text-foreground hover:bg-accent"
-                      >
-                        <Select.ItemLabel>{model.id}</Select.ItemLabel>
-                        <Select.ItemIndicator>
-                          <LuCheck class="h-4 w-4" />
-                        </Select.ItemIndicator>
-                      </Select.Item>
-                    ))
-                  )}
-                </Select.Popover>
-              </Select.Root>
+              <Resource
+                value={loadModels}
+                onPending={() => {
+                  return <Select.Disabled>Loading models...</Select.Disabled>;
+                }}
+                onResolved={(models) => {
+                  return (
+                    <Select.Root id="column-model" bind:value={modelName}>
+                      <Select.Trigger class="bg-background border-input">
+                        <Select.DisplayValue />
+                      </Select.Trigger>
+                      <Select.Popover class="bg-background border border-border max-h-[200px] overflow-y-auto top-[100%] bottom-auto">
+                        {models.map((model) => (
+                          <Select.Item
+                            key={model.id}
+                            class="text-foreground hover:bg-accent"
+                          >
+                            <Select.ItemLabel>{model.id}</Select.ItemLabel>
+                            <Select.ItemIndicator>
+                              <LuCheck class="h-4 w-4" />
+                            </Select.ItemIndicator>
+                          </Select.Item>
+                        ))}
+                      </Select.Popover>
+                    </Select.Root>
+                  );
+                }}
+              />
 
               <Label for="column-rows">Rows generated</Label>
               <Input

@@ -1,7 +1,7 @@
 import { $, component$, useSignal } from '@builder.io/qwik';
 import { useModals } from '~/components/hooks';
-import { ColumnIcon } from '~/components/ui/table/table';
 import { RunExecutionSidebar } from '~/features/run-execution/run-execution-sidebar';
+import { ColumnIcon } from '~/features/table/table';
 import { type Column, useColumnsStore } from '~/state';
 import { useReRunExecution } from '~/usecases/run-execution.usecase';
 

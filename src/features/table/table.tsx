@@ -7,8 +7,8 @@ import {
   TbSparkles,
   TbToggleLeft,
 } from '@qwikest/icons/tablericons';
-import { TableBody } from '~/components/ui/table/table-body';
-import { TableHeader } from '~/components/ui/table/table-header';
+import { TableBody } from '~/features/table/table-body';
+import { TableHeader } from '~/features/table/table-header';
 
 import {
   type Column,

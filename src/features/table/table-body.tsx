@@ -1,5 +1,5 @@
 import { component$ } from '@builder.io/qwik';
-import { TableCell } from '~/components/ui/table/table-cell';
+import { TableCell } from '~/features/table/table-cell';
 import { type Cell, type Column, useColumnsStore } from '~/state';
 
 export const TableBody = component$(() => {

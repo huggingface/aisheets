@@ -1,19 +1,27 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { ColumnCellModel } from '~/services/db/models/cell';
 import { ColumnModel } from '~/services/db/models/column';
+import { DatasetModel } from '~/services/db/models/dataset';
 import { getRowCells } from '~/services/repository/cells';
 
 afterEach(async () => {
+  await DatasetModel.destroy({ where: {} });
   await ColumnCellModel.destroy({ where: {} });
   await ColumnModel.destroy({ where: {} });
 });
 
 describe('getRowCells', () => {
   it('should return an empty array for a non-existing row idx', async () => {
+    const dataset = await DatasetModel.create({
+      name: 'Test Dataset',
+      createdBy: 'test',
+    });
+
     const column = await ColumnModel.create({
       name: 'Test Column',
       type: 'text',
       kind: 'static',
+      datasetId: dataset.id,
     });
 
     const cell = await ColumnCellModel.create({
@@ -27,21 +35,29 @@ describe('getRowCells', () => {
   });
 
   it('should return an array of cells for a given row', async () => {
+    const dataset = await DatasetModel.create({
+      name: 'Test Dataset',
+      createdBy: 'test',
+    });
+
     const columns = await ColumnModel.bulkCreate([
       {
         name: 'Test Column',
         type: 'text',
         kind: 'static',
+        datasetId: dataset.id,
       },
       {
         name: 'Test Column 2',
         type: 'number',
         kind: 'static',
+        datasetId: dataset.id,
       },
       {
         name: 'Test Column 3',
         type: 'boolean',
         kind: 'static',
+        datasetId: dataset.id,
       },
     ]);
 

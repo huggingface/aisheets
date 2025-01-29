@@ -1,11 +1,4 @@
-import {
-  $,
-  component$,
-  useOn,
-  useSignal,
-  useStore,
-  useTask$,
-} from '@builder.io/qwik';
+import { $, component$, useSignal, useStore, useTask$ } from '@builder.io/qwik';
 import {
   TbAlignJustified,
   TbBraces,
@@ -198,16 +191,6 @@ const TableCell = component$<{ cell: Cell }>(({ cell }) => {
   const editCellValueInput = useSignal<HTMLElement>();
 
   const validateCell = useValidateCellUseCase();
-
-  useOn(
-    'click',
-    $((event) => {
-      const target = event.target as HTMLElement;
-      if (elementRef.value && !elementRef.value.contains(target)) {
-        isEditing.value = false;
-      }
-    }),
-  );
 
   useTask$(({ track }) => {
     track(isEditing);

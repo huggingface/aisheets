@@ -1,4 +1,4 @@
-# Argilla V3
+# easydatagen
 
 ## Dev dependencies on your vscode
 

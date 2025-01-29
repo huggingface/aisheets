@@ -106,11 +106,11 @@ export default component$(() => {
 });
 
 export const head: DocumentHead = {
-  title: 'Argilla - V3',
+  title: 'easydatagen',
   meta: [
     {
       name: 'description',
-      content: 'Argilla - V3',
+      content: 'easydatagen',
     },
   ],
 };

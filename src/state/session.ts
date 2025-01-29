@@ -9,15 +9,21 @@ interface Session {
   };
 }
 
-export const useServerSession = ({ sharedMap }: RequestEventBase): Session => {
+export const useServerSession = (request: RequestEventBase): Session => {
   if (isBrowser)
     throw new Error('useServerSession must be used on the server.');
 
-  const session = sharedMap.get('session')!;
+  const session = request.sharedMap.get('session')!;
 
   if (!session) {
     throw new Error('session is undefined');
   }
 
-  return session;
+  return {
+    token: session.token,
+    user: {
+      name: session.user.name,
+      picture: session.user.picture,
+    },
+  };
 };

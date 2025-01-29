@@ -1,4 +1,4 @@
-# Argilla V3
+# easydatagen
 
 ## Dev dependencies on your vscode
 
@@ -35,6 +35,19 @@ Inside your project, you'll see the following directory structure:
 - `public`: Any static assets, like images, can be placed in the public directory. Please see the [Vite public directory](https://vitejs.dev/guide/assets.html#the-public-directory) for more info.
 
 ## Development
+
+Run this on your root folder
+```sh
+touch .env.local
+```
+
+Add in your `.env.local` file the following variables:
+
+```
+OAUTH_CLIENT_ID
+HF_TOKEN=X
+```
+Please note that if you define the `HF_TOKEN`, this variable will take priority over `OAUTH_CLIENT_ID`.
 
 Development mode uses [Vite's development server](https://vitejs.dev/). The `dev` command will server-side render (SSR) the output during development.
 

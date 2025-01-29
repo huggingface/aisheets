@@ -4,19 +4,26 @@ import { type CreateColumn, useColumnsStore, useLoadColumns } from '~/state';
 import { useAddColumnUseCase } from '~/usecases/add-column.usecase';
 
 export const useHome = () => {
-  const columns = useLoadColumns();
-  const { addColumn } = useColumnsStore();
+  useLoadColumns();
+  const { addColumn, addCell } = useColumnsStore();
 
   const execute = useAddColumnUseCase();
 
   const onCreateColumn = $(async (createColumn: CreateColumn) => {
-    const column = await execute(createColumn);
+    const response = await execute(createColumn);
 
-    addColumn(column);
+    for await (const { column, cell } of response) {
+      if (column) {
+        addColumn(column);
+      }
+
+      if (cell) {
+        addCell(cell);
+      }
+    }
   });
 
   return {
-    columns,
     onCreateColumn,
   };
 };

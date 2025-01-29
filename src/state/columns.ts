@@ -30,8 +30,11 @@ export interface CreateColumn {
 export type Cell = {
   id: string;
   idx: number;
+  columnId: string;
+  validated: boolean;
   value?: string;
   error?: string;
+  updatedAt: Date;
 };
 
 export interface Column {
@@ -72,6 +75,26 @@ export const useColumnsStore = () => {
     }),
     deleteColumn: $((deleted: Column) => {
       columns.value = columns.value.filter((c) => c.name !== deleted.name);
+    }),
+    addCell: $((cell: Cell) => {
+      const column = columns.value.find((c) => c.id === cell.columnId);
+
+      if (column) {
+        column.cells.push(cell);
+      }
+
+      columns.value = [...columns.value];
+    }),
+    replaceCell: $((cell: Cell) => {
+      const column = columns.value.find((c) => c.id === cell.columnId);
+
+      if (!column) return;
+
+      column.cells = [
+        ...column.cells.map((c) => (c.id === cell.id ? cell : c)),
+      ];
+
+      columns.value = [...columns.value];
     }),
   };
 };

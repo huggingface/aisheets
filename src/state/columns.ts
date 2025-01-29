@@ -8,6 +8,7 @@ import {
 import { routeLoader$ } from '@builder.io/qwik-city';
 
 import { getAllColumns } from '~/services';
+import type { Dataset } from '~/state/datasets';
 
 export type ColumnType = 'text' | 'array' | 'number' | 'boolean' | 'object';
 export type ColumnKind = 'static' | 'dynamic';
@@ -25,6 +26,7 @@ export interface CreateColumn {
   type: ColumnType;
   kind: ColumnKind;
   executionProcess?: Process;
+  dataset: Dataset;
 }
 
 export type Cell = {
@@ -41,6 +43,7 @@ export interface Column {
   kind: ColumnKind;
   process?: Process;
   cells: Cell[];
+  dataset: Dataset;
 }
 
 const columnContext = createContextId<Signal<Column[]>>('column.context');

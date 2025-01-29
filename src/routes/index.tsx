@@ -10,6 +10,7 @@ import { Table } from '~/components';
 import { useHome } from '~/routes/useHome';
 
 import * as hub from '@huggingface/hub';
+import { useDatasetsStore } from '~/state/datasets';
 import { useServerSession } from '~/state/session';
 
 export { useColumnsLoader, useDatasetsLoader } from '~/state';
@@ -92,10 +93,12 @@ export const useSession = routeLoader$(useServerSession);
 export default component$(() => {
   const session = useSession();
   const { columns, onCreateColumn } = useHome();
+  const { activeDataset } = useDatasetsStore();
 
   return (
     <div class="mx-auto px-4 pt-2">
       <h2>Hello {session.value.user.name} 👋</h2>
+      <h3>You are working with `{activeDataset.value.name}` dataset</h3>
       <Commands />
 
       <Table columns={columns} />

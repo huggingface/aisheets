@@ -12,13 +12,14 @@ export const useAddColumnUseCase = () =>
   ): Promise<Column> {
     const session = useServerSession(this);
 
-    const { name, type, kind, executionProcess } = newColum;
+    const { name, type, kind, dataset, executionProcess } = newColum;
 
     const column = await addColumn(
       {
         name,
         type,
         kind,
+        dataset,
       },
       executionProcess,
     );

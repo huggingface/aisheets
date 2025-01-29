@@ -10,10 +10,10 @@ import { Table } from '~/components';
 import { useHome } from '~/routes/useHome';
 
 import * as hub from '@huggingface/hub';
-import { useDatasetsStore } from '~/state/datasets';
+import { useDatasetsLoader, useDatasetsStore } from '~/state/datasets';
 import { useServerSession } from '~/state/session';
 
-export { useColumnsLoader, useDatasetsLoader } from '~/state';
+export { useDatasetsLoader } from '~/state';
 
 // See https://huggingface.co/docs/hub/en/spaces-oauth
 const HF_TOKEN = process.env.HF_TOKEN;
@@ -92,8 +92,7 @@ export const useSession = routeLoader$(useServerSession);
 
 export default component$(() => {
   const session = useSession();
-  const { columns, onCreateColumn } = useHome();
-  const { activeDataset } = useDatasetsStore();
+  const { columns, activeDataset, onCreateColumn } = useHome();
 
   return (
     <div class="mx-auto px-4 pt-2">

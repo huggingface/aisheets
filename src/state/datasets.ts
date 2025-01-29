@@ -10,48 +10,51 @@ import {
   routeLoader$,
   server$,
 } from '@builder.io/qwik-city';
-import { getOrCreateDataset } from '~/services';
+import { getAllColumns, getOrCreateDataset } from '~/services';
+import { type Column, useColumnsStore, useLoadColumns } from '~/state/columns';
 import { useServerSession } from '~/state/session';
 
 export interface Dataset {
   id: string;
   name: string;
   createdBy: string;
+  columns: Column[];
 }
 
-const datasetsContext = createContextId<Signal<Dataset[]>>('datasets.context');
+const datasetsContext = createContextId<Signal<Dataset>>('datasets.context');
 export const useLoadDatasets = () => {
-  const datasets = useDatasetsLoader();
+  const dataset = useDatasetsLoader();
+  useLoadColumns(dataset.value.columns);
 
-  useContextProvider(datasetsContext, datasets);
-
-  return datasets;
+  useContextProvider(datasetsContext, dataset);
 };
 
-export const useDatasetsLoader = routeLoader$<Dataset[]>(async function (
+export const useDatasetsLoader = routeLoader$<Dataset>(async function (
   this: RequestEventBase<QwikCityPlatform>,
 ) {
   const session = useServerSession(this);
   const dataset = await getOrCreateDataset({ createdBy: session.user.name });
+  const columns = await getAllColumns(dataset.id);
 
-  return [
-    {
-      id: dataset.id,
-      name: dataset.name,
-      createdBy: dataset.createdBy,
-    },
-  ];
+  return {
+    id: dataset.id,
+    name: dataset.name,
+    createdBy: dataset.createdBy,
+    columns,
+  };
 });
 
 export const useDatasetsStore = () => {
   const datasets = useContext(datasetsContext);
-  const activeDataset = useSignal(datasets.value[0]);
+  const activeDataset = useSignal(datasets.value);
 
   return {
     state: datasets,
     activeDataset,
-    setDatasets: (newDatasets: Dataset[]) => {
-      datasets.value = [...newDatasets];
+    setDataset: (newDataset: Dataset) => {
+      datasets.value = {
+        ...newDataset,
+      };
     },
   };
 };

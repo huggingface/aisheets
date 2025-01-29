@@ -4,6 +4,7 @@ import {
   createContextId,
   useContext,
   useContextProvider,
+  useSignal,
 } from '@builder.io/qwik';
 import { routeLoader$ } from '@builder.io/qwik-city';
 
@@ -43,19 +44,14 @@ export interface Column {
   kind: ColumnKind;
   process?: Process;
   cells: Cell[];
-  dataset: Dataset;
+  dataset: Omit<Dataset, 'columns'>;
 }
 
 const columnContext = createContextId<Signal<Column[]>>('column.context');
-export const useLoadColumns = () => {
-  const columns = useColumnsLoader();
 
-  useContextProvider(columnContext, columns);
-
-  return columns;
+export const useLoadColumns = async (columns: Column[]) => {
+  useContextProvider(columnContext, useSignal(columns));
 };
-
-export const useColumnsLoader = routeLoader$<Column[]>(() => getAllColumns());
 
 export const useColumnsStore = () => {
   const columns = useContext(columnContext);

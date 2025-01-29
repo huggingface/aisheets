@@ -10,11 +10,9 @@ import {
 import { useAddColumnUseCase } from '~/usecases/add-column.usecase';
 
 export const useHome = () => {
-  const datasets = useLoadDatasets();
+  useLoadDatasets();
   const { activeDataset } = useDatasetsStore();
-
-  const columns = useLoadColumns();
-  const { addColumn } = useColumnsStore();
+  const { state: columns, addColumn } = useColumnsStore();
 
   const execute = useAddColumnUseCase();
 
@@ -28,8 +26,8 @@ export const useHome = () => {
   });
 
   return {
-    datasets,
     columns,
+    activeDataset,
     onCreateColumn,
   };
 };

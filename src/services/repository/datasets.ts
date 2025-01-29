@@ -1,4 +1,5 @@
 import { DatasetModel } from '~/services/db/models/dataset';
+import type { Dataset } from '~/state';
 interface CreateDatasetParams {
   name: string;
   description?: string;
@@ -7,29 +8,31 @@ interface CreateDatasetParams {
 
 export const getOrCreateDataset = async ({
   createdBy,
-}: { createdBy: string }): Promise<DatasetModel> => {
-  const dataset = await DatasetModel.findOne({
+}: { createdBy: string }): Promise<Dataset> => {
+  let dataset = await DatasetModel.findOne({
     where: { createdBy },
   });
 
-  if (dataset) {
-    return dataset;
+  if (!dataset) {
+    dataset = await createDataset({
+      name: 'My Dataset',
+      createdBy,
+    });
   }
 
-  return await createDataset({
-    name: 'Default Dataset',
-    createdBy,
-  });
+  return {
+    id: dataset.id,
+    name: dataset.name,
+    createdBy: dataset.createdBy,
+  };
 };
 
 export const createDataset = async ({
   name,
   createdBy,
 }: CreateDatasetParams): Promise<DatasetModel> => {
-  const dataset = await DatasetModel.create({
+  return DatasetModel.create({
     name,
     createdBy,
   });
-
-  return dataset;
 };

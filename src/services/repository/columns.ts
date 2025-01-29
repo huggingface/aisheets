@@ -30,10 +30,13 @@ export const listColumns = async (
   }));
 };
 
-export const getAllColumns = async (): Promise<Column[]> => {
+export const getAllColumns = async (datasetId: string): Promise<Column[]> => {
   const columns = await ColumnModel.findAll({
     include: [ColumnModel.associations.cells, ColumnModel.associations.dataset],
     order: [['createdAt', 'ASC']],
+    where: {
+      datasetId,
+    },
   });
 
   return columns.map((column) => ({

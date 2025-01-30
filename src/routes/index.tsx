@@ -4,14 +4,15 @@ import {
   type RequestEvent,
   routeLoader$,
 } from '@builder.io/qwik-city';
-import { AddColumn, Commands } from '~/features';
+import { AddColumnModal, Commands } from '~/features';
 
 import { Table } from '~/components';
-import { useHome } from '~/routes/useHome';
 
 import * as hub from '@huggingface/hub';
-import { useDatasetsLoader, useDatasetsStore } from '~/state/datasets';
+
 import { useServerSession } from '~/state/session';
+
+import { useDatasetsStore, useLoadDatasets } from '~/state';
 
 export { useDatasetsLoader } from '~/state';
 
@@ -92,8 +93,10 @@ export const onGet = async ({
 export const useSession = routeLoader$(useServerSession);
 
 export default component$(() => {
+  useLoadDatasets();
+
   const session = useSession();
-  const { columns, activeDataset, onCreateColumn } = useHome();
+  const { activeDataset } = useDatasetsStore();
 
   return (
     <div class="mx-auto px-4 pt-2">
@@ -103,7 +106,7 @@ export default component$(() => {
 
       <Table />
 
-      <AddColumn onCreateColumn={onCreateColumn} />
+      <AddColumnModal />
     </div>
   );
 });

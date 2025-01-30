@@ -7,7 +7,7 @@ import {
 } from '@builder.io/qwik';
 import { type RequestEventBase, routeLoader$ } from '@builder.io/qwik-city';
 import { getOrCreateDataset } from '~/services';
-import { type Column, useColumnsStore } from '~/state/columns';
+import type { Column } from '~/state/columns';
 import { useServerSession } from '~/state/session';
 
 export interface Dataset {
@@ -41,13 +41,11 @@ export const useLoadDatasets = () => {
 
 export const useDatasetsStore = () => {
   const datasets = useContext(datasetsContext);
-  const columns = useColumnsStore();
-
   const activeDataset = useSignal(datasets.value);
 
   return {
     datasets,
     activeDataset,
-    columns,
+    columns: activeDataset.value.columns,
   };
 };

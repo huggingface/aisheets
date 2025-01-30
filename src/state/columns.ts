@@ -24,7 +24,7 @@ export interface CreateColumn {
 export type Cell = {
   id: string;
   idx: number;
-  columnId: string;
+  columnId?: string;
   validated: boolean;
   value?: string;
   error?: string;

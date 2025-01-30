@@ -17,7 +17,7 @@ import { db } from '~/services/db';
 import { ColumnCellModel } from '~/services/db/models/cell';
 import type { DatasetModel } from '~/services/db/models/dataset';
 import { ProcessModel } from '~/services/db/models/process';
-import type { Cell, ColumnKind, ColumnType, Dataset } from '~/state';
+import type { Dataset } from '~/state';
 
 //Review the path
 import type { Cell, ColumnKind, ColumnType, Process } from '~/state';

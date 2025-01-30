@@ -2,34 +2,6 @@ import { ColumnModel } from '~/services/db/models/column';
 import { ProcessModel } from '~/services/db/models/process';
 import type { Cell, Column, Process } from '~/state';
 
-export const listColumns = async (
-  params = {} as Record<string, any>,
-): Promise<Column[]> => {
-  const columns = await ColumnModel.findAll({
-    where: params,
-    include: [ColumnModel.associations.cells, ColumnModel.associations.dataset],
-    order: [['createdAt', 'ASC']],
-  });
-
-  return columns.map((column) => ({
-    id: column.id,
-    name: column.name,
-    type: column.type,
-    kind: column.kind,
-    dataset: {
-      id: column.dataset.id,
-      name: column.dataset.name,
-      createdBy: column.dataset.createdBy,
-    },
-    cells: column.cells.map((cell) => ({
-      id: cell.id,
-      idx: cell.idx,
-      value: cell.value,
-      error: cell.error,
-    })),
-  }));
-};
-
 export const getAllColumns = async (datasetId: string): Promise<Column[]> => {
   const columns = await ColumnModel.findAll({
     include: [ColumnModel.associations.cells, ColumnModel.associations.dataset],
@@ -60,6 +32,7 @@ export const getAllColumns = async (datasetId: string): Promise<Column[]> => {
       columnId: cell.columnId,
       updatedAt: cell.updatedAt,
     })),
+
     process: {
       columnsReferences: column.process?.columnsReferences ?? [],
       limit: column.process?.limit ?? 0,
@@ -82,6 +55,13 @@ export const getColumnById = async (id: string): Promise<Column | null> => {
     name: column.name,
     type: column.type,
     kind: column.kind,
+
+    dataset: {
+      id: column.dataset.id,
+      name: column.dataset.name,
+      createdBy: column.dataset.createdBy,
+    },
+
     cells: column.cells.map((cell) => ({
       id: cell.id,
       idx: cell.idx,
@@ -91,6 +71,7 @@ export const getColumnById = async (id: string): Promise<Column | null> => {
       columnId: cell.columnId,
       updatedAt: cell.updatedAt,
     })),
+
     process: {
       columnsReferences: column.process?.columnsReferences ?? [],
       limit: column.process?.limit ?? 0,

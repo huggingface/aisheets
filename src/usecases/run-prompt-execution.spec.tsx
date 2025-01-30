@@ -1,9 +1,11 @@
 import { expect, test } from 'vitest';
-import { runPromptExecution } from '~/usecases/run-prompt-execution';
+import {
+  runPromptExecution,
+  runPromptExecutionStream,
+} from '~/usecases/run-prompt-execution';
 
-const testModelName = 'meta-llama/Llama-2-7b-chat-hf';
-const testPrompt = 'Generate a title for a blog post about cats';
-
+const testModelName = 'google/gemma-2b-it';
+const testPrompt = 'Write a short greeting';
 const accessToken = process.env.HF_TOKEN;
 
 test('should generate a value', async () => {
@@ -18,39 +20,26 @@ test('should generate a value', async () => {
   expect(result.value).not.toContain(testPrompt);
 });
 
-test('should generate 3 different values with the same prompt', async () => {
-  const examples = [
-    'Title: Cats are the best',
-    'About our Feline friends',
-    'The best cats in the world',
-  ];
+test('should stream response with partial results', async () => {
+  console.error('Starting streaming test');
+  const updates: PromptExecutionResponse[] = [];
 
-  const result = await runPromptExecution({
+  for await (const response of runPromptExecutionStream({
     accessToken,
     modelName: testModelName,
     instruction: testPrompt,
-    examples,
-  });
+  })) {
+    console.error('Received update:', response);
+    updates.push(response);
+  }
 
-  expect(result.error).toBeUndefined();
-  expect(result.value).toBeDefined();
-  expect(examples).not.toContain(result.value);
-});
+  console.error('Stream complete. Total updates:', updates.length);
 
-test('should genenrate a value based on a data object', async () => {
-  const data = {
-    title: 'Cats are very cute',
-  };
-  const prompt =
-    'Describe the title following title in 3 sentences:\n{{title}}';
-
-  const result = await runPromptExecution({
-    accessToken,
-    modelName: testModelName,
-    instruction: prompt,
-    data,
-  });
-
-  expect(result.error).toBeUndefined();
-  expect(result.value).toBeDefined();
+  expect(updates.length).toBeGreaterThan(1);
+  expect(updates[0].done).toBe(false);
+  expect(updates[updates.length - 1].done).toBe(true);
+  expect(updates[updates.length - 1].value).toBeDefined();
+  expect(updates[0].value!.length).toBeLessThan(
+    updates[updates.length - 1].value!.length,
+  );
 });

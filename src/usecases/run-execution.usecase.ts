@@ -1,7 +1,7 @@
 import { type RequestEventBase, server$ } from '@builder.io/qwik-city';
 import { getColumnById, updateCell } from '~/services';
 import { useServerSession } from '~/state';
-import { runPromptExecution } from '~/usecases/run-prompt-execution';
+import { runPromptExecutionStream } from '~/usecases/run-prompt-execution';
 
 export const useReRunExecution = () =>
   server$(async function* (
@@ -31,16 +31,29 @@ export const useReRunExecution = () =>
     };
 
     for (const cell of column.cells.filter((cell) => !cell.validated)) {
-      const response = await runPromptExecution(args);
+      try {
+        for await (const response of runPromptExecutionStream(args)) {
+          cell.value = response.value;
+          cell.error = response.error;
+          cell.updatedAt = new Date();
 
-      cell.value = response.value;
-      cell.error = response.error;
-      cell.updatedAt = new Date();
+          yield {
+            cell,
+            done: response.done,
+          };
 
-      await updateCell(cell);
-
-      yield {
-        cell,
-      };
+          // Only save to database when stream is complete
+          if (response.done) {
+            await updateCell(cell);
+          }
+        }
+      } catch (error) {
+        console.error('Error processing cell:', error);
+        cell.error = error instanceof Error ? error.message : 'Unknown error';
+        yield {
+          cell,
+          done: true,
+        };
+      }
     }
   });

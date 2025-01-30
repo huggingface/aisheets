@@ -37,6 +37,7 @@ interface HFModel {
 }
 
 const outputType = ['text', 'array', 'number', 'boolean', 'object'];
+
 export const AddDynamicColumnSidebar = component$<SidebarProps>(
   ({ onCreateColumn }) => {
     const { isOpenAddDynamicColumnSidebar, closeAddDynamicColumnSidebar } =

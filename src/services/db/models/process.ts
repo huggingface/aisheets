@@ -1,11 +1,13 @@
 import { isDev } from '@builder.io/qwik';
 import {
+  type Association,
   type CreationOptional,
   DataTypes,
   type ForeignKey,
   type InferAttributes,
   type InferCreationAttributes,
   Model,
+  type NonAttribute,
 } from 'sequelize';
 
 import { db } from '~/services/db';
@@ -20,14 +22,19 @@ export class ProcessModel extends Model<
   declare modelName: string;
   declare offset: number;
   declare limit: number;
-
   declare columnId: ForeignKey<ColumnModel['id']>;
+
+  declare referredColumns: NonAttribute<ColumnModel[]>; // This is a virtual attribute
+
+  declare static associations: {
+    referredColumns: Association<ProcessModel, ColumnModel>;
+  };
 }
 
 ProcessModel.init(
   {
     id: {
-      type: DataTypes.UUIDV4,
+      type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
@@ -48,7 +55,7 @@ ProcessModel.init(
       allowNull: false,
     },
     columnId: {
-      type: DataTypes.UUIDV4,
+      type: DataTypes.UUID,
       allowNull: false,
     },
   },

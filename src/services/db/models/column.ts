@@ -15,8 +15,6 @@ import {
 import { db } from '~/services/db';
 import { ColumnCellModel } from '~/services/db/models/cell';
 import { ProcessModel } from '~/services/db/models/process';
-//Review the path
-import type { Cell, ColumnKind, ColumnType, Process } from '~/state';
 
 export class ColumnModel extends Model<
   InferAttributes<ColumnModel>,
@@ -24,11 +22,11 @@ export class ColumnModel extends Model<
 > {
   declare id: CreationOptional<string>;
   declare name: string;
-  declare type: ColumnType;
-  declare kind: ColumnKind;
+  declare type: string;
+  declare kind: string;
 
-  declare process: NonAttribute<Process>;
-  declare cells: NonAttribute<Cell[]>;
+  declare process: NonAttribute<ProcessModel>;
+  declare cells: NonAttribute<ColumnCellModel[]>;
 
   declare createCell: HasManyCreateAssociationMixin<
     ColumnCellModel,
@@ -44,7 +42,7 @@ export class ColumnModel extends Model<
 ColumnModel.init(
   {
     id: {
-      type: DataTypes.UUIDV4,
+      type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
@@ -85,4 +83,34 @@ ColumnModel.hasOne(ProcessModel, {
   as: 'process',
 });
 
+export const ProcessColumnModel = db.define('ProcessColumn', {
+  processId: {
+    type: DataTypes.UUID,
+    allowNull: false,
+    references: {
+      model: ProcessModel,
+      key: 'id',
+    },
+  },
+  columnId: {
+    type: DataTypes.UUID,
+    allowNull: false,
+    references: {
+      model: ColumnModel,
+      key: 'id',
+    },
+  },
+});
+
+ProcessModel.belongsToMany(ColumnModel, {
+  through: ProcessColumnModel,
+  as: 'referredColumns',
+  foreignKey: 'processId',
+});
+ColumnModel.belongsToMany(ProcessModel, {
+  through: ProcessColumnModel,
+  foreignKey: 'columnId',
+});
+
+await ProcessColumnModel.sync({ alter: isDev });
 await ColumnModel.sync({ alter: isDev });

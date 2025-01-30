@@ -4,12 +4,12 @@ import {
   type RequestEvent,
   routeLoader$,
 } from '@builder.io/qwik-city';
-import { AddColumn, Commands } from '~/features';
+import { AddColumnModal, Commands } from '~/features';
 
 import { Table } from '~/components';
-import { useHome } from '~/routes/useHome';
 
 import * as hub from '@huggingface/hub';
+import { useInitializeColumnsStore } from '~/state';
 import { useServerSession } from '~/state/session';
 
 export { useColumnsLoader } from '~/state';
@@ -92,7 +92,8 @@ export const useSession = routeLoader$(useServerSession);
 
 export default component$(() => {
   const session = useSession();
-  const { onCreateColumn } = useHome();
+
+  useInitializeColumnsStore();
 
   return (
     <div class="mx-auto px-4 pt-2">
@@ -101,7 +102,7 @@ export default component$(() => {
 
       <Table />
 
-      <AddColumn onCreateColumn={onCreateColumn} />
+      <AddColumnModal />
     </div>
   );
 });

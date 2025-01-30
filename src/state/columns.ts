@@ -47,15 +47,14 @@ export interface Column {
 }
 
 const columnContext = createContextId<Signal<Column[]>>('column.context');
-export const useLoadColumns = () => {
+
+export const useInitializeColumnsStore = () => {
   const columns = useColumnsLoader();
 
   useContextProvider(columnContext, columns);
-
-  return columns;
 };
 
-export const useColumnsLoader = routeLoader$<Column[]>(() => getAllColumns());
+export const useColumnsLoader = routeLoader$<Column[]>(getAllColumns);
 
 export const useColumnsStore = () => {
   const columns = useContext(columnContext);

@@ -33,6 +33,17 @@ type TriggerProps = PropsOf<typeof HeadlessSelect.Trigger> & {
   look?: 'default' | 'ghost' | 'headless';
 };
 
+const Disabled = component$(() => {
+  const defaultClass =
+    'flex h-10 w-full items-center justify-between whitespace-nowrap rounded-sm border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1 opacity-50';
+
+  return (
+    <div class={defaultClass}>
+      <Slot />
+    </div>
+  );
+});
+
 const Trigger = component$<TriggerProps>(({ look = 'default', ...props }) => {
   const defaultClass =
     'flex h-10 w-full items-center justify-between whitespace-nowrap rounded-sm border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1';
@@ -128,4 +139,5 @@ export const Select = {
   ItemIndicator,
   ItemLabel,
   ErrorMessage,
+  Disabled,
 };

@@ -1,4 +1,4 @@
-import { $, useContext, useSignal, useTask$ } from '@builder.io/qwik';
+import { $, useComputed$, useContext } from '@builder.io/qwik';
 
 import { type Dataset, datasetsContext } from '~/state/datasets';
 
@@ -43,55 +43,45 @@ export interface Column {
 
 export const useColumnsStore = () => {
   const dataset = useContext(datasetsContext);
-  const columns = useSignal(dataset.value.columns);
+  const columns = useComputed$(() => dataset.value.columns);
 
-  useTask$(({ track }) => {
-    track(columns);
-
-    dataset.value.columns = [...columns.value];
-  });
-
-  useTask$(({ track }) => {
-    track(dataset);
-
-    columns.value = [...dataset.value.columns];
+  const replaceColumn = $((replaced: Column[]) => {
+    dataset.value = {
+      ...dataset.value,
+      columns: [...replaced],
+    };
   });
 
   return {
     state: columns,
-    replaceColumn: $((replaced: Column[]) => {
-      columns.value = [...replaced];
-    }),
     addColumn: $((newbie: Column) => {
-      columns.value = [...columns.value, newbie];
+      replaceColumn([...columns.value, newbie]);
     }),
     updateColumn: $((updated: Column) => {
-      columns.value = [
-        ...columns.value.map((c) => (c.name === updated.name ? updated : c)),
-      ];
+      replaceColumn(
+        columns.value.map((c) => (c.id === updated.id ? updated : c)),
+      );
     }),
     deleteColumn: $((deleted: Column) => {
-      columns.value = columns.value.filter((c) => c.name !== deleted.name);
+      replaceColumn(columns.value.filter((c) => c.id !== deleted.id));
     }),
     addCell: $((cell: Cell) => {
       const column = columns.value.find((c) => c.id === cell.columnId);
+      if (!column) return;
 
-      if (column) {
-        column.cells.push(cell);
-      }
+      column.cells.push(cell);
 
-      columns.value = [...columns.value];
+      replaceColumn(columns.value);
     }),
     replaceCell: $((cell: Cell) => {
       const column = columns.value.find((c) => c.id === cell.columnId);
-
       if (!column) return;
 
       column.cells = [
         ...column.cells.map((c) => (c.id === cell.id ? cell : c)),
       ];
 
-      columns.value = [...columns.value];
+      replaceColumn(columns.value);
     }),
   };
 };

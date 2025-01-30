@@ -40,12 +40,10 @@ export const useLoadDatasets = () => {
 };
 
 export const useDatasetsStore = () => {
-  const datasets = useContext(datasetsContext);
-  const activeDataset = useSignal(datasets.value);
+  const dataset = useContext(datasetsContext);
+  const activeDataset = useSignal(dataset.value);
 
   return {
-    datasets,
     activeDataset,
-    columns: activeDataset.value.columns,
   };
 };

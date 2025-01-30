@@ -16,10 +16,6 @@ import { useDatasetsStore, useLoadDatasets } from '~/state';
 
 export { useDatasetsLoader } from '~/state';
 
-// See https://huggingface.co/docs/hub/en/spaces-oauth
-const HF_TOKEN = process.env.HF_TOKEN;
-const CLIENT_ID = process.env.OAUTH_CLIENT_ID;
-
 export const onGet = async ({
   cookie,
   sharedMap,
@@ -27,6 +23,10 @@ export const onGet = async ({
   next,
   url,
 }: RequestEvent) => {
+  // See https://huggingface.co/docs/hub/en/spaces-oauth
+  const HF_TOKEN = process.env.HF_TOKEN;
+  const CLIENT_ID = process.env.OAUTH_CLIENT_ID;
+
   const session = sharedMap.get('session');
   if (session) {
     return next();

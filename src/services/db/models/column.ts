@@ -28,11 +28,11 @@ export class ColumnModel extends Model<
   declare kind: string;
 
   declare datasetId: ForeignKey<DatasetModel['id']>;
-  
+
   declare dataset: NonAttribute<DatasetModel>;
   declare process: NonAttribute<ProcessModel>;
   declare cells: NonAttribute<ColumnCellModel[]>;
-  
+
   declare createCell: HasManyCreateAssociationMixin<
     ColumnCellModel,
     'columnId'

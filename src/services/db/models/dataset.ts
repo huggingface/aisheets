@@ -12,7 +12,6 @@ import {
 import { db } from '~/services/db';
 import { ColumnModel } from '~/services/db/models/column';
 //Review the path
-import type { Column } from '~/state';
 
 export class DatasetModel extends Model<
   InferAttributes<DatasetModel>,
@@ -22,7 +21,7 @@ export class DatasetModel extends Model<
   declare name: string;
   declare createdBy: string;
 
-  declare columns: NonAttribute<Column[]>;
+  declare columns: NonAttribute<ColumnModel[]>;
 
   declare static associations: {
     columns: Association<DatasetModel, ColumnModel>;

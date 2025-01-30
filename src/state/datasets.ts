@@ -24,14 +24,8 @@ export const useDatasetsLoader = routeLoader$<Dataset>(async function (
   this: RequestEventBase<QwikCityPlatform>,
 ) {
   const session = useServerSession(this);
-  const dataset = await getOrCreateDataset({ createdBy: session.user.name });
 
-  return {
-    id: dataset.id,
-    name: dataset.name,
-    createdBy: dataset.createdBy,
-    columns: dataset.columns,
-  };
+  return await getOrCreateDataset({ createdBy: session.user.name });
 });
 
 export const useLoadDatasets = () => {

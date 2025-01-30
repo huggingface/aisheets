@@ -19,7 +19,7 @@ export const getAllColumns = async (datasetId: string): Promise<Column[]> => {
       },
       {
         association: ColumnModel.associations.dataset,
-      }
+      },
     ],
     order: [['createdAt', 'ASC']],
   });
@@ -69,6 +69,9 @@ export const getColumnById = async (id: string): Promise<Column | null> => {
       {
         association: ColumnModel.associations.process,
         include: [ProcessModel.associations.referredColumns],
+      },
+      {
+        association: ColumnModel.associations.dataset,
       },
     ],
   });

@@ -69,8 +69,10 @@ export const TableCell = component$<{ cell: Cell }>(({ cell }) => {
         <Textarea
           ref={editCellValueInput}
           bind:value={newCellValue}
-          onKeyUp$={(e) => {
-            if (e.key === 'Enter' && e.altKey) {
+          onKeyDown$={(e) => {
+            if (e.key === 'Enter') {
+              if (e.shiftKey) return;
+              e.preventDefault();
               onUpdateCell();
             }
           }}

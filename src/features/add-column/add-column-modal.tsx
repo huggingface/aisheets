@@ -1,4 +1,4 @@
-import { $, component$, type QRL, useSignal } from '@builder.io/qwik';
+import { $, component$, useSignal } from '@builder.io/qwik';
 import {
   TbAlignJustified,
   TbBraces,
@@ -14,37 +14,52 @@ import { Button, Modal } from '~/components';
 import { useModals } from '~/components/hooks/modals/use-modals';
 import { AddDynamicColumnSidebar } from '~/features/add-column/add-dynamic-column-sidebar';
 import { AddStaticColumnSidebar } from '~/features/add-column/add-static-column-sidebar';
-import type { Column, ColumnKind, ColumnType, CreateColumn } from '~/state';
+import {
+  type Column,
+  type ColumnType,
+  type CreateColumn,
+  useColumnsStore,
+} from '~/state';
+import { useAddColumnUseCase } from '~/usecases/add-column.usecase';
 
-interface Props {
-  onCreateColumn: QRL<(createColumn: CreateColumn) => void>;
-}
-
-export const AddColumn = component$<Props>(({ onCreateColumn }) => {
+export const AddColumnModal = component$(() => {
   const { isOpenAddColumnModal, closeAddColumnModal } =
     useModals('addColumnModal');
-  const { openAddDynamicColumnSidebar } = useModals('addDynamicColumnSidebar');
-  const { openAddStaticColumnSidebar } = useModals('addStaticColumnSidebar');
+  const dynamicModal = useModals('addDynamicColumnSidebar');
+  const staticModal = useModals('addStaticColumnSidebar');
+
+  const { addColumn, addCell } = useColumnsStore();
 
   const columnType = useSignal<Column['type']>('text');
 
-  const openSidebar = $((type: ColumnType, kind: ColumnKind) => {
+  const openDynamicSidebar = $((type: ColumnType) => {
     closeAddColumnModal();
-
     columnType.value = type;
 
-    if (kind === 'dynamic') return openAddDynamicColumnSidebar();
-
-    openAddStaticColumnSidebar();
+    dynamicModal.openAddDynamicColumnSidebar();
   });
 
-  const openDynamicSidebar = $((type: ColumnType) =>
-    openSidebar(type, 'dynamic'),
-  );
+  const openStaticSidebar = $((type: ColumnType) => {
+    closeAddColumnModal();
+    columnType.value = type;
 
-  const openStaticSidebar = $((type: ColumnType) =>
-    openSidebar(type, 'static'),
-  );
+    staticModal.openAddStaticColumnSidebar();
+  });
+
+  const addNewColumn = useAddColumnUseCase();
+  const onCreateColumn = $(async (createColumn: CreateColumn) => {
+    const response = await addNewColumn(createColumn);
+
+    for await (const { column, cell } of response) {
+      if (column) {
+        addColumn(column);
+      }
+
+      if (cell) {
+        addCell(cell);
+      }
+    }
+  });
 
   return (
     <Modal.Root bind:show={isOpenAddColumnModal} class="h-max w-full">

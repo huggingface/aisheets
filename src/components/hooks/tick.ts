@@ -1,4 +1,4 @@
-import { $, useVisibleTask$ } from '@builder.io/qwik';
+import { $ } from '@builder.io/qwik';
 
 type Callback = () => void;
 

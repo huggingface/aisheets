@@ -42,12 +42,22 @@ test('should save 10 cells', async () => {
   };
 
   const columnAdded = await add(newColumn);
+  const cells = [];
 
-  expect(columnAdded).toContain({
-    id: columnAdded.id,
-    name: 'name',
-    type: 'text',
-    kind: 'dynamic',
-  });
-  expect(columnAdded.cells).toHaveLength(10);
+  for await (const { column, cell } of columnAdded) {
+    if (column) {
+      expect(column).toContain({
+        id: column.id,
+        name: 'name',
+        type: 'text',
+        kind: 'dynamic',
+      });
+    }
+
+    if (cell) {
+      cells.push(cell);
+    }
+  }
+
+  expect(cells).toHaveLength(10);
 });

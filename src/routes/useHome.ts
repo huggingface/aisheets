@@ -21,8 +21,16 @@ export const useHome = () => {
       ...createColumn,
       dataset: activeDataset.value,
     });
+    
+    for await (const { column, cell } of response) {
+      if (column) {
+        addColumn(column);
+      }
 
-    addColumn(column);
+      if (cell) {
+        addCell(cell);
+      }
+    }
   });
 
   return {

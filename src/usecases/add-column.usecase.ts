@@ -2,14 +2,14 @@ import { type RequestEventBase, server$ } from '@builder.io/qwik-city';
 
 import { addColumn } from '~/services';
 import { getRowCells } from '~/services/repository';
-import { type Column, type CreateColumn, useServerSession } from '~/state';
+import { type Cell, type CreateColumn, useServerSession } from '~/state';
 import { runPromptExecution } from '~/usecases/run-prompt-execution';
 
 export const useAddColumnUseCase = () =>
-  server$(async function (
+  server$(async function* (
     this: RequestEventBase<QwikCityPlatform>,
     newColum: CreateColumn,
-  ): Promise<Column> {
+  ) {
     const session = useServerSession(this);
 
     const { name, type, kind, dataset, executionProcess } = newColum;
@@ -23,6 +23,17 @@ export const useAddColumnUseCase = () =>
       },
       executionProcess,
     );
+
+    yield {
+      column: {
+        id: column.id,
+        name: column.name,
+        type: column.type,
+        kind: column.kind,
+        cells: [],
+        process: column.process,
+      },
+    };
 
     if (kind === 'dynamic') {
       const { limit, offset, modelName, prompt, columnsReferences } =
@@ -38,7 +49,6 @@ export const useAddColumnUseCase = () =>
           data: {},
         };
 
-        const data: object = {};
         if (columnsReferences && columnsReferences.length > 0) {
           const rowCells = await getRowCells({
             rowIdx: i,
@@ -51,11 +61,15 @@ export const useAddColumnUseCase = () =>
 
         const response = await runPromptExecution(args);
 
-        await column.addCell({
+        const cell: Cell = await column.addCell({
           idx: i,
           value: response.value,
           error: response.error,
         });
+
+        yield {
+          cell,
+        };
 
         if (response.value) {
           examples.push(response.value);
@@ -71,26 +85,4 @@ export const useAddColumnUseCase = () =>
         });
       }
     }
-
-    return {
-      id: column.id,
-      name: column.name,
-      type: column.type,
-      kind: column.kind,
-      cells: column.cells.map((cell) => ({
-        id: cell.id,
-        idx: cell.idx,
-        value: cell.value,
-        error: cell.error,
-      })),
-      process: column.process
-        ? {
-            modelName: column.process.modelName,
-            columnsReferences: column.process.columnsReferences,
-            prompt: column.process.prompt,
-            limit: column.process.limit,
-            offset: column.process.offset,
-          }
-        : undefined,
-    };
   });

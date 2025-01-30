@@ -20,6 +20,7 @@ import { ProcessModel } from '~/services/db/models/process';
 import type { Cell, ColumnKind, ColumnType, Dataset } from '~/state';
 
 //Review the path
+import type { Cell, ColumnKind, ColumnType, Process } from '~/state';
 
 export class ColumnModel extends Model<
   InferAttributes<ColumnModel>,
@@ -32,6 +33,7 @@ export class ColumnModel extends Model<
   declare datasetId: ForeignKey<DatasetModel['id']>;
 
   declare dataset: NonAttribute<Dataset>;
+  declare process: NonAttribute<Process>;
   declare cells: NonAttribute<Cell[]>;
 
   declare createCell: HasManyCreateAssociationMixin<
@@ -42,6 +44,7 @@ export class ColumnModel extends Model<
   declare static associations: {
     cells: Association<ColumnModel, ColumnCellModel>;
     dataset: Association<ColumnModel, DatasetModel>;
+    process: Association<ColumnModel, ProcessModel>;
   };
 }
 
@@ -81,6 +84,7 @@ ColumnModel.hasMany(ColumnCellModel, {
   foreignKey: 'columnId',
   as: 'cells',
 });
+
 ColumnCellModel.belongsTo(ColumnModel, {
   foreignKey: 'columnId',
   as: 'column',
@@ -88,6 +92,8 @@ ColumnCellModel.belongsTo(ColumnModel, {
 
 ColumnModel.hasOne(ProcessModel, {
   sourceKey: 'id',
+  foreignKey: 'columnId',
+  as: 'process',
 });
 
 await ColumnModel.sync({ alter: isDev });

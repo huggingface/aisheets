@@ -37,6 +37,7 @@ export const onGet = async ({
     const authData = {
       state: sessionCode,
       clientId: CLIENT_ID,
+      scopes: 'inference-api',
       redirectUrl: `${url.origin}/auth/callback/`,
       localStorage: {
         codeVerifier: undefined,
@@ -100,7 +101,7 @@ export default component$(() => {
       <h3>You are working with `{activeDataset.value.name}` dataset</h3>
       <Commands />
 
-      <Table columns={columns} />
+      <Table />
 
       <AddColumn onCreateColumn={onCreateColumn} />
     </div>

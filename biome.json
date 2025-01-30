@@ -18,6 +18,9 @@
       "security": {
         "noDangerouslySetInnerHtml": "off"
       },
+      "correctness": {
+        "noUnusedImports": "error"
+      },
       "complexity": {
         "useLiteralKeys": "off"
       },

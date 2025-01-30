@@ -20,6 +20,7 @@ export class ProcessModel extends Model<
   declare modelName: string;
   declare offset: number;
   declare limit: number;
+
   declare columnId: ForeignKey<ColumnModel['id']>;
 }
 

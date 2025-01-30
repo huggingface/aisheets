@@ -20,13 +20,7 @@ interface SidebarProps {
   onCreateColumn: QRL<(createColumn: CreateColumn) => void>;
 }
 
-interface HFModel {
-  id: string;
-}
-
 const outputType = ['text', 'array', 'number', 'boolean', 'object'];
-const DEFAULT_MODEL = 'google/gemma-2-2b-it';
-
 export const AddDynamicColumnSidebar = component$<SidebarProps>(
   ({ onCreateColumn }) => {
     const { isOpenAddDynamicColumnSidebar, closeAddDynamicColumnSidebar } =
@@ -43,9 +37,7 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
     const onSelectedVariables = $((variables: { id: string }[]) => {
       columnsReferences.value = variables.map((v) => v.id);
     });
-    const modelName = useSignal(DEFAULT_MODEL);
-    const models = useSignal<HFModel[]>([]);
-    const isLoadingModels = useSignal(true);
+    const modelName = useSignal('meta-llama/Llama-2-7b-chat-hf');
 
     useVisibleTask$(({ track }) => {
       track(isOpenAddDynamicColumnSidebar);
@@ -53,36 +45,13 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
       type.value = 'text';
       name.value = '';
       prompt.value = '';
-      modelName.value = DEFAULT_MODEL;
+      modelName.value = 'meta-llama/Llama-2-7b-chat-hf';
       rowsToGenerate.value = '3';
       columnsReferences.value = [];
       variables.value = columns.value.map((c) => ({
         id: c.id,
         name: c.name,
       }));
-    });
-
-    useTask$(async () => {
-      try {
-        const response = await fetch(
-          'https://huggingface.co/api/models?other=text-generation-inference&inference=warm',
-        );
-        const data = await response.json();
-
-        models.value = data
-          .filter((model: any) =>
-            model.tags?.includes('text-generation-inference'),
-          )
-          .map((model: any) => ({
-            id: model.id,
-          }));
-
-        if (!models.value.find((model) => model.id === DEFAULT_MODEL)) {
-          modelName.value = models.value[0]?.id || DEFAULT_MODEL;
-        }
-      } finally {
-        isLoadingModels.value = false;
-      }
     });
 
     const onCreate = $(() => {
@@ -153,32 +122,23 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
               />
 
               <Label for="column-model" class="flex gap-1">
-                Model
+                Model name. Available models in the
+                <a
+                  href="https://huggingface.co/playground"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="text-blue-500 underline hover:text-blue-700"
+                >
+                  huggingface playground
+                </a>
               </Label>
-              <Select.Root id="column-model" bind:value={modelName}>
-                <Select.Trigger class="bg-background border-input">
-                  <Select.DisplayValue />
-                </Select.Trigger>
-                <Select.Popover class="bg-background border border-border max-h-[200px] overflow-y-auto top-[100%] bottom-auto">
-                  {isLoadingModels.value ? (
-                    <Select.Item class="text-foreground hover:bg-accent">
-                      <Select.ItemLabel>Loading models...</Select.ItemLabel>
-                    </Select.Item>
-                  ) : (
-                    models.value.map((model) => (
-                      <Select.Item
-                        key={model.id}
-                        class="text-foreground hover:bg-accent"
-                      >
-                        <Select.ItemLabel>{model.id}</Select.ItemLabel>
-                        <Select.ItemIndicator>
-                          <LuCheck class="h-4 w-4" />
-                        </Select.ItemIndicator>
-                      </Select.Item>
-                    ))
-                  )}
-                </Select.Popover>
-              </Select.Root>
+              <Input
+                id="column-model"
+                class="h-10"
+                value="meta-llama/Llama-2-7b-chat-hf"
+                placeholder="Enter the HF model name"
+                bind:value={modelName}
+              />
 
               <Label for="column-rows">Rows generated</Label>
               <Input

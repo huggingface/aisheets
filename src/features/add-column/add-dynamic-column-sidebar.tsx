@@ -16,7 +16,12 @@ import {
   TemplateTextArea,
   type Variable,
 } from '~/features/add-column/components/template-textarea';
-import { type ColumnType, type CreateColumn, useColumnsStore } from '~/state';
+import {
+  type ColumnType,
+  type CreateColumn,
+  useColumnsStore,
+  useDatasetsStore,
+} from '~/state';
 
 interface SidebarProps {
   onCreateColumn: QRL<(createColumn: CreateColumn) => void>;
@@ -44,6 +49,8 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
     const prompt = useSignal('');
     const variables = useSignal<Variable[]>([]);
     const columnsReferences = useSignal<string[]>([]);
+
+    const { activeDataset } = useDatasetsStore();
 
     const onSelectedVariables = $((variables: { id: string }[]) => {
       columnsReferences.value = variables.map((v) => v.id);
@@ -99,6 +106,7 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
         name: name.value,
         type: type.value,
         kind: 'dynamic',
+        dataset: activeDataset.value,
         executionProcess: {
           modelName: modelName.value,
           prompt: prompt.value,

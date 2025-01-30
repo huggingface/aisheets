@@ -1,10 +1,10 @@
-import { $, component$, type QRL, useSignal, useTask$ } from '@builder.io/qwik';
+import { $, type QRL, component$, useSignal, useTask$ } from '@builder.io/qwik';
 import { LuCheck } from '@qwikest/icons/lucide';
 import { TbX } from '@qwikest/icons/tablericons';
 
 import { Button, Input, Label, Select, Sidebar } from '~/components';
 import { useModals } from '~/components/hooks/modals/use-modals';
-import type { ColumnType, CreateColumn } from '~/state';
+import { type ColumnType, type CreateColumn, useDatasetsStore } from '~/state';
 
 interface SidebarProps {
   type: ColumnType;
@@ -15,6 +15,8 @@ export const AddStaticColumnSidebar = component$<SidebarProps>(
   ({ onCreateColumn, type }) => {
     const { isOpenAddStaticColumnSidebar, closeAddStaticColumnSidebar } =
       useModals('addStaticColumnSidebar');
+
+    const { activeDataset } = useDatasetsStore();
 
     const types = ['text', 'array', 'number', 'boolean', 'object'];
     const newType = useSignal<ColumnType>(type);
@@ -35,6 +37,7 @@ export const AddStaticColumnSidebar = component$<SidebarProps>(
         name: name.value,
         type: newType.value,
         kind: 'static',
+        dataset: activeDataset.value,
       });
     });
 

@@ -19,7 +19,6 @@ import {
   type ColumnType,
   type CreateColumn,
   useColumnsStore,
-  useDatasetsStore,
 } from '~/state';
 import { useAddColumnUseCase } from '~/usecases/add-column.usecase';
 
@@ -30,7 +29,6 @@ export const AddColumnModal = component$(() => {
   const staticModal = useModals('addStaticColumnSidebar');
 
   const { addColumn, addCell } = useColumnsStore();
-  const { activeDataset } = useDatasetsStore();
 
   const columnType = useSignal<Column['type']>('text');
 
@@ -50,10 +48,7 @@ export const AddColumnModal = component$(() => {
 
   const addNewColumn = useAddColumnUseCase();
   const onCreateColumn = $(async (createColumn: CreateColumn) => {
-    const response = await addNewColumn({
-      ...createColumn,
-      dataset: activeDataset.value,
-    });
+    const response = await addNewColumn(createColumn);
 
     for await (const { column, cell } of response) {
       if (column) {

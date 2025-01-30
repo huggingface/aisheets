@@ -101,7 +101,9 @@ export default component$(() => {
   return (
     <div class="mx-auto px-4 pt-2">
       <h2>Hello {session.value.user.name} 👋</h2>
-      <h3>You are working with `{activeDataset.value.name}` dataset</h3>
+      <h3>
+        You are creating the dataset <strong>{activeDataset.value.name}</strong>
+      </h3>
       <Commands />
 
       <Table />

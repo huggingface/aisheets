@@ -12,7 +12,7 @@ export const useAddColumnUseCase = () =>
   ) {
     const session = useServerSession(this);
 
-    const { name, type, kind, dataset, executionProcess } = newColum;
+    const { name, type, kind, dataset, process } = newColum;
 
     const column = await addColumn(
       {
@@ -21,7 +21,7 @@ export const useAddColumnUseCase = () =>
         kind,
         dataset,
       },
-      executionProcess,
+      process,
     );
 
     yield {
@@ -37,8 +37,7 @@ export const useAddColumnUseCase = () =>
     };
 
     if (kind === 'dynamic') {
-      const { limit, offset, modelName, prompt, columnsReferences } =
-        executionProcess!;
+      const { limit, offset, modelName, prompt, columnsReferences } = process!;
 
       const examples: string[] = [];
       for (let i = offset; i < limit + offset; i++) {

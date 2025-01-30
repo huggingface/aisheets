@@ -1,21 +1,34 @@
-import { ColumnModel } from '~/services/db/models/column';
+import { ColumnModel, ProcessColumnModel } from '~/services/db/models/column';
 import { ProcessModel } from '~/services/db/models/process';
-import type { Cell, Column, Process } from '~/state';
+import type { Cell, Column, ColumnKind, ColumnType, Process } from '~/state';
 
 export const getAllColumns = async (datasetId: string): Promise<Column[]> => {
   const columns = await ColumnModel.findAll({
-    include: [ColumnModel.associations.cells, ColumnModel.associations.dataset],
-    order: [['createdAt', 'ASC']],
     where: {
       datasetId,
     },
+    include: [
+      {
+        association: ColumnModel.associations.cells,
+        separate: true,
+        order: [['idx', 'ASC']],
+      },
+      {
+        association: ColumnModel.associations.process,
+        include: [ProcessModel.associations.referredColumns],
+      },
+      {
+        association: ColumnModel.associations.dataset,
+      }
+    ],
+    order: [['createdAt', 'ASC']],
   });
 
   return columns.map((column) => ({
     id: column.id,
     name: column.name,
-    type: column.type,
-    kind: column.kind,
+    type: column.type as ColumnType,
+    kind: column.kind as ColumnKind,
 
     dataset: {
       id: column.dataset.id,
@@ -34,7 +47,9 @@ export const getAllColumns = async (datasetId: string): Promise<Column[]> => {
     })),
 
     process: {
-      columnsReferences: column.process?.columnsReferences ?? [],
+      columnsReferences: (column.process?.referredColumns ?? []).map(
+        (column) => column.id,
+      ),
       limit: column.process?.limit ?? 0,
       modelName: column.process?.modelName ?? '',
       offset: column.process?.offset ?? 0,
@@ -45,7 +60,17 @@ export const getAllColumns = async (datasetId: string): Promise<Column[]> => {
 
 export const getColumnById = async (id: string): Promise<Column | null> => {
   const column = await ColumnModel.findByPk(id, {
-    include: [ColumnModel.associations.cells, 'process'],
+    include: [
+      {
+        association: ColumnModel.associations.cells,
+        separate: true,
+        order: [['idx', 'ASC']],
+      },
+      {
+        association: ColumnModel.associations.process,
+        include: [ProcessModel.associations.referredColumns],
+      },
+    ],
   });
 
   if (!column) return null;
@@ -53,8 +78,8 @@ export const getColumnById = async (id: string): Promise<Column | null> => {
   return {
     id: column.id,
     name: column.name,
-    type: column.type,
-    kind: column.kind,
+    type: column.type as ColumnType,
+    kind: column.kind as ColumnKind,
 
     dataset: {
       id: column.dataset.id,
@@ -73,7 +98,10 @@ export const getColumnById = async (id: string): Promise<Column | null> => {
     })),
 
     process: {
-      columnsReferences: column.process?.columnsReferences ?? [],
+      id: column.process?.id,
+      columnsReferences: (column.process?.referredColumns ?? []).map(
+        (column) => column.id,
+      ),
       limit: column.process?.limit ?? 0,
       modelName: column.process?.modelName ?? '',
       offset: column.process?.offset ?? 0,
@@ -96,13 +124,23 @@ export const addColumn = async (
   });
 
   if (process) {
-    await ProcessModel.create({
+    const newProcess = await ProcessModel.create({
       limit: process.limit,
       modelName: process.modelName,
       offset: process.offset,
       prompt: process.prompt,
       columnId: addedColumn.id,
     });
+    // TODO: Try to create junction model when creating a process
+    if ((process.columnsReferences ?? []).length > 0) {
+      await ProcessColumnModel.bulkCreate(
+        process.columnsReferences!.map((columnId) => {
+          return { processId: newProcess.id, columnId };
+        }),
+      );
+    }
+
+    addedColumn.process = newProcess;
   }
 
   const handler: Column & {
@@ -133,11 +171,20 @@ export const addColumn = async (
     },
     id: addedColumn.id,
     name: addedColumn.name,
-    type: addedColumn.type,
-    kind: addedColumn.kind,
+    type: addedColumn.type as ColumnType,
+    kind: addedColumn.kind as ColumnKind,
     dataset: column.dataset,
     cells,
-    process,
+    process: {
+      id: addedColumn.process?.id,
+      columnsReferences: (addedColumn.process?.referredColumns ?? []).map(
+        (column) => column.id,
+      ),
+      limit: addedColumn.process?.limit ?? 0,
+      modelName: addedColumn.process?.modelName ?? '',
+      offset: addedColumn.process?.offset ?? 0,
+      prompt: addedColumn.process?.prompt ?? '',
+    },
   };
 
   return handler;

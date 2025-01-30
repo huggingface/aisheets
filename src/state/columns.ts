@@ -6,9 +6,10 @@ export type ColumnType = 'text' | 'array' | 'number' | 'boolean' | 'object';
 export type ColumnKind = 'static' | 'dynamic';
 
 export interface Process {
+  id?: string;
   modelName: string;
   prompt: string;
-  columnsReferences: string[];
+  columnsReferences?: string[];
   offset: number;
   limit: number;
 }
@@ -17,8 +18,8 @@ export interface CreateColumn {
   name: string;
   type: ColumnType;
   kind: ColumnKind;
-  executionProcess?: Process;
   dataset: Dataset;
+  process?: Process;
 }
 
 export type Cell = {

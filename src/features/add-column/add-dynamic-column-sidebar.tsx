@@ -45,7 +45,7 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
 
     const type = useSignal<NonNullable<ColumnType>>('text');
     const name = useSignal('');
-    const rowsToGenerate = useSignal('3');
+    const rowsToGenerate = useSignal('5');
     const prompt = useSignal('');
     const variables = useSignal<Variable[]>([]);
     const columnsReferences = useSignal<string[]>([]);
@@ -64,7 +64,7 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
       name.value = '';
       prompt.value = '';
       modelName.value = DEFAULT_MODEL;
-      rowsToGenerate.value = '3';
+      rowsToGenerate.value = '5';
       columnsReferences.value = [];
       variables.value = columns.value.map((c) => ({
         id: c.id,
@@ -107,7 +107,7 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
         type: type.value,
         kind: 'dynamic',
         dataset: activeDataset.value,
-        executionProcess: {
+        process: {
           modelName: modelName.value,
           prompt: prompt.value,
           columnsReferences: columnsReferences.value,

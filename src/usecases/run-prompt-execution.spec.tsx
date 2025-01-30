@@ -21,7 +21,6 @@ test('should generate a value', async () => {
 });
 
 test('should stream response with partial results', async () => {
-  console.error('Starting streaming test');
   const updates: PromptExecutionResponse[] = [];
 
   for await (const response of runPromptExecutionStream({
@@ -29,11 +28,8 @@ test('should stream response with partial results', async () => {
     modelName: testModelName,
     instruction: testPrompt,
   })) {
-    console.error('Received update:', response);
     updates.push(response);
   }
-
-  console.error('Stream complete. Total updates:', updates.length);
 
   expect(updates.length).toBeGreaterThan(1);
   expect(updates[0].done).toBe(false);

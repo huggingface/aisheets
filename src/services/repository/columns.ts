@@ -66,17 +66,15 @@ export const getColumnById = async (id: string): Promise<Column | null> => {
     name: column.name,
     type: column.type as ColumnType,
     kind: column.kind as ColumnKind,
-    cells: column.cells
-      .map((cell) => ({
-        id: cell.id,
-        idx: cell.idx,
-        value: cell.value,
-        error: cell.error,
-        validated: cell.validated,
-        columnId: cell.columnId,
-        updatedAt: cell.updatedAt,
-      }))
-      .sort((a, b) => a.idx - b.idx),
+    cells: column.cells.map((cell) => ({
+      id: cell.id,
+      idx: cell.idx,
+      value: cell.value,
+      error: cell.error,
+      validated: cell.validated,
+      columnId: cell.columnId,
+      updatedAt: cell.updatedAt,
+    })),
     process: {
       id: column.process?.id,
       columnsReferences: (column.process?.referredColumns ?? []).map(

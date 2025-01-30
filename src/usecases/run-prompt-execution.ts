@@ -25,7 +25,7 @@ Generate a new response based on the following instruction. Be clear and concise
 {{instruction}}
 
 {{#examples}}
-Find a way to generate the new response that is not similar to the examples below.
+Find a way to generate the new response similar to the examples below.
 ## Examples:
 - {{examples}}
 {{/examples}}
@@ -39,18 +39,29 @@ Find a way to generate the new response that is not similar to the examples belo
 const promptForResponseFromData = (
   instruction: string,
   data: object,
+  examples?: string[],
 ): string => {
   return mustache.render(
     `
-Generate a new response based on the following instruction. Be clear and concise in the response and do not generate any introductory text. Only the response is required.
+{{#examples}}
+# Example
+Guide you by these examples to complete the task
+- {{examples}}
+{{/examples}}
+{{^examples}}
+# Introduction
+Generate a new response based on the following task. Be clear and concise in 
+the response and do not generate any introductory text. Only a clear response is required.
+{{/examples}}
 
-## Instruction:
+# Task
 {{instruction}}
 
-## Response:
+# Response
     `,
     {
       instruction: mustache.render(instruction, data),
+      examples: examples?.join('\n- '),
     },
   );
 };
@@ -73,11 +84,17 @@ export const runPromptExecution = async ({
   }
 
   try {
-    const response = await chatCompletion({
-      model: modelName,
-      messages: [{ role: 'user', content: inputPrompt }],
-      accessToken,
-    });
+    // https://huggingface.co/docs/api-inference/tasks/chat-completion?code=js#api-specification
+    const response = await chatCompletion(
+      {
+        model: modelName,
+        messages: [{ role: 'user', content: inputPrompt }],
+        accessToken,
+      },
+      {
+        use_cache: false,
+      },
+    );
     return { value: response.choices[0].message.content };
   } catch (e) {
     let error: string;

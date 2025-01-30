@@ -4,7 +4,7 @@ import { Sequelize } from 'sequelize';
 
 // https://sequelize.org/docs/v6/other-topics/typescript/
 
-const isTest = true; //process.env.NODE_ENV === 'test';
+const isTest = process.env.NODE_ENV === 'test';
 
 export const db = new Sequelize({
   storage: isTest ? ':memory:' : './.data/db.sqlite',
@@ -16,17 +16,18 @@ export const db = new Sequelize({
   },
 });
 
-//TODO: Move to start up method
-try {
-  await db.authenticate();
-  consola.success('🔌 Connection has been established successfully.');
-} catch (error) {
-  consola.error('❌ Unable to connect to the database:', error);
-}
+db.beforeInit(async () => {
+  try {
+    await db.authenticate();
+    consola.success('🔌 Connection has been established successfully.');
+  } catch (error) {
+    consola.error('❌ Unable to connect to the database:', error);
+  }
 
-try {
-  await db.sync();
-  consola.success('🔁 Database synchronized');
-} catch (error) {
-  consola.error('❌ Failed to synchronize database', error);
-}
+  try {
+    await db.sync();
+    consola.success('🔁 Database synchronized');
+  } catch (error) {
+    consola.error('❌ Failed to synchronize database', error);
+  }
+});

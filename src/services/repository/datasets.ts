@@ -15,13 +15,13 @@ export const getOrCreateDataset = async ({
   });
 
   if (!dataset) {
-    const newDataset = await createDataset({
+    const { dataValues } = await createDataset({
       name: 'My Dataset',
       createdBy,
     });
 
     return {
-      ...newDataset,
+      ...dataValues,
       columns: [],
     };
   }

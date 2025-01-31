@@ -2,8 +2,6 @@ import { component$ } from '@builder.io/qwik';
 import {
   TbColumnInsertRight,
   TbColumns3,
-  TbDownload,
-  TbFilter,
   TbFold,
 } from '@qwikest/icons/tablericons';
 
@@ -13,7 +11,6 @@ import { useColumnsStore } from '~/state';
 
 export const Commands = component$(() => {
   const { openAddColumnModal } = useModals('addColumnModal');
-
   const { state: columns } = useColumnsStore();
 
   return (
@@ -84,24 +81,6 @@ export const Commands = component$(() => {
             </Select.Item>
           </Select.Popover>
         </Select.Root>
-
-        <Popover.Root flip={false} gutter={8} floating="bottom-start">
-          <Popover.Trigger
-            class={buttonVariants({
-              look: 'ghost',
-              size: 'sm',
-            })}
-          >
-            <div class="flex items-center gap-1 font-light">
-              <TbFilter />
-              Filter
-            </div>
-          </Popover.Trigger>
-
-          <Popover.Panel>
-            <h6 class="text-sm">Filters</h6>
-          </Popover.Panel>
-        </Popover.Root>
       </div>
 
       <div class="flex space-x-2">
@@ -113,10 +92,6 @@ export const Commands = component$(() => {
         >
           <TbColumnInsertRight />
           Add column
-        </Button>
-
-        <Button size="sm" look="ghost" class="flex gap-1 font-light">
-          <TbDownload />
         </Button>
       </div>
     </div>

@@ -1,5 +1,5 @@
 import { DatasetModel } from '~/services/db/models/dataset';
-import { getAllColumns } from '~/services/repository/columns';
+import { getDatasetColumns } from '~/services/repository/columns';
 import type { Dataset } from '~/state';
 interface CreateDatasetParams {
   name: string;
@@ -10,11 +10,11 @@ interface CreateDatasetParams {
 export const getOrCreateDataset = async ({
   createdBy,
 }: { createdBy: string }): Promise<Dataset> => {
-  const dataset = await DatasetModel.findOne({
+  const model = await DatasetModel.findOne({
     where: { createdBy },
   });
 
-  if (!dataset) {
+  if (!model) {
     const newDataset = await createDataset({
       name: 'My Dataset',
       createdBy,
@@ -28,12 +28,12 @@ export const getOrCreateDataset = async ({
     };
   }
 
-  const columns = await getAllColumns(dataset.id);
+  const columns = await getDatasetColumns(model.id);
 
   return {
-    id: dataset.id,
-    name: dataset.name,
-    createdBy: dataset.createdBy,
+    id: model.id,
+    name: model.name,
+    createdBy: model.createdBy,
     columns,
   };
 };

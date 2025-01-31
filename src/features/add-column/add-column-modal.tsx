@@ -3,7 +3,6 @@ import {
   TbAlignJustified,
   TbBraces,
   TbBrackets,
-  TbCloud,
   TbHash,
   TbKeyboard,
   TbToggleLeft,
@@ -137,17 +136,6 @@ export const AddColumnModal = component$(() => {
             <Button
               size="md"
               look="ghost"
-              class="flex justify-start text-left text-sm hover:border-green-200"
-            >
-              <span class="mr-2 flex h-8 w-8 items-center justify-center rounded-full bg-purple-300">
-                🤗
-              </span>
-              From HuggingFace
-            </Button>
-
-            <Button
-              size="md"
-              look="ghost"
               class="flex justify-start text-left text-sm hover:bg-blue-300"
               onClick$={() => openDynamicSidebar('text')}
             >
@@ -155,26 +143,6 @@ export const AddColumnModal = component$(() => {
                 <TbKeyboard />
               </span>
               Run Prompt
-            </Button>
-            <Button
-              size="md"
-              look="ghost"
-              class="flex justify-start text-left text-sm hover:bg-cyan-200"
-            >
-              <span class="mr-2 flex h-8 w-8 items-center justify-center rounded-full bg-purple-300">
-                <TbCloud />
-              </span>
-              Api Call
-            </Button>
-            <Button
-              size="md"
-              look="ghost"
-              class="flex justify-start text-left text-sm hover:bg-yellow-100"
-            >
-              <span class="mr-2 flex h-8 w-8 items-center justify-center rounded-full bg-purple-300">
-                <TbBraces />
-              </span>
-              Extract from JSON
             </Button>
           </div>
         </div>

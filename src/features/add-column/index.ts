@@ -1,1 +1,1 @@
-export * from './add-column-modal';
+export * from './add-dynamic-column-sidebar';

@@ -27,15 +27,18 @@ export const TableBody = component$(() => {
   return (
     <tbody>
       {Array.from({ length: rowCount }).map((_, rowIndex) => (
-        <tr key={rowIndex} class="hover:bg-gray-100">
-          <td class="max-w-6 border px-2 py-2 text-center">
-            <input type="checkbox" />
-          </td>
+        <tr
+          key={rowIndex}
+          class="border-b border-gray-200 hover:bg-gray-50/50 transition-colors"
+        >
           {columns.value.map((column) => {
             const cell = getCell(column, rowIndex);
-
             return (
-              <TableCell key={`${cell.id}-${cell.updatedAt}`} cell={cell} />
+              <TableCell
+                key={`${cell.id}-${cell.updatedAt}`}
+                cell={cell}
+                class="border-r border-gray-200 last:border-r-0"
+              />
             );
           })}
         </tr>

@@ -4,15 +4,13 @@ import {
   type RequestEvent,
   routeLoader$,
 } from '@builder.io/qwik-city';
-import { AddColumnModal, Commands } from '~/features';
-
 import { Table } from '~/components';
+import { Commands } from '~/features';
 
 import * as hub from '@huggingface/hub';
 
+import { useLoadDatasets } from '~/state';
 import { useServerSession } from '~/state/session';
-
-import { useDatasetsStore, useLoadDatasets } from '~/state';
 
 export { useDatasetsLoader } from '~/state';
 
@@ -22,24 +20,29 @@ export const onGet = async ({
   redirect,
   next,
   url,
+  headers,
 }: RequestEvent) => {
-  // See https://huggingface.co/docs/hub/en/spaces-oauth
-  const HF_TOKEN = process.env.HF_TOKEN;
-  const CLIENT_ID = process.env.OAUTH_CLIENT_ID;
-
   const session = sharedMap.get('session');
   if (session) {
     return next();
   }
 
+  // See https://huggingface.co/docs/hub/en/spaces-oauth
+  const CLIENT_ID = process.env.OAUTH_CLIENT_ID;
+  const HF_TOKEN = process.env.HF_TOKEN;
+
   if (CLIENT_ID) {
     const sessionCode = crypto.randomUUID();
+
+    const redirectOrigin = !isDev
+      ? url.origin.replace('http://', 'https://')
+      : url.origin;
 
     const authData = {
       state: sessionCode,
       clientId: CLIENT_ID,
-      scopes: 'inference-api',
-      redirectUrl: `${url.origin}/auth/callback/`,
+      scopes: process.env.OAUTH_SCOPES || 'openid profile inference-api',
+      redirectUrl: `${redirectOrigin}/auth/callback/`,
       localStorage: {
         codeVerifier: undefined,
         nonce: undefined,
@@ -95,20 +98,14 @@ export const useSession = routeLoader$(useServerSession);
 export default component$(() => {
   useLoadDatasets();
 
-  const session = useSession();
-  const { activeDataset } = useDatasetsStore();
-
   return (
-    <div class="mx-auto px-4 pt-2">
-      <h2>Hello {session.value.user.name} 👋</h2>
-      <h3>
-        You are creating the dataset <strong>{activeDataset.value.name}</strong>
-      </h3>
-      <Commands />
-
-      <Table />
-
-      <AddColumnModal />
+    <div class="min-h-screen bg-gray-50/50">
+      <div class="mx-auto max-w-[1200px] px-6 py-4">
+        <Commands />
+        <div class="mt-3">
+          <Table />
+        </div>
+      </div>
     </div>
   );
 });

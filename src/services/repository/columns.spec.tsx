@@ -2,20 +2,31 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { ColumnModel, ProcessColumnModel } from '../db/models/column';
 import { ProcessModel } from '../db/models/process';
 
+import { DatasetModel } from '../db/models/dataset';
 import { addColumn } from './columns';
 
 afterEach(async () => {
+  await DatasetModel.destroy({ where: {} });
   await ColumnModel.destroy({ where: {} });
   await ProcessModel.destroy({ where: {} });
 });
 
 describe('addColumn', () => {
   it('should add a new column with a process', async () => {
+    const dataset = await DatasetModel.create({
+      name: 'dataset',
+      createdBy: 'test',
+    });
     const newColumn = await addColumn(
       {
         name: 'Column 1',
         type: 'text',
         kind: 'static',
+        dataset: {
+          id: dataset.id,
+          name: dataset.name,
+          createdBy: dataset.createdBy,
+        },
       },
       {
         modelName: 'model',
@@ -30,16 +41,23 @@ describe('addColumn', () => {
   });
 
   it('should add a new column with a process and referred columns', async () => {
+    const dataset = await DatasetModel.create({
+      name: 'dataset',
+      createdBy: 'test',
+    });
+
     const columns = await ColumnModel.bulkCreate([
       {
         name: 'column 1',
         type: 'text',
         kind: 'static',
+        datasetId: dataset.id,
       },
       {
         name: 'column 2',
         type: 'text',
         kind: 'static',
+        datasetId: dataset.id,
       },
     ]);
 
@@ -48,6 +66,11 @@ describe('addColumn', () => {
         name: 'Column 1',
         type: 'text',
         kind: 'static',
+        dataset: {
+          id: dataset.id,
+          name: dataset.name,
+          createdBy: dataset.createdBy,
+        },
       },
       {
         modelName: 'model',

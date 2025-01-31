@@ -32,6 +32,12 @@ test('should save 10 cells', async () => {
     name: 'name',
     type: 'text',
     kind: 'dynamic',
+    dataset: {
+      id: 'id',
+      name: 'name',
+      createdBy: 'test',
+      columns: [],
+    },
     process: {
       limit: 10,
       columnsReferences: [],

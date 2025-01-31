@@ -39,11 +39,9 @@ export const Table = component$(() => {
 
   const state = useStore<{
     selectedColumns: Record<string, number[] | undefined>;
-    selectedRows: string[];
     columnWidths: Record<string, number>;
   }>({
     selectedColumns: {},
-    selectedRows: [],
     columnWidths: {},
   });
 
@@ -61,17 +59,15 @@ export const Table = component$(() => {
 
   if (columns.value.length === 0) {
     return (
-      <div class="overflow-x-auto">
-        <div class="flex items-center justify-center p-4">
-          <p class="text-gray-500">No data available</p>
-        </div>
+      <div class="min-h-[200px] flex items-center justify-center text-gray-400 text-sm">
+        <p>No columns yet. Click "Add column" to get started.</p>
       </div>
     );
   }
 
   return (
-    <div class="overflow-x-auto">
-      <table class="min-w-full bg-white text-sm">
+    <div class="w-full overflow-x-auto">
+      <table class="w-full border-collapse bg-white text-sm">
         <TableHeader />
         <TableBody />
       </table>

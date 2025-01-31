@@ -32,27 +32,28 @@ export const TableHeader = component$(() => {
   return (
     <thead>
       <tr>
-        <th class="max-w-8 border bg-gray-50 px-2 py-2 text-center hover:bg-sky-100">
-          <input type="checkbox" />
-        </th>
-
         {columns.value.map((column) => (
           <th
             key={column.id}
-            class="bg-purple-200 text-left font-light hover:bg-purple-50"
+            class="border-b border-r cursor-pointer border-gray-200 bg-white px-3 py-2 text-left font-medium text-gray-600 sticky top-0 last:border-r-0 z-0"
             onDblClick$={() => handleHeaderClick(column)}
           >
-            <div class="flex flex-row items-center justify-between">
-              <div class="flex w-full items-center gap-1 px-2">
-                <ColumnIcon type={column.type} kind={column.kind} />
-                {column.name}
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <ColumnIcon
+                  type={column.type}
+                  kind={column.kind}
+                  class="h-3.5 w-3.5 text-gray-400"
+                />
+                <span class="text-sm font-medium text-gray-700">
+                  {column.name}
+                </span>
               </div>
-              <div class="h-8  w-2 cursor-col-resize" />
+              <div class="h-full w-px cursor-col-resize hover:bg-gray-200" />
             </div>
           </th>
         ))}
       </tr>
-
       <RunExecutionSidebar
         column={selectedColumnForExecution}
         onRunExecution={onRunExecution}

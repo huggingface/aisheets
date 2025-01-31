@@ -5,12 +5,10 @@ import {
   TbDownload,
   TbFilter,
   TbFold,
-  TbPlayerPlay,
-  TbRefresh,
 } from '@qwikest/icons/tablericons';
 
 import { useModals } from '~/components/hooks/modals/use-modals';
-import { Button, buttonVariants, Popover, Select } from '~/components/ui';
+import { Button, Popover, Select, buttonVariants } from '~/components/ui';
 import { useColumnsStore } from '~/state';
 
 export const Commands = component$(() => {
@@ -115,24 +113,6 @@ export const Commands = component$(() => {
         >
           <TbColumnInsertRight />
           Add column
-        </Button>
-
-        <Button
-          size="sm"
-          look="outline"
-          class="flex gap-1 border-purple-300 bg-purple-100 font-light"
-        >
-          <TbPlayerPlay />
-          Run Prompt
-        </Button>
-
-        <Button
-          size="sm"
-          look="outline"
-          class="flex gap-1 border-green-300 bg-green-100 font-light"
-        >
-          <TbRefresh />
-          Sync with 🤗
         </Button>
 
         <Button size="sm" look="ghost" class="flex gap-1 font-light">

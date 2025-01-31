@@ -35,7 +35,7 @@ export const TableHeader = component$(() => {
         {columns.value.map((column) => (
           <th
             key={column.id}
-            class="border-b border-r border-gray-200 bg-white px-3 py-2 text-left font-medium text-gray-600 sticky top-0 last:border-r-0 z-0"
+            class="border-b border-r cursor-pointer border-gray-200 bg-white px-3 py-2 text-left font-medium text-gray-600 sticky top-0 last:border-r-0 z-0"
             onDblClick$={() => handleHeaderClick(column)}
           >
             <div class="flex items-center justify-between gap-2">

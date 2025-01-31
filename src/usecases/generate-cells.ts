@@ -1,6 +1,6 @@
 import {
   createCell,
-  getCellByIdxAndColumnId,
+  getColumnCellByIdx,
   getRowCells,
   updateCell,
 } from '~/services';
@@ -71,15 +71,16 @@ export const generateCells = async function* ({
 
     const response = await runPromptExecution(args);
 
-    let cell = await getCellByIdxAndColumnId({ idx: i, columnId: column.id });
+    let cell = await getColumnCellByIdx({ column, idx: i });
 
     if (!cell) {
       cell = await createCell({
-        idx: i,
-        value: response.value,
-        error: response.error,
-        // TODO: align Ids and entities as other type does (Column has a dataset instead of an ID)
-        columnId: column.id,
+        cell: {
+          idx: i,
+          value: response.value,
+          error: response.error,
+        },
+        column,
       });
     } else {
       cell = await updateCell({

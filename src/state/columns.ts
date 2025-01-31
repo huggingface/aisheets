@@ -25,7 +25,7 @@ export interface CreateColumn {
 export type Cell = {
   id: string;
   idx: number;
-  columnId?: string;
+  column?: Column;
   validated: boolean;
   value?: string;
   error?: string;
@@ -67,7 +67,7 @@ export const useColumnsStore = () => {
       replaceColumn(columns.value.filter((c) => c.id !== deleted.id));
     }),
     addCell: $((cell: Cell) => {
-      const column = columns.value.find((c) => c.id === cell.columnId);
+      const column = columns.value.find((c) => c.id === cell.column?.id);
       if (!column) return;
 
       column.cells.push(cell);
@@ -75,7 +75,7 @@ export const useColumnsStore = () => {
       replaceColumn(columns.value);
     }),
     replaceCell: $((cell: Cell) => {
-      const column = columns.value.find((c) => c.id === cell.columnId);
+      const column = columns.value.find((c) => c.id === cell.column?.id);
       if (!column) return;
 
       column.cells = [

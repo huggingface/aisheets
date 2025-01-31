@@ -15,7 +15,10 @@ export const useEditColumn = () =>
       return;
     }
 
-    const validatedCells = await getColumnCells(column.id, { validated: true });
+    const validatedCells = await getColumnCells({
+      column,
+      conditions: { validated: true },
+    });
 
     yield* generateCells({
       column,

@@ -15,7 +15,7 @@ export const TableBody = component$(() => {
         value: '',
         error: '',
         validated: false,
-        columnId: column.id,
+        column,
         updatedAt: new Date(),
         idx: rowIndex,
       };

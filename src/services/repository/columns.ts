@@ -27,39 +27,45 @@ export const getDatasetColumns = async (
     order: [['createdAt', 'ASC']],
   });
 
-  return models.map((column) => ({
-    id: column.id,
-    name: column.name,
-    type: column.type as ColumnType,
-    kind: column.kind as ColumnKind,
+  return models.map((model) => {
+    const column = {
+      id: model.id,
+      name: model.name,
+      type: model.type as ColumnType,
+      kind: model.kind as ColumnKind,
 
-    dataset: {
-      id: column.dataset.id,
-      name: column.dataset.name,
-      createdBy: column.dataset.createdBy,
-    },
+      dataset: {
+        id: model.dataset.id,
+        name: model.dataset.name,
+        createdBy: model.dataset.createdBy,
+      },
 
-    cells: column.cells.map((cell) => ({
-      id: cell.id,
-      idx: cell.idx,
-      value: cell.value,
-      error: cell.error,
-      validated: cell.validated,
-      columnId: cell.columnId,
-      updatedAt: cell.updatedAt,
-    })),
+      process: {
+        id: model.process?.id,
+        columnsReferences: (model.process?.referredColumns ?? []).map(
+          (columnRef) => columnRef.id,
+        ),
+        limit: model.process?.limit ?? 0,
+        modelName: model.process?.modelName ?? '',
+        offset: model.process?.offset ?? 0,
+        prompt: model.process?.prompt ?? '',
+      },
+      cells: [],
+    };
 
-    process: {
-      id: column.process?.id,
-      columnsReferences: (column.process?.referredColumns ?? []).map(
-        (column) => column.id,
-      ),
-      limit: column.process?.limit ?? 0,
-      modelName: column.process?.modelName ?? '',
-      offset: column.process?.offset ?? 0,
-      prompt: column.process?.prompt ?? '',
-    },
-  }));
+    return {
+      ...column,
+      cells: model.cells.map((cell) => ({
+        id: cell.id,
+        idx: cell.idx,
+        value: cell.value,
+        error: cell.error,
+        validated: cell.validated,
+        updatedAt: cell.updatedAt,
+        column,
+      })),
+    };
+  });
 };
 
 export const getColumnById = async (id: string): Promise<Column | null> => {
@@ -82,7 +88,7 @@ export const getColumnById = async (id: string): Promise<Column | null> => {
 
   if (!model) return null;
 
-  return {
+  const column = {
     id: model.id,
     name: model.name,
     type: model.type as ColumnType,
@@ -94,16 +100,6 @@ export const getColumnById = async (id: string): Promise<Column | null> => {
       createdBy: model.dataset.createdBy,
     },
 
-    cells: model.cells.map((cell) => ({
-      id: cell.id,
-      idx: cell.idx,
-      value: cell.value,
-      error: cell.error,
-      validated: cell.validated,
-      columnId: cell.columnId,
-      updatedAt: cell.updatedAt,
-    })),
-
     process: {
       id: model.process?.id,
       columnsReferences: (model.process?.referredColumns ?? []).map(
@@ -114,6 +110,21 @@ export const getColumnById = async (id: string): Promise<Column | null> => {
       offset: model.process?.offset ?? 0,
       prompt: model.process?.prompt ?? '',
     },
+
+    cells: [],
+  };
+
+  return {
+    ...column,
+    cells: model.cells.map((cell) => ({
+      id: cell.id,
+      idx: cell.idx,
+      value: cell.value,
+      error: cell.error,
+      validated: cell.validated,
+      updatedAt: cell.updatedAt,
+      column,
+    })),
   };
 };
 

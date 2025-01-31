@@ -1,7 +1,7 @@
 import { isBrowser } from '@builder.io/qwik';
 import type { RequestEventBase } from '@builder.io/qwik-city';
 
-interface Session {
+export interface Session {
   token: string;
   user: {
     name: string;

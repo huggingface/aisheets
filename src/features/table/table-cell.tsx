@@ -1,13 +1,14 @@
 import { $, component$, useSignal, useTask$ } from '@builder.io/qwik';
 import { Skeleton } from '~/components/ui/skeleton/skeleton';
 import { Textarea } from '~/components/ui/textarea/textarea';
-import type { Cell } from '~/state';
+import { type Cell, useColumnsStore } from '~/state';
 import { useValidateCellUseCase } from '~/usecases/validate-cell.usecase';
 
 export const TableCell = component$<{ cell: Cell }>(({ cell }) => {
   const isEditing = useSignal(false);
   const originalValue = useSignal(cell.value);
   const newCellValue = useSignal(cell.value);
+  const { replaceCell } = useColumnsStore();
 
   const elementRef = useSignal<HTMLElement>();
   const editCellValueInput = useSignal<HTMLElement>();
@@ -15,13 +16,13 @@ export const TableCell = component$<{ cell: Cell }>(({ cell }) => {
   const validateCell = useValidateCellUseCase();
 
   useTask$(({ track }) => {
-    track(isEditing);
+    track(() => isEditing.value);
+    track(() => cell.value);
+
+    originalValue.value = cell.value;
 
     if (isEditing.value) {
-      originalValue.value = cell.value;
-
       newCellValue.value = originalValue.value;
-
       editCellValueInput.value?.focus();
     }
   });
@@ -29,11 +30,18 @@ export const TableCell = component$<{ cell: Cell }>(({ cell }) => {
   const onUpdateCell = $(async () => {
     originalValue.value = newCellValue.value;
 
-    await validateCell({
+    const success = await validateCell({
       id: cell.id,
-
       value: newCellValue.value!,
     });
+
+    if (success) {
+      replaceCell({
+        ...cell,
+        value: newCellValue.value,
+        validated: true,
+      });
+    }
 
     isEditing.value = false;
   });
@@ -61,8 +69,10 @@ export const TableCell = component$<{ cell: Cell }>(({ cell }) => {
         <Textarea
           ref={editCellValueInput}
           bind:value={newCellValue}
-          onKeyUp$={(e) => {
-            if (e.key === 'Enter' && e.altKey) {
+          onKeyDown$={(e) => {
+            if (e.key === 'Enter') {
+              if (e.shiftKey) return;
+              e.preventDefault();
               onUpdateCell();
             }
           }}

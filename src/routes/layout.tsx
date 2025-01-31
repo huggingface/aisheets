@@ -17,11 +17,11 @@ export const onGet: RequestHandler = async ({
 
 export default component$(() => {
   return (
-    <>
+    <div class="min-h-screen bg-white">
       {/* <NavBar /> */}
       <ModalsProvider>
         <Slot />
       </ModalsProvider>
-    </>
+    </div>
   );
 });

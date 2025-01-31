@@ -26,7 +26,7 @@ export const Commands = component$(() => {
   });
 
   return (
-    <div class="flex h-12 w-full items-center justify-between border-t">
+    <div class="flex h-12 w-full items-center justify-between">
       <div class="flex space-x-2">{/* Left side empty for now */}</div>
 
       <div class="flex space-x-2">

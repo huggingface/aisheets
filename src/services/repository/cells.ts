@@ -11,7 +11,7 @@ interface GetRowCellsParams {
 export const getRowCells = async ({
   rowIdx,
   columns,
-}: GetRowCellsParams): Promise<Cell[]> => {
+}: GetRowCellsParams): Promise<ColumnCellModel[]> => {
   const models = await ColumnCellModel.findAll({
     where: {
       [Op.and]: [{ idx: rowIdx }, columns ? { columnId: columns } : {}],
@@ -23,15 +23,7 @@ export const getRowCells = async ({
     },
   });
 
-  return models.map((model) => ({
-    id: model.id,
-    idx: model.idx,
-    value: model.value,
-    error: model.error,
-    validated: model.validated,
-    columnId: model.columnId,
-    updatedAt: model.updatedAt,
-  }));
+  return models;
 };
 
 export const getCellByIdxAndColumnId = async ({

@@ -4,10 +4,8 @@ import { Sequelize } from 'sequelize';
 
 // https://sequelize.org/docs/v6/other-topics/typescript/
 
-const isTest = process.env.NODE_ENV === 'test';
-
 export const db = new Sequelize({
-  storage: isTest ? ':memory:' : './.data/db.sqlite',
+  storage: ':memory:',
   dialect: 'sqlite',
   logging: (sql) => {
     if (isDev) {

@@ -3,11 +3,11 @@ import { useModals } from '~/components/hooks';
 import { RunExecutionSidebar } from '~/features/run-execution/run-execution-sidebar';
 import { ColumnIcon } from '~/features/table/table';
 import { type Column, useColumnsStore } from '~/state';
-import { useReRunExecution } from '~/usecases/run-execution.usecase';
+import { useEditColumn } from '~/usecases/edit-column.usecase';
 
 export const TableHeader = component$(() => {
   const { state: columns, replaceCell } = useColumnsStore();
-  const runExecution = useReRunExecution();
+  const editColumn = useEditColumn();
   const { openRunExecutionSidebar, closeRunExecutionSidebar } = useModals(
     'runExecutionSidebar',
   );
@@ -19,10 +19,10 @@ export const TableHeader = component$(() => {
     openRunExecutionSidebar();
   });
 
-  const onRunExecution = $(async (columnId: string) => {
+  const onUpdateColumn = $(async (column: Column) => {
     closeRunExecutionSidebar();
 
-    const response = await runExecution(columnId);
+    const response = await editColumn(column);
 
     for await (const { cell } of response) {
       replaceCell(cell);
@@ -55,7 +55,7 @@ export const TableHeader = component$(() => {
 
       <RunExecutionSidebar
         column={selectedColumnForExecution}
-        onRunExecution={onRunExecution}
+        onUpdateColumn={onUpdateColumn}
       />
     </thead>
   );

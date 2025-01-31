@@ -77,8 +77,6 @@ export const RunExecutionSidebar = component$<SidebarProps>(
             </div>
           </div>
 
-          {column.value.process?.columnsReferences}
-
           <div class="flex h-16 w-full items-center justify-center">
             <Button
               size="sm"

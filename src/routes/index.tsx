@@ -43,15 +43,13 @@ export const onGet = async ({
     const authData = {
       state: sessionCode,
       clientId: CLIENT_ID,
-      scopes: 'inference-api',
+      scopes: process.env.OAUTH_SCOPES || 'openid profile inference-api',
       redirectUrl: `${redirectOrigin}/auth/callback/`,
       localStorage: {
         codeVerifier: undefined,
         nonce: undefined,
       },
     };
-
-    hub.oauthHandleRedirectIfPresent;
 
     const loginUrl = await hub.oauthLoginUrl(authData);
 

@@ -40,11 +40,7 @@ export const TableHeader = component$(() => {
           >
             <div class="flex items-center justify-between gap-2">
               <div class="flex items-center gap-2">
-                <ColumnIcon
-                  type={column.type}
-                  kind={column.kind}
-                  class="h-3.5 w-3.5 text-gray-400"
-                />
+                <ColumnIcon type={column.type} kind={column.kind} />
                 <span class="text-sm font-medium text-gray-700">
                   {column.name}
                 </span>

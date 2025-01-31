@@ -20,24 +20,29 @@ export const onGet = async ({
   redirect,
   next,
   url,
+  headers,
 }: RequestEvent) => {
-  // See https://huggingface.co/docs/hub/en/spaces-oauth
-  const HF_TOKEN = process.env.HF_TOKEN;
-  const CLIENT_ID = process.env.OAUTH_CLIENT_ID;
-
   const session = sharedMap.get('session');
   if (session) {
     return next();
   }
 
+  // See https://huggingface.co/docs/hub/en/spaces-oauth
+  const CLIENT_ID = process.env.OAUTH_CLIENT_ID;
+  const HF_TOKEN = process.env.HF_TOKEN;
+
   if (CLIENT_ID) {
     const sessionCode = crypto.randomUUID();
+
+    const redirectOrigin = !isDev
+      ? url.origin.replace('http://', 'https://')
+      : url.origin;
 
     const authData = {
       state: sessionCode,
       clientId: CLIENT_ID,
-      scopes: 'inference-api',
-      redirectUrl: `${url.origin}/auth/callback/`,
+      scopes: process.env.OAUTH_SCOPES || 'openid profile inference-api',
+      redirectUrl: `${redirectOrigin}/auth/callback/`,
       localStorage: {
         codeVerifier: undefined,
         nonce: undefined,

@@ -39,11 +39,9 @@ export const Table = component$(() => {
 
   const state = useStore<{
     selectedColumns: Record<string, number[] | undefined>;
-    selectedRows: string[];
     columnWidths: Record<string, number>;
   }>({
     selectedColumns: {},
-    selectedRows: [],
     columnWidths: {},
   });
 

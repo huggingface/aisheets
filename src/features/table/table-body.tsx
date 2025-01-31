@@ -28,9 +28,6 @@ export const TableBody = component$(() => {
     <tbody>
       {Array.from({ length: rowCount }).map((_, rowIndex) => (
         <tr key={rowIndex} class="hover:bg-gray-100">
-          <td class="max-w-6 border px-2 py-2 text-center">
-            <input type="checkbox" />
-          </td>
           {columns.value.map((column) => {
             const cell = getCell(column, rowIndex);
 

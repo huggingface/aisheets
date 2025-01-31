@@ -32,10 +32,6 @@ export const TableHeader = component$(() => {
   return (
     <thead>
       <tr>
-        <th class="max-w-8 border bg-gray-50 px-2 py-2 text-center hover:bg-sky-100">
-          <input type="checkbox" />
-        </th>
-
         {columns.value.map((column) => (
           <th
             key={column.id}

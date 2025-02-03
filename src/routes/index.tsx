@@ -9,6 +9,7 @@ import { Commands } from '~/features';
 
 import * as hub from '@huggingface/hub';
 
+import { saveSession } from '~/services/auth/session';
 import { useLoadDatasets } from '~/state';
 import { useServerSession } from '~/state/session';
 
@@ -77,13 +78,7 @@ export const onGet = async ({
       },
     };
 
-    cookie.delete('session');
-
-    cookie.set('session', session, {
-      secure: true,
-      httpOnly: !isDev,
-      path: '/',
-    });
+    saveSession(cookie, session);
 
     sharedMap.set('session', session);
 

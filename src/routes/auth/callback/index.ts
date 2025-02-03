@@ -1,16 +1,8 @@
-import { isDev } from '@builder.io/qwik';
 import type { RequestEvent } from '@builder.io/qwik-city';
 import * as hub from '@huggingface/hub';
+import { saveSession } from '~/services/auth/session';
 
-export const onGet = async ({
-  cookie,
-  redirect,
-  query,
-  url,
-  text,
-  sharedMap,
-  next,
-}: RequestEvent) => {
+export const onGet = async ({ cookie, redirect, query, url }: RequestEvent) => {
   const code = query.get('code');
   const stateParam = query.get('state');
 
@@ -49,13 +41,7 @@ export const onGet = async ({
       },
     };
 
-    cookie.delete('session');
-
-    cookie.set('session', session, {
-      secure: true,
-      httpOnly: !isDev,
-      path: '/',
-    });
+    saveSession(cookie, session);
   } catch (e) {
     console.error(e);
   }

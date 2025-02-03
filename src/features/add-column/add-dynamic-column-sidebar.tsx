@@ -123,7 +123,7 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
     return (
       <Sidebar name="addDynamicColumnSidebar">
         <div class="flex h-full flex-col justify-between p-4">
-          <div class="h-full">
+          <div class="max-h-full">
             <div class="flex flex-col gap-4">
               <div class="flex items-center justify-between">
                 <Label for="column-name">Column name</Label>
@@ -182,7 +182,7 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
                       <Select.Trigger class="bg-background border-input">
                         <Select.DisplayValue />
                       </Select.Trigger>
-                      <Select.Popover class="bg-background border border-border max-h-[200px] overflow-y-auto top-[100%] bottom-auto">
+                      <Select.Popover class="bg-background border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto">
                         {models.map((model) => (
                           <Select.Item
                             key={model.id}

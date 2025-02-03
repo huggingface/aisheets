@@ -82,7 +82,7 @@ export const TableHeader = component$(() => {
             </th>
 
             {indexColumnEditing.value === index ? (
-              <th key="temporal" class="w-[200px]" />
+              <th key="temporal" class="w-[300px]" />
             ) : null}
           </>
         ))}

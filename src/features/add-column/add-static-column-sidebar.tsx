@@ -43,7 +43,7 @@ export const AddStaticColumnSidebar = component$<SidebarProps>(
     return (
       <Sidebar name="addStaticColumnSidebar">
         <div class="flex h-full flex-col justify-between p-4">
-          <div class="h-full">
+          <div class="max-h-full">
             <div class="flex flex-col gap-4">
               <div class="flex items-center justify-between">
                 <Label for="column-name">Column name</Label>

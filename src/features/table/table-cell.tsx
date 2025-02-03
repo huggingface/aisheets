@@ -1,4 +1,5 @@
 import { $, component$, useSignal, useTask$ } from '@builder.io/qwik';
+import { Markdown } from '~/components/ui/markdown/markdown';
 import { Skeleton } from '~/components/ui/skeleton/skeleton';
 import { Textarea } from '~/components/ui/textarea/textarea';
 import { type Cell, useColumnsStore } from '~/state';
@@ -80,14 +81,14 @@ export const TableCell = component$<{ cell: Cell }>(({ cell }) => {
 
   return (
     <td
-      class="px-3 h-[60px] cursor-pointer border-r border-gray-200 last:border-r-0"
+      class="px-3 h-[60px] cursor-pointer border-r border-gray-200 last:border-r-0 max-w-[300px]"
       onDblClick$={() => {
         isEditing.value = true;
       }}
     >
-      <div class="line-clamp-6 text-sm">
+      <div class="line-clamp-6 text-sm overflow-hidden text-ellipsis">
         {originalValue.value ? (
-          <span class="text-gray-900">{originalValue.value}</span>
+          <Markdown class="text-gray-900" content={originalValue.value} />
         ) : (
           <span class="text-red-500 text-xs flex items-center gap-1">
             <span>⚠</span>

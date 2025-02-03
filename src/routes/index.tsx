@@ -4,11 +4,11 @@ import {
   type RequestEvent,
   routeLoader$,
 } from '@builder.io/qwik-city';
-import { Table } from '~/components';
 import { Commands } from '~/features';
 
 import * as hub from '@huggingface/hub';
 
+import { Table } from '~/features/table/table';
 import { useLoadDatasets } from '~/state';
 import { useServerSession } from '~/state/session';
 
@@ -102,9 +102,7 @@ export default component$(() => {
     <div class="min-h-screen bg-gray-50/50">
       <div class="mx-auto max-w-[1200px] px-6 py-4">
         <Commands />
-        <div class="mt-3">
-          <Table />
-        </div>
+        <Table />
       </div>
     </div>
   );

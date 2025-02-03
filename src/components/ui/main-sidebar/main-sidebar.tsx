@@ -2,7 +2,7 @@ import { $, component$, useStore } from '@builder.io/qwik';
 import { LuPanelLeftClose, LuPanelLeftOpen } from '@qwikest/icons/lucide';
 
 export const MainSidebar = component$(() => {
-  const store = useStore({ isExpanded: true });
+  const store = useStore({ isExpanded: false });
 
   const mockedItems = [
     'Lorem ipsum dolor',

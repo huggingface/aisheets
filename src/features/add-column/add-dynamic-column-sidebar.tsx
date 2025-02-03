@@ -121,7 +121,7 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
     });
 
     return (
-      <Sidebar bind:show={isOpenAddDynamicColumnSidebar}>
+      <Sidebar name="addDynamicColumnSidebar">
         <div class="flex h-full flex-col justify-between p-4">
           <div class="h-full">
             <div class="flex flex-col gap-4">

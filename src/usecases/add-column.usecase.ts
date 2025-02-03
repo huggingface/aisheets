@@ -28,11 +28,13 @@ export const useAddColumnUseCase = () =>
       return;
     }
 
-    yield* generateCells({
+    for await (const cell of generateCells({
       column,
       process: column.process!,
       session,
       limit: column.process!.limit!,
       offset: column.process!.offset,
-    });
+    })) {
+      yield { cell };
+    }
   });

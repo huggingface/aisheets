@@ -19,6 +19,7 @@ import {
 import {
   type ColumnType,
   type CreateColumn,
+  TEMPORAL_ID,
   useColumnsStore,
   useDatasetsStore,
 } from '~/state';
@@ -66,10 +67,12 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
       modelName.value = DEFAULT_MODEL;
       rowsToGenerate.value = '5';
       columnsReferences.value = [];
-      variables.value = columns.value.map((c) => ({
-        id: c.id,
-        name: c.name,
-      }));
+      variables.value = columns.value
+        .filter((c) => c.id !== TEMPORAL_ID)
+        .map((c) => ({
+          id: c.id,
+          name: c.name,
+        }));
     });
 
     const loadModels = useResource$(async ({ track, cleanup }) => {

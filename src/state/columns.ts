@@ -1,4 +1,4 @@
-import { $, useContext, useSignal, useTask$ } from '@builder.io/qwik';
+import { $, useComputed$, useContext } from '@builder.io/qwik';
 
 import { type Dataset, datasetsContext } from '~/state/datasets';
 
@@ -42,19 +42,14 @@ export interface Column {
   dataset: Omit<Dataset, 'columns'>;
 }
 
+export const TEMPORAL_ID = '-1';
 export const useColumnsStore = () => {
   const dataset = useContext(datasetsContext);
-  const columns = useSignal<Column[]>([]);
-
-  useTask$(({ track }) => {
-    track(dataset);
-
-    if (dataset.value.columns.length > 0) {
-      columns.value = [...dataset.value.columns];
-    } else {
-      columns.value = [
+  const columns = useComputed$(() => {
+    if (dataset.value.columns.length === 0) {
+      return [
         {
-          id: '1f6c1c55-671f-4c88-ba30-914a1a974f9e',
+          id: TEMPORAL_ID,
           name: 'Column 1',
           kind: 'dynamic',
           type: 'text',
@@ -63,8 +58,10 @@ export const useColumnsStore = () => {
             ...dataset.value,
           },
         },
-      ];
+      ] as Column[];
     }
+
+    return dataset.value.columns.filter((c) => c.id !== TEMPORAL_ID);
   });
 
   const replaceColumn = $((replaced: Column[]) => {

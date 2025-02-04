@@ -21,39 +21,29 @@ export const RunExecutionSidebar = component$<SidebarProps>(
     const column = useSignal<Column | null>(null);
     const { state: columns, updateColumn, replaceCell } = useColumnsStore();
     const isGenerating = useSignal(false);
+    const prompt = useSignal('');
+    const modelName = useSignal('');
 
     useTask$(({ track }) => {
       track(args);
-
       if (!args.value?.columnId) return;
 
       const columnFound = columns.value.find(
         (column) => column.id === args.value?.columnId,
       )!;
-
       column.value = { ...columnFound };
+      prompt.value = columnFound.process?.prompt || '';
+      modelName.value = columnFound.process?.modelName || '';
     });
 
-    const updatePrompt = $((value: string) => {
-      if (!column.value) return;
-      column.value = {
-        ...column.value,
-        process: {
-          ...column.value.process!,
-          prompt: value,
-        },
-      };
-    });
-
-    const updateModelName = $((value: string) => {
-      if (!column.value) return;
-      column.value = {
-        ...column.value,
-        process: {
-          ...column.value.process!,
-          modelName: value,
-        },
-      };
+    // Sync signals back to column
+    useTask$(({ track }) => {
+      track(prompt);
+      track(modelName);
+      if (column.value?.process) {
+        column.value.process.prompt = prompt.value;
+        column.value.process.modelName = modelName.value;
+      }
     });
 
     const runExecution = $(async () => {
@@ -126,12 +116,7 @@ export const RunExecutionSidebar = component$<SidebarProps>(
               />
 
               <Label for="column-prompt">Prompt template</Label>
-              <Textarea
-                value={column.value.process?.prompt}
-                onInput$={(e) =>
-                  updatePrompt((e.target as HTMLTextAreaElement).value)
-                }
-              />
+              <Textarea bind:value={prompt} />
 
               <Label for="column-model" class="flex gap-1">
                 Model name. Available models in the
@@ -144,14 +129,7 @@ export const RunExecutionSidebar = component$<SidebarProps>(
                   huggingface playground
                 </a>
               </Label>
-              <Input
-                id="column-model"
-                class="h-10"
-                value={column.value.process!.modelName}
-                onInput$={(e) =>
-                  updateModelName((e.target as HTMLInputElement).value)
-                }
-              />
+              <Input id="column-model" class="h-10" bind:value={modelName} />
             </div>
           </div>
 

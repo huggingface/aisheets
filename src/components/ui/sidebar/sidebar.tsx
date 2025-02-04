@@ -43,7 +43,7 @@ export const Sidebar = component$<{
             ? `${nearToPosition.value.right}px`
             : 'unset',
         }}
-        class={`fixed max-h-full min-w-[33vw] transform bg-white text-black transition-transform duration-300 z-20 shadow-md ${
+        class={`fixed max-h-[92vh] min-w-[33vw] overflow-auto transform bg-white text-black transition-transform duration-300 z-20 shadow-md ${
           !args.value?.columnId && 'fixed !right-0 top-2'
         }
         }`}

@@ -1,12 +1,10 @@
 import { $, component$ } from '@builder.io/qwik';
 import { AddDynamicColumnSidebar } from '~/features/add-column/add-dynamic-column-sidebar';
-import { ExportToHubSidebar } from '~/features/export-to-hub';
 import { type CreateColumn, useColumnsStore } from '~/state';
 import { useAddColumnUseCase } from '~/usecases/add-column.usecase';
 
 export const Commands = component$(() => {
   const { openAddDynamicColumnSidebar } = useModals('addDynamicColumnSidebar');
-  const { openExportToHubSidebar } = useModals('exportToHubSidebar');
   const { addColumn, addCell } = useColumnsStore();
 
   const addNewColumn = useAddColumnUseCase();
@@ -37,18 +35,8 @@ export const Commands = component$(() => {
           <TbColumnInsertRight />
           Add column
         </Button>
-        <AddDynamicColumnSidebar onCreateColumn={onCreateColumn} />
 
-        <Button
-          size="sm"
-          look="outline"
-          class="flex gap-1 font-light"
-          onClick$={openExportToHubSidebar}
-        >
-          <TbColumnInsertRight />
-          Export to Hub
-        </Button>
-        <ExportToHubSidebar />
+        <AddDynamicColumnSidebar onCreateColumn={onCreateColumn} />
       </div>
     </div>
   );

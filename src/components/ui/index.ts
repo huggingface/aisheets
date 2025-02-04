@@ -10,4 +10,3 @@ export * from './skeleton/skeleton';
 export * from './tabs/tabs';
 export * from './textarea/textarea';
 export * from './textarea/textarea';
-export * from './checkbox/checkbox';

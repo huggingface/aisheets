@@ -29,17 +29,24 @@ export const TableCell = component$<{ cell: Cell }>(({ cell }) => {
   });
 
   const onUpdateCell = $(async () => {
-    originalValue.value = newCellValue.value;
+    const valueToUpdate = newCellValue.value;
+
+    if (valueToUpdate === originalValue.value) {
+      isEditing.value = false;
+      return;
+    }
+
+    originalValue.value = valueToUpdate;
 
     const success = await validateCell({
       id: cell.id,
-      value: newCellValue.value!,
+      value: valueToUpdate!,
     });
 
     if (success) {
       replaceCell({
         ...cell,
-        value: newCellValue.value,
+        value: valueToUpdate,
         validated: true,
       });
     }
@@ -60,16 +67,20 @@ export const TableCell = component$<{ cell: Cell }>(({ cell }) => {
 
   if (isEditing.value) {
     return (
-      <td ref={elementRef} class="px-3 min-h-[60px]">
+      <td class="px-3 min-h-[60px]">
         <Textarea
           ref={editCellValueInput}
           bind:value={newCellValue}
+          preventEnterNewline
           class="w-full resize-y border-0 rounded-none bg-transparent p-0 focus:outline-none focus:ring-0 text-sm"
           style={{
             height: `${editCellValueInput.value?.scrollHeight || 60}px`,
           }}
           onKeyDown$={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
+            if (e.key === 'Enter') {
+              if (e.shiftKey) {
+                return;
+              }
               e.preventDefault();
               onUpdateCell();
             }

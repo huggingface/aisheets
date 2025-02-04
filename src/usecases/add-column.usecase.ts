@@ -1,14 +1,19 @@
 import { type RequestEventBase, server$ } from '@builder.io/qwik-city';
 
 import { createColumn } from '~/services/repository';
-import { type CreateColumn, useServerSession } from '~/state';
+import {
+  type Cell,
+  type Column,
+  type CreateColumn,
+  useServerSession,
+} from '~/state';
 import { generateCells } from './generate-cells';
 
 export const useAddColumnUseCase = () =>
   server$(async function* (
     this: RequestEventBase<QwikCityPlatform>,
     newColum: CreateColumn,
-  ) {
+  ): AsyncGenerator<{ column?: Column; cell?: Cell }> {
     const session = useServerSession(this);
     const column = await createColumn(newColum);
 
@@ -28,11 +33,13 @@ export const useAddColumnUseCase = () =>
       return;
     }
 
-    yield* generateCells({
+    for await (const cell of generateCells({
       column,
       process: column.process!,
       session,
       limit: column.process!.limit!,
       offset: column.process!.offset,
-    });
+    })) {
+      yield { cell };
+    }
   });

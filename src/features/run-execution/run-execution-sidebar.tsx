@@ -5,7 +5,6 @@ import {
   Button,
   Input,
   Label,
-  Select,
   Sidebar,
   Textarea,
   useModals,
@@ -112,11 +111,6 @@ export const RunExecutionSidebar = component$<SidebarProps>(
                 class="h-10"
                 value={column.value.name}
               />
-
-              <Label for="column-output-type">Output type</Label>
-              <Select.Root id="column-output-type" value={column.value.type}>
-                <Select.Trigger>{column.value.type}</Select.Trigger>
-              </Select.Root>
 
               <Label for="column-prompt">Prompt template</Label>
               <Textarea

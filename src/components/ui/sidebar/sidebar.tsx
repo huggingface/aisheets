@@ -43,7 +43,8 @@ export const Sidebar = component$<{
             ? `${nearToPosition.value.right}px`
             : 'unset',
         }}
-        class={`fixed max-h-full w-[300px] transform bg-white text-black transition-transform duration-300 z-20 shadow-md ${!args.value?.columnId && 'fixed !right-0 top-2'}
+        class={`fixed max-h-full w-[300px] transform bg-white text-black transition-transform duration-300 z-20 shadow-md ${
+          !args.value?.columnId && 'fixed !right-0 top-2'
         }`}
       >
         <Slot />

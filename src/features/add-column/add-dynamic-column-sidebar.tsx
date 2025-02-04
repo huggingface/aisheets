@@ -17,7 +17,6 @@ import {
   type Variable,
 } from '~/features/add-column/components/template-textarea';
 import {
-  type ColumnType,
   type CreateColumn,
   TEMPORAL_ID,
   useColumnsStore,
@@ -44,24 +43,22 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
       useModals('addDynamicColumnSidebar');
     const { state: columns } = useColumnsStore();
 
-    const type = useSignal<NonNullable<ColumnType>>('text');
     const name = useSignal('');
     const rowsToGenerate = useSignal('5');
     const prompt = useSignal('');
     const variables = useSignal<Variable[]>([]);
     const columnsReferences = useSignal<string[]>([]);
+    const modelName = useSignal(DEFAULT_MODEL);
 
     const { activeDataset } = useDatasetsStore();
 
     const onSelectedVariables = $((variables: { id: string }[]) => {
       columnsReferences.value = variables.map((v) => v.id);
     });
-    const modelName = useSignal(DEFAULT_MODEL);
 
     useTask$(({ track }) => {
       track(isOpenAddDynamicColumnSidebar);
 
-      type.value = 'text';
       name.value = '';
       prompt.value = '';
       modelName.value = DEFAULT_MODEL;
@@ -107,7 +104,7 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
 
       const column: CreateColumn = {
         name: name.value,
-        type: type.value,
+        type: 'text',
         kind: 'dynamic',
         dataset: activeDataset.value,
         process: {
@@ -145,24 +142,6 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
                 placeholder="Enter column name"
                 bind:value={name}
               />
-
-              <Label for="column-output-type">Output type</Label>
-
-              <Select.Root id="column-output-type" bind:value={type}>
-                <Select.Trigger>
-                  <Select.DisplayValue />
-                </Select.Trigger>
-                <Select.Popover>
-                  {outputType.map((type) => (
-                    <Select.Item key={type}>
-                      <Select.ItemLabel>{type}</Select.ItemLabel>
-                      <Select.ItemIndicator>
-                        <LuCheck class="h-4 w-4" />
-                      </Select.ItemIndicator>
-                    </Select.Item>
-                  ))}
-                </Select.Popover>
-              </Select.Root>
 
               <Label for="column-prompt">Prompt template</Label>
               <TemplateTextArea

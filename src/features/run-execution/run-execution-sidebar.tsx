@@ -20,7 +20,7 @@ export const RunExecutionSidebar = component$<SidebarProps>(
   ({ onUpdateCell }) => {
     const { args, closeRunExecutionSidebar } = useModals('runExecutionSidebar');
     const column = useSignal<Column | null>(null);
-    const { state: columns, updateColumn } = useColumnsStore();
+    const { state: columns, updateColumn, replaceCell } = useColumnsStore();
 
     useTask$(({ track }) => {
       track(args);
@@ -57,8 +57,32 @@ export const RunExecutionSidebar = component$<SidebarProps>(
     });
 
     const runExecution = $(async () => {
-      updateColumn(column.value!);
-      await onUpdateCell(column.value!);
+      if (!column.value) return;
+
+      const cellsInColumn = columns.value.flatMap((col) =>
+        col.id === column.value.id ? col.cells : [],
+      );
+
+      for (const cell of cellsInColumn) {
+        if (!cell.validated || !cell.value) {
+          replaceCell({
+            ...cell,
+            isLoading: true,
+          });
+        }
+      }
+
+      try {
+        updateColumn(column.value);
+        await onUpdateCell(column.value);
+      } finally {
+        for (const cell of cellsInColumn) {
+          replaceCell({
+            ...cell,
+            isLoading: false,
+          });
+        }
+      }
     });
 
     if (!column.value) return null;

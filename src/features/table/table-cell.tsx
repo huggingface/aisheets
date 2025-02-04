@@ -1,4 +1,10 @@
-import { $, component$, useSignal, useTask$ } from '@builder.io/qwik';
+import {
+  $,
+  component$,
+  useSignal,
+  useTask$,
+  useVisibleTask$,
+} from '@builder.io/qwik';
 import { Markdown } from '~/components/ui/markdown/markdown';
 import { Skeleton } from '~/components/ui/skeleton/skeleton';
 import { Textarea } from '~/components/ui/textarea/textarea';
@@ -11,8 +17,9 @@ export const TableCell = component$<{ cell: Cell }>(({ cell }) => {
   const newCellValue = useSignal(cell.value);
   const { replaceCell } = useColumnsStore();
 
-  const elementRef = useSignal<HTMLElement>();
   const editCellValueInput = useSignal<HTMLElement>();
+  const contentRef = useSignal<HTMLElement>();
+  const isTruncated = useSignal(false);
 
   const validateCell = useValidateCellUseCase();
 
@@ -25,6 +32,20 @@ export const TableCell = component$<{ cell: Cell }>(({ cell }) => {
     if (isEditing.value) {
       newCellValue.value = originalValue.value;
       editCellValueInput.value?.focus();
+    }
+  });
+
+  // Check truncation after DOM is ready and content is rendered
+  useVisibleTask$(({ track }) => {
+    track(() => originalValue.value);
+    track(() => contentRef.value);
+
+    if (contentRef.value) {
+      const lineHeight = Number.parseInt(
+        window.getComputedStyle(contentRef.value).lineHeight,
+      );
+      const maxHeight = lineHeight * 6;
+      isTruncated.value = contentRef.value.scrollHeight > maxHeight;
     }
   });
 
@@ -100,14 +121,19 @@ export const TableCell = component$<{ cell: Cell }>(({ cell }) => {
         isEditing.value = true;
       }}
     >
-      <div class="line-clamp-6 text-sm overflow-hidden text-ellipsis">
-        {originalValue.value ? (
-          <Markdown class="text-gray-900" content={originalValue.value} />
-        ) : (
-          <span class="text-red-500 text-xs flex items-center gap-1">
-            <span>⚠</span>
-            <span>{cell.error}</span>
-          </span>
+      <div class="relative text-sm">
+        <div ref={contentRef} class="line-clamp-6 overflow-hidden">
+          {originalValue.value ? (
+            <Markdown class="text-gray-900" content={originalValue.value} />
+          ) : (
+            <span class="text-red-500 text-xs flex items-center gap-1">
+              <span>⚠</span>
+              <span>{cell.error}</span>
+            </span>
+          )}
+        </div>
+        {isTruncated.value && (
+          <div class="absolute bottom-0 left-0 h-6 w-full bg-gradient-to-t from-white/75 to-transparent pointer-events-none" />
         )}
       </div>
     </td>

@@ -19,6 +19,7 @@ import {
 import {
   type ColumnType,
   type CreateColumn,
+  TEMPORAL_ID,
   useColumnsStore,
   useDatasetsStore,
 } from '~/state';
@@ -66,10 +67,12 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
       modelName.value = DEFAULT_MODEL;
       rowsToGenerate.value = '5';
       columnsReferences.value = [];
-      variables.value = columns.value.map((c) => ({
-        id: c.id,
-        name: c.name,
-      }));
+      variables.value = columns.value
+        .filter((c) => c.id !== TEMPORAL_ID)
+        .map((c) => ({
+          id: c.id,
+          name: c.name,
+        }));
     });
 
     const loadModels = useResource$(async ({ track, cleanup }) => {
@@ -121,9 +124,9 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
     });
 
     return (
-      <Sidebar bind:show={isOpenAddDynamicColumnSidebar}>
+      <Sidebar name="addDynamicColumnSidebar">
         <div class="flex h-full flex-col justify-between p-4">
-          <div class="h-full">
+          <div class="max-h-full">
             <div class="flex flex-col gap-4">
               <div class="flex items-center justify-between">
                 <Label for="column-name">Column name</Label>
@@ -182,7 +185,7 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
                       <Select.Trigger class="bg-background border-input">
                         <Select.DisplayValue />
                       </Select.Trigger>
-                      <Select.Popover class="bg-background border border-border max-h-[200px] overflow-y-auto top-[100%] bottom-auto">
+                      <Select.Popover class="bg-background border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto">
                         {models.map((model) => (
                           <Select.Item
                             key={model.id}

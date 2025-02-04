@@ -1,12 +1,22 @@
 import { type Signal, createContextId } from '@builder.io/qwik';
+import type { State } from '~/components/hooks/modals/config';
 
-import type { Modals } from '~/components/hooks/modals/config';
+export const modalsContext = createContextId<Signal<State>>('modals.context');
 
-export const modalsContext = createContextId<Signal<Modals>>('modals.context');
-
-export const initialState: Modals = {
-  addColumnModal: 'closed',
-  addStaticColumnSidebar: 'closed',
-  addDynamicColumnSidebar: 'closed',
-  runExecutionSidebar: 'closed',
+export const initialState: State = {
+  active: null,
+  modals: {
+    addStaticColumnSidebar: {
+      status: 'closed',
+      args: null,
+    },
+    addDynamicColumnSidebar: {
+      status: 'closed',
+      args: null,
+    },
+    runExecutionSidebar: {
+      status: 'closed',
+      args: null,
+    },
+  },
 };

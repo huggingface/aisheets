@@ -13,8 +13,7 @@ interface SidebarProps {
 
 export const AddStaticColumnSidebar = component$<SidebarProps>(
   ({ onCreateColumn, type }) => {
-    const { isOpenAddStaticColumnSidebar, closeAddStaticColumnSidebar } =
-      useModals('addStaticColumnSidebar');
+    const { closeAddStaticColumnSidebar } = useModals('addStaticColumnSidebar');
 
     const { activeDataset } = useDatasetsStore();
 
@@ -42,9 +41,9 @@ export const AddStaticColumnSidebar = component$<SidebarProps>(
     });
 
     return (
-      <Sidebar bind:show={isOpenAddStaticColumnSidebar}>
+      <Sidebar name="addStaticColumnSidebar">
         <div class="flex h-full flex-col justify-between p-4">
-          <div class="h-full">
+          <div class="max-h-full">
             <div class="flex flex-col gap-4">
               <div class="flex items-center justify-between">
                 <Label for="column-name">Column name</Label>

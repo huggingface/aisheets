@@ -38,7 +38,7 @@ export const TableHeader = component$(() => {
     const response = await editColumn(column);
 
     for await (const { cell } of response) {
-      replaceCell(cell.cell);
+      replaceCell(cell);
     }
   });
 
@@ -88,7 +88,7 @@ export const TableHeader = component$(() => {
         ))}
       </tr>
 
-      <RunExecutionSidebar onUpdateColumn={onUpdateCell} />
+      <RunExecutionSidebar onUpdateCell={onUpdateCell} />
     </thead>
   );
 });

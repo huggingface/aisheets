@@ -20,7 +20,7 @@ export const RunExecutionSidebar = component$<SidebarProps>(
   ({ onUpdateCell }) => {
     const { args, closeRunExecutionSidebar } = useModals('runExecutionSidebar');
     const column = useSignal<Column | null>(null);
-    const { state: columns } = useColumnsStore();
+    const { state: columns, updateColumn } = useColumnsStore();
 
     useTask$(({ track }) => {
       track(args);
@@ -32,6 +32,32 @@ export const RunExecutionSidebar = component$<SidebarProps>(
       )!;
 
       column.value = { ...columnFound };
+    });
+
+    const updatePrompt = $((value: string) => {
+      if (!column.value) return;
+      const updatedColumn = {
+        ...column.value,
+        process: {
+          ...column.value.process!,
+          prompt: value,
+        },
+      };
+      column.value = updatedColumn;
+      updateColumn(updatedColumn);
+    });
+
+    const updateModelName = $((value: string) => {
+      if (!column.value) return;
+      const updatedColumn = {
+        ...column.value,
+        process: {
+          ...column.value.process!,
+          modelName: value,
+        },
+      };
+      column.value = updatedColumn;
+      updateColumn(updatedColumn);
     });
 
     const runExecution = $(async () => {
@@ -69,7 +95,12 @@ export const RunExecutionSidebar = component$<SidebarProps>(
               </Select.Root>
 
               <Label for="column-prompt">Prompt template</Label>
-              <Textarea value={column.value.process?.prompt} />
+              <Textarea
+                value={column.value.process?.prompt}
+                onInput$={(e) =>
+                  updatePrompt((e.target as HTMLTextAreaElement).value)
+                }
+              />
 
               <Label for="column-model" class="flex gap-1">
                 Model name. Available models in the
@@ -86,6 +117,9 @@ export const RunExecutionSidebar = component$<SidebarProps>(
                 id="column-model"
                 class="h-10"
                 value={column.value.process!.modelName}
+                onInput$={(e) =>
+                  updateModelName((e.target as HTMLInputElement).value)
+                }
               />
             </div>
           </div>

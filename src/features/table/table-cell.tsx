@@ -11,7 +11,7 @@ export const TableCell = component$<{
   const isEditing = useSignal(false);
   const originalValue = useSignal(cell.value);
   const newCellValue = useSignal(cell.value);
-  const { replaceCell, generatingColumnId } = useColumnsStore();
+  const { replaceCell } = useColumnsStore();
 
   const elementRef = useSignal<HTMLElement>();
   const editCellValueInput = useSignal<HTMLElement>();

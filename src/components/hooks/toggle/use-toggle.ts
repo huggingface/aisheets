@@ -1,4 +1,4 @@
-import { $, useSignal } from '@builder.io/qwik';
+import { $, useComputed$, useSignal } from '@builder.io/qwik';
 
 /**
  * Custom hook that provides a toggle functionality.
@@ -9,15 +9,20 @@ import { $, useSignal } from '@builder.io/qwik';
  * - `close`: A function to set the toggle state to false.
  */
 export const useToggle = () => {
-  const toggle = useSignal(false);
+  const state = useSignal(false);
+  const isOpen = useComputed$(() => state.value === true);
 
   const open = $(() => {
-    toggle.value = true;
+    state.value = true;
   });
 
   const close = $(() => {
-    toggle.value = false;
+    state.value = false;
   });
 
-  return { value: toggle, open, close };
+  const toggle = $(() => {
+    state.value = !state.value;
+  });
+
+  return { isOpen, open, close, toggle };
 };

@@ -40,7 +40,7 @@ export const generateCells = async function* ({
 }: GenerateCellsParams): AsyncGenerator<{ cell: Cell }> {
   const { columnsReferences, modelName, prompt } = process;
 
-  const hasRefferedColumns = columnsReferences && columnsReferences.length > 0;
+  const hasReferredColumns = columnsReferences && columnsReferences.length > 0;
   const hasValidatedCells = validatedCells && validatedCells.length > 0;
 
   const examples: string[] = validatedCells?.map((cell) => cell.value!) ?? [];
@@ -59,7 +59,7 @@ export const generateCells = async function* ({
       data: {},
     };
 
-    if (hasRefferedColumns) {
+    if (hasReferredColumns) {
       const rowCells = await getRowCells({
         rowIdx: i,
         columns: columnsReferences,
@@ -90,11 +90,9 @@ export const generateCells = async function* ({
       });
     }
 
-    yield {
-      cell,
-    };
+    yield cell;
 
-    if (response.value && !(hasValidatedCells || hasRefferedColumns)) {
+    if (response.value && !(hasValidatedCells || hasReferredColumns)) {
       examples.push(response.value);
     }
   }

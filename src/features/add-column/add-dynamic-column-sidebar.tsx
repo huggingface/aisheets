@@ -185,7 +185,7 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
                       <Select.Trigger class="bg-background border-input">
                         <Select.DisplayValue />
                       </Select.Trigger>
-                      <Select.Popover class="bg-background border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto">
+                      <Select.Popover class="bg-background border border-border max-h-[33vw] overflow-y-auto top-[100%] bottom-auto">
                         {models.map((model) => (
                           <Select.Item
                             key={model.id}

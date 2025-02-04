@@ -67,7 +67,7 @@ export const Table = component$(() => {
 
   return (
     <div class="w-full overflow-x-auto">
-      <table class="w-full border-collapse bg-white text-sm">
+      <table class="mt-8 w-full border-collapse bg-white text-sm">
         <TableHeader />
         <TableBody />
       </table>

@@ -1,7 +1,8 @@
 export type ID =
   | 'addStaticColumnSidebar'
   | 'addDynamicColumnSidebar'
-  | 'runExecutionSidebar';
+  | 'runExecutionSidebar'
+  | 'exportToHubSidebar';
 
 export type Status = 'open' | 'closed';
 

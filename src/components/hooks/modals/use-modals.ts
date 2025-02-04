@@ -1,4 +1,4 @@
-import { $, useContext, useSignal, useTask$ } from '@builder.io/qwik';
+import { $, useComputed$, useContext } from '@builder.io/qwik';
 
 import type { ID, Status } from '~/components/hooks/modals/config';
 import { modalsContext } from '~/components/hooks/modals/context';
@@ -28,38 +28,54 @@ import { wrap } from '~/components/hooks/modals/named';
  * console.log(isOpenMyModal.value); // true or false
  */
 export const useModals = <N extends ID>(id: N) => {
-  const isOpen = useSignal(false);
-  const modals = useContext(modalsContext);
+  const modalContext = useContext(modalsContext);
+  const isOpen = useComputed$(
+    () => modalContext.value.modals[id].status === 'open',
+  );
+  const args = useComputed$(() => modalContext.value.modals[id].args);
 
-  const change = $((status: Status) => {
-    isOpen.value = status === 'open';
-    modals.value = {
-      ...modals.value,
-      [id]: status,
+  const change = $((status: Status, args: unknown) => {
+    modalContext.value = {
+      active: status === 'open' ? id : null,
+      modals: {
+        ...modalContext.value.modals,
+        [id]: {
+          status,
+          args: status === 'open' ? args : null,
+        },
+      },
     };
   });
 
-  useTask$(({ track }) => {
-    track(() => modals.value[id]);
-
-    isOpen.value = modals.value[id] === 'open';
-  });
-
-  useTask$(({ track }) => {
-    const newValue = track(() => isOpen.value);
-
-    if (newValue) {
-      change('open');
-    } else {
-      change('closed');
-    }
-  });
-
   const modal = {
-    isOpen,
-    open: $(() => change('open')),
-    close: $(() => change('closed')),
+    open: $((args: unknown) => change('open', args)),
+    close: $(() => change('closed', null)),
   };
 
-  return wrap(id, isOpen, modal.open, modal.close);
+  return wrap(id, isOpen, modal.open, modal.close, args);
+};
+
+export const useActiveModal = () => {
+  const modalContext = useContext(modalsContext);
+
+  const activeModal = useComputed$(() => modalContext.value.active);
+  const modal = useComputed$(() => {
+    if (!activeModal.value) return null;
+
+    return modalContext.value.modals[activeModal.value];
+  });
+
+  const isOpen = useComputed$(() => modal.value?.status === 'open');
+  const args = useComputed$(() => modal.value?.args);
+
+  return {
+    isOpen,
+    args,
+    close: $(() => {
+      modalContext.value = {
+        ...modalContext.value,
+        active: null,
+      };
+    }),
+  };
 };

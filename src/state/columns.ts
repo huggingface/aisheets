@@ -42,9 +42,27 @@ export interface Column {
   dataset: Omit<Dataset, 'columns'>;
 }
 
+export const TEMPORAL_ID = '-1';
 export const useColumnsStore = () => {
   const dataset = useContext(datasetsContext);
-  const columns = useComputed$(() => dataset.value.columns);
+  const columns = useComputed$(() => {
+    if (dataset.value.columns.length === 0) {
+      return [
+        {
+          id: TEMPORAL_ID,
+          name: 'Column 1',
+          kind: 'dynamic',
+          type: 'text',
+          cells: [],
+          dataset: {
+            ...dataset.value,
+          },
+        },
+      ] as Column[];
+    }
+
+    return dataset.value.columns.filter((c) => c.id !== TEMPORAL_ID);
+  });
 
   const replaceColumn = $((replaced: Column[]) => {
     dataset.value = {

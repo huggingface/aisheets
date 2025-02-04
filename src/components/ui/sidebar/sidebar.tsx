@@ -1,9 +1,4 @@
-import {
-  Slot,
-  component$,
-  useSignal,
-  useVisibleTask$,
-} from '@builder.io/qwik';
+import { Slot, component$, useSignal, useVisibleTask$ } from '@builder.io/qwik';
 import { useModals } from '~/components/hooks';
 import type { ID } from '~/components/hooks/modals/config';
 
@@ -23,6 +18,11 @@ export const Sidebar = component$<{
     if (!args.value?.columnId) return;
 
     const element = document.getElementById(args.value.columnId);
+    element?.scrollIntoView({
+      behavior: 'auto',
+      block: 'center',
+      inline: 'center',
+    });
 
     if (element) {
       const rect = element.getBoundingClientRect();

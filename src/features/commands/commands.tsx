@@ -4,7 +4,6 @@ import { type CreateColumn, useColumnsStore } from '~/state';
 import { useAddColumnUseCase } from '~/usecases/add-column.usecase';
 
 export const Commands = component$(() => {
-  const { openAddDynamicColumnSidebar } = useModals('addDynamicColumnSidebar');
   const { addColumn, addCell } = useColumnsStore();
 
   const addNewColumn = useAddColumnUseCase();
@@ -26,16 +25,6 @@ export const Commands = component$(() => {
       <div class="flex space-x-2">{/* Left side empty for now */}</div>
 
       <div class="flex space-x-2">
-        <Button
-          size="sm"
-          look="outline"
-          class="flex gap-1 font-light"
-          onClick$={openAddDynamicColumnSidebar}
-        >
-          <TbColumnInsertRight />
-          Add column
-        </Button>
-
         <AddDynamicColumnSidebar onCreateColumn={onCreateColumn} />
       </div>
     </div>

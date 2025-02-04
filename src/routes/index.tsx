@@ -68,21 +68,26 @@ export const onGet = async ({
   }
 
   if (HF_TOKEN) {
-    const userInfo = (await hub.whoAmI({ accessToken: HF_TOKEN })) as any;
+    try {
+      const userInfo = (await hub.whoAmI({ accessToken: HF_TOKEN })) as any;
 
-    const session = {
-      token: HF_TOKEN,
-      user: {
-        name: userInfo.name,
-        picture: userInfo.avatarUrl,
-      },
-    };
+      const session = {
+        token: HF_TOKEN,
+        user: {
+          name: userInfo.fullname,
+          username: userInfo.name,
+          picture: userInfo.avatarUrl,
+        },
+      };
 
-    saveSession(cookie, session);
+      saveSession(cookie, session);
 
-    sharedMap.set('session', session);
+      sharedMap.set('session', session);
 
-    return next();
+      return next();
+    } catch (e: any) {
+      throw Error(`Invalid HF_TOKEN: ${e.message}`);
+    }
   }
 
   throw Error('Missing HF_TOKEN or OAUTH_CLIENT_ID');

@@ -1,23 +1,16 @@
 import { isDev } from '@builder.io/qwik';
 import type { Cookie } from '@builder.io/qwik-city';
-
-interface Session {
-  token: string;
-  user: {
-    name: string;
-    picture: string;
-  };
-}
+import type { Session } from '~/state';
 
 export const saveSession = async (cookie: Cookie, session: Session) => {
-  let expiration: Date = new Date();
+  let maxAge = undefined;
 
   try {
     const decodedToken = JSON.parse(
       Buffer.from(session.token.split('.')[1], 'base64').toString(),
     );
 
-    expiration = new Date(decodedToken.exp * 1000);
+    maxAge = decodedToken.exp - decodedToken.iat;
   } catch (e) {
     console.error(e);
   }
@@ -26,7 +19,7 @@ export const saveSession = async (cookie: Cookie, session: Session) => {
   cookie.set('session', session, {
     secure: true,
     httpOnly: !isDev,
-    expires: expiration,
+    maxAge,
     path: '/',
   });
 };

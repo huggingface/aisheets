@@ -37,6 +37,7 @@ export const onGet = async ({ cookie, redirect, query, url }: RequestEvent) => {
       token: auth.accessToken,
       user: {
         name: auth.userInfo.name,
+        username: auth.userInfo.preferred_username,
         picture: auth.userInfo.picture,
       },
     };

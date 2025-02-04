@@ -38,7 +38,7 @@ export const TableHeader = component$(() => {
     const response = await editColumn(column);
 
     for await (const { cell } of response) {
-      replaceCell(cell);
+      replaceCell(cell.cell);
     }
   });
 

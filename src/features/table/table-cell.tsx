@@ -67,14 +67,17 @@ export const TableCell = component$<{ cell: Cell }>(({ cell }) => {
 
   if (isEditing.value) {
     return (
-      <td class="px-3 min-h-[60px]">
+      <td class="relative min-h-[60px]">
         <Textarea
           ref={editCellValueInput}
           bind:value={newCellValue}
           preventEnterNewline
-          class="w-full resize-y border-0 rounded-none bg-transparent p-0 focus:outline-none focus:ring-0 text-sm"
+          class="absolute z-10 left-0 top-0 min-w-[400px] w-[200%] resize-y border-0 
+            rounded-none bg-white px-3 py-2 focus:outline-none focus:ring-1 
+            focus:ring-primary shadow-lg text-sm"
           style={{
             height: `${editCellValueInput.value?.scrollHeight || 60}px`,
+            maxWidth: 'max(800px, 200%)',
           }}
           onKeyDown$={(e) => {
             if (e.key === 'Enter') {

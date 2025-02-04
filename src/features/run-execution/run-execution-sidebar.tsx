@@ -13,11 +13,11 @@ import {
 import { type Column, useColumnsStore } from '~/state';
 
 interface SidebarProps {
-  onUpdateColumn: QRL<(column: Column) => Promise<void>>;
+  onUpdateCell: QRL<(column: Column) => Promise<void>>;
 }
 
 export const RunExecutionSidebar = component$<SidebarProps>(
-  ({ onUpdateColumn }) => {
+  ({ onUpdateCell }) => {
     const { args, closeRunExecutionSidebar } = useModals('runExecutionSidebar');
     const column = useSignal<Column | null>(null);
     const { state: columns } = useColumnsStore();
@@ -35,7 +35,7 @@ export const RunExecutionSidebar = component$<SidebarProps>(
     });
 
     const runExecution = $(async () => {
-      await onUpdateColumn(column.value!);
+      await onUpdateCell(column.value!);
     });
 
     if (!column.value) return null;

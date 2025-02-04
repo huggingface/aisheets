@@ -20,14 +20,12 @@ export const useEditColumn = () =>
       conditions: { validated: true },
     });
 
-    for await (const cell of generateCells({
+    yield* generateCells({
       column,
       process: column.process!,
       session,
       limit: column.process!.limit!,
       offset: column.process!.offset,
       validatedCells,
-    })) {
-      yield { cell };
-    }
+    });
   });

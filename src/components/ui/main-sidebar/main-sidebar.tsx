@@ -1,8 +1,9 @@
-import { $, component$, useStore } from '@builder.io/qwik';
+import { component$ } from '@builder.io/qwik';
 import { LuPanelLeftClose, LuPanelLeftOpen } from '@qwikest/icons/lucide';
+import { useToggle } from '~/components/hooks';
 
 export const MainSidebar = component$(() => {
-  const store = useStore({ isExpanded: true });
+  const { isOpen, toggle } = useToggle();
 
   const mockedItems = [
     'Lorem ipsum dolor',
@@ -13,35 +14,31 @@ export const MainSidebar = component$(() => {
     'Consectetur adipiscing elit',
   ];
 
-  const toggleMenu = $(() => {
-    store.isExpanded = !store.isExpanded;
-  });
-
   return (
     <div
       class="bg-gradient-to-r from-white to-gray-50 h-screen transition-all duration-300 ease-in-out shrink-0"
       style={{
-        width: store.isExpanded ? '300px' : '50px',
+        width: isOpen.value ? '300px' : '50px',
       }}
     >
       {/* Header del menú */}
       <div class="flex justify-between items-center p-2 mb-10 w-full transition-all duration-500 ease-in-out">
         <p
           class={`transition-[opacity, max-height] duration-300 ease-in-out font-mono ${
-            store.isExpanded
+            isOpen.value
               ? 'max-h-screen opacity-100 px-4 duration-400'
               : 'max-h-0 opacity-0 px-0'
           } overflow-hidden`}
-          style={store.isExpanded ? '' : 'max-height: 0; opacity: 0;'}
+          style={isOpen.value ? '' : 'max-height: 0; opacity: 0;'}
         >
-          {store.isExpanded && 'Easy Datagen'}
+          {isOpen.value && 'Easy Datagen'}
         </p>
         <button
           type="button"
-          onClick$={toggleMenu}
+          onClick$={toggle}
           class="rounded p-2 hover:bg-gray-100 text-muted-foreground"
         >
-          {store.isExpanded ? (
+          {isOpen.value ? (
             <LuPanelLeftClose class="w-5 h-5" />
           ) : (
             <LuPanelLeftOpen class="w-5 h-5" />
@@ -52,9 +49,9 @@ export const MainSidebar = component$(() => {
       {/* Contenedor del menú con transición en el eje horizontal */}
       <div
         class="transition-all duration-500 ease-in-out overflow-auto max-h-full"
-        style={{ opacity: store.isExpanded ? '1' : '0' }}
+        style={{ opacity: isOpen.value ? '1' : '0' }}
       >
-        {store.isExpanded && (
+        {isOpen.value && (
           <div>
             <p class="text-muted-foreground px-6 text-sm font-semibold">
               Today

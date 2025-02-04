@@ -15,7 +15,7 @@ export const Commands = component$(() => {
         addColumn(column);
       }
       if (cell) {
-        addCell(cell.cell);
+        addCell(cell);
       }
     }
   });

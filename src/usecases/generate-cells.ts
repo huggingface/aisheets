@@ -37,7 +37,7 @@ export const generateCells = async function* ({
   limit,
   offset,
   validatedCells,
-}: GenerateCellsParams): AsyncGenerator<{ cell: Cell }> {
+}: GenerateCellsParams) {
   const { columnsReferences, modelName, prompt } = process;
 
   const hasReferredColumns = columnsReferences && columnsReferences.length > 0;
@@ -90,7 +90,7 @@ export const generateCells = async function* ({
       });
     }
 
-    yield cell;
+    yield { cell };
 
     if (response.value && !(hasValidatedCells || hasReferredColumns)) {
       examples.push(response.value);

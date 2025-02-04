@@ -1,5 +1,4 @@
 import {
-  $,
   Slot,
   component$,
   useSignal,
@@ -18,30 +17,12 @@ export const Sidebar = component$<{
     top: number;
   } | null>(null);
 
-  const findScrollableAncestor = $((el: HTMLElement | null) => {
-    while (el) {
-      if (el.scrollWidth > el.clientWidth) {
-        return el;
-      }
-
-      el = el.parentElement;
-    }
-
-    return null;
-  });
-
   useVisibleTask$(async ({ track }) => {
     track(args);
 
     if (!args.value?.columnId) return;
 
     const element = document.getElementById(args.value.columnId);
-    const getScrollableAncestor = await findScrollableAncestor(element);
-    console.log(element?.offsetLeft);
-    getScrollableAncestor?.scrollTo({
-      left: element?.offsetLeft,
-      behavior: 'smooth',
-    });
 
     if (element) {
       const rect = element.getBoundingClientRect();

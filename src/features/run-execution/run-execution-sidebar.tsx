@@ -36,31 +36,28 @@ export const RunExecutionSidebar = component$<SidebarProps>(
 
     const updatePrompt = $((value: string) => {
       if (!column.value) return;
-      const updatedColumn = {
+      column.value = {
         ...column.value,
         process: {
           ...column.value.process!,
           prompt: value,
         },
       };
-      column.value = updatedColumn;
-      updateColumn(updatedColumn);
     });
 
     const updateModelName = $((value: string) => {
       if (!column.value) return;
-      const updatedColumn = {
+      column.value = {
         ...column.value,
         process: {
           ...column.value.process!,
           modelName: value,
         },
       };
-      column.value = updatedColumn;
-      updateColumn(updatedColumn);
     });
 
     const runExecution = $(async () => {
+      updateColumn(column.value!);
       await onUpdateCell(column.value!);
     });
 

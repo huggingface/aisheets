@@ -33,8 +33,6 @@ export const TableHeader = component$(() => {
   });
 
   const onUpdateCell = $(async (column: Column) => {
-    closeRunExecutionSidebar();
-
     const response = await editColumn(column);
 
     for await (const { cell } of response) {

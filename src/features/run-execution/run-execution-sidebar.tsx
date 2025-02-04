@@ -21,6 +21,7 @@ export const RunExecutionSidebar = component$<SidebarProps>(
     const { args, closeRunExecutionSidebar } = useModals('runExecutionSidebar');
     const column = useSignal<Column | null>(null);
     const { state: columns, updateColumn, replaceCell } = useColumnsStore();
+    const isGenerating = useSignal(false);
 
     useTask$(({ track }) => {
       track(args);
@@ -58,6 +59,7 @@ export const RunExecutionSidebar = component$<SidebarProps>(
 
     const runExecution = $(async () => {
       if (!column.value) return;
+      isGenerating.value = true;
 
       const cellsInColumn = columns.value.flatMap((col) =>
         col.id === column.value.id ? col.cells : [],
@@ -82,6 +84,7 @@ export const RunExecutionSidebar = component$<SidebarProps>(
             isLoading: false,
           });
         }
+        isGenerating.value = false;
       }
     });
 
@@ -150,8 +153,9 @@ export const RunExecutionSidebar = component$<SidebarProps>(
               size="sm"
               class="w-full rounded-sm p-2"
               onClick$={runExecution}
+              disabled={isGenerating.value}
             >
-              Generate
+              {isGenerating.value ? 'Generating...' : 'Generate'}
             </Button>
           </div>
         </div>

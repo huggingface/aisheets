@@ -6,7 +6,7 @@ import {
   useSignal,
 } from '@builder.io/qwik';
 import { type RequestEventBase, routeLoader$ } from '@builder.io/qwik-city';
-import { getOrCreateDataset } from '~/services';
+import { getOrCreateDataset } from '~/services/repository';
 import type { Column } from '~/state/columns';
 import { useServerSession } from '~/state/session';
 

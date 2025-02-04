@@ -39,7 +39,7 @@ export interface Column {
   kind: ColumnKind;
   process?: Process;
   cells: Cell[];
-  dataset: Omit<Dataset, 'columns'>;
+  dataset?: Omit<Dataset, 'columns'>;
 }
 
 export const useColumnsStore = () => {

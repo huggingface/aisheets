@@ -135,7 +135,7 @@ export const createColumn = async (
     name: column.name,
     type: column.type,
     kind: column.kind,
-    datasetId: column.dataset.id,
+    datasetId: column.dataset!.id,
   });
 
   const newColumn = {

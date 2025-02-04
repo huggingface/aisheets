@@ -11,3 +11,4 @@ export * from '../../features/table/table';
 export * from './tabs/tabs';
 export * from './textarea/textarea';
 export * from './textarea/textarea';
+export * from './checkbox/checkbox';

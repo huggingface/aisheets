@@ -19,6 +19,13 @@ export const TableCell = component$<{
   const validateCell = useValidateCellUseCase();
 
   useTask$(({ track }) => {
+    track(() => cell.value);
+    track(() => cell.updatedAt);
+
+    originalValue.value = cell.value;
+  });
+
+  useTask$(({ track }) => {
     track(() => isEditing.value);
     track(() => cell.value);
 

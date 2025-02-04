@@ -60,10 +60,12 @@ export const RunExecutionSidebar = component$<SidebarProps>(
       if (!column.value) return;
       isGenerating.value = true;
 
+      // Get fresh reference to cells
       const cellsInColumn = columns.value.flatMap((col) =>
         col.id === column.value.id ? col.cells : [],
       );
 
+      // Set loading state
       for (const cell of cellsInColumn) {
         if (!cell.validated || !cell.value) {
           replaceCell({
@@ -74,15 +76,26 @@ export const RunExecutionSidebar = component$<SidebarProps>(
       }
 
       try {
+        // Update column first
         updateColumn(column.value);
-        await onUpdateCell(column.value);
-      } finally {
-        for (const cell of cellsInColumn) {
-          replaceCell({
-            ...cell,
-            isLoading: false,
-          });
+
+        // Wait for all cell updates
+        const response = await onUpdateCell(column.value);
+
+        // Get fresh column data after updates
+        const updatedColumn = columns.value.find(
+          (col) => col.id === column.value?.id,
+        );
+        if (updatedColumn) {
+          // Update all cells with fresh data
+          for (const cell of updatedColumn.cells) {
+            replaceCell({
+              ...cell,
+              isLoading: false,
+            });
+          }
         }
+      } finally {
         isGenerating.value = false;
       }
     });

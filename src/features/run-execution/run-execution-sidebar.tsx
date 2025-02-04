@@ -127,7 +127,7 @@ export const RunExecutionSidebar = component$<SidebarProps>(
               class="w-full rounded-sm p-2"
               onClick$={runExecution}
             >
-              Run execution
+              Generate
             </Button>
           </div>
         </div>

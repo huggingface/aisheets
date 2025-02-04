@@ -1,14 +1,17 @@
 import { $, component$ } from '@builder.io/qwik';
-import { TbColumnInsertRight } from '@qwikest/icons/tablericons';
-import { Button } from '~/components/ui';
+import { Button, useModals } from '~/components';
+import { AddDynamicColumnSidebar } from '~/features/add-column/add-dynamic-column-sidebar';
 import { ExportToHubSidebar } from '~/features/export-to-hub';
 import { type CreateColumn, useColumnsStore } from '~/state';
 import { useAddColumnUseCase } from '~/usecases/add-column.usecase';
 
 export const Commands = component$(() => {
   const { openExportToHubSidebar } = useModals('exportToHubSidebar');
-
   const { addColumn, addCell } = useColumnsStore();
+
+  const onExportButtonClick = $(() => {
+    openExportToHubSidebar();
+  });
 
   const addNewColumn = useAddColumnUseCase();
   const onCreateColumn = $(async (createColumn: CreateColumn) => {
@@ -29,13 +32,15 @@ export const Commands = component$(() => {
       <div class="flex space-x-2">{/* Left side empty for now */}</div>
 
       <div class="flex space-x-2">
+        <AddDynamicColumnSidebar onCreateColumn={onCreateColumn} />
+      </div>
+
+      <div class="flex space-x-2">
         <Button
           size="sm"
-          look="outline"
           class="flex gap-1 font-light"
-          onClick$={openExportToHubSidebar}
+          onClick$={onExportButtonClick}
         >
-          <TbColumnInsertRight />
           Export to Hub
         </Button>
         <ExportToHubSidebar />

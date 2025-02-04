@@ -17,6 +17,7 @@ export type Modals = {
   addStaticColumnSidebar: ModalColumArg;
   addDynamicColumnSidebar: ModalColumArg;
   runExecutionSidebar: ModalColumArg;
+  exportToHubSidebar: Modal<{ datasetId: string }>;
 };
 
 export interface State {

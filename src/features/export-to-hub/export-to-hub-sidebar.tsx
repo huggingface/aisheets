@@ -9,8 +9,7 @@ import { useExportDataset } from '~/usecases/export-to-hub.usecase';
 const exportDataset = useExportDataset();
 
 export const ExportToHubSidebar = component$(() => {
-  const { isOpenExportToHubSidebar, closeExportToHubSidebar } =
-    useModals('exportToHubSidebar');
+  const { closeExportToHubSidebar } = useModals('exportToHubSidebar');
 
   const { activeDataset } = useDatasetsStore();
 
@@ -29,7 +28,7 @@ export const ExportToHubSidebar = component$(() => {
   });
 
   return (
-    <Sidebar bind:show={isOpenExportToHubSidebar}>
+    <Sidebar name="exportToHubSidebar">
       <div class="flex h-full flex-col justify-between p-4">
         <div class="h-full">
           <div class="flex flex-col gap-4">

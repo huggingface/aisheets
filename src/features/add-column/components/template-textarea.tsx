@@ -39,11 +39,7 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
     lineHeight: 0,
   });
 
-  useVisibleTask$(({ track }) => {
-    track(props['bind:value']);
-
-    if (props['bind:value'].value !== '') return;
-
+  useVisibleTask$(() => {
     if (textarea.value) {
       const verticalPadding = 10;
       popover.lineHeight =
@@ -54,6 +50,10 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
         x: 0,
         y: popover.lineHeight,
       };
+
+      nextTick(() => {
+        textarea.value!.focus();
+      }, 100);
     }
 
     popover.options = props.variables.value.map((variable) => variable.name);

@@ -119,7 +119,6 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
         },
       };
 
-      closeAddDynamicColumnSidebar();
       onCreateColumn(column);
     });
 

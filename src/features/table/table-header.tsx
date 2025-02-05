@@ -46,11 +46,8 @@ export const TableHeader = component$(() => {
   const { state: columns, replaceCell } = useColumnsStore();
   const editColumn = useEditColumn();
   const { args } = useActiveModal();
-  const { closeAddDynamicColumnSidebar } = useModals('addDynamicColumnSidebar');
 
   const onUpdateCell = $(async (column: Column) => {
-    closeAddDynamicColumnSidebar();
-
     const response = await editColumn(column);
 
     for await (const { cell } of response) {

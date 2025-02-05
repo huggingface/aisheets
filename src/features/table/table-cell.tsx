@@ -13,7 +13,6 @@ export const TableCell = component$<{ cell: Cell; class?: string }>(
 
     const elementRef = useSignal<HTMLElement>();
     const editCellValueInput = useSignal<HTMLElement>();
-
     const validateCell = useValidateCellUseCase();
 
     useTask$(({ track }) => {

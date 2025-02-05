@@ -132,12 +132,15 @@ export const runPromptExecutionStream = async function* ({
     const hf = new HfInference(accessToken);
     let accumulated = '';
 
-    const stream = hf.chatCompletionStream({
-      model: modelName,
-      messages: [{ role: 'user', content: inputPrompt }],
-      max_tokens: 512,
-      temperature: 0.1,
-    });
+    const stream = hf.chatCompletionStream(
+      {
+        model: modelName,
+        messages: [{ role: 'user', content: inputPrompt }],
+        max_tokens: 512,
+        temperature: 0.1,
+      },
+      { use_cache: false },
+    );
 
     for await (const chunk of stream) {
       if (chunk.choices && chunk.choices.length > 0) {

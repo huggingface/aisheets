@@ -17,7 +17,7 @@ import {
   type Variable,
 } from '~/features/add-column/components/template-textarea';
 import {
-  type ColumnType,
+  type Column,
   type CreateColumn,
   TEMPORAL_ID,
   useColumnsStore,
@@ -25,7 +25,7 @@ import {
 } from '~/state';
 
 interface SidebarProps {
-  onCreateColumn: QRL<(createColumn: CreateColumn) => void>;
+  onGenerateColumn: QRL<(column: CreateColumn | Column) => void>;
 }
 
 const MODEL_URL =
@@ -37,56 +37,53 @@ interface HFModel {
   tags?: string[];
 }
 
-const outputType = ['text', 'array', 'number', 'boolean', 'object'];
 export const AddDynamicColumnSidebar = component$<SidebarProps>(
-  ({ onCreateColumn }) => {
-    const { isOpenAddDynamicColumnSidebar, closeAddDynamicColumnSidebar } =
-      useModals('addDynamicColumnSidebar');
+  ({ onGenerateColumn }) => {
+    const {
+      args,
+      isOpenAddDynamicColumnSidebar,
+      closeAddDynamicColumnSidebar,
+    } = useModals('addDynamicColumnSidebar');
     const { state: columns } = useColumnsStore();
+    const { activeDataset } = useDatasetsStore();
 
-    const type = useSignal<NonNullable<ColumnType>>('text');
-    const name = useSignal('');
+    const column = useSignal<Column | null>(null);
     const rowsToGenerate = useSignal('5');
     const prompt = useSignal('');
     const variables = useSignal<Variable[]>([]);
     const columnsReferences = useSignal<string[]>([]);
-
-    const { activeDataset } = useDatasetsStore();
+    const modelName = useSignal(DEFAULT_MODEL);
 
     const onSelectedVariables = $((variables: { id: string }[]) => {
       columnsReferences.value = variables.map((v) => v.id);
     });
-    const modelName = useSignal(DEFAULT_MODEL);
 
     useTask$(({ track }) => {
-      track(isOpenAddDynamicColumnSidebar);
+      track(args);
+      if (!args.value?.columnId) return;
+      const columnFound = columns.value.find(
+        (column) => column.id === args.value?.columnId,
+      )!;
 
-      const getNextColumnName = (counter = 1): string => {
-        const manyColumnsWithName = columns.value
-          .filter((c) => c.id !== TEMPORAL_ID)
-          .filter((c) => c.name.startsWith('Column'));
+      column.value = { ...columnFound };
 
-        const newPosibleColumnName = `Column ${manyColumnsWithName.length + 1}`;
-
-        if (!manyColumnsWithName.find((c) => c.name === newPosibleColumnName)) {
-          return newPosibleColumnName;
-        }
-
-        return getNextColumnName(counter + 1);
-      };
-
-      type.value = 'text';
-      name.value = getNextColumnName();
-      prompt.value = '';
-      modelName.value = DEFAULT_MODEL;
-      rowsToGenerate.value = '5';
-      columnsReferences.value = [];
       variables.value = columns.value
         .filter((c) => c.id !== TEMPORAL_ID)
         .map((c) => ({
           id: c.id,
           name: c.name,
         }));
+      columnsReferences.value = [];
+
+      if (args.value.mode === 'edit') {
+        prompt.value = columnFound.process!.prompt;
+        modelName.value = columnFound.process!.modelName;
+        rowsToGenerate.value = String(columnFound.process!.limit);
+      } else if (args.value.mode === 'create') {
+        prompt.value = '';
+        modelName.value = DEFAULT_MODEL;
+        rowsToGenerate.value = '5';
+      }
     });
 
     const loadModels = useResource$(async ({ track, cleanup }) => {
@@ -116,24 +113,57 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
         }));
     });
 
-    const onCreate = $(() => {
-      if (!name.value) return;
+    const onGenerate = $(() => {
+      if (!args.value) return;
 
-      const column: CreateColumn = {
-        name: name.value,
-        type: type.value,
-        kind: 'dynamic',
-        dataset: activeDataset.value,
-        process: {
-          modelName: modelName.value,
-          prompt: prompt.value,
-          columnsReferences: columnsReferences.value,
-          offset: 0,
-          limit: Number(rowsToGenerate.value),
-        },
-      };
+      if (args.value.mode === 'create') {
+        const getNextColumnName = (counter = 1): string => {
+          const manyColumnsWithName = columns.value
+            .filter((c) => c.id !== TEMPORAL_ID)
+            .filter((c) => c.name.startsWith('Column'));
 
-      onCreateColumn(column);
+          const newPosibleColumnName = `Column ${manyColumnsWithName.length + 1}`;
+
+          if (
+            !manyColumnsWithName.find((c) => c.name === newPosibleColumnName)
+          ) {
+            return newPosibleColumnName;
+          }
+
+          return getNextColumnName(counter + 1);
+        };
+
+        const columnToSave: CreateColumn = {
+          name: getNextColumnName(),
+          type: 'text',
+          kind: 'dynamic',
+          dataset: activeDataset.value,
+          process: {
+            modelName: modelName.value,
+            prompt: prompt.value,
+            columnsReferences: columnsReferences.value,
+            offset: 0,
+            limit: Number(rowsToGenerate.value),
+          },
+        };
+
+        onGenerateColumn(columnToSave);
+      } else if (args.value.mode === 'edit') {
+        const columnToSave: Column = {
+          ...column.value!,
+          dataset: column.value!.dataset,
+          process: {
+            ...column.value!.process,
+            modelName: modelName.value,
+            prompt: prompt.value,
+            columnsReferences: columnsReferences.value,
+            offset: 0,
+            limit: Number(rowsToGenerate.value),
+          },
+        };
+
+        onGenerateColumn(columnToSave);
+      }
     });
 
     return (
@@ -142,7 +172,7 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
           <div class="max-h-full">
             <div class="flex flex-col gap-4">
               <div class="flex items-center justify-between">
-                <Label for="column-name">Column name</Label>
+                <Label for="column-prompt">Prompt template</Label>
 
                 <Button
                   size="sm"
@@ -152,32 +182,7 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
                   <TbX />
                 </Button>
               </div>
-              <Input
-                id="column-name"
-                class="h-10"
-                placeholder="Enter column name"
-                bind:value={name}
-              />
 
-              <Label for="column-output-type">Output type</Label>
-
-              <Select.Root id="column-output-type" bind:value={type}>
-                <Select.Trigger>
-                  <Select.DisplayValue />
-                </Select.Trigger>
-                <Select.Popover>
-                  {outputType.map((type) => (
-                    <Select.Item key={type}>
-                      <Select.ItemLabel>{type}</Select.ItemLabel>
-                      <Select.ItemIndicator>
-                        <LuCheck class="h-4 w-4" />
-                      </Select.ItemIndicator>
-                    </Select.Item>
-                  ))}
-                </Select.Popover>
-              </Select.Root>
-
-              <Label for="column-prompt">Prompt template</Label>
               <TemplateTextArea
                 bind:value={prompt}
                 variables={variables}
@@ -227,8 +232,12 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
           </div>
 
           <div class="flex h-16 w-full items-center justify-center">
-            <Button size="sm" class="w-full rounded-sm p-2" onClick$={onCreate}>
-              Create new column
+            <Button
+              size="sm"
+              class="w-full rounded-sm p-2"
+              onClick$={onGenerate}
+            >
+              Generate
             </Button>
           </div>
         </div>

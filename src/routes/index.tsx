@@ -4,7 +4,7 @@ import {
   type RequestEvent,
   routeLoader$,
 } from '@builder.io/qwik-city';
-import { Commands } from '~/features';
+import { Execution } from '~/features';
 
 import * as hub from '@huggingface/hub';
 
@@ -21,7 +21,6 @@ export const onGet = async ({
   redirect,
   next,
   url,
-  headers,
 }: RequestEvent) => {
   const session = sharedMap.get('session');
   if (session) {
@@ -101,7 +100,7 @@ export default component$(() => {
   return (
     <div class="min-h-screen">
       <div class="min-h-screen mx-auto  px-6 py-4">
-        <Commands />
+        <Execution />
         <Table />
       </div>
     </div>

@@ -14,9 +14,5 @@ export const initialState: State = {
       status: 'closed',
       args: null,
     },
-    runExecutionSidebar: {
-      status: 'closed',
-      args: null,
-    },
   },
 };

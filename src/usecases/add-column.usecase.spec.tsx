@@ -17,7 +17,7 @@ test('should AddDynamicColumnSidebar does not call onCreateColumn initially', as
   await render(
     <ModalsProvider>
       <QwikCityMockProvider>
-        <AddDynamicColumnSidebar onCreateColumn={onCreateColumn} />
+        <AddDynamicColumnSidebar onGenerateColumn={onCreateColumn} />
       </QwikCityMockProvider>
     </ModalsProvider>,
   );

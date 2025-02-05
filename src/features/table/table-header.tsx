@@ -20,7 +20,6 @@ import { Button } from '~/components';
 import { useActiveModal, useModals, useToggle } from '~/components/hooks';
 import { useClickOutside } from '~/components/hooks/click/outside';
 import { useDebounce } from '~/components/hooks/debounce/debounce';
-import { RunExecutionSidebar } from '~/features/run-execution/run-execution-sidebar';
 import { updateColumnName } from '~/services';
 import {
   type Column,
@@ -29,7 +28,6 @@ import {
   TEMPORAL_ID,
   useColumnsStore,
 } from '~/state';
-import { useEditColumn } from '~/usecases/edit-column.usecase';
 
 const Icons: Record<Column['type'], any> = {
   text: TbAlignJustified,
@@ -49,17 +47,8 @@ export const ColumnIcon = component$<{ type: ColumnType; kind: ColumnKind }>(
 );
 
 export const TableHeader = component$(() => {
-  const { state: columns, replaceCell } = useColumnsStore();
-  const editColumn = useEditColumn();
+  const { state: columns } = useColumnsStore();
   const { args } = useActiveModal();
-
-  const onUpdateCell = $(async (column: Column) => {
-    const response = await editColumn(column);
-
-    for await (const { cell } of response) {
-      replaceCell(cell);
-    }
-  });
 
   const indexColumnEditing = useComputed$(() =>
     columns.value.findIndex((column) => column.id === args.value?.columnId),
@@ -80,14 +69,12 @@ export const TableHeader = component$(() => {
 
         <TableCellHeaderPlaceHolder />
       </tr>
-
-      <RunExecutionSidebar onUpdateCell={onUpdateCell} />
     </thead>
   );
 });
 
 const TableCellHeader = component$<{ column: Column }>(({ column }) => {
-  const { openRunExecutionSidebar } = useModals('runExecutionSidebar');
+  const { openAddDynamicColumnSidebar } = useModals('addDynamicColumnSidebar');
   const isEditingCellName = useToggle();
   const newName = useSignal(column.name);
 
@@ -111,8 +98,9 @@ const TableCellHeader = component$<{ column: Column }>(({ column }) => {
     if (isEditingCellName.isOpen.value) return;
     if (column.id === TEMPORAL_ID) return;
 
-    openRunExecutionSidebar({
+    openAddDynamicColumnSidebar({
       columnId: column.id,
+      mode: 'edit',
     });
   });
 
@@ -149,7 +137,7 @@ const TableCellHeader = component$<{ column: Column }>(({ column }) => {
         </div>
 
         {column.id !== TEMPORAL_ID && (
-          <Button look="ghost" class=" rounded-full" onClick$={editCell}>
+          <Button look="ghost" class="h-2" onClick$={editCell}>
             <TbDots class="text-gray-400" />
           </Button>
         )}
@@ -171,6 +159,7 @@ const TableCellHeaderPlaceHolder = component$(() => {
     if (columns.value.length === 1 && lastColumnId.value === TEMPORAL_ID) {
       openAddDynamicColumnSidebar({
         columnId: lastColumnId.value,
+        mode: 'create',
       });
     }
   });
@@ -186,6 +175,7 @@ const TableCellHeaderPlaceHolder = component$(() => {
         onClick$={() =>
           openAddDynamicColumnSidebar({
             columnId: lastColumnId.value,
+            mode: 'create',
           })
         }
       >

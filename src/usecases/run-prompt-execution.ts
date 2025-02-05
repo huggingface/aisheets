@@ -74,7 +74,6 @@ export const runPromptExecution = async ({
   instruction,
   data,
   examples,
-  stream = false,
 }: PromptExecutionParams): Promise<PromptExecutionResponse> => {
   let inputPrompt: string;
   switch (data && Object.keys(data).length > 0) {
@@ -87,27 +86,9 @@ export const runPromptExecution = async ({
   }
 
   try {
-    const inference = new HfInference(accessToken);
-    if (stream) {
-      let out = '';
-      const stream = inference.chatCompletionStream({
-        model: modelName,
-        messages: [{ role: 'user', content: inputPrompt }],
-        max_tokens: 512,
-        temperature: 0.1,
-      });
-
-      for await (const chunk of stream) {
-        if (chunk.choices && chunk.choices.length > 0) {
-          const content = chunk.choices[0].delta.content;
-          if (content) {
-            out += content;
-          }
-        }
-      }
-      return { value: out, done: true };
-    }
     // https://huggingface.co/docs/api-inference/tasks/chat-completion?code=js#api-specification
+    const inference = new HfInference();
+
     const response = await inference.chatCompletion(
       {
         model: modelName,

@@ -1,4 +1,4 @@
-import { chatCompletion } from '@huggingface/inference';
+import { chatCompletion, chatCompletionStream } from '@huggingface/inference';
 import mustache from 'mustache';
 
 export interface PromptExecutionParams {
@@ -7,11 +7,13 @@ export interface PromptExecutionParams {
   instruction: string;
   data?: object;
   examples?: string[];
+  stream?: boolean;
 }
 
 export interface PromptExecutionResponse {
   value?: string;
   error?: string;
+  done?: boolean;
 }
 
 const promptForResponseFromScratch = (
@@ -104,5 +106,56 @@ export const runPromptExecution = async ({
       error = JSON.stringify(e);
     }
     return { error };
+  }
+};
+
+export const runPromptExecutionStream = async function* ({
+  accessToken,
+  modelName,
+  instruction,
+  data,
+  examples,
+}: PromptExecutionParams): AsyncGenerator<PromptExecutionResponse> {
+  let inputPrompt: string;
+  switch (data && Object.keys(data).length > 0) {
+    case true:
+      inputPrompt = promptForResponseFromData(instruction, data!);
+      break;
+    default:
+      inputPrompt = promptForResponseFromScratch(instruction, examples);
+      break;
+  }
+
+  try {
+    let accumulated = '';
+
+    const stream = chatCompletionStream(
+      {
+        model: modelName,
+        messages: [{ role: 'user', content: inputPrompt }],
+        accessToken,
+      },
+      { use_cache: false },
+    );
+
+    for await (const chunk of stream) {
+      if (chunk.choices && chunk.choices.length > 0) {
+        const content = chunk.choices[0].delta.content;
+        if (content) {
+          accumulated += content;
+          yield { value: accumulated, done: false };
+        }
+      }
+    }
+
+    yield { value: accumulated, done: true };
+  } catch (e) {
+    let error: string;
+    if (e instanceof Error) {
+      error = e.message;
+    } else {
+      error = JSON.stringify(e);
+    }
+    yield { error, done: true };
   }
 };

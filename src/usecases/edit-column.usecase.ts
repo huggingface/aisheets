@@ -1,13 +1,13 @@
 import { type RequestEventBase, server$ } from '@builder.io/qwik-city';
 import { getColumnCells, updateColumn } from '~/services';
-import { type Column, useServerSession } from '~/state';
+import { type Cell, type Column, useServerSession } from '~/state';
 import { generateCells } from './generate-cells';
 
 export const useEditColumn = () =>
   server$(async function* (
     this: RequestEventBase<QwikCityPlatform>,
     column: Column,
-  ) {
+  ): AsyncGenerator<{ cell: Cell }> {
     const session = useServerSession(this);
     column = await updateColumn(column);
 

@@ -4,7 +4,7 @@ import { type CreateColumn, useColumnsStore } from '~/state';
 import { useAddColumnUseCase } from '~/usecases/add-column.usecase';
 
 export const Commands = component$(() => {
-  const { addColumn, addCell } = useColumnsStore();
+  const { addColumn, replaceCell } = useColumnsStore();
 
   const addNewColumn = useAddColumnUseCase();
   const onCreateColumn = $(async (createColumn: CreateColumn) => {
@@ -15,7 +15,7 @@ export const Commands = component$(() => {
         addColumn(column);
       }
       if (cell) {
-        addCell(cell);
+        replaceCell(cell);
       }
     }
   });

@@ -1,10 +1,12 @@
 import { describe, it } from 'node:test';
 import { expect } from 'vitest';
-import { runPromptExecution } from '~/usecases/run-prompt-execution';
+import {
+  runPromptExecution,
+  runPromptExecutionStream,
+} from './run-prompt-execution';
 
-const testModelName = 'meta-llama/Llama-2-7b-chat-hf';
-const testPrompt = 'Generate a title for a blog post about cats';
-
+const testModelName = 'google/gemma-2b-it';
+const testPrompt = 'Write a short greeting';
 const accessToken = process.env.HF_TOKEN;
 
 describe('runPromptExecution', () => {
@@ -39,7 +41,7 @@ describe('runPromptExecution', () => {
     expect(examples).not.toContain(result.value);
   });
 
-  it('should genenrate a value based on a data object', async () => {
+  it('should generate a value based on a data object', async () => {
     const data = {
       title: 'Cats are very cute',
     };
@@ -55,5 +57,27 @@ describe('runPromptExecution', () => {
 
     expect(result.error).toBeUndefined();
     expect(result.value).toBeDefined();
+  });
+});
+
+describe('stream', () => {
+  it('should stream response with partial results', async () => {
+    const updates = [];
+
+    for await (const response of runPromptExecutionStream({
+      accessToken,
+      modelName: testModelName,
+      instruction: testPrompt,
+    })) {
+      updates.push(response);
+    }
+
+    expect(updates.length).toBeGreaterThan(1);
+    expect(updates[0].done).toBe(false);
+    expect(updates[updates.length - 1].done).toBe(true);
+    expect(updates[updates.length - 1].value).toBeDefined();
+    expect(updates[0].value!.length).toBeLessThan(
+      updates[updates.length - 1].value!.length,
+    );
   });
 });

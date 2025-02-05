@@ -1,27 +1,21 @@
 import { type RequestEventBase, server$ } from '@builder.io/qwik-city';
 
-import { addColumn } from '~/services';
-import { getRowCells } from '~/services/repository';
-import { type Cell, type CreateColumn, useServerSession } from '~/state';
-import { runPromptExecution } from '~/usecases/run-prompt-execution';
+import { createColumn } from '~/services/repository';
+import {
+  type Cell,
+  type Column,
+  type CreateColumn,
+  useServerSession,
+} from '~/state';
+import { generateCells } from './generate-cells';
 
 export const useAddColumnUseCase = () =>
   server$(async function* (
     this: RequestEventBase<QwikCityPlatform>,
     newColum: CreateColumn,
-  ) {
+  ): AsyncGenerator<{ column?: Column; cell?: Cell }> {
     const session = useServerSession(this);
-
-    const { name, type, kind, executionProcess } = newColum;
-
-    const column = await addColumn(
-      {
-        name,
-        type,
-        kind,
-      },
-      executionProcess,
-    );
+    const column = await createColumn(newColum);
 
     yield {
       column: {
@@ -30,58 +24,20 @@ export const useAddColumnUseCase = () =>
         type: column.type,
         kind: column.kind,
         cells: [],
+        dataset: column.dataset,
         process: column.process,
       },
     };
 
-    if (kind === 'dynamic') {
-      const { limit, offset, modelName, prompt, columnsReferences } =
-        executionProcess!;
-
-      const examples: string[] = [];
-      for (let i = offset; i < limit + offset; i++) {
-        const args = {
-          accessToken: session.token,
-          modelName,
-          examples,
-          instruction: prompt,
-          data: {},
-        };
-
-        if (columnsReferences && columnsReferences.length > 0) {
-          const rowCells = await getRowCells({
-            rowIdx: i,
-            columns: columnsReferences,
-          });
-          args.data = Object.fromEntries(
-            rowCells.map((cell) => [cell.column!.name, cell.value]),
-          );
-        }
-
-        const response = await runPromptExecution(args);
-
-        const cell: Cell = await column.addCell({
-          idx: i,
-          value: response.value,
-          error: response.error,
-        });
-
-        yield {
-          cell,
-        };
-
-        if (response.value) {
-          examples.push(response.value);
-        }
-      }
-    } else {
-      // Iterate based on quantity of rows.
-      for (let idx = 0; idx < 2; idx++) {
-        await column.addCell({
-          idx,
-          value: '',
-          error: '',
-        });
-      }
+    if (!column.process) {
+      return;
     }
+
+    yield* generateCells({
+      column,
+      process: column.process!,
+      session,
+      limit: column.process!.limit!,
+      offset: column.process!.offset,
+    });
   });

@@ -4,19 +4,16 @@ import {
   type RequestEvent,
   routeLoader$,
 } from '@builder.io/qwik-city';
-import { AddColumn, Commands } from '~/features';
-
-import { Table } from '~/components';
-import { useHome } from '~/routes/useHome';
+import { Commands } from '~/features';
 
 import * as hub from '@huggingface/hub';
+
+import { Table } from '~/features/table/table';
+import { saveSession } from '~/services/auth/session';
+import { useLoadDatasets } from '~/state';
 import { useServerSession } from '~/state/session';
 
-export { useColumnsLoader } from '~/state';
-
-// See https://huggingface.co/docs/hub/en/spaces-oauth
-const HF_TOKEN = process.env.HF_TOKEN;
-const CLIENT_ID = process.env.OAUTH_CLIENT_ID;
+export { useDatasetsLoader } from '~/state';
 
 export const onGet = async ({
   cookie,
@@ -24,20 +21,29 @@ export const onGet = async ({
   redirect,
   next,
   url,
+  headers,
 }: RequestEvent) => {
   const session = sharedMap.get('session');
   if (session) {
     return next();
   }
 
+  // See https://huggingface.co/docs/hub/en/spaces-oauth
+  const CLIENT_ID = process.env.OAUTH_CLIENT_ID;
+  const HF_TOKEN = process.env.HF_TOKEN;
+
   if (CLIENT_ID) {
     const sessionCode = crypto.randomUUID();
+
+    const redirectOrigin = !isDev
+      ? url.origin.replace('http://', 'https://')
+      : url.origin;
 
     const authData = {
       state: sessionCode,
       clientId: CLIENT_ID,
-      scopes: 'inference-api',
-      redirectUrl: `${url.origin}/auth/callback/`,
+      scopes: process.env.OAUTH_SCOPES || 'openid profile inference-api',
+      redirectUrl: `${redirectOrigin}/auth/callback/`,
       localStorage: {
         codeVerifier: undefined,
         nonce: undefined,
@@ -62,27 +68,26 @@ export const onGet = async ({
   }
 
   if (HF_TOKEN) {
-    const userInfo = (await hub.whoAmI({ accessToken: HF_TOKEN })) as any;
+    try {
+      const userInfo = (await hub.whoAmI({ accessToken: HF_TOKEN })) as any;
 
-    const session = {
-      token: HF_TOKEN,
-      user: {
-        name: userInfo.name,
-        picture: userInfo.avatarUrl,
-      },
-    };
+      const session = {
+        token: HF_TOKEN,
+        user: {
+          name: userInfo.fullname,
+          username: userInfo.name,
+          picture: userInfo.avatarUrl,
+        },
+      };
 
-    cookie.delete('session');
+      saveSession(cookie, session);
 
-    cookie.set('session', session, {
-      secure: true,
-      httpOnly: !isDev,
-      path: '/',
-    });
+      sharedMap.set('session', session);
 
-    sharedMap.set('session', session);
-
-    return next();
+      return next();
+    } catch (e: any) {
+      throw Error(`Invalid HF_TOKEN: ${e.message}`);
+    }
   }
 
   throw Error('Missing HF_TOKEN or OAUTH_CLIENT_ID');
@@ -91,17 +96,14 @@ export const onGet = async ({
 export const useSession = routeLoader$(useServerSession);
 
 export default component$(() => {
-  const session = useSession();
-  const { onCreateColumn } = useHome();
+  useLoadDatasets();
 
   return (
-    <div class="mx-auto px-4 pt-2">
-      <h2>Hello {session.value.user.name} 👋</h2>
-      <Commands />
-
-      <Table />
-
-      <AddColumn onCreateColumn={onCreateColumn} />
+    <div class="min-h-screen">
+      <div class="min-h-screen mx-auto max-w-[1200px] px-6 py-4">
+        <Commands />
+        <Table />
+      </div>
     </div>
   );
 });

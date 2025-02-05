@@ -1,21 +1,15 @@
-import {
-  $,
-  type Signal,
-  createContextId,
-  useContext,
-  useContextProvider,
-} from '@builder.io/qwik';
-import { routeLoader$ } from '@builder.io/qwik-city';
+import { $, useComputed$, useContext } from '@builder.io/qwik';
 
-import { getAllColumns } from '~/services';
+import { type Dataset, datasetsContext } from '~/state/datasets';
 
 export type ColumnType = 'text' | 'array' | 'number' | 'boolean' | 'object';
 export type ColumnKind = 'static' | 'dynamic';
 
 export interface Process {
+  id?: string;
   modelName: string;
   prompt: string;
-  columnsReferences: string[];
+  columnsReferences?: string[];
   offset: number;
   limit: number;
 }
@@ -24,13 +18,14 @@ export interface CreateColumn {
   name: string;
   type: ColumnType;
   kind: ColumnKind;
-  executionProcess?: Process;
+  dataset: Dataset;
+  process?: Process;
 }
 
 export type Cell = {
   id: string;
   idx: number;
-  columnId: string;
+  column?: Column;
   validated: boolean;
   value?: string;
   error?: string;
@@ -44,57 +39,68 @@ export interface Column {
   kind: ColumnKind;
   process?: Process;
   cells: Cell[];
+  dataset: Omit<Dataset, 'columns'>;
 }
 
-const columnContext = createContextId<Signal<Column[]>>('column.context');
-export const useLoadColumns = () => {
-  const columns = useColumnsLoader();
-
-  useContextProvider(columnContext, columns);
-
-  return columns;
-};
-
-export const useColumnsLoader = routeLoader$<Column[]>(() => getAllColumns());
-
+export const TEMPORAL_ID = '-1';
 export const useColumnsStore = () => {
-  const columns = useContext(columnContext);
+  const dataset = useContext(datasetsContext);
+  const columns = useComputed$(() => {
+    if (dataset.value.columns.length === 0) {
+      return [
+        {
+          id: TEMPORAL_ID,
+          name: 'Column 1',
+          kind: 'dynamic',
+          type: 'text',
+          cells: [],
+          dataset: {
+            ...dataset.value,
+          },
+        },
+      ] as Column[];
+    }
+
+    return dataset.value.columns.filter((c) => c.id !== TEMPORAL_ID);
+  });
+
+  const replaceColumn = $((replaced: Column[]) => {
+    dataset.value = {
+      ...dataset.value,
+      columns: [...replaced],
+    };
+  });
 
   return {
     state: columns,
-    replaceColumn: $((replaced: Column[]) => {
-      columns.value = [...replaced];
-    }),
     addColumn: $((newbie: Column) => {
-      columns.value = [...columns.value, newbie];
+      replaceColumn([...columns.value, newbie]);
     }),
     updateColumn: $((updated: Column) => {
-      columns.value = [
-        ...columns.value.map((c) => (c.name === updated.name ? updated : c)),
-      ];
+      replaceColumn(
+        columns.value.map((c) => (c.id === updated.id ? updated : c)),
+      );
     }),
     deleteColumn: $((deleted: Column) => {
-      columns.value = columns.value.filter((c) => c.name !== deleted.name);
+      replaceColumn(columns.value.filter((c) => c.id !== deleted.id));
     }),
     addCell: $((cell: Cell) => {
-      const column = columns.value.find((c) => c.id === cell.columnId);
+      const column = columns.value.find((c) => c.id === cell.column?.id);
+      if (!column) return;
 
-      if (column) {
-        column.cells.push(cell);
-      }
+      column.cells.push(cell);
 
-      columns.value = [...columns.value];
+      replaceColumn(columns.value);
     }),
     replaceCell: $((cell: Cell) => {
-      const column = columns.value.find((c) => c.id === cell.columnId);
-
+      const column = columns.value.find((c) => c.id === cell.column?.id);
       if (!column) return;
 
       column.cells = [
         ...column.cells.map((c) => (c.id === cell.id ? cell : c)),
       ];
 
-      columns.value = [...columns.value];
+      replaceColumn(columns.value);
     }),
   };
 };

@@ -1,119 +1,189 @@
 import { ColumnModel } from '~/services/db/models/column';
 import { ProcessModel } from '~/services/db/models/process';
-import type { Cell, Column, Process } from '~/state';
+import type { Column, ColumnKind, ColumnType } from '~/state';
+import { createProcess, updateProcess } from './processes';
 
-export const getAllColumns = async (): Promise<Column[]> => {
-  const columns = await ColumnModel.findAll({
-    include: [ColumnModel.associations.cells, 'process'],
-    order: [[ColumnModel.associations.cells, 'id', 'DESC']],
+export const getDatasetColumns = async (
+  datasetId: string,
+): Promise<Column[]> => {
+  const models = await ColumnModel.findAll({
+    where: {
+      datasetId,
+    },
+    include: [
+      {
+        association: ColumnModel.associations.cells,
+        separate: true,
+        order: [['idx', 'ASC']],
+      },
+      {
+        association: ColumnModel.associations.process,
+        include: [ProcessModel.associations.referredColumns],
+      },
+      {
+        association: ColumnModel.associations.dataset,
+      },
+    ],
+    order: [['createdAt', 'ASC']],
   });
 
-  return columns.map((column) => ({
-    id: column.id,
-    name: column.name,
-    type: column.type,
-    kind: column.kind,
-    cells: column.cells.map((cell) => ({
-      id: cell.id,
-      idx: cell.idx,
-      value: cell.value,
-      error: cell.error,
-      validated: cell.validated,
-      columnId: cell.columnId,
-      updatedAt: cell.updatedAt,
-    })),
-    process: {
-      columnsReferences: column.process?.columnsReferences ?? [],
-      limit: column.process?.limit ?? 0,
-      modelName: column.process?.modelName ?? '',
-      offset: column.process?.offset ?? 0,
-      prompt: column.process?.prompt ?? '',
-    },
-  }));
+  return models.map((model) => {
+    const column = {
+      id: model.id,
+      name: model.name,
+      type: model.type as ColumnType,
+      kind: model.kind as ColumnKind,
+
+      dataset: {
+        id: model.dataset.id,
+        name: model.dataset.name,
+        createdBy: model.dataset.createdBy,
+      },
+
+      process: {
+        id: model.process?.id,
+        columnsReferences: (model.process?.referredColumns ?? []).map(
+          (columnRef) => columnRef.id,
+        ),
+        limit: model.process?.limit ?? 0,
+        modelName: model.process?.modelName ?? '',
+        offset: model.process?.offset ?? 0,
+        prompt: model.process?.prompt ?? '',
+      },
+      cells: [],
+    };
+
+    return {
+      ...column,
+      cells: model.cells.map((cell) => ({
+        id: cell.id,
+        idx: cell.idx,
+        value: cell.value,
+        error: cell.error,
+        validated: cell.validated,
+        updatedAt: cell.updatedAt,
+        column,
+      })),
+    };
+  });
 };
 
 export const getColumnById = async (id: string): Promise<Column | null> => {
-  const column = await ColumnModel.findByPk(id, {
-    include: [ColumnModel.associations.cells, 'process'],
+  const model = await ColumnModel.findByPk(id, {
+    include: [
+      {
+        association: ColumnModel.associations.cells,
+        separate: true,
+        order: [['idx', 'ASC']],
+      },
+      {
+        association: ColumnModel.associations.process,
+        include: [ProcessModel.associations.referredColumns],
+      },
+      {
+        association: ColumnModel.associations.dataset,
+      },
+    ],
   });
 
-  if (!column) return null;
+  if (!model) return null;
+
+  const column = {
+    id: model.id,
+    name: model.name,
+    type: model.type as ColumnType,
+    kind: model.kind as ColumnKind,
+
+    dataset: {
+      id: model.dataset.id,
+      name: model.dataset.name,
+      createdBy: model.dataset.createdBy,
+    },
+
+    process: {
+      id: model.process?.id,
+      columnsReferences: (model.process?.referredColumns ?? []).map(
+        (column) => column.id,
+      ),
+      limit: model.process?.limit ?? 0,
+      modelName: model.process?.modelName ?? '',
+      offset: model.process?.offset ?? 0,
+      prompt: model.process?.prompt ?? '',
+    },
+
+    cells: [],
+  };
 
   return {
-    id: column.id,
-    name: column.name,
-    type: column.type,
-    kind: column.kind,
-    cells: column.cells.map((cell) => ({
+    ...column,
+    cells: model.cells.map((cell) => ({
       id: cell.id,
       idx: cell.idx,
       value: cell.value,
       error: cell.error,
       validated: cell.validated,
-      columnId: cell.columnId,
       updatedAt: cell.updatedAt,
+      column,
     })),
-    process: {
-      columnsReferences: column.process?.columnsReferences ?? [],
-      limit: column.process?.limit ?? 0,
-      modelName: column.process?.modelName ?? '',
-      offset: column.process?.offset ?? 0,
-      prompt: column.process?.prompt ?? '',
-    },
   };
 };
 
-export const addColumn = async (
+export const createColumn = async (
   column: Omit<Column, 'id' | 'cells'>,
-  process?: Process,
-) => {
-  const cells: Cell[] = [];
+): Promise<Column> => {
+  const model = await ColumnModel.create({
+    name: column.name,
+    type: column.type,
+    kind: column.kind,
+    datasetId: column.dataset.id,
+  });
 
-  const addedColumn = await ColumnModel.create(column);
+  const newColumn = {
+    id: model.id,
+    name: model.name,
+    type: model.type as ColumnType,
+    kind: model.kind as ColumnKind,
+    dataset: column.dataset,
+    process: column.process,
+    cells: [], // TODO: review this assigment
+  };
 
-  if (process) {
-    await ProcessModel.create({
-      limit: process.limit,
-      modelName: process.modelName,
-      offset: process.offset,
-      prompt: process.prompt,
-      columnId: addedColumn.id,
+  if (column.process) {
+    newColumn.process = await createProcess({
+      process: column.process,
+      column: newColumn,
     });
   }
 
-  const handler: Column & {
-    addCell: (
-      cell: Omit<Cell, 'id' | 'validated' | 'columnId' | 'updatedAt'>,
-    ) => Promise<Cell>;
-  } = {
-    addCell: async (
-      cell: Omit<Cell, 'id' | 'validated' | 'columnId' | 'updatedAt'>,
-    ): Promise<Cell> => {
-      const newbie = await addedColumn.createCell({
-        idx: cell.idx,
-        value: cell.value ?? '',
-        error: cell.error ?? '',
-      });
+  return newColumn;
+};
 
-      cells.push(newbie);
+export const updateColumn = async (column: Column): Promise<Column> => {
+  let model = await ColumnModel.findByPk(column.id);
 
-      return {
-        id: newbie.id,
-        idx: newbie.idx,
-        value: newbie.value,
-        error: newbie.error,
-        validated: newbie.validated,
-        columnId: newbie.columnId,
-        updatedAt: newbie.updatedAt,
-      };
-    },
-    id: addedColumn.id,
-    name: addedColumn.name,
-    type: addedColumn.type,
-    kind: addedColumn.kind,
-    cells,
-    process,
+  if (!model) {
+    throw new Error('Column not found');
+  }
+
+  model.set({
+    name: column.name,
+    type: column.type,
+    kind: column.kind,
+  });
+
+  model = await model.save();
+
+  if (column.process) {
+    column.process = await updateProcess(column.process);
+  }
+
+  return {
+    id: model.id,
+    name: model.name,
+    type: model.type as ColumnType,
+    kind: model.kind as ColumnKind,
+    dataset: column.dataset,
+    process: column.process,
+    cells: column.cells,
   };
-
-  return handler;
 };

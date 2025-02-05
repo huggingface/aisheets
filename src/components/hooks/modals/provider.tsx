@@ -1,20 +1,19 @@
 import {
-  component$,
   type Signal,
   Slot,
+  component$,
   useContextProvider,
   useSignal,
 } from '@builder.io/qwik';
-
-import type { Modals } from '~/components/hooks/modals/config';
+import type { State } from '~/components/hooks/modals/config';
 import { initialState, modalsContext } from '~/components/hooks/modals/context';
 
-const useModalsProvider = (modals: Signal<Modals>) => {
+const useModalsProvider = (modals: Signal<State>) => {
   useContextProvider(modalsContext, modals);
 };
 
 export const ModalsProvider = component$(() => {
-  const internalState = useSignal<Modals>(initialState);
+  const internalState = useSignal<State>(initialState);
   useModalsProvider(internalState);
 
   return <Slot />;

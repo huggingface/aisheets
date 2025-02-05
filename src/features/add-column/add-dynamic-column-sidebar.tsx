@@ -1,9 +1,11 @@
 import {
   $,
   type QRL,
+  Resource,
   component$,
+  useResource$,
   useSignal,
-  useVisibleTask$,
+  useTask$,
 } from '@builder.io/qwik';
 import { LuCheck } from '@qwikest/icons/lucide';
 import { TbX } from '@qwikest/icons/tablericons';
@@ -14,10 +16,25 @@ import {
   TemplateTextArea,
   type Variable,
 } from '~/features/add-column/components/template-textarea';
-import { type ColumnType, type CreateColumn, useColumnsStore } from '~/state';
+import {
+  type ColumnType,
+  type CreateColumn,
+  TEMPORAL_ID,
+  useColumnsStore,
+  useDatasetsStore,
+} from '~/state';
 
 interface SidebarProps {
   onCreateColumn: QRL<(createColumn: CreateColumn) => void>;
+}
+
+const MODEL_URL =
+  'https://huggingface.co/api/models?other=text-generation-inference&inference=warm';
+const DEFAULT_MODEL = 'google/gemma-2-2b-it';
+
+interface HFModel {
+  id: string;
+  tags?: string[];
 }
 
 const outputType = ['text', 'array', 'number', 'boolean', 'object'];
@@ -29,29 +46,60 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
 
     const type = useSignal<NonNullable<ColumnType>>('text');
     const name = useSignal('');
-    const rowsToGenerate = useSignal('3');
+    const rowsToGenerate = useSignal('5');
     const prompt = useSignal('');
     const variables = useSignal<Variable[]>([]);
     const columnsReferences = useSignal<string[]>([]);
 
+    const { activeDataset } = useDatasetsStore();
+
     const onSelectedVariables = $((variables: { id: string }[]) => {
       columnsReferences.value = variables.map((v) => v.id);
     });
-    const modelName = useSignal('meta-llama/Llama-2-7b-chat-hf');
+    const modelName = useSignal(DEFAULT_MODEL);
 
-    useVisibleTask$(({ track }) => {
+    useTask$(({ track }) => {
       track(isOpenAddDynamicColumnSidebar);
 
       type.value = 'text';
       name.value = '';
       prompt.value = '';
-      modelName.value = 'meta-llama/Llama-2-7b-chat-hf';
-      rowsToGenerate.value = '3';
+      modelName.value = DEFAULT_MODEL;
+      rowsToGenerate.value = '5';
       columnsReferences.value = [];
-      variables.value = columns.value.map((c) => ({
-        id: c.id,
-        name: c.name,
-      }));
+      variables.value = columns.value
+        .filter((c) => c.id !== TEMPORAL_ID)
+        .map((c) => ({
+          id: c.id,
+          name: c.name,
+        }));
+    });
+
+    const loadModels = useResource$(async ({ track, cleanup }) => {
+      track(isOpenAddDynamicColumnSidebar);
+
+      if (!isOpenAddDynamicColumnSidebar) return Promise.resolve([]);
+
+      const controller = new AbortController();
+      cleanup(() => controller.abort());
+
+      const response = await fetch(MODEL_URL, {
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch models');
+      }
+
+      const data = (await response.json()) as HFModel[];
+
+      return data
+        .filter((model: any) =>
+          model.tags?.includes('text-generation-inference'),
+        )
+        .map((model: any) => ({
+          id: model.id,
+        }));
     });
 
     const onCreate = $(() => {
@@ -61,7 +109,8 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
         name: name.value,
         type: type.value,
         kind: 'dynamic',
-        executionProcess: {
+        dataset: activeDataset.value,
+        process: {
           modelName: modelName.value,
           prompt: prompt.value,
           columnsReferences: columnsReferences.value,
@@ -75,9 +124,9 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
     });
 
     return (
-      <Sidebar bind:show={isOpenAddDynamicColumnSidebar}>
+      <Sidebar name="addDynamicColumnSidebar">
         <div class="flex h-full flex-col justify-between p-4">
-          <div class="h-full">
+          <div class="max-h-full">
             <div class="flex flex-col gap-4">
               <div class="flex items-center justify-between">
                 <Label for="column-name">Column name</Label>
@@ -98,6 +147,7 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
               />
 
               <Label for="column-output-type">Output type</Label>
+
               <Select.Root id="column-output-type" bind:value={type}>
                 <Select.Trigger>
                   <Select.DisplayValue />
@@ -122,22 +172,35 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
               />
 
               <Label for="column-model" class="flex gap-1">
-                Model name. Available models in the
-                <a
-                  href="https://huggingface.co/playground"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="text-blue-500 underline hover:text-blue-700"
-                >
-                  huggingface playground
-                </a>
+                Model
               </Label>
-              <Input
-                id="column-model"
-                class="h-10"
-                value="meta-llama/Llama-2-7b-chat-hf"
-                placeholder="Enter the HF model name"
-                bind:value={modelName}
+              <Resource
+                value={loadModels}
+                onPending={() => {
+                  return <Select.Disabled>Loading models...</Select.Disabled>;
+                }}
+                onResolved={(models) => {
+                  return (
+                    <Select.Root id="column-model" bind:value={modelName}>
+                      <Select.Trigger class="bg-background border-input">
+                        <Select.DisplayValue />
+                      </Select.Trigger>
+                      <Select.Popover class="bg-background border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto">
+                        {models.map((model) => (
+                          <Select.Item
+                            key={model.id}
+                            class="text-foreground hover:bg-accent"
+                          >
+                            <Select.ItemLabel>{model.id}</Select.ItemLabel>
+                            <Select.ItemIndicator>
+                              <LuCheck class="h-4 w-4" />
+                            </Select.ItemIndicator>
+                          </Select.Item>
+                        ))}
+                      </Select.Popover>
+                    </Select.Root>
+                  );
+                }}
               />
 
               <Label for="column-rows">Rows generated</Label>

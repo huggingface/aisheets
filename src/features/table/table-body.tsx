@@ -42,15 +42,9 @@ export const TableBody = component$(() => {
 
             return (
               <>
-                <TableCell
-                  key={`${cell.id}-${cell.updatedAt}`}
-                  cell={cell}
-                  class="border-r border-gray-200 last:border-r-0"
-                />
+                <TableCell key={`${cell.id}-${cell.updatedAt}`} cell={cell} />
                 {indexColumnEditing.value === columnIndex ? (
-                  <th key="temporal" class="min-w-[33vw]">
-                    <h2>sdasd</h2>
-                  </th>
+                  <th key="temporal" class="min-w-[33vw]" />
                 ) : null}
               </>
             );

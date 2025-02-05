@@ -5,6 +5,7 @@ export interface Session {
   token: string;
   user: {
     name: string;
+    username: string;
     picture: string;
   };
 }
@@ -23,6 +24,7 @@ export const useServerSession = (request: RequestEventBase): Session => {
     token: session.token,
     user: {
       name: session.user.name,
+      username: session.user.username,
       picture: session.user.picture,
     },
   };

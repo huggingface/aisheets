@@ -1,6 +1,13 @@
-import { component$ } from '@builder.io/qwik';
-import { LuPanelLeftClose, LuPanelLeftOpen } from '@qwikest/icons/lucide';
+import { $, component$ } from '@builder.io/qwik';
+import { Link } from '@builder.io/qwik-city';
+import { Logo } from '~/components/ui/logo/logo';
 import { useToggle } from '~/components/hooks';
+
+import {
+  LuPanelLeftClose,
+  LuPanelLeftOpen,
+  LuLibrary,
+} from '@qwikest/icons/lucide';
 
 export const MainSidebar = component$(() => {
   const { isOpen, toggle } = useToggle();
@@ -14,29 +21,27 @@ export const MainSidebar = component$(() => {
     'Consectetur adipiscing elit',
   ];
 
+  const newDataset = $(() => {
+    console.log('New dataset');
+  });
+
   return (
     <div
-      class="bg-gradient-to-r from-white to-gray-50 h-screen transition-all duration-300 ease-in-out shrink-0"
-      style={{
-        width: isOpen.value ? '300px' : '50px',
-      }}
+      class={`transition-color shrink-0 ${
+        isOpen.value
+          ? 'bg-gradient-to-r from-white to-gray-50 h-screen'
+          : 'bg-white'
+      }`}
     >
-      {/* Header del menú */}
-      <div class="flex justify-between items-center p-2 mb-10 w-full transition-all duration-500 ease-in-out">
-        <p
-          class={`transition-[opacity, max-height] duration-300 ease-in-out font-mono ${
-            isOpen.value
-              ? 'max-h-screen opacity-100 px-4 duration-400'
-              : 'max-h-0 opacity-0 px-0'
-          } overflow-hidden`}
-          style={isOpen.value ? '' : 'max-height: 0; opacity: 0;'}
-        >
-          {isOpen.value && 'Easy Datagen'}
-        </p>
+      <div
+        class={`transition-all duration-300 flex items-center justify-between py-2 px-4 absolute ${
+          isOpen.value ? 'min-w-[300px]' : 'min-w-0'
+        }`}
+      >
         <button
           type="button"
           onClick$={toggle}
-          class="rounded p-2 hover:bg-gray-100 text-muted-foreground"
+          class="transition-opacity duration-300 ease-in-out rounded p-2 hover:bg-gray-100 text-muted-foreground"
         >
           {isOpen.value ? (
             <LuPanelLeftClose class="w-5 h-5" />
@@ -44,45 +49,80 @@ export const MainSidebar = component$(() => {
             <LuPanelLeftOpen class="w-5 h-5" />
           )}
         </button>
+        <button
+          onClick$={newDataset}
+          type="button"
+          class="flex rounded items-center gap-[8px] p-2 hover:bg-gray-100 text-muted-foreground text-sm"
+        >
+          <Logo class="w-5 h-5 rotate-15" />
+          {!isOpen.value && 'Start dataset'}
+        </button>
       </div>
 
-      {/* Contenedor del menú con transición en el eje horizontal */}
       <div
-        class="transition-all duration-500 ease-in-out overflow-auto max-h-full"
-        style={{ opacity: isOpen.value ? '1' : '0' }}
+        class="transition-all duration-300 shrink-0 mt-12"
+        style={{
+          width: isOpen.value ? '300px' : '0',
+          opacity: isOpen.value ? '1' : '0',
+        }}
       >
-        {isOpen.value && (
-          <div>
-            <p class="text-muted-foreground px-6 text-sm font-semibold">
-              Today
-            </p>
-            <div class="block space-y-2 p-4">
-              {mockedItems.splice(0, 1).map((item, index) => (
-                <button
-                  type="button"
-                  key={index}
-                  class="block px-2 py-1 hover:bg-gray-100 rounded text-sm font-light truncate max-w-full"
-                >
-                  {item}
-                </button>
-              ))}
+        <div class="transition-all duration-300 ease-in-out overflow-auto max-h-full">
+          <>
+            <div class="block space-y-2 p-4 mb-4">
+              <Link
+                href="/"
+                class="flex items-center gap-2 px-2 py-1 hover:bg-gray-100 rounded text-sm font-light truncate max-w-full"
+              >
+                <Logo
+                  class="w-5 h-5 rotate-15"
+                  fillColor="#89FF14"
+                  strokeColor="#849AFF"
+                />
+                Dataset
+              </Link>
+              <Link
+                href="/explore-prompts"
+                class="flex items-center gap-2 px-2 py-1 hover:bg-gray-100 rounded text-sm font-light truncate max-w-full"
+              >
+                <LuLibrary class="w-5 h-5 text-muted-foreground" />
+                Explore prompts
+              </Link>
             </div>
-            <p class="text-muted-foreground px-6 text-sm font-semibold">
-              7 days
-            </p>
-            <div class="block space-y-2 p-4">
-              {mockedItems.splice(1, mockedItems.length).map((item, index) => (
-                <button
-                  type="button"
-                  key={index}
-                  class="block px-2 py-1 hover:bg-gray-100 rounded text-sm font-light truncate max-w-full"
-                >
-                  {item}
-                </button>
-              ))}
+
+            <div>
+              <p class="text-muted-foreground px-6 text-sm font-semibold">
+                Today
+              </p>
+              <div class="block space-y-2 p-4 mb-4">
+                {mockedItems.splice(0, 1).map((item, index) => (
+                  <button
+                    type="button"
+                    key={index}
+                    class="block px-2 py-1 hover:bg-gray-100 rounded text-sm font-light truncate max-w-full"
+                  >
+                    {item}
+                  </button>
+                ))}
+              </div>
+              <p class="text-muted-foreground px-6 text-sm font-semibold">
+                7 days
+              </p>
+              <div class="block space-y-2 p-4 mb-4">
+                {mockedItems
+                  .splice(1, mockedItems.length)
+                  .map((item, index) => (
+                    <button
+                      type="button"
+                      key={index}
+                      class="block px-2 py-1 hover:bg-gray-100 rounded text-sm font-light truncate max-w-full"
+                    >
+                      {item}
+                    </button>
+                  ))}
+              </div>
             </div>
-          </div>
-        )}
+          </>
+        </div>
       </div>
     </div>
   );

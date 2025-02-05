@@ -25,7 +25,7 @@ export const useDatasetsLoader = routeLoader$<Dataset>(async function (
 ) {
   const session = useServerSession(this);
 
-  return await getOrCreateDataset({ createdBy: session.user.name });
+  return await getOrCreateDataset({ createdBy: session.user.username });
 });
 
 export const useLoadDatasets = () => {

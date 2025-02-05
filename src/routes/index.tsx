@@ -9,6 +9,7 @@ import { Commands } from '~/features';
 import * as hub from '@huggingface/hub';
 
 import { Table } from '~/features/table/table';
+import { saveSession } from '~/services/auth/session';
 import { useLoadDatasets } from '~/state';
 import { useServerSession } from '~/state/session';
 
@@ -67,27 +68,26 @@ export const onGet = async ({
   }
 
   if (HF_TOKEN) {
-    const userInfo = (await hub.whoAmI({ accessToken: HF_TOKEN })) as any;
+    try {
+      const userInfo = (await hub.whoAmI({ accessToken: HF_TOKEN })) as any;
 
-    const session = {
-      token: HF_TOKEN,
-      user: {
-        name: userInfo.name,
-        picture: userInfo.avatarUrl,
-      },
-    };
+      const session = {
+        token: HF_TOKEN,
+        user: {
+          name: userInfo.fullname,
+          username: userInfo.name,
+          picture: userInfo.avatarUrl,
+        },
+      };
 
-    cookie.delete('session');
+      saveSession(cookie, session);
 
-    cookie.set('session', session, {
-      secure: true,
-      httpOnly: !isDev,
-      path: '/',
-    });
+      sharedMap.set('session', session);
 
-    sharedMap.set('session', session);
-
-    return next();
+      return next();
+    } catch (e: any) {
+      throw Error(`Invalid HF_TOKEN: ${e.message}`);
+    }
   }
 
   throw Error('Missing HF_TOKEN or OAUTH_CLIENT_ID');
@@ -99,8 +99,8 @@ export default component$(() => {
   useLoadDatasets();
 
   return (
-    <div class="min-h-screen bg-gray-50/50">
-      <div class="mx-auto max-w-[1200px] px-6 py-4">
+    <div class="min-h-screen">
+      <div class="min-h-screen mx-auto max-w-[1200px] px-6 py-4">
         <Commands />
         <Table />
       </div>

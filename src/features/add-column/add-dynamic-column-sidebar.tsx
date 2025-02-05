@@ -64,8 +64,8 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
       const columnFound = columns.value.find(
         (column) => column.id === args.value?.columnId,
       )!;
-
       column.value = { ...columnFound };
+      columnsReferences.value = [];
 
       variables.value = columns.value
         .filter((c) => c.id !== TEMPORAL_ID)
@@ -73,12 +73,14 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
           id: c.id,
           name: c.name,
         }));
-      columnsReferences.value = [];
 
       if (args.value.mode === 'edit') {
         prompt.value = columnFound.process!.prompt;
         modelName.value = columnFound.process!.modelName;
         rowsToGenerate.value = String(columnFound.process!.limit);
+        variables.value = variables.value.filter(
+          (c) => c.id !== columnFound.id, //Remove the column itself
+        );
       } else if (args.value.mode === 'create') {
         prompt.value = '';
         modelName.value = DEFAULT_MODEL;

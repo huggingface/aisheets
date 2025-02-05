@@ -48,7 +48,7 @@ export const TableBody = component$(() => {
                   class="border-r border-gray-200 last:border-r-0"
                 />
                 {indexColumnEditing.value === columnIndex ? (
-                  <th key="temporal" class="w-[300px]">
+                  <th key="temporal" class="min-w-[33vw]">
                     <h2>sdasd</h2>
                   </th>
                 ) : null}

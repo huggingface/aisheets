@@ -50,7 +50,7 @@ export const TableCell = component$<{ cell: Cell; class?: string }>(
     // First check: Show skeleton for empty cells
     if (!cell.value && !cell.error) {
       return (
-        <td class={`px-3 py-1 ${className}`}>
+        <td class={`px-3 py-1 min-w-[300px] w-[15vw] ${className}`}>
           <div class="flex flex-col gap-2">
             <Skeleton class="h-6 w-full" />
             <Skeleton class="h-3 w-full" />
@@ -65,7 +65,10 @@ export const TableCell = component$<{ cell: Cell; class?: string }>(
     // Second check: Show editing state
     if (isEditing.value) {
       return (
-        <td ref={elementRef} class={`px-3 py-1 ${className}`}>
+        <td
+          ref={elementRef}
+          class={`px-3 py-1 min-w-[300px] w-[15vw] ${className}`}
+        >
           <Textarea
             ref={editCellValueInput}
             bind:value={newCellValue}
@@ -85,7 +88,7 @@ export const TableCell = component$<{ cell: Cell; class?: string }>(
     // Default state: Show value or error
     return (
       <td
-        class={`px-3 py-1 cursor-pointer ${className}`}
+        class={`px-3 py-1 cursor-pointer min-w-[300px] w-[15vw] ${className}`}
         onDblClick$={() => {
           isEditing.value = true;
         }}

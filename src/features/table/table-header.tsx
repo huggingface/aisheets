@@ -54,7 +54,7 @@ export const TableHeader = component$(() => {
             <th
               key={column.id}
               id={column.id}
-              class="border-b border-r cursor-pointer border-gray-200 bg-white px-3 py-2 text-left font-medium text-gray-600 sticky top-0 last:border-r-0 z-0"
+              class="min-w-[300px] w-[15vw] border-b border-r cursor-pointer border-gray-200 bg-white px-3 py-2 text-left font-medium text-gray-600 sticky top-0 last:border-r-0 z-0"
               onDblClick$={() => editCell(column)}
             >
               <div class="flex items-center justify-between gap-2">
@@ -82,7 +82,7 @@ export const TableHeader = component$(() => {
             </th>
 
             {indexColumnEditing.value === index ? (
-              <th key="temporal" class="w-[300px]" />
+              <th key="temporal" class="min-w-[33vw]" />
             ) : null}
           </>
         ))}

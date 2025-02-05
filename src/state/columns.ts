@@ -96,9 +96,13 @@ export const useColumnsStore = () => {
       const column = columns.value.find((c) => c.id === cell.column?.id);
       if (!column) return;
 
-      column.cells = [
-        ...column.cells.map((c) => (c.id === cell.id ? cell : c)),
-      ];
+      if (column.cells.some((c) => c.id === cell.id)) {
+        column.cells = [
+          ...column.cells.map((c) => (c.id === cell.id ? cell : c)),
+        ];
+      } else {
+        column.cells.push(cell);
+      }
 
       replaceColumn(columns.value);
     }),

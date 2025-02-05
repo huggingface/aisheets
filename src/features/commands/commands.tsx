@@ -7,7 +7,7 @@ import { useAddColumnUseCase } from '~/usecases/add-column.usecase';
 
 export const Commands = component$(() => {
   const { openExportToHubSidebar } = useModals('exportToHubSidebar');
-  const { addColumn, addCell } = useColumnsStore();
+  const { addColumn, replaceCell } = useColumnsStore();
 
   const onExportButtonClick = $(() => {
     openExportToHubSidebar();
@@ -22,7 +22,7 @@ export const Commands = component$(() => {
         addColumn(column);
       }
       if (cell) {
-        addCell(cell);
+        replaceCell(cell);
       }
     }
   });

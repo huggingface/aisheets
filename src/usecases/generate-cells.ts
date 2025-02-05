@@ -5,7 +5,7 @@ import {
   updateCell,
 } from '~/services';
 import type { Cell, Column, Process, Session } from '~/state';
-import { runPromptExecution } from './run-prompt-execution';
+import { runPromptExecutionStream } from './run-prompt-execution';
 
 export interface GenerateCellsParams {
   column: Column;
@@ -69,31 +69,26 @@ export const generateCells = async function* ({
       );
     }
 
-    const response = await runPromptExecution(args);
-
-    let cell = await getColumnCellByIdx({ column, idx: i });
-
-    if (!cell) {
-      cell = await createCell({
-        cell: {
-          idx: i,
-          value: response.value,
-          error: response.error,
-        },
+    const cell =
+      (await getColumnCellByIdx({ column, idx: i })) ??
+      (await createCell({
+        cell: { idx: i },
         column,
-      });
-    } else {
-      cell = await updateCell({
-        ...cell,
-        value: response.value,
-        error: response.error,
-      });
+      }));
+
+    for await (const response of runPromptExecutionStream(args)) {
+      cell.value = response.value;
+      cell.error = response.error;
+
+      if (!response.done) yield { cell };
     }
 
+    // Only save to database when stream is complete
+    await updateCell(cell);
     yield { cell };
 
-    if (response.value && !(hasValidatedCells || hasReferredColumns)) {
-      examples.push(response.value);
+    if (cell.value && !(hasValidatedCells || hasReferredColumns)) {
+      examples.push(cell.value);
     }
   }
 };

@@ -1,4 +1,4 @@
-import { chatCompletion } from '@huggingface/inference';
+import { HfInference } from '@huggingface/inference';
 import mustache from 'mustache';
 
 export interface PromptExecutionParams {
@@ -7,11 +7,13 @@ export interface PromptExecutionParams {
   instruction: string;
   data?: object;
   examples?: string[];
+  stream?: boolean;
 }
 
 export interface PromptExecutionResponse {
   value?: string;
   error?: string;
+  done?: boolean;
 }
 
 const promptForResponseFromScratch = (
@@ -85,7 +87,9 @@ export const runPromptExecution = async ({
 
   try {
     // https://huggingface.co/docs/api-inference/tasks/chat-completion?code=js#api-specification
-    const response = await chatCompletion(
+    const inference = new HfInference();
+
+    const response = await inference.chatCompletion(
       {
         model: modelName,
         messages: [{ role: 'user', content: inputPrompt }],
@@ -104,5 +108,58 @@ export const runPromptExecution = async ({
       error = JSON.stringify(e);
     }
     return { error };
+  }
+};
+
+export const runPromptExecutionStream = async function* ({
+  accessToken,
+  modelName,
+  instruction,
+  data,
+  examples,
+}: PromptExecutionParams): AsyncGenerator<PromptExecutionResponse> {
+  let inputPrompt: string;
+  switch (data && Object.keys(data).length > 0) {
+    case true:
+      inputPrompt = promptForResponseFromData(instruction, data!);
+      break;
+    default:
+      inputPrompt = promptForResponseFromScratch(instruction, examples);
+      break;
+  }
+
+  try {
+    const hf = new HfInference(accessToken);
+    let accumulated = '';
+
+    const stream = hf.chatCompletionStream(
+      {
+        model: modelName,
+        messages: [{ role: 'user', content: inputPrompt }],
+        max_tokens: 512,
+        temperature: 0.1,
+      },
+      { use_cache: false },
+    );
+
+    for await (const chunk of stream) {
+      if (chunk.choices && chunk.choices.length > 0) {
+        const content = chunk.choices[0].delta.content;
+        if (content) {
+          accumulated += content;
+          yield { value: accumulated, done: false };
+        }
+      }
+    }
+
+    yield { value: accumulated, done: true };
+  } catch (e) {
+    let error: string;
+    if (e instanceof Error) {
+      error = e.message;
+    } else {
+      error = JSON.stringify(e);
+    }
+    yield { error, done: true };
   }
 };

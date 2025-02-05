@@ -1,6 +1,9 @@
 import { describe, it } from 'node:test';
 import { expect } from 'vitest';
-import { runPromptExecution } from '~/usecases/run-prompt-execution';
+import {
+  runPromptExecution,
+  runPromptExecutionStream,
+} from './run-prompt-execution';
 
 const testModelName = 'google/gemma-2b-it';
 const testPrompt = 'Write a short greeting';
@@ -58,8 +61,8 @@ describe('runPromptExecution', () => {
 });
 
 describe('stream', () => {
-  test('should stream response with partial results', async () => {
-    const updates: PromptExecutionResponse[] = [];
+  it('should stream response with partial results', async () => {
+    const updates = [];
 
     for await (const response of runPromptExecutionStream({
       accessToken,

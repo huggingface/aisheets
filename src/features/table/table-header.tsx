@@ -1,4 +1,10 @@
-import { $, component$, useComputed$, useSignal } from '@builder.io/qwik';
+import {
+  $,
+  component$,
+  useComputed$,
+  useSignal,
+  useVisibleTask$,
+} from '@builder.io/qwik';
 import { server$ } from '@builder.io/qwik-city';
 import {
   TbAlignJustified,
@@ -159,6 +165,15 @@ const TableCellHeaderPlaceHolder = component$(() => {
   const lastColumnId = useComputed$(
     () => columns.value[columns.value.length - 1].id,
   );
+
+  useVisibleTask$(({ track }) => {
+    track(columns);
+    if (columns.value.length === 1 && lastColumnId.value === TEMPORAL_ID) {
+      openAddDynamicColumnSidebar({
+        columnId: lastColumnId.value,
+      });
+    }
+  });
 
   return (
     <th

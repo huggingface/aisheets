@@ -16,7 +16,7 @@ export const Table = component$(() => {
   });
 
   useTask$(({ track }) => {
-    track(() => columns);
+    track(columns);
 
     state.columnWidths = columns.value.reduce(
       (acc, column) => {

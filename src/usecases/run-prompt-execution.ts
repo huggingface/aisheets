@@ -1,4 +1,4 @@
-import { HfInference } from '@huggingface/inference';
+import { chatCompletion, chatCompletionStream } from '@huggingface/inference';
 import mustache from 'mustache';
 
 export interface PromptExecutionParams {
@@ -87,9 +87,7 @@ export const runPromptExecution = async ({
 
   try {
     // https://huggingface.co/docs/api-inference/tasks/chat-completion?code=js#api-specification
-    const inference = new HfInference();
-
-    const response = await inference.chatCompletion(
+    const response = await chatCompletion(
       {
         model: modelName,
         messages: [{ role: 'user', content: inputPrompt }],
@@ -129,10 +127,9 @@ export const runPromptExecutionStream = async function* ({
   }
 
   try {
-    const hf = new HfInference();
     let accumulated = '';
 
-    const stream = hf.chatCompletionStream(
+    const stream = chatCompletionStream(
       {
         model: modelName,
         messages: [{ role: 'user', content: inputPrompt }],

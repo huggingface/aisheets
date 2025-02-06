@@ -55,11 +55,6 @@ export const Sidebar = component$<{
       >
         <Slot />
       </div>
-
-      <div
-        class="absolute border-2 left-0 top-0 h-full w-full z-10"
-        onClick$={generic.close}
-      />
     </div>
   );
 });

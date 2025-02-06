@@ -43,6 +43,7 @@
     "@types/compression": "^1.7.5",
     "@types/eslint": "8.56.10",
     "@types/express": "^4.17.21",
+    "@types/marked": "^6.0.0",
     "@types/mustache": "^4.2.5",
     "@types/node": "20.14.11",
     "@typescript-eslint/eslint-plugin": "7.16.1",
@@ -69,6 +70,7 @@
     "@huggingface/inference": "^3.1.6",
     "consola": "^3.4.0",
     "express": "4.20.0",
+    "marked": "^15.0.6",
     "mustache": "^4.2.0",
     "sequelize": "^6.37.5",
     "sqlite3": "^5.1.7"

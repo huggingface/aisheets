@@ -61,8 +61,22 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
     useTask$(({ track }) => {
       track(isOpenAddDynamicColumnSidebar);
 
+      const getNextColumnName = (counter = 1): string => {
+        const manyColumnsWithName = columns.value
+          .filter((c) => c.id !== TEMPORAL_ID)
+          .filter((c) => c.name.startsWith('Column'));
+
+        const newPosibleColumnName = `Column ${manyColumnsWithName.length + 1}`;
+
+        if (!manyColumnsWithName.find((c) => c.name === newPosibleColumnName)) {
+          return newPosibleColumnName;
+        }
+
+        return getNextColumnName(counter + 1);
+      };
+
       type.value = 'text';
-      name.value = '';
+      name.value = getNextColumnName();
       prompt.value = '';
       modelName.value = DEFAULT_MODEL;
       rowsToGenerate.value = '5';
@@ -119,7 +133,6 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
         },
       };
 
-      closeAddDynamicColumnSidebar();
       onCreateColumn(column);
     });
 

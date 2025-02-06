@@ -1,12 +1,12 @@
-import { $, component$ } from '@builder.io/qwik';
+import { component$ } from '@builder.io/qwik';
 import { Link } from '@builder.io/qwik-city';
-import { Logo } from '~/components/ui/logo/logo';
 import { useToggle } from '~/components/hooks';
+import { Logo } from '~/components/ui/logo/logo';
 
 import {
+  LuLibrary,
   LuPanelLeftClose,
   LuPanelLeftOpen,
-  LuLibrary,
 } from '@qwikest/icons/lucide';
 
 export const MainSidebar = component$(() => {
@@ -21,10 +21,6 @@ export const MainSidebar = component$(() => {
     'Consectetur adipiscing elit',
   ];
 
-  const newDataset = $(() => {
-    console.log('New dataset');
-  });
-
   return (
     <div
       class={`transition-color shrink-0 ${
@@ -34,7 +30,7 @@ export const MainSidebar = component$(() => {
       }`}
     >
       <div
-        class={`transition-all duration-300 flex items-center justify-between py-2 px-4 absolute ${
+        class={`transition-all duration-300 flex items-center justify-between py-2 px-4 ${
           isOpen.value ? 'min-w-[300px]' : 'min-w-0'
         }`}
       >
@@ -49,18 +45,10 @@ export const MainSidebar = component$(() => {
             <LuPanelLeftOpen class="w-5 h-5" />
           )}
         </button>
-        <button
-          onClick$={newDataset}
-          type="button"
-          class="flex rounded items-center gap-[8px] p-2 hover:bg-gray-100 text-muted-foreground text-sm"
-        >
-          <Logo class="w-5 h-5 rotate-15" />
-          {!isOpen.value && 'Start dataset'}
-        </button>
       </div>
 
       <div
-        class="transition-all duration-300 shrink-0 mt-12"
+        class="transition-all duration-300 shrink-0"
         style={{
           width: isOpen.value ? '300px' : '0',
           opacity: isOpen.value ? '1' : '0',
@@ -78,7 +66,7 @@ export const MainSidebar = component$(() => {
                   fillColor="#89FF14"
                   strokeColor="#849AFF"
                 />
-                Dataset
+                Create Dataset
               </Link>
               <Link
                 href="/explore-prompts"

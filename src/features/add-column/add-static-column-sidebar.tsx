@@ -31,7 +31,6 @@ export const AddStaticColumnSidebar = component$<SidebarProps>(
     const onSave = $(() => {
       if (!name.value) return;
 
-      closeAddStaticColumnSidebar();
       onCreateColumn({
         name: name.value,
         type: newType.value,

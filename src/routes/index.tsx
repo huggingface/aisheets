@@ -100,7 +100,7 @@ export default component$(() => {
 
   return (
     <div class="min-h-screen">
-      <div class="min-h-screen mx-auto max-w-[1200px] px-6 py-4">
+      <div class="min-h-screen mx-auto  px-6 py-4">
         <Commands />
         <Table />
       </div>

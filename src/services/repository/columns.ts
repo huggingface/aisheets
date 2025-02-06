@@ -187,3 +187,17 @@ export const updateColumn = async (column: Column): Promise<Column> => {
     cells: column.cells,
   };
 };
+
+export const updateColumnName = async (columnId: string, newName: string) => {
+  const model = await ColumnModel.findByPk(columnId);
+
+  if (!model) {
+    throw new Error('Column not found');
+  }
+
+  model.set({
+    name: newName,
+  });
+
+  await model.save();
+};

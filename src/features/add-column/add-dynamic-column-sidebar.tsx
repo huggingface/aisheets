@@ -121,7 +121,6 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
 
       const synchronizedColum = await onGenerateColumn(columnToSave);
 
-      args.value.columnId = synchronizedColum.id;
       currentColumn.value = {
         ...synchronizedColum,
       };

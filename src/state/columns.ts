@@ -108,10 +108,11 @@ export const useColumnsStore = () => {
     removeTemporalColumn: $(() => {
       replaceColumn(columns.value.filter((c) => c.id !== TEMPORAL_ID));
     }),
-    addColumnFinalColumn: $((newbie: Column) => {
-      replaceColumn(
-        columns.value.map((c) => (c.id === TEMPORAL_ID ? newbie : c)),
-      );
+    addColumn: $((newbie: Column) => {
+      replaceColumn([
+        ...columns.value.filter((c) => c.id !== TEMPORAL_ID),
+        newbie,
+      ]);
     }),
     updateColumn: $((updated: Column) => {
       replaceColumn(

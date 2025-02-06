@@ -1,5 +1,6 @@
 import {
   $,
+  type PropsOf,
   Slot,
   component$,
   useOnWindow,
@@ -9,9 +10,11 @@ import {
 import { useModals } from '~/components/hooks';
 import type { ID } from '~/components/hooks/modals/config';
 
-export const Sidebar = component$<{
+interface SidebarProps extends PropsOf<'div'> {
   name: ID;
-}>((props) => {
+}
+
+export const Sidebar = component$<SidebarProps>((props) => {
   const { args, generic } = useModals(props.name);
   const nearToPosition = useSignal<{
     left: number;
@@ -58,9 +61,7 @@ export const Sidebar = component$<{
           ? `${nearToPosition.value.right}px`
           : 'unset',
       }}
-      class={
-        'absolute h-full w-[600px] overflow-auto transform bg-white text-black transition-transform duration-300 z-20 shadow-md'
-      }
+      class={`absolute h-full w-[600px] overflow-auto transform bg-white text-black transition-transform duration-300 z-20 shadow-md ${props.class}`}
     >
       <Slot />
     </div>

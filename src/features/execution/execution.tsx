@@ -1,5 +1,5 @@
 import { $, component$ } from '@builder.io/qwik';
-import { Button, useModals } from '~/components';
+import { useModals } from '~/components';
 import { AddDynamicColumnSidebar } from '~/features/add-column/add-dynamic-column-sidebar';
 import { ExportToHubSidebar } from '~/features/export-to-hub';
 import {
@@ -14,24 +14,26 @@ import { useEditColumnUseCase } from '~/usecases/edit-column.usecase';
 export const Execution = component$(() => {
   const {
     state: columns,
-    addColumnFinalColumn,
+    addColumn,
     updateColumn,
     replaceCell,
   } = useColumnsStore();
-  const { openExportToHubSidebar } = useModals('exportToHubSidebar');
   const addNewColumn = useAddColumnUseCase();
   const editColumn = useEditColumnUseCase();
 
-  const onExportButtonClick = $(() => {
-    openExportToHubSidebar();
-  });
+  const { openAddDynamicColumnSidebar } = useModals('addDynamicColumnSidebar');
 
   const onCreateColumn = $(async (newColumn: CreateColumn): Promise<Column> => {
     const response = await addNewColumn(newColumn);
 
     for await (const { column, cell } of response) {
       if (column) {
-        addColumnFinalColumn(column);
+        await addColumn(column);
+
+        openAddDynamicColumnSidebar({
+          columnId: column.id,
+          mode: 'edit',
+        });
       }
       if (cell) {
         replaceCell(cell);
@@ -70,16 +72,7 @@ export const Execution = component$(() => {
 
       <AddDynamicColumnSidebar onGenerateColumn={onGenerateColumn} />
 
-      <div class="flex">
-        <Button
-          size="sm"
-          class="flex gap-1 font-light w-30"
-          onClick$={onExportButtonClick}
-        >
-          Export to Hub
-        </Button>
-        <ExportToHubSidebar />
-      </div>
+      <ExportToHubSidebar />
     </div>
   );
 });

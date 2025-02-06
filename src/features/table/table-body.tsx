@@ -6,7 +6,6 @@ import { type Cell, type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
 export const TableBody = component$(() => {
   const { state: columns } = useColumnsStore();
   const rowCount = columns.value[0]?.cells.length || 0;
-  const { args } = useActiveModal();
 
   const getCell = (column: Column, rowIndex: number): Cell => {
     const cell = column.cells[rowIndex];
@@ -37,7 +36,12 @@ export const TableBody = component$(() => {
             const cell = getCell(column, rowIndex);
 
             if (column.id === TEMPORAL_ID) {
-              return <th key="temporal" class="min-w-[33vw]" />;
+              return (
+                <th
+                  key="temporal"
+                  class="min-w-[300px] w-[300px] max-w-[300px]"
+                />
+              );
             }
 
             return (
@@ -68,6 +72,6 @@ const TableCellHeaderForExecution = component$<{ index: number }>(
 
     if (indexColumnEditing.value !== index) return null;
 
-    return <th class="w-[300px] max-w-[300px]" />;
+    return <th class="min-w-[300px] w-[300px] max-w-[300px]" />;
   },
 );

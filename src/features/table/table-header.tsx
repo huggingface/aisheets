@@ -155,7 +155,7 @@ const TableCellHeaderForExecution = component$<{ index: number }>(
 
     if (indexColumnEditing.value !== index) return null;
 
-    return <th class="w-[600px]" />;
+    return <th class="min-w-[600px] w-[600px]" />;
   },
 );
 

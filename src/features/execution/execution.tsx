@@ -1,5 +1,7 @@
 import { $, component$ } from '@builder.io/qwik';
+import { Button, useModals } from '~/components';
 import { AddDynamicColumnSidebar } from '~/features/add-column/add-dynamic-column-sidebar';
+import { ExportToHubSidebar } from '~/features/export-to-hub';
 import {
   type Column,
   type CreateColumn,
@@ -16,8 +18,13 @@ export const Execution = component$(() => {
     updateColumn,
     replaceCell,
   } = useColumnsStore();
+  const { openExportToHubSidebar } = useModals('exportToHubSidebar');
   const addNewColumn = useAddColumnUseCase();
   const editColumn = useEditColumnUseCase();
+
+  const onExportButtonClick = $(() => {
+    openExportToHubSidebar();
+  });
 
   const onCreateColumn = $(async (newColumn: CreateColumn): Promise<Column> => {
     const response = await addNewColumn(newColumn);
@@ -57,5 +64,24 @@ export const Execution = component$(() => {
     return onUpdateCell(column);
   });
 
-  return <AddDynamicColumnSidebar onGenerateColumn={onGenerateColumn} />;
+  return (
+    <div class="flex w-full items-center justify-between">
+      <div class="flex space-x-2">{/* Left side empty for now */}</div>
+
+      <div class="flex space-x-2">
+        <AddDynamicColumnSidebar onGenerateColumn={onGenerateColumn} />
+      </div>
+
+      <div class="flex space-x-2">
+        <Button
+          size="sm"
+          class="flex gap-1 font-light"
+          onClick$={onExportButtonClick}
+        >
+          Export to Hub
+        </Button>
+        <ExportToHubSidebar />
+      </div>
+    </div>
+  );
 });

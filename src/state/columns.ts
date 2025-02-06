@@ -1,6 +1,6 @@
-import { $, useComputed$, useContext } from '@builder.io/qwik';
+import { $, useComputed$ } from '@builder.io/qwik';
 
-import { type Dataset, datasetsContext } from '~/state/datasets';
+import { type Dataset, useDatasetsStore } from '~/state/datasets';
 
 export type ColumnType = 'text' | 'array' | 'number' | 'boolean' | 'object';
 export type ColumnKind = 'static' | 'dynamic';
@@ -39,42 +39,79 @@ export interface Column {
   kind: ColumnKind;
   process?: Process;
   cells: Cell[];
-  dataset: Omit<Dataset, 'columns'>;
+  dataset: Dataset;
 }
 
 export const TEMPORAL_ID = '-1';
 export const useColumnsStore = () => {
-  const dataset = useContext(datasetsContext);
-  const columns = useComputed$(() => {
-    if (dataset.value.columns.length === 0) {
-      return [
-        {
-          id: TEMPORAL_ID,
-          name: 'Column 1',
-          kind: 'dynamic',
-          type: 'text',
-          cells: [],
-          dataset: {
-            ...dataset.value,
-          },
-        },
-      ] as Column[];
+  const { activeDataset } = useDatasetsStore();
+
+  const createPlaceholderColumn = $((): Column => {
+    const DEFAULT_MODEL = 'google/gemma-2-2b-it';
+    const getNextColumnName = (counter = 1): string => {
+      const manyColumnsWithName = activeDataset.value.columns
+        .filter((c) => c.id !== TEMPORAL_ID)
+        .filter((c) => c.name.startsWith('Column'));
+
+      const newPosibleColumnName = `Column ${manyColumnsWithName.length + 1}`;
+
+      if (!manyColumnsWithName.find((c) => c.name === newPosibleColumnName)) {
+        return newPosibleColumnName;
+      }
+
+      return getNextColumnName(counter + 1);
+    };
+
+    return {
+      id: TEMPORAL_ID,
+      name: getNextColumnName(),
+      kind: 'dynamic',
+      type: 'text',
+      cells: [],
+      process: {
+        modelName: DEFAULT_MODEL,
+        offset: 0,
+        limit: 5,
+        prompt: '',
+        columnsReferences: [],
+      },
+      dataset: {
+        ...activeDataset.value,
+      },
+    };
+  });
+
+  const columns = useComputed$(async () => {
+    if (activeDataset.value.columns.length === 0) {
+      activeDataset.value.columns = [await createPlaceholderColumn()];
     }
 
-    return dataset.value.columns.filter((c) => c.id !== TEMPORAL_ID);
+    return activeDataset.value.columns;
   });
 
   const replaceColumn = $((replaced: Column[]) => {
-    dataset.value = {
-      ...dataset.value,
+    activeDataset.value = {
+      ...activeDataset.value,
       columns: [...replaced],
     };
   });
 
   return {
     state: columns,
-    addColumn: $((newbie: Column) => {
-      replaceColumn([...columns.value, newbie]);
+    addTemporalColumn: $(async () => {
+      if (activeDataset.value.columns.some((c) => c.id === TEMPORAL_ID)) return;
+
+      const newTemporalColumn = await createPlaceholderColumn();
+
+      replaceColumn([...columns.value, newTemporalColumn]);
+    }),
+    removeTemporalColumn: $(() => {
+      replaceColumn(columns.value.filter((c) => c.id !== TEMPORAL_ID));
+    }),
+    addColumnFinalColumn: $((newbie: Column) => {
+      replaceColumn(
+        columns.value.map((c) => (c.id === TEMPORAL_ID ? newbie : c)),
+      );
     }),
     updateColumn: $((updated: Column) => {
       replaceColumn(

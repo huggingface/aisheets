@@ -3,6 +3,7 @@ import {
   type QRL,
   Resource,
   component$,
+  useComputed$,
   useResource$,
   useSignal,
   useTask$,
@@ -16,21 +17,14 @@ import {
   TemplateTextArea,
   type Variable,
 } from '~/features/add-column/components/template-textarea';
-import {
-  type Column,
-  type CreateColumn,
-  TEMPORAL_ID,
-  useColumnsStore,
-  useDatasetsStore,
-} from '~/state';
+import { type Column, useColumnsStore } from '~/state';
 
 interface SidebarProps {
-  onGenerateColumn: QRL<(column: CreateColumn | Column) => void>;
+  onGenerateColumn: QRL<(column: Column) => Promise<Column>>;
 }
 
 const MODEL_URL =
   'https://huggingface.co/api/models?other=text-generation-inference&inference=warm';
-const DEFAULT_MODEL = 'google/gemma-2-2b-it';
 
 interface HFModel {
   id: string;
@@ -44,48 +38,42 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
       isOpenAddDynamicColumnSidebar,
       closeAddDynamicColumnSidebar,
     } = useModals('addDynamicColumnSidebar');
-    const { state: columns } = useColumnsStore();
-    const { activeDataset } = useDatasetsStore();
+    const { state: columns, removeTemporalColumn } = useColumnsStore();
+    const isSubmitting = useSignal(false);
 
-    const column = useSignal<Column | null>(null);
+    const currentColumn = useSignal<Column | undefined>();
     const rowsToGenerate = useSignal('5');
-    const prompt = useSignal('');
-    const variables = useSignal<Variable[]>([]);
+    const prompt = useSignal<string>('');
+    const modelName = useSignal<string>('');
     const columnsReferences = useSignal<string[]>([]);
-    const modelName = useSignal(DEFAULT_MODEL);
 
-    const onSelectedVariables = $((variables: { id: string }[]) => {
-      columnsReferences.value = variables.map((v) => v.id);
-    });
-
-    useTask$(({ track }) => {
-      track(args);
-      if (!args.value?.columnId) return;
-      const columnFound = columns.value.find(
-        (column) => column.id === args.value?.columnId,
-      )!;
-      column.value = { ...columnFound };
-      columnsReferences.value = [];
-
-      variables.value = columns.value
-        .filter((c) => c.id !== TEMPORAL_ID)
+    const variables = useComputed$<Variable[]>(() => {
+      const variables = columns.value
+        .filter(
+          (c) => c.id !== args.value?.columnId, //Remove the column itself
+        )
         .map((c) => ({
           id: c.id,
           name: c.name,
         }));
 
-      if (args.value.mode === 'edit') {
-        prompt.value = columnFound.process!.prompt;
-        modelName.value = columnFound.process!.modelName;
-        rowsToGenerate.value = String(columnFound.process!.limit);
-        variables.value = variables.value.filter(
-          (c) => c.id !== columnFound.id, //Remove the column itself
-        );
-      } else if (args.value.mode === 'create') {
-        prompt.value = '';
-        modelName.value = DEFAULT_MODEL;
-        rowsToGenerate.value = '5';
-      }
+      return variables;
+    });
+    const onSelectedVariables = $((variables: { id: string }[]) => {
+      columnsReferences.value = variables.map((v) => v.id);
+    });
+
+    useTask$(({ track }) => {
+      track(isOpenAddDynamicColumnSidebar);
+      if (!isOpenAddDynamicColumnSidebar.value) return;
+
+      currentColumn.value = columns.value.find(
+        (c) => c.id === args.value?.columnId,
+      );
+
+      prompt.value = currentColumn.value?.process!.prompt!;
+      modelName.value = currentColumn.value?.process!.modelName!;
+      rowsToGenerate.value = String(currentColumn.value?.process!.limit);
     });
 
     const loadModels = useResource$(async ({ track, cleanup }) => {
@@ -115,57 +103,37 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
         }));
     });
 
-    const onGenerate = $(() => {
+    const onGenerate = $(async () => {
       if (!args.value) return;
+      isSubmitting.value = true;
 
-      if (args.value.mode === 'create') {
-        const getNextColumnName = (counter = 1): string => {
-          const manyColumnsWithName = columns.value
-            .filter((c) => c.id !== TEMPORAL_ID)
-            .filter((c) => c.name.startsWith('Column'));
+      const columnToSave = {
+        ...currentColumn.value!,
+        process: {
+          ...currentColumn.value!.process,
+          modelName: modelName.value!,
+          prompt: prompt.value!,
+          columnsReferences: columnsReferences.value,
+          offset: 0,
+          limit: Number(rowsToGenerate.value),
+        },
+      };
 
-          const newPosibleColumnName = `Column ${manyColumnsWithName.length + 1}`;
+      const synchronizedColum = await onGenerateColumn(columnToSave);
 
-          if (
-            !manyColumnsWithName.find((c) => c.name === newPosibleColumnName)
-          ) {
-            return newPosibleColumnName;
-          }
+      currentColumn.value = {
+        ...synchronizedColum,
+      };
 
-          return getNextColumnName(counter + 1);
-        };
+      isSubmitting.value = false;
+    });
 
-        const columnToSave: CreateColumn = {
-          name: getNextColumnName(),
-          type: 'text',
-          kind: 'dynamic',
-          dataset: activeDataset.value,
-          process: {
-            modelName: modelName.value,
-            prompt: prompt.value,
-            columnsReferences: columnsReferences.value,
-            offset: 0,
-            limit: Number(rowsToGenerate.value),
-          },
-        };
-
-        onGenerateColumn(columnToSave);
-      } else if (args.value.mode === 'edit') {
-        const columnToSave: Column = {
-          ...column.value!,
-          dataset: column.value!.dataset,
-          process: {
-            ...column.value!.process,
-            modelName: modelName.value,
-            prompt: prompt.value,
-            columnsReferences: columnsReferences.value,
-            offset: 0,
-            limit: Number(rowsToGenerate.value),
-          },
-        };
-
-        onGenerateColumn(columnToSave);
+    const handleCloseForm = $(async () => {
+      if (args.value?.mode === 'create') {
+        await removeTemporalColumn();
       }
+
+      closeAddDynamicColumnSidebar();
     });
 
     return (
@@ -176,11 +144,7 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
               <div class="flex items-center justify-between">
                 <Label for="column-prompt">Prompt template</Label>
 
-                <Button
-                  size="sm"
-                  look="ghost"
-                  onClick$={closeAddDynamicColumnSidebar}
-                >
+                <Button size="sm" look="ghost" onClick$={handleCloseForm}>
                   <TbX />
                 </Button>
               </div>
@@ -238,8 +202,9 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
               size="sm"
               class="w-full rounded-sm p-2"
               onClick$={onGenerate}
+              disabled={isSubmitting.value}
             >
-              Generate
+              {isSubmitting.value ? 'Generating...' : 'Generate'}
             </Button>
           </div>
         </div>

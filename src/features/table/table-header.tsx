@@ -67,7 +67,7 @@ export const TableHeader = component$(() => {
           </>
         ))}
 
-        <TableCellHeaderPlaceHolder />
+        <TableAddCellHeaderPlaceHolder />
       </tr>
     </thead>
   );
@@ -81,6 +81,8 @@ const TableCellHeader = component$<{ column: Column }>(({ column }) => {
   useDebounce(
     newName,
     $((debouncedName) => {
+      if (column.id === TEMPORAL_ID) return;
+
       server$(async () => {
         await updateColumnName(column.id, debouncedName.value);
       })();
@@ -146,9 +148,9 @@ const TableCellHeader = component$<{ column: Column }>(({ column }) => {
   );
 });
 
-const TableCellHeaderPlaceHolder = component$(() => {
+const TableAddCellHeaderPlaceHolder = component$(() => {
   const { openAddDynamicColumnSidebar } = useModals('addDynamicColumnSidebar');
-  const { state: columns } = useColumnsStore();
+  const { state: columns, addTemporalColumn } = useColumnsStore();
 
   const lastColumnId = useComputed$(
     () => columns.value[columns.value.length - 1].id,
@@ -164,21 +166,21 @@ const TableCellHeaderPlaceHolder = component$(() => {
     }
   });
 
+  const handleNewColumn = $(async () => {
+    await addTemporalColumn();
+
+    openAddDynamicColumnSidebar({
+      columnId: TEMPORAL_ID,
+      mode: 'create',
+    });
+  });
+
   return (
     <th
       id={lastColumnId.value}
       class="min-w-[300px] w-[15vw] border-b border-r cursor-pointer border-gray-200 bg-white py-2 text-left font-medium text-gray-600 sticky top-0 last:border-r-0 z-0"
     >
-      <Button
-        look="ghost"
-        class="h-2"
-        onClick$={() =>
-          openAddDynamicColumnSidebar({
-            columnId: lastColumnId.value,
-            mode: 'create',
-          })
-        }
-      >
+      <Button look="ghost" class="h-2" onClick$={handleNewColumn}>
         <TbPlus />
       </Button>
     </th>

@@ -3,7 +3,6 @@ import {
   createContextId,
   useContext,
   useContextProvider,
-  useSignal,
 } from '@builder.io/qwik';
 import { type RequestEventBase, routeLoader$ } from '@builder.io/qwik-city';
 import { getOrCreateDataset } from '~/services';
@@ -34,8 +33,7 @@ export const useLoadDatasets = () => {
 };
 
 export const useDatasetsStore = () => {
-  const dataset = useContext(datasetsContext);
-  const activeDataset = useSignal(dataset.value);
+  const activeDataset = useContext(datasetsContext);
 
   return {
     activeDataset,

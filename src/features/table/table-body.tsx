@@ -1,7 +1,7 @@
 import { component$, useComputed$ } from '@builder.io/qwik';
 import { useActiveModal } from '~/components';
 import { TableCell } from '~/features/table/table-cell';
-import { type Cell, type Column, useColumnsStore } from '~/state';
+import { type Cell, type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
 
 export const TableBody = component$(() => {
   const { state: columns } = useColumnsStore();
@@ -37,16 +37,13 @@ export const TableBody = component$(() => {
           key={rowIndex}
           class="border-b border-gray-200 hover:bg-gray-50/50 transition-colors"
         >
-          {columns.value.map((column, columnIndex) => {
+          {columns.value.map((column) => {
             const cell = getCell(column, rowIndex);
 
-            return (
-              <>
-                <TableCell key={`${cell.id}-${cell.updatedAt}`} cell={cell} />
-                {indexColumnEditing.value === columnIndex ? (
-                  <th key="temporal" class="min-w-[33vw]" />
-                ) : null}
-              </>
+            return column.id === TEMPORAL_ID ? (
+              <th key="temporal" class="min-w-[33vw]" />
+            ) : (
+              <TableCell key={`${cell.id}-${cell.updatedAt}`} cell={cell} />
             );
           })}
         </tr>

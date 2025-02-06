@@ -36,8 +36,8 @@ export const TableCell = component$<{ cell: Cell }>(({ cell }) => {
 
   // Check truncation after DOM is ready and content is rendered
   useVisibleTask$(({ track }) => {
-    track(() => originalValue.value);
-    track(() => contentRef.value);
+    track(originalValue);
+    track(contentRef);
 
     if (contentRef.value) {
       const lineHeight = Number.parseInt(

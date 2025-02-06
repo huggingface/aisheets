@@ -80,8 +80,10 @@ const TableCellHeader = component$<{ column: Column }>(({ column }) => {
       server$(async () => {
         await updateColumnName(column.id, debouncedName.value);
       })();
+
+      column.name = debouncedName.value;
     }),
-    3000,
+    1000,
   );
 
   const ref = useClickOutside(

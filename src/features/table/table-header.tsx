@@ -68,6 +68,7 @@ export const TableHeader = component$(() => {
 
 const TableCellHeader = component$<{ column: Column }>(({ column }) => {
   const { openAddDynamicColumnSidebar } = useModals('addDynamicColumnSidebar');
+  const { removeTemporalColumn } = useColumnsStore();
   const isEditingCellName = useToggle();
   const newName = useSignal(column.name);
 
@@ -89,9 +90,11 @@ const TableCellHeader = component$<{ column: Column }>(({ column }) => {
     }),
   );
 
-  const editCell = $(() => {
+  const editCell = $(async () => {
     if (isEditingCellName.isOpen.value) return;
     if (column.id === TEMPORAL_ID) return;
+
+    await removeTemporalColumn();
 
     openAddDynamicColumnSidebar({
       columnId: column.id,

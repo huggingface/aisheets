@@ -3,7 +3,6 @@ import {
   type QRL,
   Resource,
   component$,
-  useComputed$,
   useResource$,
   useSignal,
   useTask$,
@@ -46,21 +45,24 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
     const prompt = useSignal<string>('');
     const modelName = useSignal<string>('');
     const columnsReferences = useSignal<string[]>([]);
+    const variables = useSignal<Variable[]>([]);
 
-    const variables = useComputed$<Variable[]>(() => {
-      const variables = columns.value
+    const onSelectedVariables = $((variables: { id: string }[]) => {
+      columnsReferences.value = variables.map((v) => v.id);
+    });
+
+    useTask$(({ track }) => {
+      track(currentColumn);
+      if (!currentColumn.value) return;
+
+      variables.value = columns.value
         .filter(
-          (c) => c.id !== args.value?.columnId, //Remove the column itself
+          (c) => c.id !== currentColumn.value?.id, //Remove the column itself
         )
         .map((c) => ({
           id: c.id,
           name: c.name,
         }));
-
-      return variables;
-    });
-    const onSelectedVariables = $((variables: { id: string }[]) => {
-      columnsReferences.value = variables.map((v) => v.id);
     });
 
     useTask$(({ track }) => {

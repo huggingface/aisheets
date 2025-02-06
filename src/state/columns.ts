@@ -18,7 +18,7 @@ export interface CreateColumn {
   name: string;
   type: ColumnType;
   kind: ColumnKind;
-  dataset: Dataset;
+  dataset: Omit<Dataset, 'columns'>;
   process?: Process;
 }
 
@@ -39,7 +39,7 @@ export interface Column {
   kind: ColumnKind;
   process?: Process;
   cells: Cell[];
-  dataset: Dataset;
+  dataset: Omit<Dataset, 'columns'>;
 }
 
 export const TEMPORAL_ID = '-1';

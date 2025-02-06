@@ -71,9 +71,11 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
         (c) => c.id === args.value?.columnId,
       );
 
-      prompt.value = currentColumn.value?.process!.prompt!;
-      modelName.value = currentColumn.value?.process!.modelName!;
-      rowsToGenerate.value = String(currentColumn.value?.process!.limit);
+      if (!currentColumn.value) return;
+
+      prompt.value = currentColumn.value.process!.prompt;
+      modelName.value = currentColumn.value.process!.modelName!;
+      rowsToGenerate.value = String(currentColumn.value.process!.limit);
     });
 
     const loadModels = useResource$(async ({ track, cleanup }) => {

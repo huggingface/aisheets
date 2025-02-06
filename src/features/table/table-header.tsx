@@ -48,11 +48,6 @@ export const ColumnIcon = component$<{ type: ColumnType; kind: ColumnKind }>(
 
 export const TableHeader = component$(() => {
   const { state: columns } = useColumnsStore();
-  const { args } = useActiveModal();
-
-  const indexColumnEditing = useComputed$(() =>
-    columns.value.findIndex((column) => column.id === args.value?.columnId),
-  );
 
   return (
     <thead>
@@ -61,9 +56,7 @@ export const TableHeader = component$(() => {
           <>
             <TableCellHeader key={column.id} column={column} />
 
-            {indexColumnEditing.value === index ? (
-              <th key="temporal" class="min-w-[300px] w-[15vw]" />
-            ) : null}
+            <TableCellHeaderForExecution key={column.id} index={index} />
           </>
         ))}
 
@@ -117,7 +110,7 @@ const TableCellHeader = component$<{ column: Column }>(({ column }) => {
   return (
     <th
       id={column.id}
-      class="min-w-[300px] w-[15vw] border-b border-r cursor-pointer border-gray-200 bg-white px-3 py-2 text-left font-medium text-gray-600 sticky top-0 last:border-r-0 z-0"
+      class="w-[600px] border-b border-r cursor-pointer border-gray-200 bg-white px-3 py-2 text-left font-medium text-gray-600 sticky top-0 z-0"
     >
       <div class="flex items-center justify-between gap-2" ref={ref}>
         <div class="flex items-center gap-2">
@@ -147,6 +140,21 @@ const TableCellHeader = component$<{ column: Column }>(({ column }) => {
     </th>
   );
 });
+
+const TableCellHeaderForExecution = component$<{ index: number }>(
+  ({ index }) => {
+    const { state: columns } = useColumnsStore();
+    const { args } = useActiveModal();
+
+    const indexColumnEditing = useComputed$(() =>
+      columns.value.findIndex((column) => column.id === args.value?.columnId),
+    );
+
+    if (indexColumnEditing.value !== index) return null;
+
+    return <th class="w-[600px]" />;
+  },
+);
 
 const TableAddCellHeaderPlaceHolder = component$(() => {
   const { openAddDynamicColumnSidebar } = useModals('addDynamicColumnSidebar');
@@ -178,7 +186,7 @@ const TableAddCellHeaderPlaceHolder = component$(() => {
   return (
     <th
       id={lastColumnId.value}
-      class="min-w-[300px] w-[15vw] border-b border-r cursor-pointer border-gray-200 bg-white py-2 text-left font-medium text-gray-600 sticky top-0 last:border-r-0 z-0"
+      class="w-[10px] border-b border-r cursor-pointer border-gray-200 bg-white py-2 text-left font-medium text-gray-600 sticky top-0 z-0"
     >
       <Button look="ghost" class="h-2" onClick$={handleNewColumn}>
         <TbPlus />

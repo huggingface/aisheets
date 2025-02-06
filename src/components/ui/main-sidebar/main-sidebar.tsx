@@ -1,12 +1,12 @@
 import { $, component$ } from '@builder.io/qwik';
 import { Link } from '@builder.io/qwik-city';
-import { Logo } from '~/components/ui/logo/logo';
 import { useToggle } from '~/components/hooks';
+import { Logo } from '~/components/ui/logo/logo';
 
 import {
+  LuLibrary,
   LuPanelLeftClose,
   LuPanelLeftOpen,
-  LuLibrary,
 } from '@qwikest/icons/lucide';
 
 export const MainSidebar = component$(() => {

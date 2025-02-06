@@ -1,4 +1,4 @@
-import { component$ } from '@builder.io/qwik';
+import { component$, useSignal, useTask$ } from '@builder.io/qwik';
 import { marked } from 'marked';
 
 interface MarkdownProps {
@@ -20,39 +20,43 @@ const HEADING_SIZES = {
   6: 'text-xs',
 } as const;
 
-const MARKED_OPTIONS: marked.MarkedOptions = {
-  gfm: true,
-  breaks: true,
-  silent: true,
-  pedantic: false,
-  smartLists: true,
-  smartypants: true,
-  headerIds: false,
-  mangle: false,
-};
-
 export const Markdown = component$<MarkdownProps>(
   ({ content, class: className }) => {
-    const renderer = new marked.Renderer();
+    const renderer = {
+      heading({ tokens, depth }: { tokens: MarkdownToken; depth: number }) {
+        const headingText =
+          typeof tokens === 'object' && 'tokens' in tokens
+            ? (tokens.tokens?.[0]?.text ?? tokens.toString())
+            : tokens;
 
-    renderer.heading = (text: string | MarkdownToken, level: number) => {
-      const headingText =
-        typeof text === 'object' && 'tokens' in text
-          ? (text.tokens?.[0]?.text ?? text.toString())
-          : text;
-
-      const size =
-        HEADING_SIZES[level as keyof typeof HEADING_SIZES] ?? 'text-base';
-      return `<h${level} class="${size} font-bold">${headingText}</h${level}>`;
+        const size =
+          HEADING_SIZES[depth as keyof typeof HEADING_SIZES] ?? 'text-base';
+        return `<h${depth} class="${size} font-bold">${headingText}</h${depth}>`;
+      },
     };
+
+    marked.use({
+      gfm: true,
+      breaks: true,
+      silent: true,
+      pedantic: false,
+      // smartLists: true,
+      // smartypants: true,
+      // headerIds: false,
+      // mangle: false,
+      renderer,
+    });
+
+    const markdownContent = useSignal<string>();
+
+    useTask$(async () => {
+      markdownContent.value = await marked.parse(content);
+    });
 
     return (
       <div
         class={`${className} break-words whitespace-normal`}
-        dangerouslySetInnerHTML={marked.parse(content, {
-          ...MARKED_OPTIONS,
-          renderer,
-        })}
+        dangerouslySetInnerHTML={markdownContent.value}
       />
     );
   },

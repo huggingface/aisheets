@@ -98,11 +98,9 @@ export default component$(() => {
   useLoadDatasets();
 
   return (
-    <div class="min-h-screen">
-      <div class="min-h-screen mx-auto  px-6 py-4">
-        <Execution />
-        <Table />
-      </div>
+    <div class="min-w-screen px-6 pt-4">
+      <Execution />
+      <Table />
     </div>
   );
 });

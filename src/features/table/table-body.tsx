@@ -26,10 +26,6 @@ export const TableBody = component$(() => {
     return cell;
   };
 
-  const indexColumnEditing = useComputed$(() =>
-    columns.value.findIndex((column) => column.id === args.value?.columnId),
-  );
-
   return (
     <tbody>
       {Array.from({ length: rowCount }).map((_, rowIndex) => (
@@ -37,13 +33,22 @@ export const TableBody = component$(() => {
           key={rowIndex}
           class="border-b border-gray-200 hover:bg-gray-50/50 transition-colors"
         >
-          {columns.value.map((column) => {
+          {columns.value.map((column, index) => {
             const cell = getCell(column, rowIndex);
 
-            return column.id === TEMPORAL_ID ? (
-              <th key="temporal" class="min-w-[33vw]" />
-            ) : (
-              <TableCell key={`${cell.id}-${cell.updatedAt}`} cell={cell} />
+            if (column.id === TEMPORAL_ID) {
+              return <th key="temporal" class="min-w-[33vw]" />;
+            }
+
+            return (
+              <>
+                <TableCell key={`${cell.id}-${cell.updatedAt}`} cell={cell} />
+
+                <TableCellHeaderForExecution
+                  key={`${cell.id}-${cell.updatedAt}`}
+                  index={index}
+                />
+              </>
             );
           })}
         </tr>
@@ -51,3 +56,18 @@ export const TableBody = component$(() => {
     </tbody>
   );
 });
+
+const TableCellHeaderForExecution = component$<{ index: number }>(
+  ({ index }) => {
+    const { state: columns } = useColumnsStore();
+    const { args } = useActiveModal();
+
+    const indexColumnEditing = useComputed$(() =>
+      columns.value.findIndex((column) => column.id === args.value?.columnId),
+    );
+
+    if (indexColumnEditing.value !== index) return null;
+
+    return <th class="w-[300px] max-w-[300px]" />;
+  },
+);

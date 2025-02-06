@@ -113,7 +113,7 @@ const TableCellHeader = component$<{ column: Column }>(({ column }) => {
   return (
     <th
       id={column.id}
-      class="w-[600px] border-b border-r cursor-pointer border-gray-200 bg-white px-3 py-2 text-left font-medium text-gray-600 sticky top-0 z-0"
+      class="w-[300px] max-w-[300px] text-wrap border-b border-r cursor-pointer border-gray-200 bg-white px-3 py-2 text-left font-medium text-gray-600 sticky top-0 z-0"
     >
       <div class="flex items-center justify-between gap-2" ref={ref}>
         <div class="flex items-center gap-2">

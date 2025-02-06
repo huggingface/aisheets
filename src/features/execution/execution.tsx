@@ -65,17 +65,15 @@ export const Execution = component$(() => {
   });
 
   return (
-    <div class="flex w-full items-center justify-between">
-      <div class="flex space-x-2">{/* Left side empty for now */}</div>
+    <div class="h-4 flex w-full items-center justify-between">
+      <div class="flex">{/* Left side empty for now */}</div>
 
-      <div class="flex space-x-2">
-        <AddDynamicColumnSidebar onGenerateColumn={onGenerateColumn} />
-      </div>
+      <AddDynamicColumnSidebar onGenerateColumn={onGenerateColumn} />
 
-      <div class="flex space-x-2">
+      <div class="flex">
         <Button
           size="sm"
-          class="flex gap-1 font-light"
+          class="flex gap-1 font-light w-30"
           onClick$={onExportButtonClick}
         >
           Export to Hub

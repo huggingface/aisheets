@@ -1,4 +1,11 @@
-import { Slot, component$, useSignal, useVisibleTask$ } from '@builder.io/qwik';
+import {
+  $,
+  Slot,
+  component$,
+  useOnWindow,
+  useSignal,
+  useVisibleTask$,
+} from '@builder.io/qwik';
 import { useModals } from '~/components/hooks';
 import type { ID } from '~/components/hooks/modals/config';
 
@@ -12,9 +19,7 @@ export const Sidebar = component$<{
     top: number;
   } | null>(null);
 
-  useVisibleTask$(async ({ track }) => {
-    track(args);
-
+  const recalculateSidebarPosition = $(() => {
     if (!args.value?.columnId) return;
 
     const element = document.getElementById(args.value.columnId);
@@ -34,6 +39,14 @@ export const Sidebar = component$<{
     }
   });
 
+  useVisibleTask$(async ({ track }) => {
+    track(args);
+
+    await recalculateSidebarPosition();
+  });
+
+  useOnWindow('resize', recalculateSidebarPosition);
+
   if (!generic.isOpen.value) return null;
 
   return (
@@ -45,10 +58,9 @@ export const Sidebar = component$<{
           ? `${nearToPosition.value.right}px`
           : 'unset',
       }}
-      class={`fixed max-h-[92vh] w-[600px] overflow-auto transform bg-white text-black transition-transform duration-300 z-20 shadow-md ${
-        !args.value?.columnId && 'fixed !right-0 top-2'
+      class={
+        'absolute h-full w-[600px] overflow-auto transform bg-white text-black transition-transform duration-300 z-20 shadow-md'
       }
-        }`}
     >
       <Slot />
     </div>

@@ -80,11 +80,7 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
       rowsToGenerate.value = String(currentColumn.value.process!.limit);
     });
 
-    const loadModels = useResource$(async ({ track, cleanup }) => {
-      track(isOpenAddDynamicColumnSidebar);
-
-      if (!isOpenAddDynamicColumnSidebar) return Promise.resolve([]);
-
+    const loadModels = useResource$(async ({ cleanup }) => {
       const controller = new AbortController();
       cleanup(() => controller.abort());
 
@@ -142,63 +138,61 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
 
     return (
       <Sidebar name="addDynamicColumnSidebar">
-        <div class="flex h-full flex-col justify-between p-4">
-          <div class="max-h-full">
-            <div class="flex flex-col gap-4">
-              <div class="flex items-center justify-between">
-                <Label for="column-prompt">Prompt template</Label>
+        <div class="flex h-[96vh] flex-col justify-between p-4">
+          <div class="flex flex-col gap-4">
+            <div class="flex items-center justify-between">
+              <Label for="column-prompt">Prompt template</Label>
 
-                <Button size="sm" look="ghost" onClick$={handleCloseForm}>
-                  <TbX />
-                </Button>
-              </div>
-
-              <TemplateTextArea
-                bind:value={prompt}
-                variables={variables}
-                onSelectedVariables={onSelectedVariables}
-              />
-
-              <Label for="column-model" class="flex gap-1">
-                Model
-              </Label>
-              <Resource
-                value={loadModels}
-                onPending={() => {
-                  return <Select.Disabled>Loading models...</Select.Disabled>;
-                }}
-                onResolved={(models) => {
-                  return (
-                    <Select.Root id="column-model" bind:value={modelName}>
-                      <Select.Trigger class="bg-background border-input">
-                        <Select.DisplayValue />
-                      </Select.Trigger>
-                      <Select.Popover class="bg-background border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto">
-                        {models.map((model) => (
-                          <Select.Item
-                            key={model.id}
-                            class="text-foreground hover:bg-accent"
-                          >
-                            <Select.ItemLabel>{model.id}</Select.ItemLabel>
-                            <Select.ItemIndicator>
-                              <LuCheck class="h-4 w-4" />
-                            </Select.ItemIndicator>
-                          </Select.Item>
-                        ))}
-                      </Select.Popover>
-                    </Select.Root>
-                  );
-                }}
-              />
-
-              <Label for="column-rows">Rows generated</Label>
-              <Input
-                id="column-rows"
-                type="number"
-                class="h-10"
-                bind:value={rowsToGenerate}
-              />
+              <Button size="sm" look="ghost" onClick$={handleCloseForm}>
+                <TbX />
+              </Button>
             </div>
+
+            <TemplateTextArea
+              bind:value={prompt}
+              variables={variables}
+              onSelectedVariables={onSelectedVariables}
+            />
+
+            <Label for="column-model" class="flex gap-1">
+              Model
+            </Label>
+            <Resource
+              value={loadModels}
+              onPending={() => {
+                return <Select.Disabled>Loading models...</Select.Disabled>;
+              }}
+              onResolved={(models) => {
+                return (
+                  <Select.Root id="column-model" bind:value={modelName}>
+                    <Select.Trigger class="bg-background border-input">
+                      <Select.DisplayValue />
+                    </Select.Trigger>
+                    <Select.Popover class="bg-background border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto">
+                      {models.map((model) => (
+                        <Select.Item
+                          key={model.id}
+                          class="text-foreground hover:bg-accent"
+                        >
+                          <Select.ItemLabel>{model.id}</Select.ItemLabel>
+                          <Select.ItemIndicator>
+                            <LuCheck class="h-4 w-4" />
+                          </Select.ItemIndicator>
+                        </Select.Item>
+                      ))}
+                    </Select.Popover>
+                  </Select.Root>
+                );
+              }}
+            />
+
+            <Label for="column-rows">Rows generated</Label>
+            <Input
+              id="column-rows"
+              type="number"
+              class="h-10"
+              bind:value={rowsToGenerate}
+            />
           </div>
 
           <div class="flex h-16 w-full items-center justify-center">

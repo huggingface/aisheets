@@ -40,6 +40,11 @@ describe('listDatasetRows', () => {
             type: column.type as ColumnType,
             kind: column.kind as ColumnKind,
             cells: [],
+            dataset: {
+              id: dataset.id,
+              name: dataset.name,
+              createdBy: dataset.createdBy,
+            },
           },
         ],
       },
@@ -110,6 +115,11 @@ describe('listDatasetRows', () => {
           type: column.type as ColumnType,
           kind: column.kind as ColumnKind,
           cells: [],
+          dataset: {
+            id: dataset.id,
+            name: dataset.name,
+            createdBy: dataset.createdBy,
+          },
         })),
       },
     })) {

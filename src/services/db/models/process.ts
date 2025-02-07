@@ -1,4 +1,3 @@
-import { isDev } from '@builder.io/qwik';
 import {
   type Association,
   type CreationOptional,
@@ -64,5 +63,3 @@ ProcessModel.init(
     modelName: 'Process',
   },
 );
-
-await ProcessModel.sync({ alter: isDev });

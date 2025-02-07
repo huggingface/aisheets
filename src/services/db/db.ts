@@ -2,10 +2,12 @@ import { isDev } from '@builder.io/qwik';
 import consola from 'consola';
 import { Sequelize } from 'sequelize';
 
+const env = process.env.NODE_ENV || 'development';
+
 // https://sequelize.org/docs/v6/other-topics/typescript/
 
 export const db = new Sequelize({
-  storage: ':memory:',
+  storage: `data/${env}.db`,
   dialect: 'sqlite',
   logging: (sql) => {
     if (isDev) {
@@ -20,12 +22,5 @@ db.beforeInit(async () => {
     consola.success('🔌 Connection has been established successfully.');
   } catch (error) {
     consola.error('❌ Unable to connect to the database:', error);
-  }
-
-  try {
-    await db.sync();
-    consola.success('🔁 Database synchronized');
-  } catch (error) {
-    consola.error('❌ Failed to synchronize database', error);
   }
 });

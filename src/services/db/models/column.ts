@@ -1,4 +1,3 @@
-import { isDev } from '@builder.io/qwik';
 import type {
   Association,
   ForeignKey,
@@ -121,6 +120,3 @@ ColumnModel.belongsToMany(ProcessModel, {
   through: ProcessColumnModel,
   foreignKey: 'columnId',
 });
-
-await ProcessColumnModel.sync({ alter: isDev });
-await ColumnModel.sync({ alter: isDev });

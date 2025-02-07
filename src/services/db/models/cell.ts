@@ -1,4 +1,3 @@
-import { isDev } from '@builder.io/qwik';
 import type { ForeignKey, NonAttribute } from 'sequelize';
 import {
   type Association,
@@ -66,5 +65,3 @@ ColumnCellModel.init(
     modelName: 'Cell',
   },
 );
-
-await ColumnCellModel.sync({ alter: isDev });

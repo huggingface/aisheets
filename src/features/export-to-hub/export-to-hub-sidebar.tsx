@@ -1,5 +1,5 @@
 import { $, component$, useSignal } from '@builder.io/qwik';
-import { TbX } from '@qwikest/icons/tablericons';
+import { LuXCircle } from '@qwikest/icons/lucide';
 
 import { Button, Checkbox, Input, Label, Sidebar } from '~/components';
 import { useModals } from '~/components/hooks/modals/use-modals';
@@ -46,19 +46,23 @@ export const ExportToHubSidebar = component$(() => {
         Export to Hub
       </Button>
 
-      <Sidebar name="exportToHubSidebar" class="fixed !right-0 !top-2 !h-1/3">
+      <Sidebar
+        name="exportToHubSidebar"
+        class="fixed !right-0 !top-2 h-1/3 shadow-md"
+      >
         <div class="flex h-full flex-col justify-between p-4">
           <div class="h-full">
+            <Button
+              size="sm"
+              look="ghost"
+              class="absolute top-0 right-0 m-2"
+              onClick$={closeExportToHubSidebar}
+            >
+              <LuXCircle class="text-lg text-primary-foreground" />
+            </Button>
             <div class="flex flex-col gap-4">
               <div class="flex items-center justify-between">
                 <Label for="dataset-owner">Owner</Label>
-                <Button
-                  size="sm"
-                  look="ghost"
-                  onClick$={closeExportToHubSidebar}
-                >
-                  <TbX />
-                </Button>
               </div>
               <Input
                 id="dataset-owner"

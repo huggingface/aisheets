@@ -191,7 +191,7 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
       {popover.options.length === 0 && (
         <Textarea
           ref={textarea}
-          class="w-full h-40 p-2 border border-gray-300 rounded"
+          class="w-full h-40 p-2 border border-secondary bg-primary text-[#BDBDBD]"
           bind:value={props['bind:value']}
         />
       )}

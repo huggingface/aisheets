@@ -1,3 +1,4 @@
+import consola from 'consola';
 import {
   createCell,
   getColumnCellByIdx,
@@ -5,7 +6,10 @@ import {
   updateCell,
 } from '~/services';
 import type { Cell, Column, Process, Session } from '~/state';
-import { runPromptExecutionStream } from './run-prompt-execution';
+import {
+  runPromptExecution,
+  runPromptExecutionStream,
+} from './run-prompt-execution';
 
 export interface GenerateCellsParams {
   column: Column;
@@ -14,6 +18,8 @@ export interface GenerateCellsParams {
   limit: number;
   offset: number;
   validatedCells?: Cell[];
+  stream?: boolean;
+  timeout?: number;
 }
 
 /**
@@ -37,6 +43,8 @@ export const generateCells = async function* ({
   limit,
   offset,
   validatedCells,
+  stream,
+  timeout,
 }: GenerateCellsParams) {
   const { columnsReferences, modelName, prompt } = process;
 
@@ -56,6 +64,7 @@ export const generateCells = async function* ({
       modelName,
       examples,
       instruction: prompt,
+      timeout,
       data: {},
     };
 
@@ -76,14 +85,20 @@ export const generateCells = async function* ({
         column,
       }));
 
-    for await (const response of runPromptExecutionStream(args)) {
+    consola.info(`Generating cell ${i} for column ${column.name}`);
+    if (stream) {
+      for await (const response of runPromptExecutionStream(args)) {
+        cell.value = response.value;
+        cell.error = response.error;
+
+        if (!response.done) yield { cell };
+      }
+    } else {
+      const response = await runPromptExecution(args);
       cell.value = response.value;
       cell.error = response.error;
-
-      if (!response.done) yield { cell };
     }
 
-    // Only save to database when stream is complete
     await updateCell(cell);
     yield { cell };
 

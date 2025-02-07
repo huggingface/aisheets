@@ -61,7 +61,7 @@ export const Sidebar = component$<SidebarProps>((props) => {
           ? `${nearToPosition.value.right}px`
           : 'unset',
       }}
-      class={`absolute h-full w-[600px] overflow-auto transform bg-white text-black transition-transform duration-300 z-20 shadow-md ${props.class}`}
+      class={`absolute h-[93%] w-[600px] overflow-auto transform bg-white text-black transition-transform duration-300 z-20 shadow-md ${props.class}`}
     >
       <Slot />
     </div>

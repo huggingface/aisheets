@@ -5,6 +5,8 @@ import {
   useTask$,
   useVisibleTask$,
 } from '@builder.io/qwik';
+import { LuThumbsUp } from '@qwikest/icons/lucide';
+import { Button } from '~/components';
 import { Markdown } from '~/components/ui/markdown/markdown';
 import { Skeleton } from '~/components/ui/skeleton/skeleton';
 import { Textarea } from '~/components/ui/textarea/textarea';
@@ -115,16 +117,27 @@ export const TableCell = component$<{ cell: Cell }>(({ cell }) => {
 
   return (
     <td
-      class={`min-w-[300px] w-[300px] max-w-[300px] px-3 h-[60px] cursor-pointer border-r border-gray-200 ${cell.validated ? 'bg-green-50 border-l-2 border-l-green-200' : ''}
-        `}
+      class={`min-w-[300px] w-[300px] max-w-[300px] px-2 min-h-[100px] h-[100px] cursor-pointer border-2 ${cell.validated ? 'bg-green-50 border-green-200' : 'border-secondary'}`}
       onDblClick$={() => {
         isEditing.value = true;
       }}
     >
-      <div class="relative text-sm">
-        <div ref={contentRef} class="line-clamp-6 overflow-hidden">
+      <div class="text-sm h-full">
+        <div ref={contentRef} class="relative flex flex-col h-full">
           {originalValue.value ? (
-            <Markdown class="text-gray-900" content={originalValue.value} />
+            <>
+              <Button
+                look="ghost"
+                size="sm"
+                class={`absolute top-0 right-0 ${cell.validated ? 'text-green-200' : 'text-primary-foreground'}`}
+                //TODO: Validate cell
+              >
+                <LuThumbsUp />
+              </Button>
+              <div class="h-full flex items-center py-8">
+                <Markdown class="text-gray-900" content={originalValue.value} />
+              </div>
+            </>
           ) : (
             <span class="text-red-500 text-xs flex items-center gap-1">
               <span>⚠</span>

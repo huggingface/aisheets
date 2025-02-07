@@ -138,7 +138,7 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
 
     return (
       <Sidebar name="addDynamicColumnSidebar">
-        <div class="flex h-[96vh] flex-col justify-between p-4">
+        <div class="flex h-full flex-col justify-between p-4">
           <div class="flex flex-col gap-4">
             <div class="flex items-center justify-between">
               <Label for="column-prompt">Prompt template</Label>

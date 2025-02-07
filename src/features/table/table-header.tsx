@@ -7,16 +7,20 @@ import {
 } from '@builder.io/qwik';
 import { server$ } from '@builder.io/qwik-city';
 import {
+  LuEgg,
+  LuEggOff,
+  LuPlus,
+  LuSettings2,
+  LuSparkle,
+} from '@qwikest/icons/lucide';
+import {
   TbAlignJustified,
   TbBraces,
   TbBrackets,
-  TbDots,
   TbHash,
-  TbPlus,
-  TbSparkles,
   TbToggleLeft,
 } from '@qwikest/icons/tablericons';
-import { Button } from '~/components';
+import { Button, Input } from '~/components';
 import { useActiveModal, useModals, useToggle } from '~/components/hooks';
 import { useClickOutside } from '~/components/hooks/click/outside';
 import { nextTick } from '~/components/hooks/tick';
@@ -38,7 +42,8 @@ const Icons: Record<Column['type'], any> = {
 };
 export const ColumnIcon = component$<{ type: ColumnType; kind: ColumnKind }>(
   ({ type, kind }) => {
-    if (kind === 'dynamic') return <TbSparkles />;
+    if (kind === 'dynamic')
+      return <LuSparkle class="text-primary-foreground" />;
 
     const Icon = Icons[type];
 
@@ -113,32 +118,41 @@ const TableCellHeader = component$<{ column: Column }>(({ column }) => {
   return (
     <th
       id={column.id}
-      class="w-[300px] max-w-[300px] text-wrap border-b border-r cursor-pointer border-gray-200 bg-white px-3 py-2 text-left font-medium text-gray-600 sticky top-0 z-0"
+      class="w-[300px] max-w-[300px] border-b border-r border-secondary bg-primary  py-1 text-left"
     >
-      <div class="flex items-center justify-between gap-2" ref={ref}>
-        <div class="flex items-center gap-2">
+      <div class="flex items-center justify-between gap-2 w-full" ref={ref}>
+        <div class="flex items-center gap-2 text-wrap w-[80%]">
           <ColumnIcon type={column.type} kind={column.kind} />
-          {isEditingCellName.isOpen.value ? (
-            <input
-              type="text"
-              class="w-full h-8 px-2 border border-gray-200 rounded-sm text-sm font-medium text-gray-700"
-              bind:value={newName}
-            />
-          ) : (
-            <span
-              class="text-sm font-medium text-gray-700"
-              onClick$={editCellName}
-            >
-              {newName.value}
-            </span>
-          )}
+          <div class="font-normal text-gray-400 w-full">
+            {isEditingCellName.isOpen.value ? (
+              <Input type="text" class="h-8 px-0" bind:value={newName} />
+            ) : (
+              <span class="text-sm" onClick$={editCellName}>
+                {newName.value}
+              </span>
+            )}
+          </div>
         </div>
 
-        {column.id !== TEMPORAL_ID && (
-          <Button look="ghost" class="h-2" onClick$={editCell}>
-            <TbDots class="text-gray-400" />
+        <div class="flex items-center w-[20%]">
+          <Button
+            look="ghost"
+            size="sm"
+            onClick$={editCell}
+            //TODO: Enable if this column has at least one row validated
+            disabled
+          >
+            {column.id === TEMPORAL_ID && (
+              <LuEggOff class="text-primary-foreground" />
+            )}
+            <LuEgg class="text-primary-foreground" />
           </Button>
-        )}
+          {column.id !== TEMPORAL_ID && (
+            <Button look="ghost" size="sm" onClick$={editCell}>
+              <LuSettings2 class="text-primary-foreground" />
+            </Button>
+          )}
+        </div>
       </div>
     </th>
   );
@@ -181,8 +195,8 @@ const TableAddCellHeaderPlaceHolder = component$(() => {
   });
 
   const handleNewColumn = $(async () => {
-    await closeAddDynamicColumnSidebar();
     await addTemporalColumn();
+    await closeAddDynamicColumnSidebar();
 
     nextTick(() => {
       openAddDynamicColumnSidebar({
@@ -195,10 +209,10 @@ const TableAddCellHeaderPlaceHolder = component$(() => {
   return (
     <th
       id={lastColumnId.value}
-      class="w-[10px] border-b border-r cursor-pointer border-gray-200 bg-white py-2 text-left font-medium text-gray-600 sticky top-0 z-0"
+      class="w-[300px] max-w-[300px] border-b border-secondary bg-primary py-1 text-left"
     >
-      <Button look="ghost" class="h-2" onClick$={handleNewColumn}>
-        <TbPlus />
+      <Button look="ghost" size="sm" onClick$={handleNewColumn}>
+        <LuPlus class="text-primary-foreground" />
       </Button>
     </th>
   );

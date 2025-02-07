@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@duckdb/node-api':
+        specifier: 1.2.0-alpha.13
+        version: 1.2.0-alpha.13
       '@huggingface/hub':
         specifier: ^1.0.0
         version: 1.0.0
@@ -206,6 +209,37 @@ packages:
     resolution: {integrity: sha512-0MhX9/B4iL6Re04jPrttDm+BsP8y6mS7byuv0BvXgdXhbV5PdlsHt55dvNsuBCPZ7xq1oTAOOuotR9NFbQyMSA==}
     bundledDependencies:
       - is-unicode-supported
+
+  '@duckdb/node-api@1.2.0-alpha.13':
+    resolution: {integrity: sha512-O6Dy9uEu0FQdBO18ihG+x0HVOv4+dGaB4nCZ5vF1ay6E9x7RY4Y9xDwhv0AkzvzM6n6fmyb4okXaIAb5kDvKvw==}
+
+  '@duckdb/node-bindings-darwin-arm64@1.2.0-alpha.13':
+    resolution: {integrity: sha512-0zDKvycejRdxISCWYZmFHW9C28vwbPaXUbO/rpeSh33sx68JMbGmDhh9N1Dx1yq6KvaP5vQtFM9kDKgcLrV6Sg==}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@duckdb/node-bindings-darwin-x64@1.2.0-alpha.13':
+    resolution: {integrity: sha512-0BZgf0wCjkmizW2+QJnXDrQfHuPMr/5y4lGIp2XWX9lw9kea3WPdZd+o7TJq+P0g+b6zaWTxYm3kjhvtgvTSOA==}
+    cpu: [x64]
+    os: [darwin]
+
+  '@duckdb/node-bindings-linux-arm64@1.2.0-alpha.13':
+    resolution: {integrity: sha512-ZTPnGLwep9yzpkOJdLgGH8uIqGqo9VaoVRe47NHuzz6HRhnuV5UiRDJCGk9CJWBwVyB4PhUt5YFdeV1N6XDdyg==}
+    cpu: [arm64]
+    os: [linux]
+
+  '@duckdb/node-bindings-linux-x64@1.2.0-alpha.13':
+    resolution: {integrity: sha512-e048HU7yalzBq/V3rtirKDWYL29BA1VJD4ZXfSk6xiKwm/DAz/PKgACVE6uNT/whEK4hj/ZkHlioeB4wm4XA1w==}
+    cpu: [x64]
+    os: [linux]
+
+  '@duckdb/node-bindings-win32-x64@1.2.0-alpha.13':
+    resolution: {integrity: sha512-jP6nNMSi86xcuwpMp1eUNFZ1PPKm7Jd1sTAfNJYf9dUckHyNmqlRlFDGlwM9XZ4dAhofOyhUhEmtYlgJcXU5Gg==}
+    cpu: [x64]
+    os: [win32]
+
+  '@duckdb/node-bindings@1.2.0-alpha.13':
+    resolution: {integrity: sha512-reo1R3v/TDoi25VWNgeL40DIQiuU4NsLi4ILJaXY/DfKXIu+UDQm8mW5eC4M9PmTyosgdJvKXS00OcDpT2rqlg==}
 
   '@emnapi/core@1.3.1':
     resolution: {integrity: sha512-pVGjBIt1Y6gg3EJN8jTcfpP/+uuRksIo055oE/OBkDNcjZqVbfkWCksG1Jp4yZnj3iKWyWX8fdG/j6UDYPbFog==}
@@ -3373,6 +3407,33 @@ snapshots:
       '@clack/core': 0.3.5
       picocolors: 1.1.1
       sisteransi: 1.0.5
+
+  '@duckdb/node-api@1.2.0-alpha.13':
+    dependencies:
+      '@duckdb/node-bindings': 1.2.0-alpha.13
+
+  '@duckdb/node-bindings-darwin-arm64@1.2.0-alpha.13':
+    optional: true
+
+  '@duckdb/node-bindings-darwin-x64@1.2.0-alpha.13':
+    optional: true
+
+  '@duckdb/node-bindings-linux-arm64@1.2.0-alpha.13':
+    optional: true
+
+  '@duckdb/node-bindings-linux-x64@1.2.0-alpha.13':
+    optional: true
+
+  '@duckdb/node-bindings-win32-x64@1.2.0-alpha.13':
+    optional: true
+
+  '@duckdb/node-bindings@1.2.0-alpha.13':
+    optionalDependencies:
+      '@duckdb/node-bindings-darwin-arm64': 1.2.0-alpha.13
+      '@duckdb/node-bindings-darwin-x64': 1.2.0-alpha.13
+      '@duckdb/node-bindings-linux-arm64': 1.2.0-alpha.13
+      '@duckdb/node-bindings-linux-x64': 1.2.0-alpha.13
+      '@duckdb/node-bindings-win32-x64': 1.2.0-alpha.13
 
   '@emnapi/core@1.3.1':
     dependencies:

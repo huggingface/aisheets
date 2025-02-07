@@ -19,7 +19,7 @@ import {
 import { Button } from '~/components';
 import { useActiveModal, useModals, useToggle } from '~/components/hooks';
 import { useClickOutside } from '~/components/hooks/click/outside';
-import { useDebounce } from '~/components/hooks/debounce/debounce';
+import { nextTick } from '~/components/hooks/tick';
 import { updateColumnName } from '~/services';
 import {
   type Column,
@@ -56,7 +56,10 @@ export const TableHeader = component$(() => {
           <>
             <TableCellHeader key={column.id} column={column} />
 
-            <TableCellHeaderForExecution key={column.id} index={index} />
+            <TableCellHeaderForExecution
+              key={`${column.id}-${index}`}
+              index={index}
+            />
           </>
         ))}
 
@@ -67,28 +70,20 @@ export const TableHeader = component$(() => {
 });
 
 const TableCellHeader = component$<{ column: Column }>(({ column }) => {
-  const { openAddDynamicColumnSidebar } = useModals('addDynamicColumnSidebar');
+  const { openAddDynamicColumnSidebar, closeAddDynamicColumnSidebar } =
+    useModals('addDynamicColumnSidebar');
   const { removeTemporalColumn } = useColumnsStore();
   const isEditingCellName = useToggle();
   const newName = useSignal(column.name);
 
-  useDebounce(
-    newName,
-    $((debouncedName) => {
-      if (column.id === TEMPORAL_ID) return;
-
-      server$(async () => {
-        await updateColumnName(column.id, debouncedName.value);
-      })();
-
-      column.name = debouncedName.value;
-    }),
-    1000,
-  );
-
   const ref = useClickOutside(
     $(() => {
+      if (!isEditingCellName.isOpen.value) return;
       isEditingCellName.close();
+
+      server$(async () => {
+        await updateColumnName(column.id, newName.value);
+      })();
     }),
   );
 
@@ -97,10 +92,13 @@ const TableCellHeader = component$<{ column: Column }>(({ column }) => {
     if (column.id === TEMPORAL_ID) return;
 
     await removeTemporalColumn();
+    await closeAddDynamicColumnSidebar();
 
-    openAddDynamicColumnSidebar({
-      columnId: column.id,
-      mode: 'edit',
+    nextTick(() => {
+      openAddDynamicColumnSidebar({
+        columnId: column.id,
+        mode: 'edit',
+      });
     });
   });
 
@@ -162,29 +160,35 @@ const TableCellHeaderForExecution = component$<{ index: number }>(
 );
 
 const TableAddCellHeaderPlaceHolder = component$(() => {
-  const { openAddDynamicColumnSidebar } = useModals('addDynamicColumnSidebar');
+  const { openAddDynamicColumnSidebar, closeAddDynamicColumnSidebar } =
+    useModals('addDynamicColumnSidebar');
   const { state: columns, addTemporalColumn } = useColumnsStore();
 
   const lastColumnId = useComputed$(
     () => columns.value[columns.value.length - 1].id,
   );
 
-  useVisibleTask$(({ track }) => {
+  useVisibleTask$(async ({ track }) => {
     track(columns);
     if (columns.value.length === 1 && lastColumnId.value === TEMPORAL_ID) {
-      openAddDynamicColumnSidebar({
-        columnId: lastColumnId.value,
-        mode: 'create',
+      nextTick(() => {
+        openAddDynamicColumnSidebar({
+          columnId: lastColumnId.value,
+          mode: 'create',
+        });
       });
     }
   });
 
   const handleNewColumn = $(async () => {
+    await closeAddDynamicColumnSidebar();
     await addTemporalColumn();
 
-    openAddDynamicColumnSidebar({
-      columnId: TEMPORAL_ID,
-      mode: 'create',
+    nextTick(() => {
+      openAddDynamicColumnSidebar({
+        columnId: TEMPORAL_ID,
+        mode: 'create',
+      });
     });
   });
 

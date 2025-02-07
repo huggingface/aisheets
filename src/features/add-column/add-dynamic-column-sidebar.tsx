@@ -66,11 +66,11 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
     });
 
     useTask$(({ track }) => {
-      track(isOpenAddDynamicColumnSidebar);
-      if (!isOpenAddDynamicColumnSidebar.value) return;
+      track(args);
+      if (!args.value?.columnId) return;
 
       currentColumn.value = columns.value.find(
-        (c) => c.id === args.value?.columnId,
+        (c) => c.id === args.value!.columnId,
       );
 
       if (!currentColumn.value) return;

@@ -49,7 +49,7 @@ export const TableBody = component$(() => {
                 <TableCell key={`${cell.id}-${cell.updatedAt}`} cell={cell} />
 
                 <TableCellHeaderForExecution
-                  key={`${cell.id}-${cell.updatedAt}`}
+                  key={`${column.id}-${index}`}
                   index={index}
                 />
               </>

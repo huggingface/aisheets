@@ -6,4 +6,4 @@ export * from './column';
 export * from './cell';
 export * from './process';
 
-if (isDev) await db.sync();
+await db.sync({ force: isDev });

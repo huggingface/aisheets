@@ -69,6 +69,8 @@ the response and do not generate any introductory text. Only a clear response is
   );
 };
 
+const DEFAULT_TIMEOUT = 10000;
+
 export const runPromptExecution = async ({
   accessToken,
   modelName,
@@ -97,7 +99,7 @@ export const runPromptExecution = async ({
       },
       {
         use_cache: false,
-        signal: AbortSignal.timeout(timeout ?? 5000),
+        signal: AbortSignal.timeout(timeout ?? DEFAULT_TIMEOUT),
       },
     );
     return { value: response.choices[0].message.content };
@@ -138,11 +140,10 @@ export const runPromptExecutionStream = async function* ({
         model: modelName,
         messages: [{ role: 'user', content: inputPrompt }],
         accessToken,
-        max_tokens: 256,
       },
       {
         use_cache: false,
-        signal: AbortSignal.timeout(timeout ?? 5000),
+        signal: AbortSignal.timeout(timeout ?? DEFAULT_TIMEOUT),
       },
     );
 

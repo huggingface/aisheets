@@ -43,7 +43,7 @@ export const generateCells = async function* ({
   limit,
   offset,
   validatedCells,
-  stream,
+  stream = true,
   timeout,
 }: GenerateCellsParams) {
   const { columnsReferences, modelName, prompt } = process;

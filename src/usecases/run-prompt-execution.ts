@@ -8,6 +8,7 @@ export interface PromptExecutionParams {
   data?: object;
   examples?: string[];
   stream?: boolean;
+  timeout?: number;
 }
 
 export interface PromptExecutionResponse {
@@ -74,6 +75,7 @@ export const runPromptExecution = async ({
   instruction,
   data,
   examples,
+  timeout,
 }: PromptExecutionParams): Promise<PromptExecutionResponse> => {
   let inputPrompt: string;
   switch (data && Object.keys(data).length > 0) {
@@ -95,6 +97,7 @@ export const runPromptExecution = async ({
       },
       {
         use_cache: false,
+        signal: AbortSignal.timeout(timeout ?? 5000),
       },
     );
     return { value: response.choices[0].message.content };
@@ -115,6 +118,7 @@ export const runPromptExecutionStream = async function* ({
   instruction,
   data,
   examples,
+  timeout,
 }: PromptExecutionParams): AsyncGenerator<PromptExecutionResponse> {
   let inputPrompt: string;
   switch (data && Object.keys(data).length > 0) {
@@ -134,8 +138,12 @@ export const runPromptExecutionStream = async function* ({
         model: modelName,
         messages: [{ role: 'user', content: inputPrompt }],
         accessToken,
+        max_tokens: 256,
       },
-      { use_cache: false },
+      {
+        use_cache: false,
+        signal: AbortSignal.timeout(timeout ?? 5000),
+      },
     );
 
     for await (const chunk of stream) {

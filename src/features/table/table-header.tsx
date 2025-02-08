@@ -24,6 +24,7 @@ import { Button, Input } from '~/components';
 import { useActiveModal, useModals, useToggle } from '~/components/hooks';
 import { useClickOutside } from '~/components/hooks/click/outside';
 import { nextTick } from '~/components/hooks/tick';
+import { useGenerateColumn } from '~/features/execution/useGenerateColumn';
 import { updateColumnName } from '~/services';
 import {
   type Column,
@@ -80,6 +81,7 @@ const TableCellHeader = component$<{ column: Column }>(({ column }) => {
   const { state: columns, removeTemporalColumn } = useColumnsStore();
   const isEditingCellName = useToggle();
   const newName = useSignal(column.name);
+  const onGenerateColumn = useGenerateColumn();
 
   const ref = useClickOutside(
     $(() => {
@@ -148,6 +150,7 @@ const TableCellHeader = component$<{ column: Column }>(({ column }) => {
                 look="ghost"
                 size="sm"
                 disabled={!hasAtLeastOneRowValidated.value}
+                onClick$={() => onGenerateColumn(column)}
               >
                 {hasAtLeastOneRowValidated.value ? (
                   <LuEgg class="text-primary-foreground" />

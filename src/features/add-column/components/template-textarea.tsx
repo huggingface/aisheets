@@ -7,7 +7,7 @@ import {
   useStore,
   useVisibleTask$,
 } from '@builder.io/qwik';
-import { TbBraces } from '@qwikest/icons/tablericons';
+import { LuBraces } from '@qwikest/icons/lucide';
 import { Select, Textarea } from '~/components';
 import { nextTick } from '~/components/hooks/tick';
 
@@ -233,13 +233,13 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
               ref={firstOption}
               look="headless"
               hideIcon
-              class="absolute bg-white border border-gray-300 p-2 rounded shadow-lg focus:outline-none"
+              class="absolute border border-secondary bg-primary p-2 rounded shadow-lg"
               style={{
                 left: `${popover.position.x + 20}px`,
                 top: `${popover.position.y}px`,
               }}
             >
-              <TbBraces />
+              <LuBraces class="text-primary-foreground" />
             </Select.Trigger>
             <Select.Popover>
               {popover.options.map((variable) => (

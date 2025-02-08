@@ -218,7 +218,7 @@ const TableAddCellHeaderPlaceHolder = component$(() => {
   return (
     <th
       id={lastColumnId.value}
-      class="w-[300px] max-w-[300px] border-b border-secondary bg-primary py-1 text-left"
+      class="min-w-[300px w-[300px] max-w-[300px] border-b border-secondary bg-primary py-1 text-left"
     >
       <Button look="ghost" size="sm" onClick$={handleNewColumn}>
         <LuPlus class="text-primary-foreground" />

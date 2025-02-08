@@ -10,7 +10,7 @@ import * as hub from '@huggingface/hub';
 
 import { Table } from '~/features/table/table';
 import { saveSession } from '~/services/auth/session';
-import { useLoadDatasets } from '~/state';
+import { useDatasetsStore, useLoadDatasets } from '~/state';
 import { useServerSession } from '~/state/session';
 
 export { useDatasetsLoader } from '~/state';
@@ -96,10 +96,20 @@ export const useSession = routeLoader$(useServerSession);
 
 export default component$(() => {
   useLoadDatasets();
+  const session = useSession();
+  const { activeDataset } = useDatasetsStore();
 
   return (
-    <div class="min-w-screen px-6 pt-4">
-      <Execution />
+    <div class="min-w-screen pr-6">
+      <div class="flex justify-end items-center w-full mt-6">
+        <span>{session.value.user.username}</span>
+      </div>
+      <div class="flex justify-between items-center w-full mb-4 pt-4">
+        <h1 class="text-3xl font-bold text-secondary w-1/2">
+          {activeDataset.value.name}
+        </h1>
+        <Execution />
+      </div>
       <Table />
     </div>
   );

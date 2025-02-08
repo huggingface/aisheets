@@ -1,5 +1,5 @@
 import { $, component$, useSignal } from '@builder.io/qwik';
-import { LuXCircle } from '@qwikest/icons/lucide';
+import { LuArrowRightFromLine, LuXCircle } from '@qwikest/icons/lucide';
 
 import { Button, Checkbox, Input, Label, Sidebar } from '~/components';
 import { useModals } from '~/components/hooks/modals/use-modals';
@@ -35,15 +35,17 @@ export const ExportToHubSidebar = component$(() => {
   return (
     <>
       <Button
+        look="primary"
         size="sm"
-        class="flex gap-1 font-light w-30"
+        class="flex gap-1 font-light w-32 justify-evenly"
         onClick$={handleOpenExportToHubSidebar}
         disabled={
           activeDataset.value.columns.filter((c) => c.id !== TEMPORAL_ID)
             .length === 0
         }
       >
-        Export to Hub
+        <LuArrowRightFromLine />
+        Export
       </Button>
 
       <Sidebar

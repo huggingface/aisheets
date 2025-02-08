@@ -15,7 +15,7 @@ export const CellGeneration = component$<{ column: Column }>(({ column }) => {
     return thisColumn.cells.some((cells) => cells.validated);
   });
 
-  if (column.id !== TEMPORAL_ID) {
+  if (column.id === TEMPORAL_ID) {
     return null;
   }
 

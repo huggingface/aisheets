@@ -23,7 +23,7 @@ export const CellSettings = component$<{ column: Column }>(({ column }) => {
     });
   });
 
-  if (column.id !== TEMPORAL_ID) {
+  if (column.id === TEMPORAL_ID) {
     return null;
   }
 

@@ -101,9 +101,7 @@ export const TableCell = component$<{ cell: Cell }>(({ cell }) => {
           ref={editCellValueInput}
           bind:value={newCellValue}
           preventEnterNewline
-          class="absolute z-10 left-0 top-0 min-w-[400px] w-[200%] resize border-0 
-            rounded-none bg-white px-3 py-2 focus:outline-none focus:ring-1 
-            focus:ring-primary shadow-lg text-sm"
+          class="absolute z-10 left-0 top-0 min-w-[400px] w-[200%] min-h-[127px] h-[127px] resize border-0 rounded-none bg-white px-3 py-2 focus:outline-none focus:ring-1 focus:ring-primary shadow-lg text-sm"
           style={{
             height: `${editCellValueInput.value?.scrollHeight || 60}px`,
             maxWidth: 'max(800px, 200%)',

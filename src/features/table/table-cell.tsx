@@ -50,16 +50,16 @@ export const TableCell = component$<{ cell: Cell }>(({ cell }) => {
     }
   });
 
-  const onValidateCell = $(async () => {
+  const onValidateCell = $(async (validatedContent: string) => {
     const success = await validateCell({
       id: cell.id,
-      value: newCellValue.value!,
+      value: validatedContent,
     });
 
     if (success) {
       replaceCell({
         ...cell,
-        value: newCellValue.value!,
+        value: validatedContent,
         validated: true,
       });
     }
@@ -71,7 +71,7 @@ export const TableCell = component$<{ cell: Cell }>(({ cell }) => {
     const valueToUpdate = newCellValue.value;
 
     if (!!newCellValue.value && newCellValue.value !== originalValue.value) {
-      const success = await onValidateCell();
+      const success = await onValidateCell(newCellValue.value);
 
       if (success) {
         originalValue.value = valueToUpdate;
@@ -135,7 +135,7 @@ export const TableCell = component$<{ cell: Cell }>(({ cell }) => {
                 look="ghost"
                 size="sm"
                 class={`absolute top-0 right-0 ${cell.validated ? 'text-green-200' : 'text-primary-foreground'}`}
-                onClick$={onValidateCell}
+                onClick$={() => onValidateCell(originalValue.value!)}
               >
                 <LuThumbsUp />
               </Button>

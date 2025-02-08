@@ -100,7 +100,7 @@ export default component$(() => {
   const { activeDataset } = useDatasetsStore();
 
   return (
-    <div class="min-w-screen pr-6">
+    <div class="min-w-screen px-6">
       <div class="flex justify-end items-center w-full mt-6">
         <span>{session.value.user.username}</span>
       </div>

@@ -162,7 +162,7 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
               onResolved={(models) => {
                 return (
                   <Select.Root id="column-model" bind:value={modelName}>
-                    <Select.Trigger class="border border-secondary bg-primary">
+                    <Select.Trigger class="border border-secondary-foreground bg-primary">
                       <Select.DisplayValue />
                     </Select.Trigger>
                     <Select.Popover class="bg-background border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto">
@@ -186,7 +186,7 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
             <Input
               id="column-rows"
               type="number"
-              class="h-10 bg-primary"
+              class="h-10 border-secondary-foreground bg-primary"
               bind:value={rowsToGenerate}
             />
           </div>

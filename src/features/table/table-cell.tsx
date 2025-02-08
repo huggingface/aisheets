@@ -80,7 +80,7 @@ export const TableCell = component$<{ cell: Cell }>(({ cell }) => {
 
   if (!cell.value && !cell.error) {
     return (
-      <td class="px-3 h-[60px] border-r border-gray-200 last:border-r-0">
+      <td class="min-w-[300px] w-[300px] max-w-[300px] px-2 min-h-[100px] h-[100px] cursor-pointer border last:border-r-0 border-secondary">
         <div class="flex flex-col gap-2">
           <Skeleton class="h-6 w-full" />
           <Skeleton class="h-3 w-full" />
@@ -91,7 +91,7 @@ export const TableCell = component$<{ cell: Cell }>(({ cell }) => {
 
   if (isEditing.value) {
     return (
-      <td class="relative min-h-[60px]">
+      <td class="relative min-h-[60px]" ref={ref}>
         <Textarea
           ref={editCellValueInput}
           bind:value={newCellValue}

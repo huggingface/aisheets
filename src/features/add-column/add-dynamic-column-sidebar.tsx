@@ -192,12 +192,12 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
           </div>
 
           <Button
-            class="rounded-3xl h-10 px-6 bg-[#6B86FF] text-white w-fit text-base select-none"
+            class="rounded-3xl h-10 px-6 bg-[#6B86FF] text-white w-fit select-none"
             onClick$={onGenerate}
             disabled={isSubmitting.value}
           >
             <div class="flex items-center gap-4">
-              <LuEgg class="text-lg" />
+              <LuEgg class="text-xl" />
 
               {isSubmitting.value ? 'Generating...' : 'Generate'}
             </div>

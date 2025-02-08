@@ -6,10 +6,10 @@ import {
   useVisibleTask$,
 } from '@builder.io/qwik';
 import { LuThumbsUp } from '@qwikest/icons/lucide';
-import { Button } from '~/components';
+import { Button, Textarea } from '~/components';
+import { useClickOutside } from '~/components/hooks/click/outside';
 import { Markdown } from '~/components/ui/markdown/markdown';
 import { Skeleton } from '~/components/ui/skeleton/skeleton';
-import { Textarea } from '~/components/ui/textarea/textarea';
 import { type Cell, useColumnsStore } from '~/state';
 import { useValidateCellUseCase } from '~/usecases/validate-cell.usecase';
 
@@ -75,6 +75,8 @@ export const TableCell = component$<{ cell: Cell }>(({ cell }) => {
 
     isEditing.value = false;
   });
+
+  const ref = useClickOutside(onUpdateCell);
 
   if (!cell.value && !cell.error) {
     return (

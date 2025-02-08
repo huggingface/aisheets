@@ -77,7 +77,7 @@ export const TableHeader = component$(() => {
 const TableCellHeader = component$<{ column: Column }>(({ column }) => {
   const { openAddDynamicColumnSidebar, closeAddDynamicColumnSidebar } =
     useModals('addDynamicColumnSidebar');
-  const { removeTemporalColumn } = useColumnsStore();
+  const { state: columns, removeTemporalColumn } = useColumnsStore();
   const isEditingCellName = useToggle();
   const newName = useSignal(column.name);
 
@@ -115,6 +115,13 @@ const TableCellHeader = component$<{ column: Column }>(({ column }) => {
     isEditingCellName.open();
   });
 
+  const hasAtLeastOneRowValidated = useComputed$(() => {
+    const thisColumn = columns.value.find((col) => col.id === column.id);
+    if (!thisColumn) return false;
+
+    return thisColumn.cells.some((cells) => cells.validated);
+  });
+
   return (
     <th
       id={column.id}
@@ -135,22 +142,24 @@ const TableCellHeader = component$<{ column: Column }>(({ column }) => {
         </div>
 
         <div class="flex items-center w-[20%]">
-          <Button
-            look="ghost"
-            size="sm"
-            onClick$={editCell}
-            //TODO: Enable if this column has at least one row validated
-            disabled
-          >
-            {column.id === TEMPORAL_ID && (
-              <LuEggOff class="text-primary-foreground" />
-            )}
-            <LuEgg class="text-primary-foreground" />
-          </Button>
           {column.id !== TEMPORAL_ID && (
-            <Button look="ghost" size="sm" onClick$={editCell}>
-              <LuSettings2 class="text-primary-foreground" />
-            </Button>
+            <>
+              <Button
+                look="ghost"
+                size="sm"
+                disabled={!hasAtLeastOneRowValidated.value}
+              >
+                {hasAtLeastOneRowValidated.value ? (
+                  <LuEgg class="text-primary-foreground" />
+                ) : (
+                  <LuEggOff class="text-primary-foreground" />
+                )}
+              </Button>
+
+              <Button look="ghost" size="sm" onClick$={editCell}>
+                <LuSettings2 class="text-primary-foreground" />
+              </Button>
+            </>
           )}
         </div>
       </div>

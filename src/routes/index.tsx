@@ -77,7 +77,6 @@ export const onGet = async ({
           username: userInfo.name,
           picture: userInfo.avatarUrl,
         },
-        inferenceProvider: INFERENCE_PROVIDER,
       };
 
       saveSession(cookie, session);

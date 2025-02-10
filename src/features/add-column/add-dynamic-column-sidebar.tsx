@@ -37,6 +37,7 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
     const rowsToGenerate = useSignal('5');
     const prompt = useSignal<string>('');
     const modelName = useSignal<string>('');
+    const modelProvider = useSignal<string>('');
     const columnsReferences = useSignal<string[]>([]);
     const variables = useSignal<Variable[]>([]);
 
@@ -70,6 +71,7 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
 
       prompt.value = currentColumn.value.process!.prompt;
       modelName.value = currentColumn.value.process!.modelName!;
+      modelProvider.value = currentColumn.value.process!.modelProvider!;
       rowsToGenerate.value = String(currentColumn.value.process!.limit);
     });
 
@@ -86,6 +88,7 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
         process: {
           ...currentColumn.value!.process,
           modelName: modelName.value!,
+          modelProvider: modelProvider.value!,
           prompt: prompt.value!,
           columnsReferences: columnsReferences.value,
           offset: 0,
@@ -139,7 +142,9 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
                 )}
                 onResolved={(models) => {
                   if (models.length > 0 && !modelName.value) {
-                    modelName.value = models[0].id;
+                    const defaultModel = models[0];
+                    modelName.value = defaultModel.id;
+                    modelProvider.value = defaultModel.provider;
                   }
 
                   return (
@@ -152,6 +157,9 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
                           <Select.Item
                             key={model.id}
                             class="text-foreground hover:bg-accent"
+                            onClick$={() => {
+                              modelProvider.value = model.provider;
+                            }}
                           >
                             <Select.ItemLabel>{model.id}</Select.ItemLabel>
                             <Select.ItemIndicator>

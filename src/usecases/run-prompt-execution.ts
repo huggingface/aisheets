@@ -4,6 +4,7 @@ import mustache from 'mustache';
 export interface PromptExecutionParams {
   accessToken?: string;
   modelName: string;
+  modelProvider: Provider;
   instruction: string;
   data?: object;
   examples?: string[];
@@ -68,13 +69,37 @@ the response and do not generate any introductory text. Only a clear response is
   );
 };
 
+type Provider =
+  | 'fal-ai'
+  | 'replicate'
+  | 'sambanova'
+  | 'together'
+  | 'hf-inference';
+
+const createApiParams = (
+  modelName: string,
+  messages: any[],
+  modelProvider: Provider,
+  accessToken?: string,
+) => {
+  console.log('[RunPrompt] Creating API params:', { modelName, modelProvider });
+  return {
+    model: modelName,
+    messages,
+    provider: modelProvider,
+    accessToken,
+  };
+};
+
 export const runPromptExecution = async ({
   accessToken,
   modelName,
+  modelProvider,
   instruction,
   data,
   examples,
 }: PromptExecutionParams): Promise<PromptExecutionResponse> => {
+  console.log('[RunPrompt] Execution started:', { modelName, modelProvider });
   let inputPrompt: string;
   switch (data && Object.keys(data).length > 0) {
     case true:
@@ -87,15 +112,15 @@ export const runPromptExecution = async ({
 
   try {
     // https://huggingface.co/docs/api-inference/tasks/chat-completion?code=js#api-specification
+
     const response = await chatCompletion(
-      {
-        model: modelName,
-        messages: [{ role: 'user', content: inputPrompt }],
+      createApiParams(
+        modelName,
+        [{ role: 'user', content: inputPrompt }],
+        modelProvider,
         accessToken,
-      },
-      {
-        use_cache: false,
-      },
+      ),
+      { use_cache: false },
     );
     return { value: response.choices[0].message.content };
   } catch (e) {
@@ -112,6 +137,7 @@ export const runPromptExecution = async ({
 export const runPromptExecutionStream = async function* ({
   accessToken,
   modelName,
+  modelProvider,
   instruction,
   data,
   examples,
@@ -130,11 +156,12 @@ export const runPromptExecutionStream = async function* ({
     let accumulated = '';
 
     const stream = chatCompletionStream(
-      {
-        model: modelName,
-        messages: [{ role: 'user', content: inputPrompt }],
+      createApiParams(
+        modelName,
+        [{ role: 'user', content: inputPrompt }],
+        modelProvider,
         accessToken,
-      },
+      ),
       { use_cache: false },
     );
 

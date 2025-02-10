@@ -40,7 +40,7 @@ export const onGet = async ({ cookie, redirect, query, url }: RequestEvent) => {
         username: auth.userInfo.preferred_username,
         picture: auth.userInfo.picture,
       },
-      inferenceProvider: process.env.INFERENCE_PROVIDER,
+      inferenceProvider: process.env.INFERENCE_PROVIDER || 'hf-inference',
     };
 
     saveSession(cookie, session);

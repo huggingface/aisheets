@@ -38,7 +38,8 @@ export const generateCells = async function* ({
   offset,
   validatedCells,
 }: GenerateCellsParams) {
-  const { columnsReferences, modelName, prompt } = process;
+  const { columnsReferences, modelName, modelProvider, prompt } = process;
+  console.log('[GenerateCells] Process config:', { modelName, modelProvider });
 
   const hasReferredColumns = columnsReferences && columnsReferences.length > 0;
   const hasValidatedCells = validatedCells && validatedCells.length > 0;
@@ -54,10 +55,12 @@ export const generateCells = async function* ({
     const args = {
       accessToken: session.token,
       modelName,
+      modelProvider,
       examples,
       instruction: prompt,
       data: {},
     };
+    console.log('[GenerateCells] Execution args:', args);
 
     if (hasReferredColumns) {
       const rowCells = await getRowCells({

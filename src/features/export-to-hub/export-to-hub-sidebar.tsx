@@ -43,7 +43,7 @@ export const ExportToHubSidebar = component$(() => {
       <Button
         look="primary"
         size="sm"
-        class="flex gap-1 font-light w-32 justify-evenly"
+        class="flex w-24 justify-between px-3"
         onClick$={handleOpenExportToHubSidebar}
         disabled={
           activeDataset.value.columns.filter((c) => c.id !== TEMPORAL_ID)

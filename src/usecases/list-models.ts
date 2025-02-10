@@ -18,5 +18,8 @@ export const listModels = server$(async function (
     throw new Error('Failed to fetch models');
   }
 
-  return (await response.json()).map(m => {...m, provider:session.inferenceProvider}) as Model[];
+  return (await response.json()).map((m: Omit<Model, 'provider'>) => ({
+    ...m,
+    provider: session.inferenceProvider,
+  })) as Model[];
 });

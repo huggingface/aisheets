@@ -17,17 +17,10 @@ import {
   type Variable,
 } from '~/features/add-column/components/template-textarea';
 import { type Column, useColumnsStore } from '~/state';
+import { listModels } from '~/usecases/list-models';
 
 interface SidebarProps {
   onGenerateColumn: QRL<(column: Column) => Promise<Column>>;
-}
-
-const MODEL_URL =
-  'https://huggingface.co/api/models?other=text-generation-inference&inference=warm';
-
-interface HFModel {
-  id: string;
-  tags?: string[];
 }
 
 export const AddDynamicColumnSidebar = component$<SidebarProps>(
@@ -80,31 +73,8 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
       rowsToGenerate.value = String(currentColumn.value.process!.limit);
     });
 
-    const loadModels = useResource$(async ({ track, cleanup }) => {
-      track(isOpenAddDynamicColumnSidebar);
-
-      if (!isOpenAddDynamicColumnSidebar) return Promise.resolve([]);
-
-      const controller = new AbortController();
-      cleanup(() => controller.abort());
-
-      const response = await fetch(MODEL_URL, {
-        signal: controller.signal,
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch models');
-      }
-
-      const data = (await response.json()) as HFModel[];
-
-      return data
-        .filter((model: any) =>
-          model.tags?.includes('text-generation-inference'),
-        )
-        .map((model: any) => ({
-          id: model.id,
-        }));
+    const loadModels = useResource$(async () => {
+      return await listModels();
     });
 
     const onGenerate = $(async () => {
@@ -164,10 +134,14 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
               </Label>
               <Resource
                 value={loadModels}
-                onPending={() => {
-                  return <Select.Disabled>Loading models...</Select.Disabled>;
-                }}
+                onPending={() => (
+                  <Select.Disabled>Loading models...</Select.Disabled>
+                )}
                 onResolved={(models) => {
+                  if (models.length > 0 && !modelName.value) {
+                    modelName.value = models[0].id;
+                  }
+
                   return (
                     <Select.Root id="column-model" bind:value={modelName}>
                       <Select.Trigger class="bg-background border-input">

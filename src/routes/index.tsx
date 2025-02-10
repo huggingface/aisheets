@@ -30,6 +30,7 @@ export const onGet = async ({
   // See https://huggingface.co/docs/hub/en/spaces-oauth
   const CLIENT_ID = process.env.OAUTH_CLIENT_ID;
   const HF_TOKEN = process.env.HF_TOKEN;
+  const INFERENCE_PROVIDER = process.env.INFERENCE_PROVIDER || 'hf-inference';
 
   if (CLIENT_ID) {
     const sessionCode = crypto.randomUUID();
@@ -77,6 +78,7 @@ export const onGet = async ({
           username: userInfo.name,
           picture: userInfo.avatarUrl,
         },
+        inferenceProvider: INFERENCE_PROVIDER,
       };
 
       saveSession(cookie, session);

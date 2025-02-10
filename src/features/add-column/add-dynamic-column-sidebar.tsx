@@ -124,7 +124,7 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
             <LuXCircle class="text-lg text-primary-foreground" />
           </Button>
           <div class="flex flex-col gap-4">
-            <Label>Start from a redacted prompt and adapt</Label>
+            <Label>Prompt</Label>
 
             <TemplateTextArea
               bind:value={prompt}

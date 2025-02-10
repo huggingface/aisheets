@@ -15,7 +15,7 @@ import {
   TemplateTextArea,
   type Variable,
 } from '~/features/add-column/components/template-textarea';
-import { type Column, useColumnsStore } from '~/state';
+import { type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
 import { listModels } from '~/usecases/list-models';
 
 interface SidebarProps {
@@ -117,7 +117,7 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
             size="sm"
             look="ghost"
             onClick$={handleCloseForm}
-            disabled={columns.value.length === 1}
+            disabled={columns.value[0]?.id === TEMPORAL_ID}
             class="absolute top-0 right-0 m-2"
           >
             <LuXCircle class="text-lg text-primary-foreground" />

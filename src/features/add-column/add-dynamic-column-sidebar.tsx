@@ -112,7 +112,7 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
 
     return (
       <Sidebar name="addDynamicColumnSidebar">
-        <div class="border-r border-t border-secondary relative flex flex-col p-4 gap-4">
+        <div class="h-full border-r border-t border-secondary relative flex flex-col p-4 gap-4">
           <Button
             size="sm"
             look="ghost"

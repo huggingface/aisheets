@@ -27,7 +27,6 @@ export const onGet = async ({
     return next();
   }
 
-  // See https://huggingface.co/docs/hub/en/spaces-oauth
   const CLIENT_ID = process.env.OAUTH_CLIENT_ID;
   const HF_TOKEN = process.env.HF_TOKEN;
 
@@ -80,7 +79,6 @@ export const onGet = async ({
       };
 
       saveSession(cookie, session);
-
       sharedMap.set('session', session);
 
       return next();

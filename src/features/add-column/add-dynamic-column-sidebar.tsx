@@ -16,17 +16,10 @@ import {
   type Variable,
 } from '~/features/add-column/components/template-textarea';
 import { type Column, useColumnsStore } from '~/state';
+import { listModels } from '~/usecases/list-models';
 
 interface SidebarProps {
   onGenerateColumn: QRL<(column: Column) => Promise<Column>>;
-}
-
-const MODEL_URL =
-  'https://huggingface.co/api/models?other=text-generation-inference&inference=warm';
-
-interface HFModel {
-  id: string;
-  tags?: string[];
 }
 
 export const AddDynamicColumnSidebar = component$<SidebarProps>(
@@ -43,6 +36,7 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
     const rowsToGenerate = useSignal('5');
     const prompt = useSignal<string>('');
     const modelName = useSignal<string>('');
+    const modelProvider = useSignal<string>('');
     const columnsReferences = useSignal<string[]>([]);
     const variables = useSignal<Variable[]>([]);
 
@@ -76,30 +70,12 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
 
       prompt.value = currentColumn.value.process!.prompt;
       modelName.value = currentColumn.value.process!.modelName!;
+      modelProvider.value = currentColumn.value.process!.modelProvider!;
       rowsToGenerate.value = String(currentColumn.value.process!.limit);
     });
 
-    const loadModels = useResource$(async ({ cleanup }) => {
-      const controller = new AbortController();
-      cleanup(() => controller.abort());
-
-      const response = await fetch(MODEL_URL, {
-        signal: controller.signal,
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch models');
-      }
-
-      const data = (await response.json()) as HFModel[];
-
-      return data
-        .filter((model: any) =>
-          model.tags?.includes('text-generation-inference'),
-        )
-        .map((model: any) => ({
-          id: model.id,
-        }));
+    const loadModels = useResource$(async () => {
+      return await listModels();
     });
 
     const onGenerate = $(async () => {
@@ -111,6 +87,7 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
         process: {
           ...currentColumn.value!.process,
           modelName: modelName.value!,
+          modelProvider: modelProvider.value!,
           prompt: prompt.value!,
           columnsReferences: columnsReferences.value,
           offset: 0,
@@ -147,22 +124,32 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
             <LuXCircle class="text-lg text-primary-foreground" />
           </Button>
           <div class="flex flex-col gap-4">
-            <Label>Start from a redacted prompt and adapt</Label>
+            <Label>Prompt</Label>
 
             <TemplateTextArea
               bind:value={prompt}
               variables={variables}
               onSelectedVariables={onSelectedVariables}
             />
+
+            <Label for="column-model" class="flex gap-1">
+              Model
+            </Label>
             <Resource
               value={loadModels}
-              onPending={() => {
-                return <Select.Disabled>Loading models...</Select.Disabled>;
-              }}
+              onPending={() => (
+                <Select.Disabled>Loading models...</Select.Disabled>
+              )}
               onResolved={(models) => {
+                if (models.length > 0 && !modelName.value) {
+                  const defaultModel = models[0];
+                  modelName.value = defaultModel.id;
+                  modelProvider.value = defaultModel.provider;
+                }
+
                 return (
                   <Select.Root id="column-model" bind:value={modelName}>
-                    <Select.Trigger class="border border-secondary-foreground bg-primary">
+                    <Select.Trigger class="bg-background border-input">
                       <Select.DisplayValue />
                     </Select.Trigger>
                     <Select.Popover class="bg-background border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto">
@@ -170,6 +157,9 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
                         <Select.Item
                           key={model.id}
                           class="text-foreground hover:bg-accent"
+                          onClick$={() => {
+                            modelProvider.value = model.provider;
+                          }}
                         >
                           <Select.ItemLabel>{model.id}</Select.ItemLabel>
                           <Select.ItemIndicator>

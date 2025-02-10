@@ -8,6 +8,7 @@ export type ColumnKind = 'static' | 'dynamic';
 export interface Process {
   id?: string;
   modelName: string;
+  modelProvider: string;
   prompt: string;
   columnsReferences?: string[];
   offset: number;
@@ -47,7 +48,6 @@ export const useColumnsStore = () => {
   const { activeDataset } = useDatasetsStore();
 
   const createPlaceholderColumn = $((): Column => {
-    const DEFAULT_MODEL = 'google/gemma-2-2b-it';
     const getNextColumnName = (counter = 1): string => {
       const manyColumnsWithName = activeDataset.value.columns;
       const newPosibleColumnName = `Column ${manyColumnsWithName.length + 1}`;
@@ -66,7 +66,8 @@ export const useColumnsStore = () => {
       type: 'text',
       cells: [],
       process: {
-        modelName: DEFAULT_MODEL,
+        modelName: '',
+        modelProvider: '',
         offset: 0,
         limit: 5,
         prompt: '',

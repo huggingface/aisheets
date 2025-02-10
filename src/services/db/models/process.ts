@@ -19,6 +19,7 @@ export class ProcessModel extends Model<
   declare id: CreationOptional<string>;
   declare prompt: string;
   declare modelName: string;
+  declare modelProvider: string;
   declare offset: number;
   declare limit: number;
   declare columnId: ForeignKey<ColumnModel['id']>;
@@ -38,6 +39,10 @@ ProcessModel.init(
       primaryKey: true,
     },
     modelName: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    modelProvider: {
       type: DataTypes.STRING,
       allowNull: false,
     },

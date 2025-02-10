@@ -11,12 +11,17 @@ export const TableCellHeader = component$<{ column: Column }>(({ column }) => {
   const { args } = useActiveModal();
 
   const classes = useComputed$(() =>
-    cn({ 'bg-primary': args.value?.columnId !== column.id }),
+    cn(
+      { 'bg-primary': args.value?.columnId !== column.id },
+      { 'border-t-primary': args.value?.columnId !== column.id },
+      { 'border-l-primary': args.value?.columnId !== column.id },
+      { 'first:border-l-0': args.value?.columnId !== column.id },
+    ),
   );
   return (
     <th
       id={column.id}
-      class={`min-w-80 w-80 max-w-80 border border-l-primary border-t-primary border-r border-b-0 border-secondary px-1 text-left ${classes.value}`}
+      class={`min-w-80 w-80 max-w-80 text-left p-2 border-[0.5px] first:rounded-tl-sm border-l-secondary border-r-secondary ${classes.value}`}
     >
       <div class="flex items-center justify-between gap-2 w-full">
         <div class="flex items-center gap-2 text-wrap w-[80%]">

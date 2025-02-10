@@ -1,7 +1,7 @@
 import { component$, useComputed$ } from '@builder.io/qwik';
 import { useActiveModal } from '~/components';
 import { TableCell } from '~/features/table/table-cell';
-import { type Cell, type Column, useColumnsStore } from '~/state';
+import { type Cell, type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
 
 export const TableBody = component$(() => {
   const { state: columns } = useColumnsStore();
@@ -28,16 +28,20 @@ export const TableBody = component$(() => {
   return (
     <tbody>
       {Array.from({ length: rowCount }).map((_, rowIndex) => (
-        <tr
-          key={rowIndex}
-          class="border-b border-gray-200 hover:bg-gray-50/50 transition-colors"
-        >
+        <tr key={rowIndex} class="hover:bg-gray-50/50 transition-colors">
           {columns.value.map((column, index) => {
             const cell = getCell(column, rowIndex);
 
             return (
               <>
-                <TableCell key={`${cell.id}-${cell.updatedAt}`} cell={cell} />
+                {column.id === TEMPORAL_ID ? (
+                  <td
+                    key={`temporal-${rowIndex}`}
+                    class="min-w-80 w-80 max-w-80 px-2 min-h-[100px] h-[100px] border-[0.5px]"
+                  />
+                ) : (
+                  <TableCell key={`${cell.id}-${cell.updatedAt}`} cell={cell} />
+                )}
 
                 <TableCellHeaderForExecution
                   key={`${column.id}-${index}`}
@@ -46,6 +50,8 @@ export const TableBody = component$(() => {
               </>
             );
           })}
+
+          <td class="min-w-80 w-80 max-w-80 min-h-[100px] h-[100px] border-[0.5px] border-r-0" />
         </tr>
       ))}
     </tbody>

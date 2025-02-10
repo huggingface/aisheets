@@ -122,7 +122,7 @@ export const TableCell = component$<{ cell: Cell }>(({ cell }) => {
 
   return (
     <td
-      class={`min-w-80 w-80 max-w-80 px-2 min-h-[100px] h-[100px] cursor-pointer border ${cell.validated ? 'bg-green-50 border-green-200' : 'border-secondary'}`}
+      class={`min-w-80 w-80 max-w-80 px-2 min-h-[100px] h-[100px] cursor-pointer border-[0.5px] ${cell.validated ? 'bg-green-50 border-green-200' : 'border-secondary'}`}
       onDblClick$={() => {
         isEditing.value = true;
       }}

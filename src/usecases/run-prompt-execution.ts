@@ -82,7 +82,6 @@ const createApiParams = (
   modelProvider: Provider,
   accessToken?: string,
 ) => {
-  console.log('[RunPrompt] Creating API params:', { modelName, modelProvider });
   return {
     model: modelName,
     messages,
@@ -99,7 +98,6 @@ export const runPromptExecution = async ({
   data,
   examples,
 }: PromptExecutionParams): Promise<PromptExecutionResponse> => {
-  console.log('[RunPrompt] Execution started:', { modelName, modelProvider });
   let inputPrompt: string;
   switch (data && Object.keys(data).length > 0) {
     case true:

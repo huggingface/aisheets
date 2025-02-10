@@ -41,6 +41,7 @@ test('should save 10 cells', async () => {
       limit: 10,
       columnsReferences: [],
       modelName: 'modelName',
+      modelProvider: 'hf-inference',
       offset: 0,
       prompt: 'prompt',
     },

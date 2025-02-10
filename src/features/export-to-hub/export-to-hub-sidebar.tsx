@@ -1,4 +1,4 @@
-import { $, component$, useSignal } from '@builder.io/qwik';
+import { $, component$, useComputed$, useSignal } from '@builder.io/qwik';
 import { LuArrowRightFromLine, LuXCircle } from '@qwikest/icons/lucide';
 
 import { Button, Checkbox, Input, Label, Sidebar } from '~/components';
@@ -17,15 +17,21 @@ export const ExportToHubSidebar = component$(() => {
   const owner = useSignal<string | undefined>(undefined); // TODO: Read the default owner from the session.
   const name = useSignal<string>(activeDataset.value.name.replace(/\s/g, '_'));
   const isPrivate = useSignal<boolean>(true);
+  const exportedRepoId = useSignal<string | undefined>(undefined);
 
-  const onButtonClick = $(() => {
-    closeExportToHubSidebar();
-    exportDataset({
+  const exportedUrl = useComputed$(
+    () => `https://huggingface.co/datasets/${exportedRepoId.value}`,
+  );
+
+  const onButtonClick = $(async () => {
+    const repoId = await exportDataset({
       dataset: activeDataset.value,
       owner: owner.value,
       name: name.value,
       private: isPrivate.value,
     });
+
+    exportedRepoId.value = repoId;
   });
 
   const handleOpenExportToHubSidebar = $(() => {
@@ -63,6 +69,22 @@ export const ExportToHubSidebar = component$(() => {
               <LuXCircle class="text-lg text-primary-foreground" />
             </Button>
             <div class="flex flex-col gap-4">
+              {exportedRepoId.value ? (
+                <div class="flex h-16 w-full items-center justify-center">
+                  <span class="text-sm">
+                    Exported to{' '}
+                    <a
+                      href={exportedUrl.value}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="text-blue-500"
+                    >
+                      {exportedRepoId.value}
+                    </a>
+                  </span>
+                </div>
+              ) : null}
+
               <div class="flex items-center justify-between">
                 <Label for="dataset-owner">Owner</Label>
               </div>

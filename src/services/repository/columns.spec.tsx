@@ -24,6 +24,7 @@ describe('addColumn', () => {
       kind: 'static',
       process: {
         modelName: 'model',
+        modelProvider: 'hf-inference',
         prompt: 'test prompt',
         offset: 0,
         limit: 10,
@@ -66,6 +67,7 @@ describe('addColumn', () => {
       kind: 'static',
       process: {
         modelName: 'model',
+        modelProvider: 'hf-inference',
         prompt: 'test prompt',
         offset: 0,
         limit: 10,

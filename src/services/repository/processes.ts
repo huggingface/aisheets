@@ -8,6 +8,7 @@ export const createProcess = async ({
   const model = await ProcessModel.create({
     limit: process.limit,
     modelName: process.modelName,
+    modelProvider: process.modelProvider,
     offset: process.offset,
     prompt: process.prompt,
     columnId: column.id!,
@@ -33,6 +34,7 @@ export const updateProcess = async (process: Process): Promise<Process> => {
   model.set({
     limit: process.limit,
     modelName: process.modelName,
+    modelProvider: process.modelProvider,
     offset: process.offset,
     prompt: process.prompt,
   });
@@ -52,6 +54,7 @@ export const updateProcess = async (process: Process): Promise<Process> => {
     id: model.id,
     limit: model.limit,
     modelName: model.modelName,
+    modelProvider: model.modelProvider,
     offset: model.offset,
     prompt: model.prompt,
     columnsReferences: process.columnsReferences,

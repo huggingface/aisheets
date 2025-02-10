@@ -1,4 +1,3 @@
-import { isDev } from '@builder.io/qwik';
 import {
   type Association,
   type CreationOptional,
@@ -61,5 +60,3 @@ ColumnModel.belongsTo(DatasetModel, {
   foreignKey: 'datasetId',
   as: 'dataset',
 });
-
-await DatasetModel.sync({ alter: isDev });

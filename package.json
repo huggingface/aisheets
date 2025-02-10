@@ -66,6 +66,7 @@
     "vitest": "^0.34.6"
   },
   "dependencies": {
+    "@duckdb/node-api": "1.2.0-alpha.13",
     "@huggingface/hub": "^1.0.0",
     "@huggingface/inference": "^3.1.6",
     "consola": "^3.4.0",

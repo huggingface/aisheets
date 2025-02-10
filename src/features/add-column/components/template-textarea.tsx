@@ -7,7 +7,7 @@ import {
   useStore,
   useVisibleTask$,
 } from '@builder.io/qwik';
-import { TbBraces } from '@qwikest/icons/tablericons';
+import { LuBraces } from '@qwikest/icons/lucide';
 import { Select, Textarea } from '~/components';
 import { nextTick } from '~/components/hooks/tick';
 
@@ -191,7 +191,7 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
       {popover.options.length === 0 && (
         <Textarea
           ref={textarea}
-          class="w-full h-40 p-2 border border-gray-300 rounded"
+          class="w-full h-40 p-2 border border-secondary bg-primary"
           bind:value={props['bind:value']}
         />
       )}
@@ -209,7 +209,7 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
 
           <Textarea
             ref={textarea}
-            class="w-full h-full min-h-40 resize-none overflow-hidden p-2 border border-gray-300 text-base"
+            class="w-full h-full min-h-40 resize-none overflow-hidden p-2 border border-secondary-foreground bg-primary text-base"
             onInput$={(event) =>
               handleTextInput(event.target as HTMLTextAreaElement)
             }
@@ -233,13 +233,13 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
               ref={firstOption}
               look="headless"
               hideIcon
-              class="absolute bg-white border border-gray-300 p-2 rounded shadow-lg focus:outline-none"
+              class="absolute border border-secondary bg-primary p-2 rounded shadow-lg"
               style={{
                 left: `${popover.position.x + 20}px`,
                 top: `${popover.position.y}px`,
               }}
             >
-              <TbBraces />
+              <LuBraces class="text-primary-foreground" />
             </Select.Trigger>
             <Select.Popover>
               {popover.options.map((variable) => (

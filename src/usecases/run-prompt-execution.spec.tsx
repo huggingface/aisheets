@@ -13,6 +13,7 @@ describe('runPromptExecution', () => {
     const result = await runPromptExecution({
       accessToken,
       modelName: testModelName,
+      modelProvider: 'hf-inference',
       instruction: testPrompt,
     });
 
@@ -31,6 +32,7 @@ describe('runPromptExecution', () => {
     const result = await runPromptExecution({
       accessToken,
       modelName: testModelName,
+      modelProvider: 'hf-inference',
       instruction: testPrompt,
       examples,
     });
@@ -50,6 +52,7 @@ describe('runPromptExecution', () => {
     const result = await runPromptExecution({
       accessToken,
       modelName: testModelName,
+      modelProvider: 'hf-inference',
       instruction: prompt,
       data,
     });
@@ -66,6 +69,7 @@ describe('stream', () => {
     for await (const response of runPromptExecutionStream({
       accessToken,
       modelName: testModelName,
+      modelProvider: 'hf-inference',
       instruction: testPrompt,
     })) {
       updates.push(response);

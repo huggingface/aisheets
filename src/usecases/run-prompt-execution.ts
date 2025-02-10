@@ -4,7 +4,7 @@ import mustache from 'mustache';
 export interface PromptExecutionParams {
   accessToken?: string;
   modelName: string;
-  modelProvider: Provider;
+  modelProvider: string;
   instruction: string;
   data?: object;
   examples?: string[];
@@ -79,13 +79,13 @@ type Provider =
 const createApiParams = (
   modelName: string,
   messages: any[],
-  modelProvider: Provider,
+  modelProvider: string,
   accessToken?: string,
 ) => {
   return {
     model: modelName,
     messages,
-    provider: modelProvider,
+    provider: modelProvider as Provider,
     accessToken,
   };
 };

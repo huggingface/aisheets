@@ -8,7 +8,6 @@ export interface Session {
     username: string;
     picture: string;
   };
-  inferenceProvider: string;
 }
 
 export const useServerSession = (request: RequestEventBase): Session => {
@@ -28,6 +27,5 @@ export const useServerSession = (request: RequestEventBase): Session => {
       username: session.user.username,
       picture: session.user.picture,
     },
-    inferenceProvider: session.inferenceProvider,
   };
 };

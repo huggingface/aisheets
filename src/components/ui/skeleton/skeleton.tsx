@@ -1,11 +1,11 @@
-import { component$, type PropsOf } from '@builder.io/qwik';
-import { cn } from '@qwik-ui/utils';
+import { component$ } from '@builder.io/qwik';
 
-export const Skeleton = component$<PropsOf<'div'>>(({ ...props }) => {
+export const Skeleton = component$(() => {
   return (
-    <div
-      {...props}
-      class={cn('animate-pulse rounded bg-foreground/10', props.class)}
-    />
+    <div class="flex items-start py-9 h-full space-x-2">
+      <div class="w-2 h-2 bg-ring rounded-full animate-[bounce_1.4s_infinite]" />
+      <div class="w-2 h-2 bg-ring rounded-full animate-[bounce_1.4s_infinite_0.2s]" />
+      <div class="w-2 h-2 bg-ring rounded-full animate-[bounce_1.4s_infinite_0.4s]" />
+    </div>
   );
 });

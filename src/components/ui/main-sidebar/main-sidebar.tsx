@@ -73,7 +73,7 @@ export const MainSidebar = component$(() => {
                 class="flex items-center gap-2 px-2 py-1 hover:bg-gray-100 rounded text-sm font-light truncate max-w-full"
               >
                 <LuLibrary class="w-5 h-5 text-muted-foreground" />
-                Explore prompts
+                Prompt gallery
               </Link>
             </div>
 

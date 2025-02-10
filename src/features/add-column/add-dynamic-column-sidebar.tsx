@@ -182,7 +182,7 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
 
           <Button
             look="ghost"
-            class="rounded-3xl h-10 px-6 bg-[#6B86FF] hover:bg-[#6b86ffa4] text-white w-fit select-none"
+            class="rounded-3xl h-10 px-6 bg-ring hover:bg-indigo-300 text-white w-fit select-none"
             onClick$={onGenerate}
             disabled={isSubmitting.value}
           >

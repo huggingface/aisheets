@@ -140,7 +140,7 @@ export const TableCell = component$<{ cell: Cell }>(({ cell }) => {
               >
                 <LuThumbsUp />
               </Button>
-              <div class="h-full flex items-center py-8">
+              <div class="h-full flex items-start py-8">
                 <Markdown class="text-gray-900" content={originalValue.value} />
               </div>
             </>

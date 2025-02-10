@@ -32,12 +32,24 @@ export const buttonVariants = cva(
   },
 );
 
-type ButtonProps = PropsOf<'button'> & VariantProps<typeof buttonVariants>;
+type ButtonProps = PropsOf<'button'> &
+  VariantProps<typeof buttonVariants> & {
+    hover?: boolean;
+  };
 
-export const Button = component$<ButtonProps>(({ size, look, ...props }) => {
-  return (
-    <button {...props} class={cn(buttonVariants({ size, look }), props.class)}>
-      <Slot />
-    </button>
-  );
-});
+export const Button = component$<ButtonProps>(
+  ({ size, look, hover = true, ...props }) => {
+    const buttonHover = cn({
+      'hover:bg-transparent': !hover,
+    });
+
+    return (
+      <button
+        {...props}
+        class={cn(buttonVariants({ size, look }), props.class, buttonHover)}
+      >
+        <Slot />
+      </button>
+    );
+  },
+);

@@ -133,6 +133,7 @@ export const TableCell = component$<{ cell: Cell }>(({ cell }) => {
             <>
               <Button
                 look="ghost"
+                hover={false}
                 size="sm"
                 class={`absolute top-0 right-0 ${cell.validated ? 'text-green-200' : 'text-primary-foreground'}`}
                 onClick$={() => onValidateCell(originalValue.value!)}

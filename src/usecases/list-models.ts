@@ -3,6 +3,7 @@ import { useServerSession } from '~/state';
 
 export interface Model {
   id: string;
+  provider: string;
   tags?: string[];
 }
 

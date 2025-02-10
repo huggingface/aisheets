@@ -5,9 +5,11 @@ import {
   useTask$,
   useVisibleTask$,
 } from '@builder.io/qwik';
+import { LuThumbsUp } from '@qwikest/icons/lucide';
+import { Button, Textarea } from '~/components';
+import { useClickOutside } from '~/components/hooks/click/outside';
 import { Markdown } from '~/components/ui/markdown/markdown';
 import { Skeleton } from '~/components/ui/skeleton/skeleton';
-import { Textarea } from '~/components/ui/textarea/textarea';
 import { type Cell, useColumnsStore } from '~/state';
 import { useValidateCellUseCase } from '~/usecases/validate-cell.usecase';
 
@@ -48,35 +50,42 @@ export const TableCell = component$<{ cell: Cell }>(({ cell }) => {
     }
   });
 
-  const onUpdateCell = $(async () => {
-    const valueToUpdate = newCellValue.value;
-
-    if (valueToUpdate === originalValue.value) {
-      isEditing.value = false;
-      return;
-    }
-
-    originalValue.value = valueToUpdate;
-
+  const onValidateCell = $(async (validatedContent: string) => {
     const success = await validateCell({
       id: cell.id,
-      value: valueToUpdate!,
+      value: validatedContent,
     });
 
     if (success) {
       replaceCell({
         ...cell,
-        value: valueToUpdate,
+        value: validatedContent,
         validated: true,
       });
+    }
+
+    return success;
+  });
+
+  const onUpdateCell = $(async () => {
+    const valueToUpdate = newCellValue.value;
+
+    if (!!newCellValue.value && newCellValue.value !== originalValue.value) {
+      const success = await onValidateCell(newCellValue.value);
+
+      if (success) {
+        originalValue.value = valueToUpdate;
+      }
     }
 
     isEditing.value = false;
   });
 
+  const ref = useClickOutside(onUpdateCell);
+
   if (!cell.value && !cell.error) {
     return (
-      <td class="px-3 h-[60px] border-r border-gray-200 last:border-r-0">
+      <td class="min-w-[300px] w-[300px] max-w-[300px] px-2 min-h-[100px] h-[100px] cursor-pointer border last:border-r-0 border-secondary">
         <div class="flex flex-col gap-2">
           <Skeleton class="h-6 w-full" />
           <Skeleton class="h-3 w-full" />
@@ -87,14 +96,12 @@ export const TableCell = component$<{ cell: Cell }>(({ cell }) => {
 
   if (isEditing.value) {
     return (
-      <td class="relative min-h-[60px]">
+      <td class="relative min-h-[60px]" ref={ref}>
         <Textarea
           ref={editCellValueInput}
           bind:value={newCellValue}
           preventEnterNewline
-          class="absolute z-10 left-0 top-0 min-w-[400px] w-[200%] resize border-0 
-            rounded-none bg-white px-3 py-2 focus:outline-none focus:ring-1 
-            focus:ring-primary shadow-lg text-sm"
+          class="absolute z-10 left-0 top-0 min-w-[400px] w-[200%] min-h-[127px] h-[127px] resize border-0 rounded-none bg-white px-3 py-2 focus:outline-none focus:ring-1 focus:ring-primary shadow-lg text-sm"
           style={{
             height: `${editCellValueInput.value?.scrollHeight || 60}px`,
             maxWidth: 'max(800px, 200%)',
@@ -115,17 +122,27 @@ export const TableCell = component$<{ cell: Cell }>(({ cell }) => {
 
   return (
     <td
-      class={`px-3 h-[60px] cursor-pointer border-r border-gray-200 last:border-r-0 max-w-[300px]
-        ${cell.validated ? 'bg-green-50 border-l-2 border-l-green-200' : ''}
-        `}
+      class={`min-w-[300px] w-[300px] max-w-[300px] px-2 min-h-[100px] h-[100px] cursor-pointer border ${cell.validated ? 'bg-green-50 border-green-200' : 'border-secondary'}`}
       onDblClick$={() => {
         isEditing.value = true;
       }}
     >
-      <div class="relative text-sm">
-        <div ref={contentRef} class="line-clamp-6 overflow-hidden">
+      <div class="text-sm h-full">
+        <div ref={contentRef} class="relative flex flex-col h-full">
           {originalValue.value ? (
-            <Markdown class="text-gray-900" content={originalValue.value} />
+            <>
+              <Button
+                look="ghost"
+                size="sm"
+                class={`absolute top-0 right-0 ${cell.validated ? 'text-green-200' : 'text-primary-foreground'}`}
+                onClick$={() => onValidateCell(originalValue.value!)}
+              >
+                <LuThumbsUp />
+              </Button>
+              <div class="h-full flex items-center py-8">
+                <Markdown class="text-gray-900" content={originalValue.value} />
+              </div>
+            </>
           ) : (
             <span class="text-red-500 text-xs flex items-center gap-1">
               <span>⚠</span>

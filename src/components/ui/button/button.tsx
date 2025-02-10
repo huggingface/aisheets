@@ -1,6 +1,6 @@
+import { type PropsOf, Slot, component$ } from '@builder.io/qwik';
 import { cn } from '@qwik-ui/utils';
-import { cva, type VariantProps } from 'class-variance-authority';
-import { component$, type PropsOf, Slot } from '@builder.io/qwik';
+import { type VariantProps, cva } from 'class-variance-authority';
 
 export const buttonVariants = cva(
   'inline-flex items-center justify-center rounded text-sm font-medium transition-all duration-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50',
@@ -8,9 +8,9 @@ export const buttonVariants = cva(
     variants: {
       look: {
         primary:
-          'border-base bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 active:shadow-base active:press',
+          'border border-secondary bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 active:shadow-base active:press',
         secondary:
-          'border-base bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/90 active:shadow-base active:press',
+          'border border-primary text-secondary-foreground shadow-sm hover:bg-secondary/90 active:shadow-base active:press',
         alert:
           'border-base bg-alert text-alert-foreground shadow-sm hover:bg-alert/90 active:shadow-base active:press',
         outline:

@@ -1,10 +1,20 @@
-import { Slot, component$, useSignal, useVisibleTask$ } from '@builder.io/qwik';
+import {
+  $,
+  type PropsOf,
+  Slot,
+  component$,
+  useOnWindow,
+  useSignal,
+  useVisibleTask$,
+} from '@builder.io/qwik';
 import { useModals } from '~/components/hooks';
 import type { ID } from '~/components/hooks/modals/config';
 
-export const Sidebar = component$<{
+interface SidebarProps extends PropsOf<'div'> {
   name: ID;
-}>((props) => {
+}
+
+export const Sidebar = component$<SidebarProps>((props) => {
   const { args, generic } = useModals(props.name);
   const nearToPosition = useSignal<{
     left: number;
@@ -12,17 +22,10 @@ export const Sidebar = component$<{
     top: number;
   } | null>(null);
 
-  useVisibleTask$(async ({ track }) => {
-    track(args);
-
+  const recalculateSidebarPosition = $(() => {
     if (!args.value?.columnId) return;
 
     const element = document.getElementById(args.value.columnId);
-    element?.scrollIntoView({
-      behavior: 'auto',
-      block: 'center',
-      inline: 'center',
-    });
 
     if (element) {
       const rect = element.getBoundingClientRect();
@@ -32,7 +35,30 @@ export const Sidebar = component$<{
 
       nearToPosition.value = { left, right, top };
     }
+
+    return element;
   });
+
+  useVisibleTask$(async ({ track }) => {
+    track(args);
+
+    await recalculateSidebarPosition();
+  });
+
+  useVisibleTask$(async ({ track }) => {
+    track(generic.isOpen);
+    if (!generic.isOpen.value) return;
+
+    const element = await recalculateSidebarPosition();
+
+    element?.scrollIntoView({
+      behavior: 'auto',
+      block: 'center',
+      inline: 'center',
+    });
+  });
+
+  useOnWindow('scroll', recalculateSidebarPosition);
 
   if (!generic.isOpen.value) return null;
 
@@ -45,10 +71,7 @@ export const Sidebar = component$<{
           ? `${nearToPosition.value.right}px`
           : 'unset',
       }}
-      class={`fixed max-h-[92vh] w-[600px] overflow-auto transform bg-white text-black transition-transform duration-300 z-20 shadow-md ${
-        !args.value?.columnId && 'fixed !right-0 top-2'
-      }
-        }`}
+      class={`absolute h-[85%] w-[600px] overflow-auto transform bg-white text-black transition-transform z-20 ${props.class}`}
     >
       <Slot />
     </div>

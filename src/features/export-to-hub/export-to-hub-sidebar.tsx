@@ -38,6 +38,10 @@ export const ExportToHubSidebar = component$(() => {
     openExportToHubSidebar();
   });
 
+  const handleOpenExportToHubSidebar = $(() => {
+    openExportToHubSidebar();
+  });
+
   return (
     <>
       <Button
@@ -84,6 +88,16 @@ export const ExportToHubSidebar = component$(() => {
                   </span>
                 </div>
               ) : null}
+
+              <div class="flex items-center justify-between">
+                <Label for="dataset-owner">Owner</Label>
+              </div>
+              <Input
+                id="dataset-owner"
+                class="h-10"
+                placeholder="Enter the dataset owner"
+                bind:value={owner}
+              />
 
               <div class="flex items-center justify-between">
                 <Label for="dataset-owner">Owner</Label>

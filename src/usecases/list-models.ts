@@ -10,8 +10,10 @@ export interface Model {
 export const listModels = server$(async function (
   this: RequestEventBase<QwikCityPlatform>,
 ): Promise<Model[]> {
+  const INFERENCE_PROVIDER = process.env.INFERENCE_PROVIDER || 'hf-inference';
+
   const session = useServerSession(this);
-  const MODEL_URL = `https://huggingface.co/api/models?inference_provider=${session.inferenceProvider}&pipeline_tag=text-generation&sort=trendingScore&direction=-1`;
+  const MODEL_URL = `https://huggingface.co/api/models?inference_provider=${INFERENCE_PROVIDER}&pipeline_tag=text-generation&sort=trendingScore&direction=-1`;
   const response = await fetch(MODEL_URL);
 
   if (!response.ok) {
@@ -20,6 +22,6 @@ export const listModels = server$(async function (
 
   return (await response.json()).map((m: Omit<Model, 'provider'>) => ({
     ...m,
-    provider: session.inferenceProvider,
+    provider: INFERENCE_PROVIDER,
   })) as Model[];
 });

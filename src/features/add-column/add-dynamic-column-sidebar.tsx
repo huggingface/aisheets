@@ -24,11 +24,9 @@ interface SidebarProps {
 
 export const AddDynamicColumnSidebar = component$<SidebarProps>(
   ({ onGenerateColumn }) => {
-    const {
-      args,
-      isOpenAddDynamicColumnSidebar,
-      closeAddDynamicColumnSidebar,
-    } = useModals('addDynamicColumnSidebar');
+    const { args, closeAddDynamicColumnSidebar } = useModals(
+      'addDynamicColumnSidebar',
+    );
     const { state: columns, removeTemporalColumn } = useColumnsStore();
     const isSubmitting = useSignal(false);
 
@@ -119,6 +117,7 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
             size="sm"
             look="ghost"
             onClick$={handleCloseForm}
+            disabled={columns.value.length === 1}
             class="absolute top-0 right-0 m-2"
           >
             <LuXCircle class="text-lg text-primary-foreground" />

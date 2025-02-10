@@ -8,7 +8,7 @@ const testModelName = 'google/gemma-2b-it';
 const testPrompt = 'Write a short greeting';
 const accessToken = process.env.HF_TOKEN;
 
-describe('runPromptExecution', () => {
+describe.runIf(accessToken)('runPromptExecution', () => {
   it('should generate a value', async () => {
     const result = await runPromptExecution({
       accessToken,
@@ -59,7 +59,7 @@ describe('runPromptExecution', () => {
   });
 });
 
-describe('stream', () => {
+describe.runIf(accessToken)('stream', () => {
   it('should stream response with partial results', async () => {
     const updates = [];
 

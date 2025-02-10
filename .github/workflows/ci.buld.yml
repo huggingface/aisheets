@@ -15,23 +15,23 @@ jobs:
     - uses: actions/checkout@v4
 
     - uses: pnpm/action-setup@v4
-        name: Install pnpm
-        with:
-          version: 10
-          run_install: false
+      name: Install pnpm
+      with:
+        version: 10
+        run_install: false
 
-      - name: Install Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'pnpm'
+    - name: Install Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+        cache: 'pnpm'
 
-      - name: Install dependencies
-        run: pnpm install
+    - name: Install dependencies
+      run: pnpm install
 
-      - name: Test 
-        run: pnpm test
-        continue-on-error: true
+    - name: Test 
+      run: pnpm test
+      continue-on-error: true
 
-      - name: Build
-        run: pnpm build
+    - name: Build
+      run: pnpm build

@@ -181,7 +181,7 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
                 onSelectedVariables={onSelectedVariables}
               />
 
-              <div class="absolute bottom-14  flex justify-between items-center w-full px-2">
+              <div class="absolute bottom-14 flex justify-between items-center w-full px-2">
                 <Button
                   look="ghost"
                   class="rounded-2xl h-10 bg-ring hover:bg-indigo-300 text-white w-fit select-none"

@@ -56,7 +56,7 @@ export const ExportToHubSidebar = component$(() => {
 
       <Sidebar
         name="exportToHubSidebar"
-        class="fixed !right-0 !top-2 h-1/3 shadow-md"
+        class="fixed !right-4 !top-1 h-80 shadow-md"
       >
         <div class="flex h-full flex-col justify-between p-4">
           <div class="h-full">

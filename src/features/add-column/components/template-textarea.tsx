@@ -107,7 +107,6 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
       x: charOffset,
       y: verticalAlignPerLines * 0.7 * popover.lineHeight,
     };
-    console.log(position);
 
     popover.position = {
       x: position.x,

@@ -101,12 +101,13 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
     };
 
     const charOffset = measureTextWidth(lines[lines.length - 1]);
-    const verticalAlignPerLines = lines.length - 1 || 1;
+    const verticalAlignPerLines = lines.length - 1 || 0.1;
 
     const position = {
       x: charOffset,
-      y: verticalAlignPerLines * popover.lineHeight,
+      y: verticalAlignPerLines * 0.7 * popover.lineHeight,
     };
+    console.log(position);
 
     popover.position = {
       x: position.x,
@@ -211,7 +212,7 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
 
           <Textarea
             ref={textarea}
-            class="w-full h-full min-h-72 resize-none overflow-hidden p-2 border border-secondary-foreground bg-primary text-base rounded-sm"
+            class="w-full h-full min-h-72 resize-none overflow-hidden p-2 border border-secondary-foreground bg-primary text-base rounded-sm pb-16"
             onInput$={(event) =>
               handleTextInput(event.target as HTMLTextAreaElement)
             }

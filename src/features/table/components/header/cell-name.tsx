@@ -3,11 +3,12 @@ import { server$ } from '@builder.io/qwik-city';
 import { Input, useToggle } from '~/components';
 import { useClickOutside } from '~/components/hooks/click/outside';
 import { updateColumnName } from '~/services';
-import { type Column, TEMPORAL_ID } from '~/state';
+import { type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
 
 export const CellName = component$<{ column: Column }>(({ column }) => {
   const isEditingCellName = useToggle();
   const newName = useSignal(column.name);
+  const { updateColumn } = useColumnsStore();
 
   const ref = useClickOutside(
     $(() => {
@@ -17,6 +18,8 @@ export const CellName = component$<{ column: Column }>(({ column }) => {
       server$(async (columnId: string, newName: string) => {
         await updateColumnName(columnId, newName);
       })(column.id, newName.value);
+
+      updateColumn({ ...column, name: newName.value });
     }),
   );
 

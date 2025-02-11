@@ -95,6 +95,13 @@ export const useColumnsStore = () => {
           updatedAt: new Date(),
           value: '',
         },
+        {
+          id: TEMPORAL_ID,
+          idx: 4,
+          validated: false,
+          updatedAt: new Date(),
+          value: '',
+        },
       ],
       process: {
         modelName: '',

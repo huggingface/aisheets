@@ -49,7 +49,9 @@ export const useColumnsStore = () => {
 
   const createPlaceholderColumn = $((): Column => {
     const getNextColumnName = (counter = 1): string => {
-      const manyColumnsWithName = activeDataset.value.columns;
+      const manyColumnsWithName = activeDataset.value.columns.filter(
+        (c) => c.id !== TEMPORAL_ID,
+      );
       const newPosibleColumnName = `Column ${manyColumnsWithName.length + 1}`;
 
       if (!manyColumnsWithName.find((c) => c.name === newPosibleColumnName)) {

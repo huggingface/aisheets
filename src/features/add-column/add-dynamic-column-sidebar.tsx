@@ -183,6 +183,7 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
 
               <div class="absolute bottom-14 flex justify-between items-center w-full px-2">
                 <Button
+                  key={isSubmitting.value.toString()}
                   look="ghost"
                   class="rounded-2xl h-10 bg-ring hover:bg-indigo-300 text-white w-fit select-none"
                   onClick$={onGenerate}

@@ -7,7 +7,7 @@ import {
   useSignal,
   useTask$,
 } from '@builder.io/qwik';
-import { LuCheck, LuEgg, LuXCircle } from '@qwikest/icons/lucide';
+import { LuBookmark, LuCheck, LuEgg, LuXCircle } from '@qwikest/icons/lucide';
 
 import { Button, Input, Label, Select, Sidebar } from '~/components';
 import { useModals } from '~/components/hooks/modals/use-modals';
@@ -15,7 +15,7 @@ import {
   TemplateTextArea,
   type Variable,
 } from '~/features/add-column/components/template-textarea';
-import { type Column, useColumnsStore } from '~/state';
+import { type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
 import { listModels } from '~/usecases/list-models';
 
 interface SidebarProps {
@@ -24,11 +24,9 @@ interface SidebarProps {
 
 export const AddDynamicColumnSidebar = component$<SidebarProps>(
   ({ onGenerateColumn }) => {
-    const {
-      args,
-      isOpenAddDynamicColumnSidebar,
-      closeAddDynamicColumnSidebar,
-    } = useModals('addDynamicColumnSidebar');
+    const { args, closeAddDynamicColumnSidebar } = useModals(
+      'addDynamicColumnSidebar',
+    );
     const { state: columns, removeTemporalColumn } = useColumnsStore();
     const isSubmitting = useSignal(false);
 
@@ -114,27 +112,21 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
 
     return (
       <Sidebar name="addDynamicColumnSidebar">
-        <div class="border-r border-t border-secondary relative flex flex-col p-4 gap-4">
+        <div class="h-full border-r border-t border-secondary relative flex flex-col p-4 gap-4">
           <Button
             size="sm"
             look="ghost"
             onClick$={handleCloseForm}
+            disabled={columns.value[0]?.id === TEMPORAL_ID}
             class="absolute top-0 right-0 m-2"
           >
             <LuXCircle class="text-lg text-primary-foreground" />
           </Button>
           <div class="flex flex-col gap-4">
-            <Label>Prompt</Label>
-
-            <TemplateTextArea
-              bind:value={prompt}
-              variables={variables}
-              onSelectedVariables={onSelectedVariables}
-            />
-
             <Label for="column-model" class="flex gap-1">
               Model
             </Label>
+
             <Resource
               value={loadModels}
               onPending={() => (
@@ -149,10 +141,10 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
 
                 return (
                   <Select.Root id="column-model" bind:value={modelName}>
-                    <Select.Trigger class="bg-background border-input">
+                    <Select.Trigger class="bg-primary rounded-base border-secondary-foreground">
                       <Select.DisplayValue />
                     </Select.Trigger>
-                    <Select.Popover class="bg-background border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto">
+                    <Select.Popover class="bg-primary border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto">
                       {models.map((model) => (
                         <Select.Item
                           key={model.id}
@@ -179,20 +171,36 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
               class="h-10 border-secondary-foreground bg-primary"
               bind:value={rowsToGenerate}
             />
-          </div>
 
-          <Button
-            look="ghost"
-            class="rounded-3xl h-10 px-6 bg-[#6B86FF] hover:bg-[#6b86ffa4] text-white w-fit select-none"
-            onClick$={onGenerate}
-            disabled={isSubmitting.value}
-          >
-            <div class="flex items-center gap-4">
-              <LuEgg class="text-xl" />
+            <div class="relative">
+              <Label>Prompt</Label>
 
-              {isSubmitting.value ? 'Generating...' : 'Generate'}
+              <TemplateTextArea
+                bind:value={prompt}
+                variables={variables}
+                onSelectedVariables={onSelectedVariables}
+              />
+
+              <div class="absolute bottom-14 flex justify-between items-center w-full px-2">
+                <Button
+                  look="ghost"
+                  class="rounded-2xl h-10 bg-ring hover:bg-indigo-300 text-white w-fit select-none"
+                  onClick$={onGenerate}
+                  disabled={isSubmitting.value}
+                >
+                  <div class="flex items-center gap-4">
+                    <LuEgg class="text-xl" />
+
+                    {isSubmitting.value ? 'Generating...' : 'Generate'}
+                  </div>
+                </Button>
+
+                <Button size="icon" look="ghost">
+                  <LuBookmark class="text-primary-foreground" />
+                </Button>
+              </div>
             </div>
-          </Button>
+          </div>
         </div>
       </Sidebar>
     );

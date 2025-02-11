@@ -85,11 +85,8 @@ export const TableCell = component$<{ cell: Cell }>(({ cell }) => {
 
   if (!cell.value && !cell.error) {
     return (
-      <td class="min-w-[300px] w-[300px] max-w-[300px] px-2 min-h-[100px] h-[100px] cursor-pointer border last:border-r-0 border-secondary">
-        <div class="flex flex-col gap-2">
-          <Skeleton class="h-6 w-full" />
-          <Skeleton class="h-3 w-full" />
-        </div>
+      <td class="min-w-80 w-80 max-w-80 px-2 min-h-[100px] h-[100px] border last:border-r-0 border-secondary">
+        <Skeleton />
       </td>
     );
   }
@@ -122,7 +119,7 @@ export const TableCell = component$<{ cell: Cell }>(({ cell }) => {
 
   return (
     <td
-      class={`min-w-[300px] w-[300px] max-w-[300px] px-2 min-h-[100px] h-[100px] cursor-pointer border ${cell.validated ? 'bg-green-50 border-green-200' : 'border-secondary'}`}
+      class={`min-w-80 w-80 max-w-80 px-2 min-h-[100px] h-[100px] cursor-pointer border-[0.5px] ${cell.validated ? 'bg-green-50 border-green-200' : 'border-secondary'}`}
       onDblClick$={() => {
         isEditing.value = true;
       }}
@@ -133,13 +130,14 @@ export const TableCell = component$<{ cell: Cell }>(({ cell }) => {
             <>
               <Button
                 look="ghost"
+                hover={false}
                 size="sm"
                 class={`absolute top-0 right-0 ${cell.validated ? 'text-green-200' : 'text-primary-foreground'}`}
                 onClick$={() => onValidateCell(originalValue.value!)}
               >
                 <LuThumbsUp />
               </Button>
-              <div class="h-full flex items-center py-8">
+              <div class="h-full flex items-start py-8">
                 <Markdown class="text-gray-900" content={originalValue.value} />
               </div>
             </>

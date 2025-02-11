@@ -52,7 +52,10 @@ export const useColumnsStore = () => {
       const manyColumnsWithName = activeDataset.value.columns;
       const newPosibleColumnName = `Column ${manyColumnsWithName.length + 1}`;
 
-      if (!manyColumnsWithName.find((c) => c.name === newPosibleColumnName)) {
+      if (
+        manyColumnsWithName.length === 0 ||
+        !manyColumnsWithName.find((c) => c.name === newPosibleColumnName)
+      ) {
         return newPosibleColumnName;
       }
 

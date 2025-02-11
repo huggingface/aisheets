@@ -3,6 +3,7 @@ import {
   type QRL,
   Resource,
   component$,
+  useComputed$,
   useResource$,
   useSignal,
   useTask$,
@@ -15,7 +16,12 @@ import {
   TemplateTextArea,
   type Variable,
 } from '~/features/add-column/components/template-textarea';
-import { type Column, useColumnsStore } from '~/state';
+import {
+  type Column,
+  TEMPORAL_ID,
+  useColumnsStore,
+  useDatasetsStore,
+} from '~/state';
 import { listModels } from '~/usecases/list-models';
 
 interface SidebarProps {
@@ -32,6 +38,8 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
     const { state: columns, removeTemporalColumn } = useColumnsStore();
     const isSubmitting = useSignal(false);
 
+    const { activeDataset } = useDatasetsStore();
+
     const currentColumn = useSignal<Column | undefined>();
     const rowsToGenerate = useSignal('5');
     const prompt = useSignal<string>('');
@@ -42,6 +50,11 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
 
     const onSelectedVariables = $((variables: { id: string }[]) => {
       columnsReferences.value = variables.map((v) => v.id);
+    });
+
+    const isEmptyDataset = useComputed$(() => {
+      const columns = activeDataset.value.columns;
+      return columns.length === 0 || columns.every((c) => c.id === TEMPORAL_ID);
     });
 
     useTask$(({ track }) => {
@@ -119,6 +132,7 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
             size="sm"
             look="ghost"
             onClick$={handleCloseForm}
+            disabled={isEmptyDataset.value}
             class="absolute top-0 right-0 m-2"
           >
             <LuXCircle class="text-lg text-primary-foreground" />

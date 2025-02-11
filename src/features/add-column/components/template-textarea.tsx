@@ -39,26 +39,6 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
     lineHeight: 0,
   });
 
-  useVisibleTask$(() => {
-    if (textarea.value) {
-      const verticalPadding = 10;
-      popover.lineHeight =
-        Number.parseInt(getComputedStyle(textarea.value).lineHeight || '20') +
-        verticalPadding;
-
-      popover.position = {
-        x: 0,
-        y: popover.lineHeight,
-      };
-
-      nextTick(() => {
-        textarea.value!.focus();
-      }, 100);
-    }
-
-    popover.options = props.variables.value.map((variable) => variable.name);
-  });
-
   useVisibleTask$(({ track }) => {
     track(props.variables);
 
@@ -186,6 +166,28 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
     });
   });
 
+  useVisibleTask$(({ track }) => {
+    track(props['bind:value']);
+
+    if (textarea.value) {
+      const verticalPadding = 10;
+      popover.lineHeight =
+        Number.parseInt(getComputedStyle(textarea.value).lineHeight || '20') +
+        verticalPadding;
+
+      popover.position = {
+        x: 0,
+        y: popover.lineHeight,
+      };
+
+      nextTick(() => {
+        updateBracketsSelectorPosition(textarea.value!);
+      });
+    }
+
+    popover.options = props.variables.value.map((variable) => variable.name);
+  });
+
   return (
     <div class="relative">
       {popover.options.length === 0 && (
@@ -209,7 +211,7 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
 
           <Textarea
             ref={textarea}
-            class="w-full h-full min-h-40 resize-none overflow-hidden p-2 border border-secondary-foreground bg-primary text-base"
+            class="w-full h-full min-h-72 resize-none overflow-hidden p-2 border border-secondary-foreground bg-primary text-base rounded-sm"
             onInput$={(event) =>
               handleTextInput(event.target as HTMLTextAreaElement)
             }

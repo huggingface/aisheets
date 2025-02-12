@@ -24,19 +24,40 @@ const promptForResponseFromScratch = (
 ): string => {
   return mustache.render(
     `
-Generate a new response based on the following instruction. Be clear and concise in the response and do not generate any introductory text. Only the response is required.
-## Instruction:
+# System Role
+You are a rigorous text-generation engine. Generate only the requested output format, with no explanations following the user instruction. Prioritize originality and diversity with respect to the existing dataset, and the adherence to constraints and the user instruction.
+
+# Core Constraints (Always Apply)
+
+## Dynamic Topic/Style Diversity
+
+- Avoid repeating subtopics, styles, or language patterns from prior examples (e.g., if data points already cover a specific topic, area, approach, find something completely original and distinct).
+
+## Language Originality
+
+- Never reuse phrasing, verbs, or sentence structures from examples.
+
+- Avoid adjacent terminology (e.g., if examples use "neural networks," avoid "machine learning models").
+
+## Dataset-Aware Cross-Checking and diversity
+Ensure your output differs meaningfully from the existing data points in topic, content, tone, and structure, depending on the user instruction.
+
+# User Instruction
 {{instruction}}
 
 {{#examples}}
-Find a way to generate the new response similar to the examples below.
-## Examples:
-- {{examples}}
+# Current dataset
+Read carefully these data points to avoid repeating them and ensure diversity across the whole dataset. Data points are prior outputs to avoid mimicking. Treat them as exclusion criteria.
+### Data points
+- {{.}}
 {{/examples}}
 
-## Response:
+# Output Format
+Generate **only** the requested text. No introductions, explanations, or labels.
+
+# Output
 `,
-    { instruction, examples: examples?.join('\n- ') },
+    { instruction, examples },
   );
 };
 
@@ -47,25 +68,23 @@ const promptForResponseFromData = (
 ): string => {
   return mustache.render(
     `
+# System role
+You are a rigorous, intelligent data-processing engine. Generate only the requested output format, with no explanations following the user instruction. You might be provided with positive, accurate examples of how the user instruction must be completed.
+
 {{#examples}}
-# Example
-Guide you by these examples to complete the task
-- {{examples}}
-{{/examples}}
-{{^examples}}
-# Introduction
-Generate a new response based on the following task. Be clear and concise in 
-the response and do not generate any introductory text. Only a clear response is required.
+# Examples
+The following are correct, accurate example outputs with respect to the user instruction:
+- {{.}}
 {{/examples}}
 
-# Task
+# User instruction
 {{instruction}}
 
-# Response
+# Output
     `,
     {
       instruction: mustache.render(instruction, data),
-      examples: examples?.join('\n- '),
+      examples,
     },
   );
 };
@@ -85,6 +104,12 @@ const createApiParams = (
   modelProvider: string,
   accessToken?: string,
 ) => {
+  console.log('🤖 Sending prompt to API:', {
+    model: modelName,
+    provider: modelProvider,
+    prompt: messages[0].content,
+  });
+
   return {
     model: modelName,
     messages,
@@ -105,7 +130,7 @@ export const runPromptExecution = async ({
   let inputPrompt: string;
   switch (data && Object.keys(data).length > 0) {
     case true:
-      inputPrompt = promptForResponseFromData(instruction, data!);
+      inputPrompt = promptForResponseFromData(instruction, data!, examples);
       break;
     default:
       inputPrompt = promptForResponseFromScratch(instruction, examples);
@@ -113,6 +138,13 @@ export const runPromptExecution = async ({
   }
 
   try {
+    console.log('📝 Generated input prompt:', {
+      instruction,
+      data,
+      examples,
+      fullPrompt: inputPrompt,
+    });
+
     // https://huggingface.co/docs/api-inference/tasks/chat-completion?code=js#api-specification
 
     const response = await chatCompletion(
@@ -151,7 +183,7 @@ export const runPromptExecutionStream = async function* ({
   let inputPrompt: string;
   switch (data && Object.keys(data).length > 0) {
     case true:
-      inputPrompt = promptForResponseFromData(instruction, data!);
+      inputPrompt = promptForResponseFromData(instruction, data!, examples);
       break;
     default:
       inputPrompt = promptForResponseFromScratch(instruction, examples);

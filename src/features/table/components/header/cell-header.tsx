@@ -11,12 +11,7 @@ export const TableCellHeader = component$<{ column: Column }>(({ column }) => {
   const { args } = useActiveModal();
 
   const classes = useComputed$(() =>
-    cn(
-      { 'bg-primary': args.value?.columnId === column.id },
-      { 'border-t-primary': args.value?.columnId === column.id },
-      { 'border-l-primary': args.value?.columnId === column.id },
-      { 'first:border-l-0': args.value?.columnId === column.id },
-    ),
+    cn({ 'bg-primary': args.value?.columnId === column.id }),
   );
   return (
     <th

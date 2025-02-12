@@ -24,9 +24,8 @@ export const useExportDataset = () =>
     this: RequestEventBase<QwikCityPlatform>,
     exportParams: ExportDatasetParams,
   ): Promise<string> {
-    const { dataset, name } = exportParams;
+    const { dataset, name, owner: requestedOwner } = exportParams;
     const session = useServerSession(this);
-    // TODO: This line is needed because the incoming dataset has no columns. cc @damianpumar
     const foundDataset = await getDatasetById(dataset.id);
 
     if (!foundDataset) {
@@ -35,7 +34,7 @@ export const useExportDataset = () =>
 
     const filePath = await exportDatasetToParquet(foundDataset);
 
-    const owner = session.user.username;
+    const owner = requestedOwner || session.user.username;
     const repoId = `${owner}/${name}`;
 
     try {

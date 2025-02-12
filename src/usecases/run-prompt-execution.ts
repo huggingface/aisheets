@@ -104,12 +104,6 @@ const createApiParams = (
   modelProvider: string,
   accessToken?: string,
 ) => {
-  console.log('🤖 Sending prompt to API:', {
-    model: modelName,
-    provider: modelProvider,
-    prompt: messages[0].content,
-  });
-
   return {
     model: modelName,
     messages,

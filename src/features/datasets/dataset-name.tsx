@@ -19,6 +19,7 @@ export const DatasetName = component$(({ dataset }: DatasetNameProps) => {
 
   const handleEditClick = $(() => {
     state.isEditing = true;
+    setTimeout(() => inputRef.value?.focus(), 0);
   });
 
   const handleChange = $((event: Event) => {
@@ -26,31 +27,40 @@ export const DatasetName = component$(({ dataset }: DatasetNameProps) => {
     state.name = target.value;
   });
 
-  const ref = useClickOutside(
-    $(() => {
-      state.isEditing = false;
+  const handleSave = $(() => {
+    state.isEditing = false;
 
-      server$(async (datasetId: string, newName: string) => {
-        await updateDataset({ id: datasetId, name: newName });
-      })(dataset.id, state.name);
+    server$(async (datasetId: string, newName: string) => {
+      await updateDataset({ id: datasetId, name: newName });
+    })(dataset.id, state.name);
 
-      updateActiveDataset({ ...dataset, name: state.name });
-    }),
-  );
+    updateActiveDataset({ ...dataset, name: state.name });
+  });
+
+  const ref = useClickOutside(handleSave);
+
+  const handleKeyDown = $((event: KeyboardEvent) => {
+    if (event.key === 'Enter') {
+      handleSave();
+    }
+  });
 
   return (
-    <div>
+    <div class="h-[40px] flex items-center">
       {state.isEditing ? (
         <Input
           type="text"
           ref={ref}
           value={state.name}
           onInput$={handleChange}
-          class="text-3xl font-bold"
+          onKeyDown$={handleKeyDown}
+          class="text-3xl font-bold w-full px-2 my-0 border-none outline-none leading-none"
         />
       ) : (
         <h1
-          class="text-3xl font-bold text-secondary w-full truncate"
+          class={`text-3xl font-bold w-full truncate leading-none px-2 ${
+            state.name === 'New dataset' ? 'text-secondary' : ''
+          }`}
           onClick$={handleEditClick}
         >
           {state.name}

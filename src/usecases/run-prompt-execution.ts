@@ -20,8 +20,11 @@ export interface PromptExecutionResponse {
 
 const promptForResponseFromScratch = (
   instruction: string,
-  examples?: string[],
+  examples?: Array<{ output: string; inputs: Record<string, string> }>,
 ): string => {
+  // Convert complex examples to simple strings (just outputs)
+  const outputExamples = examples?.map((ex) => ex.output);
+
   return mustache.render(
     `
 # System Role
@@ -57,7 +60,7 @@ Generate **only** the requested text. No introductions, explanations, or labels.
 
 # Output
 `,
-    { instruction, examples },
+    { instruction, examples: outputExamples },
   );
 };
 

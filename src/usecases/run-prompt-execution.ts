@@ -77,10 +77,10 @@ const promptForResponseFromData = (
         .join('\n');
 
       return `## Example
-Input:
+**Input**:
 ${inputsText}
 
-Output:
+**Output**:
 ${example.output}`;
     })
     .join('\n\n');
@@ -198,6 +198,11 @@ export const runPromptExecutionStream = async function* ({
   }
 
   try {
+    console.log('📝 Prompt being sent to API:', {
+      model: modelName,
+      prompt: inputPrompt,
+    });
+
     let accumulated = '';
 
     const stream = chatCompletionStream(

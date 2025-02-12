@@ -198,11 +198,6 @@ export const runPromptExecutionStream = async function* ({
   }
 
   try {
-    console.log('📝 Prompt being sent to API:', {
-      model: modelName,
-      prompt: inputPrompt,
-    });
-
     let accumulated = '';
 
     const stream = chatCompletionStream(

@@ -1,4 +1,3 @@
-import consola from 'consola';
 import {
   createCell,
   getColumnCellByIdx,
@@ -6,10 +5,7 @@ import {
   updateCell,
 } from '~/services';
 import type { Cell, Column, Process, Session } from '~/state';
-import {
-  runPromptExecution,
-  runPromptExecutionStream,
-} from './run-prompt-execution';
+import { runPromptExecutionStream } from './run-prompt-execution';
 
 export interface GenerateCellsParams {
   column: Column;
@@ -18,8 +14,6 @@ export interface GenerateCellsParams {
   limit: number;
   offset: number;
   validatedCells?: Cell[];
-  stream?: boolean;
-  timeout?: number;
 }
 
 /**
@@ -43,15 +37,40 @@ export const generateCells = async function* ({
   limit,
   offset,
   validatedCells,
-  stream = true,
-  timeout,
 }: GenerateCellsParams) {
   const { columnsReferences, modelName, modelProvider, prompt } = process;
 
   const hasReferredColumns = columnsReferences && columnsReferences.length > 0;
   const hasValidatedCells = validatedCells && validatedCells.length > 0;
 
-  const examples: string[] = validatedCells?.map((cell) => cell.value!) ?? [];
+  // Build examples array with both outputs and their inputs
+  const examples: Array<{ output: string; inputs: Record<string, string> }> =
+    [];
+
+  if (hasValidatedCells && hasReferredColumns) {
+    for (const validatedCell of validatedCells!) {
+      if (!validatedCell.value) continue;
+
+      const rowCells = await getRowCells({
+        rowIdx: validatedCell.idx,
+        columns: columnsReferences,
+      });
+
+      const inputs = Object.fromEntries(
+        rowCells
+          .filter((cell): cell is typeof cell & { value: string } =>
+            Boolean(cell.column?.name && cell.value),
+          )
+          .map((cell) => [cell.column!.name, cell.value]),
+      ) as Record<string, string>;
+
+      examples.push({
+        output: validatedCell.value,
+        inputs,
+      });
+    }
+  }
+
   const validatedIdxs = validatedCells?.map((cell) => cell.idx);
 
   for (let i = offset; i < limit + offset; i++) {
@@ -65,7 +84,6 @@ export const generateCells = async function* ({
       modelProvider,
       examples,
       instruction: prompt,
-      timeout,
       data: {},
     };
 
@@ -86,25 +104,14 @@ export const generateCells = async function* ({
         column,
       }));
 
-    consola.info(`Generating cell ${i} for column ${column.name}`);
-    if (stream) {
-      for await (const response of runPromptExecutionStream(args)) {
-        cell.value = response.value;
-        cell.error = response.error;
-
-        if (!response.done) yield { cell };
-      }
-    } else {
-      const response = await runPromptExecution(args);
+    for await (const response of runPromptExecutionStream(args)) {
       cell.value = response.value;
       cell.error = response.error;
+
+      if (!response.done) yield { cell };
     }
 
     await updateCell(cell);
     yield { cell };
-
-    if (cell.value && !(hasValidatedCells || hasReferredColumns)) {
-      examples.push(cell.value);
-    }
   }
 };

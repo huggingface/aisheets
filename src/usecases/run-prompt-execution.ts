@@ -7,7 +7,7 @@ export interface PromptExecutionParams {
   modelProvider: string;
   instruction: string;
   data?: object;
-  examples?: string[];
+  examples?: Array<{ output: string; inputs: Record<string, string> }>;
   stream?: boolean;
   timeout?: number;
 }
@@ -39,7 +39,7 @@ You are a rigorous text-generation engine. Generate only the requested output fo
 
 - Avoid adjacent terminology (e.g., if examples use "neural networks," avoid "machine learning models").
 
-## Dataset-Aware Cross-Checking and diversity
+## Dataset-Aware Cross-Checking and Diversity
 Ensure your output differs meaningfully from the existing data points in topic, content, tone, and structure, depending on the user instruction.
 
 # User Instruction
@@ -64,18 +64,34 @@ Generate **only** the requested text. No introductions, explanations, or labels.
 const promptForResponseFromData = (
   instruction: string,
   data: object,
-  examples?: string[],
+  examples?: Array<{ output: string; inputs: Record<string, string> }>,
 ): string => {
+  // Format all examples together as one string
+  const formattedExamples = examples
+    ?.map((example) => {
+      const inputsText = Object.entries(example.inputs)
+        .map(([col, val]) => `${col}: ${val}`)
+        .join('\n');
+
+      return `## Example
+Input:
+${inputsText}
+
+Output:
+${example.output}`;
+    })
+    .join('\n\n');
   return mustache.render(
     `
 # System role
 You are a rigorous, intelligent data-processing engine. Generate only the requested output format, with no explanations following the user instruction. You might be provided with positive, accurate examples of how the user instruction must be completed.
 
-{{#examples}}
+{{#hasExamples}}
 # Examples
 The following are correct, accurate example outputs with respect to the user instruction:
-- {{.}}
-{{/examples}}
+
+{{{formattedExamples}}}
+{{/hasExamples}}
 
 # User instruction
 {{instruction}}
@@ -84,7 +100,8 @@ The following are correct, accurate example outputs with respect to the user ins
     `,
     {
       instruction: mustache.render(instruction, data),
-      examples,
+      hasExamples: examples && examples.length > 0,
+      formattedExamples,
     },
   );
 };
@@ -132,13 +149,6 @@ export const runPromptExecution = async ({
   }
 
   try {
-    console.log('📝 Generated input prompt:', {
-      instruction,
-      data,
-      examples,
-      fullPrompt: inputPrompt,
-    });
-
     // https://huggingface.co/docs/api-inference/tasks/chat-completion?code=js#api-specification
 
     const response = await chatCompletion(

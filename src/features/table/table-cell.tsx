@@ -51,20 +51,20 @@ export const TableCell = component$<{ cell: Cell }>(({ cell }) => {
   });
 
   const onValidateCell = $(async (validatedContent: string) => {
-    const success = await validateCell({
+    const response = await validateCell({
       id: cell.id,
       value: validatedContent,
     });
 
-    if (success) {
+    if (response?.ok) {
       replaceCell({
         ...cell,
         value: validatedContent,
-        validated: true,
+        validated: response.validated,
       });
     }
 
-    return success;
+    return response?.ok;
   });
 
   const onUpdateCell = $(async () => {

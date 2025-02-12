@@ -15,8 +15,8 @@ importers:
         specifier: ^1.0.1
         version: 1.0.1
       '@huggingface/inference':
-        specifier: ^3.3.3
-        version: 3.3.3
+        specifier: ~3.2.0
+        version: 3.2.0
       consola:
         specifier: ^3.4.0
         version: 3.4.0
@@ -422,8 +422,8 @@ packages:
     resolution: {integrity: sha512-wogGVETaNUV/wYBkny0uQD48L0rK9cttVtbaA1Rw/pGCuSYoZ8YlvTV6zymsGJfXaxQU8zup0aOR2XLIf6HVfg==}
     engines: {node: '>=18'}
 
-  '@huggingface/inference@3.3.3':
-    resolution: {integrity: sha512-8GJituytUDCzUsqTCwaa630RZ5r/YkkDIJxSv3oqNcFpwaM0/368Ss9cYW8wsmlCBBpC4RKiBRE1KCuHBAURTA==}
+  '@huggingface/inference@3.2.0':
+    resolution: {integrity: sha512-a48bXMeiGa25m4C82k77RwTBZEEQjelqGzvpEND6q5o1E5aCPWAyhV3kAoOKSI3CIed+o8l07CDW0LiwE54aSw==}
     engines: {node: '>=18'}
 
   '@huggingface/tasks@0.15.9':
@@ -3555,7 +3555,7 @@ snapshots:
     dependencies:
       '@huggingface/tasks': 0.15.9
 
-  '@huggingface/inference@3.3.3':
+  '@huggingface/inference@3.2.0':
     dependencies:
       '@huggingface/tasks': 0.15.9
 

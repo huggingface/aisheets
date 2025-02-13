@@ -8,6 +8,7 @@ import { Execution } from '~/features';
 
 import * as hub from '@huggingface/hub';
 
+import { CLIENT_ID, HF_TOKEN, OAUTH_SCOPES } from '~/config';
 import { DatasetName } from '~/features/datasets/dataset-name';
 import { Table } from '~/features/table/table';
 import { saveSession } from '~/services/auth/session';
@@ -28,9 +29,6 @@ export const onGet = async ({
     return next();
   }
 
-  const CLIENT_ID = process.env.OAUTH_CLIENT_ID;
-  const HF_TOKEN = process.env.HF_TOKEN;
-
   if (CLIENT_ID) {
     const sessionCode = crypto.randomUUID();
 
@@ -41,7 +39,7 @@ export const onGet = async ({
     const authData = {
       state: sessionCode,
       clientId: CLIENT_ID,
-      scopes: process.env.OAUTH_SCOPES || 'openid profile inference-api',
+      scopes: OAUTH_SCOPES || 'openid profile inference-api',
       redirectUrl: `${redirectOrigin}/auth/callback/`,
       localStorage: {
         codeVerifier: undefined,

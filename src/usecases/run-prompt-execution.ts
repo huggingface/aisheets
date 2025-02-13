@@ -109,7 +109,7 @@ The following are correct, accurate example outputs with respect to the user ins
   );
 };
 
-const DEFAULT_TIMEOUT = 10000;
+const DEFAULT_TIMEOUT = 60000;
 
 type Provider =
   | 'fal-ai'

@@ -53,6 +53,23 @@ export const getColumnCellByIdx = async ({
   };
 };
 
+export const getColumnCellById = async (id: string): Promise<Cell | null> => {
+  const model = await ColumnCellModel.findByPk(id);
+
+  if (!model) {
+    return null;
+  }
+
+  return {
+    id: model.id,
+    idx: model.idx,
+    value: model.value,
+    error: model.error,
+    validated: model.validated,
+    updatedAt: model.updatedAt,
+  };
+};
+
 export const getColumnCells = async ({
   column,
   conditions,

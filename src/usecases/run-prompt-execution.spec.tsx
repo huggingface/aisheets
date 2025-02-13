@@ -23,11 +23,10 @@ describe.runIf(accessToken)('runPromptExecution', () => {
   });
 
   it('should generate 3 different values with the same prompt', async () => {
-    const examples = [
-      'Title: Cats are the best',
-      'About our Feline friends',
-      'The best cats in the world',
-    ];
+    const examples = ['example1', 'example2'].map((output) => ({
+      output,
+      inputs: { 'Column 1': 'some input' },
+    }));
 
     const result = await runPromptExecution({
       accessToken,

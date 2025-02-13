@@ -1,6 +1,7 @@
 import { component$, useComputed$ } from '@builder.io/qwik';
 import { LuEgg, LuEggOff } from '@qwikest/icons/lucide';
 import { Button } from '~/components';
+import { Tooltip } from '~/components/ui/tooltip/tooltip';
 import { useGenerateColumn } from '~/features/execution/useGenerateColumn';
 import { type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
 
@@ -20,17 +21,19 @@ export const CellGeneration = component$<{ column: Column }>(({ column }) => {
   }
 
   return (
-    <Button
-      look="ghost"
-      size="sm"
-      disabled={!hasAtLeastOneRowValidated.value}
-      onClick$={() => onGenerateColumn(column)}
-    >
-      {hasAtLeastOneRowValidated.value ? (
-        <LuEgg class="text-primary-foreground" />
-      ) : (
-        <LuEggOff class="text-primary-foreground" />
-      )}
-    </Button>
+    <Tooltip text="Regenerate">
+      <Button
+        look="ghost"
+        size="sm"
+        disabled={!hasAtLeastOneRowValidated.value}
+        onClick$={() => onGenerateColumn(column)}
+      >
+        {hasAtLeastOneRowValidated.value ? (
+          <LuEgg class="text-primary-foreground" />
+        ) : (
+          <LuEggOff class="text-primary-foreground" />
+        )}
+      </Button>
+    </Tooltip>
   );
 });

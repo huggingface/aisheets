@@ -1,4 +1,3 @@
-import consola from 'consola';
 import {
   createCell,
   getColumnCellByIdx,
@@ -51,7 +50,36 @@ export const generateCells = async function* ({
   const hasReferredColumns = columnsReferences && columnsReferences.length > 0;
   const hasValidatedCells = validatedCells && validatedCells.length > 0;
 
-  const examples: string[] = validatedCells?.map((cell) => cell.value!) ?? [];
+  // Build examples array with outputs and inputs
+  const examples: Array<{ output: string; inputs: Record<string, string> }> =
+    [];
+
+  // Add validated cells as examples
+  if (hasValidatedCells) {
+    for (const validatedCell of validatedCells!) {
+      if (!validatedCell.value) continue;
+
+      if (hasReferredColumns) {
+        const rowCells = await getRowCells({
+          rowIdx: validatedCell.idx,
+          columns: columnsReferences,
+        });
+
+        const inputs = Object.fromEntries(
+          rowCells
+            .filter((cell): cell is typeof cell & { value: string } =>
+              Boolean(cell.column?.name && cell.value),
+            )
+            .map((cell) => [cell.column!.name, cell.value]),
+        ) as Record<string, string>;
+
+        examples.push({ output: validatedCell.value, inputs });
+      } else {
+        examples.push({ output: validatedCell.value, inputs: {} });
+      }
+    }
+  }
+
   const validatedIdxs = validatedCells?.map((cell) => cell.idx);
 
   for (let i = offset; i < limit + offset; i++) {
@@ -86,7 +114,6 @@ export const generateCells = async function* ({
         column,
       }));
 
-    consola.info(`Generating cell ${i} for column ${column.name}`);
     if (stream) {
       for await (const response of runPromptExecutionStream(args)) {
         cell.value = response.value;
@@ -99,12 +126,12 @@ export const generateCells = async function* ({
       cell.value = response.value;
       cell.error = response.error;
     }
-
     await updateCell(cell);
     yield { cell };
 
+    // Add newly generated values as examples when there are no validated cells or referred columns
     if (cell.value && !(hasValidatedCells || hasReferredColumns)) {
-      examples.push(cell.value);
+      examples.push({ output: cell.value, inputs: {} });
     }
   }
 };

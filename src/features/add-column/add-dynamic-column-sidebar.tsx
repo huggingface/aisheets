@@ -123,9 +123,7 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
             <LuXCircle class="text-lg text-primary-foreground" />
           </Button>
           <div class="flex flex-col gap-4">
-            <Label for="column-model" class="flex gap-1">
-              Model
-            </Label>
+            <Label class="flex gap-1">Model</Label>
 
             <Resource
               value={loadModels}
@@ -140,8 +138,8 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
                 }
 
                 return (
-                  <Select.Root id="column-model" bind:value={modelName}>
-                    <Select.Trigger class="bg-primary rounded-base border-secondary-foreground">
+                  <Select.Root bind:value={modelName}>
+                    <Select.Trigger class="px-4 bg-primary rounded-base border-secondary-foreground">
                       <Select.DisplayValue />
                     </Select.Trigger>
                     <Select.Popover class="bg-primary border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto">
@@ -168,23 +166,26 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
             <Input
               id="column-rows"
               type="number"
-              class="h-10 border-secondary-foreground bg-primary"
+              class="px-4 h-10 border-secondary-foreground bg-primary"
               bind:value={rowsToGenerate}
             />
 
             <div class="relative">
-              <Label>Prompt</Label>
+              <div class="flex flex-col gap-4">
+                <Label>Prompt</Label>
 
-              <TemplateTextArea
-                bind:value={prompt}
-                variables={variables}
-                onSelectedVariables={onSelectedVariables}
-              />
+                <TemplateTextArea
+                  bind:value={prompt}
+                  variables={variables}
+                  onSelectedVariables={onSelectedVariables}
+                />
+              </div>
 
-              <div class="absolute bottom-14 flex justify-between items-center w-full px-2">
+              <div class="absolute bottom-14 flex justify-between items-center w-full px-4">
                 <Button
+                  key={isSubmitting.value.toString()}
                   look="ghost"
-                  class="rounded-2xl h-10 bg-ring hover:bg-indigo-300 text-white w-fit select-none"
+                  class="p-4 rounded-2xl h-10 bg-ring hover:bg-indigo-300 text-white w-fit select-none"
                   onClick$={onGenerate}
                   disabled={isSubmitting.value}
                 >

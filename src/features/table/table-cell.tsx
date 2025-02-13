@@ -51,20 +51,20 @@ export const TableCell = component$<{ cell: Cell }>(({ cell }) => {
   });
 
   const onValidateCell = $(async (validatedContent: string) => {
-    const success = await validateCell({
+    const response = await validateCell({
       id: cell.id,
       value: validatedContent,
     });
 
-    if (success) {
+    if (response?.ok) {
       replaceCell({
         ...cell,
         value: validatedContent,
-        validated: true,
+        validated: response.validated,
       });
     }
 
-    return success;
+    return response?.ok;
   });
 
   const onUpdateCell = $(async () => {
@@ -85,7 +85,7 @@ export const TableCell = component$<{ cell: Cell }>(({ cell }) => {
 
   if (!cell.value && !cell.error) {
     return (
-      <td class="min-w-80 w-80 max-w-80 px-2 min-h-[100px] h-[100px] border last:border-r-0 border-secondary">
+      <td class="min-w-80 w-80 max-w-80 p-4 min-h-[100px] h-[100px] border last:border-r-0 border-secondary">
         <Skeleton />
       </td>
     );
@@ -119,7 +119,7 @@ export const TableCell = component$<{ cell: Cell }>(({ cell }) => {
 
   return (
     <td
-      class={`min-w-80 w-80 max-w-80 px-2 min-h-[100px] h-[100px] cursor-pointer border-[0.5px] ${cell.validated ? 'bg-green-50 border-green-200' : 'border-secondary'}`}
+      class={`min-w-80 w-80 max-w-80 min-h-[100px] h-[100px] cursor-pointer border-[0.5px] ${cell.validated ? 'bg-green-50 border-green-200' : 'border-secondary'}`}
       onDblClick$={() => {
         isEditing.value = true;
       }}
@@ -132,12 +132,12 @@ export const TableCell = component$<{ cell: Cell }>(({ cell }) => {
                 look="ghost"
                 hover={false}
                 size="sm"
-                class={`absolute top-0 right-0 ${cell.validated ? 'text-green-200' : 'text-primary-foreground'}`}
+                class={`absolute text-base top-0 right-0 ${cell.validated ? 'text-green-200' : 'text-primary-foreground'}`}
                 onClick$={() => onValidateCell(originalValue.value!)}
               >
                 <LuThumbsUp />
               </Button>
-              <div class="h-full flex items-start py-8">
+              <div class="h-full flex items-start mt-2 p-4">
                 <Markdown class="text-gray-900" content={originalValue.value} />
               </div>
             </>

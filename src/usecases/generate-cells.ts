@@ -5,7 +5,10 @@ import {
   updateCell,
 } from '~/services';
 import type { Cell, Column, Process, Session } from '~/state';
-import { runPromptExecutionStream } from './run-prompt-execution';
+import {
+  runPromptExecution,
+  runPromptExecutionStream,
+} from './run-prompt-execution';
 
 export interface GenerateCellsParams {
   column: Column;
@@ -14,6 +17,8 @@ export interface GenerateCellsParams {
   limit: number;
   offset: number;
   validatedCells?: Cell[];
+  stream?: boolean;
+  timeout?: number;
 }
 
 /**
@@ -37,37 +42,41 @@ export const generateCells = async function* ({
   limit,
   offset,
   validatedCells,
+  stream = true,
+  timeout,
 }: GenerateCellsParams) {
   const { columnsReferences, modelName, modelProvider, prompt } = process;
 
   const hasReferredColumns = columnsReferences && columnsReferences.length > 0;
   const hasValidatedCells = validatedCells && validatedCells.length > 0;
 
-  // Build examples array with both outputs and their inputs
+  // Build examples array with outputs and inputs
   const examples: Array<{ output: string; inputs: Record<string, string> }> =
     [];
 
-  if (hasValidatedCells && hasReferredColumns) {
+  // Add validated cells as examples
+  if (hasValidatedCells) {
     for (const validatedCell of validatedCells!) {
       if (!validatedCell.value) continue;
 
-      const rowCells = await getRowCells({
-        rowIdx: validatedCell.idx,
-        columns: columnsReferences,
-      });
+      if (hasReferredColumns) {
+        const rowCells = await getRowCells({
+          rowIdx: validatedCell.idx,
+          columns: columnsReferences,
+        });
 
-      const inputs = Object.fromEntries(
-        rowCells
-          .filter((cell): cell is typeof cell & { value: string } =>
-            Boolean(cell.column?.name && cell.value),
-          )
-          .map((cell) => [cell.column!.name, cell.value]),
-      ) as Record<string, string>;
+        const inputs = Object.fromEntries(
+          rowCells
+            .filter((cell): cell is typeof cell & { value: string } =>
+              Boolean(cell.column?.name && cell.value),
+            )
+            .map((cell) => [cell.column!.name, cell.value]),
+        ) as Record<string, string>;
 
-      examples.push({
-        output: validatedCell.value,
-        inputs,
-      });
+        examples.push({ output: validatedCell.value, inputs });
+      } else {
+        examples.push({ output: validatedCell.value, inputs: {} });
+      }
     }
   }
 
@@ -84,6 +93,7 @@ export const generateCells = async function* ({
       modelProvider,
       examples,
       instruction: prompt,
+      timeout,
       data: {},
     };
 
@@ -104,14 +114,24 @@ export const generateCells = async function* ({
         column,
       }));
 
-    for await (const response of runPromptExecutionStream(args)) {
+    if (stream) {
+      for await (const response of runPromptExecutionStream(args)) {
+        cell.value = response.value;
+        cell.error = response.error;
+
+        if (!response.done) yield { cell };
+      }
+    } else {
+      const response = await runPromptExecution(args);
       cell.value = response.value;
       cell.error = response.error;
-
-      if (!response.done) yield { cell };
     }
-
     await updateCell(cell);
     yield { cell };
+
+    // Add newly generated values as examples when there are no validated cells or referred columns
+    if (cell.value && !(hasValidatedCells || hasReferredColumns)) {
+      examples.push({ output: cell.value, inputs: {} });
+    }
   }
 };

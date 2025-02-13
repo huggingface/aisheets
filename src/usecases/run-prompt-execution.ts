@@ -51,16 +51,18 @@ Ensure your output differs meaningfully from the existing data points in topic, 
 {{#examples}}
 # Current dataset
 Read carefully these data points to avoid repeating them and ensure diversity across the whole dataset. Data points are prior outputs to avoid mimicking. Treat them as exclusion criteria.
-### Data points
+## Data points
+{{#.}}
 - {{.}}
+{{/.}}
 {{/examples}}
 
 # Output Format
-Generate **only** the requested text. No introductions, explanations, or labels.
+Generate **only** the output requested in the user instruction. No additional introductions, explanations, or labels.
 
 # Output
 `,
-    { instruction, examples: outputExamples },
+    { instruction, examples: outputExamples ? [outputExamples] : undefined },
   );
 };
 
@@ -109,7 +111,7 @@ The following are correct, accurate example outputs with respect to the user ins
   );
 };
 
-const DEFAULT_TIMEOUT = 10000;
+const DEFAULT_TIMEOUT = 60000;
 
 type Provider =
   | 'fal-ai'
@@ -150,6 +152,8 @@ export const runPromptExecution = async ({
       inputPrompt = promptForResponseFromScratch(instruction, examples);
       break;
   }
+
+  //console.log('Sending prompt to server:', inputPrompt);
 
   try {
     // https://huggingface.co/docs/api-inference/tasks/chat-completion?code=js#api-specification
@@ -196,6 +200,8 @@ export const runPromptExecutionStream = async function* ({
       inputPrompt = promptForResponseFromScratch(instruction, examples);
       break;
   }
+
+  //console.log('Sending prompt to server:', inputPrompt);
 
   try {
     let accumulated = '';

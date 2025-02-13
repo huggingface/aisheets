@@ -1,4 +1,5 @@
 import {
+  $,
   type Signal,
   createContextId,
   useContext,
@@ -37,5 +38,9 @@ export const useDatasetsStore = () => {
 
   return {
     activeDataset,
+
+    updateActiveDataset: $((dataset: Dataset) => {
+      activeDataset.value = dataset;
+    }),
   };
 };

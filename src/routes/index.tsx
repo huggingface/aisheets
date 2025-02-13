@@ -8,6 +8,7 @@ import { Execution } from '~/features';
 
 import * as hub from '@huggingface/hub';
 
+import { DatasetName } from '~/features/datasets/dataset-name';
 import { Table } from '~/features/table/table';
 import { saveSession } from '~/services/auth/session';
 import { useDatasetsStore, useLoadDatasets } from '~/state';
@@ -103,9 +104,7 @@ export default component$(() => {
         <span>{session.value.user.username}</span>
       </div>
       <div class="flex justify-between items-center w-full mb-4 pt-4">
-        <h1 class="text-3xl font-bold text-secondary w-1/2">
-          {activeDataset.value.name}
-        </h1>
+        <DatasetName dataset={activeDataset.value} />
         <Execution />
       </div>
       <Table />

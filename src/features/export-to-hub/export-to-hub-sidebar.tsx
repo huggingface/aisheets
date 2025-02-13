@@ -14,13 +14,18 @@ export const ExportToHubSidebar = component$(() => {
     useModals('exportToHubSidebar');
 
   const { activeDataset } = useDatasetsStore();
+  const defaultExportName = useComputed$(() =>
+    activeDataset.value.name.replace(/\s/g, '_'),
+  );
   const session = useSession();
+
   const isSubmitting = useSignal(false);
+  const isPrivate = useSignal<boolean>(true);
+
   const error = useSignal<string | null>(null);
 
   const owner = useSignal<string>(session.value.user.username);
-  const name = useSignal<string>(activeDataset.value.name.replace(/\s/g, '_'));
-  const isPrivate = useSignal<boolean>(true);
+  const name = useSignal<string | undefined>(undefined);
   const exportedRepoId = useSignal<string | undefined>(undefined);
 
   const exportedUrl = useComputed$(
@@ -34,7 +39,7 @@ export const ExportToHubSidebar = component$(() => {
       const repoId = await exportDataset({
         dataset: activeDataset.value,
         owner: owner.value,
-        name: name.value,
+        name: name.value ? name.value : defaultExportName.value,
         private: isPrivate.value,
       });
 

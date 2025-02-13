@@ -1,8 +1,15 @@
-import { $, component$, useComputed$, useSignal } from '@builder.io/qwik';
+import {
+  $,
+  component$,
+  useComputed$,
+  useSignal,
+  useTask$,
+} from '@builder.io/qwik';
 import { LuArrowRightFromLine, LuXCircle } from '@qwikest/icons/lucide';
 
 import { Button, Checkbox, Input, Label, Sidebar } from '~/components';
 import { useModals } from '~/components/hooks/modals/use-modals';
+import { useSession } from '~/routes';
 import { TEMPORAL_ID, useDatasetsStore } from '~/state';
 import { useExportDataset } from '~/usecases/export-to-hub.usecase';
 
@@ -13,29 +20,47 @@ export const ExportToHubSidebar = component$(() => {
     useModals('exportToHubSidebar');
 
   const { activeDataset } = useDatasetsStore();
-
   const defaultExportName = useComputed$(() =>
     activeDataset.value.name.replace(/\s/g, '_'),
   );
+  const session = useSession();
 
-  const owner = useSignal<string | undefined>(undefined); // TODO: Read the default owner from the session.
-  const name = useSignal<string | undefined>(undefined);
+  const isSubmitting = useSignal(false);
   const isPrivate = useSignal<boolean>(true);
+
+  const error = useSignal<string | null>(null);
+
+  const owner = useSignal<string>(session.value.user.username);
+  const name = useSignal<string>(defaultExportName.value);
   const exportedRepoId = useSignal<string | undefined>(undefined);
+
+  useTask$(({ track }) => {
+    track(() => defaultExportName.value);
+    name.value = defaultExportName.value;
+  });
 
   const exportedUrl = useComputed$(
     () => `https://huggingface.co/datasets/${exportedRepoId.value}`,
   );
 
   const onButtonClick = $(async () => {
-    const repoId = await exportDataset({
-      dataset: activeDataset.value,
-      owner: owner.value,
-      name: name.value ? name.value : defaultExportName.value,
-      private: isPrivate.value,
-    });
+    error.value = null;
+    isSubmitting.value = true;
+    try {
+      const repoId = await exportDataset({
+        dataset: activeDataset.value,
+        owner: owner.value,
+        name: name.value ? name.value : defaultExportName.value,
+        private: isPrivate.value,
+      });
 
-    exportedRepoId.value = repoId;
+      exportedRepoId.value = repoId;
+    } catch (e: any) {
+      error.value = `${e.message || 'Unknown error'}`;
+      console.error('Export error:', e);
+    } finally {
+      isSubmitting.value = false;
+    }
   });
 
   const handleOpenExportToHubSidebar = $(() => {
@@ -47,7 +72,7 @@ export const ExportToHubSidebar = component$(() => {
       <Button
         look="primary"
         size="sm"
-        class="flex w-24 justify-between px-3"
+        class="flex w-32 justify-between px-3 text-muted-foreground hover:text-foreground transition-colors"
         onClick$={handleOpenExportToHubSidebar}
         disabled={
           activeDataset.value.columns.filter((c) => c.id !== TEMPORAL_ID)
@@ -55,61 +80,50 @@ export const ExportToHubSidebar = component$(() => {
         }
       >
         <LuArrowRightFromLine />
-        Export
+        Push to Hub
       </Button>
 
       <Sidebar
         name="exportToHubSidebar"
-        class="fixed !right-4 !top-1 h-fit shadow-md"
+        class="fixed !right-4 !top-[6.5rem] h-[320px] shadow-md"
       >
         <div class="flex h-full flex-col justify-between p-4">
-          <div class="h-full">
-            <Button
-              size="sm"
-              look="ghost"
-              class="absolute top-0 right-0 m-2"
-              onClick$={closeExportToHubSidebar}
-            >
-              <LuXCircle class="text-lg text-primary-foreground" />
-            </Button>
+          <div class="flex flex-col gap-2">
+            <div class="h-12 relative">
+              <Button
+                size="sm"
+                look="ghost"
+                class="absolute top-0 right-0"
+                onClick$={closeExportToHubSidebar}
+              >
+                <LuXCircle class="text-lg text-primary-foreground" />
+              </Button>
+            </div>
+
             <div class="flex flex-col gap-4">
-              {exportedRepoId.value ? (
-                <div class="flex h-16 w-full items-center justify-center">
-                  <span class="text-sm">
-                    Exported to{' '}
-                    <a
-                      href={exportedUrl.value}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      class="text-blue-500"
-                    >
-                      {exportedRepoId.value}
-                    </a>
-                  </span>
+              <div class="flex flex-col gap-2">
+                <div class="flex items-center gap-2">
+                  <div class="flex flex-col flex-1">
+                    <Label for="dataset-owner">Owner</Label>
+                    <Input
+                      id="dataset-owner"
+                      class="h-10"
+                      placeholder="Owner"
+                      bind:value={owner}
+                    />
+                  </div>
+                  <span class="text-lg mt-6">/</span>
+                  <div class="flex flex-col flex-1">
+                    <Label for="dataset-name">Dataset name</Label>
+                    <Input
+                      id="dataset-name"
+                      class="h-10"
+                      placeholder="Dataset name"
+                      bind:value={name}
+                    />
+                  </div>
                 </div>
-              ) : null}
-
-              <div class="flex items-center justify-between">
-                <Label for="dataset-owner">Owner</Label>
               </div>
-              <Input
-                id="dataset-owner"
-                class="h-10"
-                placeholder="Enter the dataset owner"
-                bind:value={owner}
-              />
-
-              <Label for="dataset-name">Name</Label>
-              <Input
-                id="dataset-name"
-                class="h-10"
-                placeholder={
-                  'Enter the dataset name (default: ' +
-                  defaultExportName.value +
-                  ')'
-                }
-                bind:value={name}
-              />
 
               <div class="flex items-center space-x-2">
                 <div>
@@ -118,15 +132,38 @@ export const ExportToHubSidebar = component$(() => {
                 <Checkbox id="dataset-private" bind:checked={isPrivate} />
               </div>
             </div>
+
+            <div class="h-6 text-sm text-left max-w-full">
+              {error.value ? (
+                <div class="text-sm text-red-500 text-left max-w-full overflow-x-auto">
+                  {error.value}
+                </div>
+              ) : (
+                exportedRepoId.value && (
+                  <div class="text-sm text-left">
+                    🥳 Published at{' '}
+                    <a
+                      href={exportedUrl.value}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="text-blue-500 hover:underline"
+                    >
+                      {exportedRepoId.value}
+                    </a>
+                  </div>
+                )
+              )}
+            </div>
           </div>
 
-          <div class="flex h-16 w-full items-center justify-center">
+          <div class="flex h-12 w-full items-center -ml-2">
             <Button
-              size="sm"
-              class="w-full rounded-sm p-2"
+              look="ghost"
+              class="h-10 bg-ring hover:bg-indigo-300 text-white w-fit select-none ml-2 rounded-2xl"
               onClick$={onButtonClick}
+              disabled={isSubmitting.value}
             >
-              Export to Hub
+              {isSubmitting.value ? 'Pushing...' : 'Push to Hub'}
             </Button>
           </div>
         </div>

@@ -1,4 +1,4 @@
-import { $, component$, useStore } from '@builder.io/qwik';
+import { $, component$, useStore, useVisibleTask$ } from '@builder.io/qwik';
 import { server$ } from '@builder.io/qwik-city';
 import { Input } from '~/components';
 import { useClickOutside } from '~/components/hooks/click/outside';
@@ -17,17 +17,12 @@ export const DatasetName = component$(({ dataset }: DatasetNameProps) => {
 
   const { updateActiveDataset } = useDatasetsStore();
 
-  const handleEditClick = $(() => {
-    state.isEditing = true;
-    setTimeout(() => inputRef.value?.focus(), 0);
-  });
-
-  const handleChange = $((event: Event) => {
-    const target = event.target as HTMLInputElement;
-    state.name = target.value;
-  });
-
   const handleSave = $(() => {
+    if (state.name.trim() === '') {
+      state.name = dataset.name; // Prevent empty names
+      return;
+    }
+
     state.isEditing = false;
 
     server$(async (datasetId: string, newName: string) => {
@@ -39,9 +34,28 @@ export const DatasetName = component$(({ dataset }: DatasetNameProps) => {
 
   const ref = useClickOutside(handleSave);
 
+  useVisibleTask$(({ track }) => {
+    track(() => state.isEditing);
+    if (state.isEditing) {
+      (ref.value as HTMLInputElement)?.focus();
+    }
+  });
+
+  const handleEditClick = $(() => {
+    state.isEditing = true;
+  });
+
+  const handleChange = $((event: Event) => {
+    const target = event.target as HTMLInputElement;
+    state.name = target.value;
+  });
+
   const handleKeyDown = $((event: KeyboardEvent) => {
     if (event.key === 'Enter') {
       handleSave();
+    } else if (event.key === 'Escape') {
+      state.name = dataset.name; // Reset to original name
+      state.isEditing = false;
     }
   });
 
@@ -58,8 +72,8 @@ export const DatasetName = component$(({ dataset }: DatasetNameProps) => {
         />
       ) : (
         <h1
-          class={`text-3xl font-bold w-full truncate leading-none px-2 ${
-            state.name === 'New dataset' ? 'text-secondary' : ''
+          class={`text-3xl font-bold w-full min-w-[200px] truncate leading-none px-2 ${
+            dataset.name === 'New dataset' ? 'text-secondary' : ''
           }`}
           onClick$={handleEditClick}
         >

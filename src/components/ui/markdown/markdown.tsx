@@ -6,11 +6,6 @@ interface MarkdownProps {
   class?: string;
 }
 
-interface MarkdownToken {
-  tokens?: Array<{ text: string }>;
-  toString: () => string;
-}
-
 const HEADING_SIZES = {
   1: 'text-xl',
   2: 'text-lg',
@@ -42,9 +37,14 @@ export const Markdown = component$<MarkdownProps>(
       return `<h${depth} class="${sizeClass} font-bold">${text}</h${depth}>`;
     };
 
+    // Add styles for code blocks
+    renderer.code = ({ text, lang }) => {
+      return `<pre class="overflow-x-auto"><code class="language-${lang}">${text}</code></pre>`;
+    };
+
     return (
       <div
-        class={`${className} [overflow-wrap:anywhere] whitespace-normal`}
+        class={`${className} [overflow-wrap:anywhere] whitespace-normal prose max-w-full`}
         dangerouslySetInnerHTML={
           marked.parse(content, {
             ...MARKED_OPTIONS,

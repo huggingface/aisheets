@@ -69,10 +69,10 @@ export const ExportToHubSidebar = component$(() => {
 
       <Sidebar
         name="exportToHubSidebar"
-        class="fixed !right-4 !top-1 h-fit shadow-md"
+        class="fixed !right-4 !top-[6.5rem] h-[340px] shadow-md"
       >
         <div class="flex h-full flex-col justify-between p-4">
-          <div class="h-full">
+          <div class="flex flex-col gap-2">
             <div class="h-12 relative">
               <Button
                 size="sm"
@@ -84,7 +84,7 @@ export const ExportToHubSidebar = component$(() => {
               </Button>
             </div>
 
-            <div class="flex flex-col gap-6">
+            <div class="flex flex-col gap-4">
               <div class="flex flex-col gap-2">
                 <div class="flex items-center gap-2">
                   <div class="flex flex-col flex-1">
@@ -118,30 +118,30 @@ export const ExportToHubSidebar = component$(() => {
             </div>
           </div>
 
-          <div class="flex flex-col gap-4 mt-8">
-            <div class="h-6">
-              {error.value ? (
-                <div class="text-sm text-red-500 text-center max-w-full overflow-x-auto">
-                  {error.value}
+          <div>
+            {error.value ? (
+              <div class="text-sm text-red-500 text-left max-w-full overflow-x-auto">
+                {error.value}
+              </div>
+            ) : (
+              exportedRepoId.value && (
+                <div class="text-sm text-left">
+                  🥳 Published at{' '}
+                  <a
+                    href={exportedUrl.value}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="text-blue-500 hover:underline"
+                  >
+                    {exportedRepoId.value}
+                  </a>
                 </div>
-              ) : (
-                exportedRepoId.value && (
-                  <div class="text-sm text-center">
-                    🥳 Published at{' '}
-                    <a
-                      href={exportedUrl.value}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      class="text-blue-500 hover:underline"
-                    >
-                      {exportedRepoId.value}
-                    </a>
-                  </div>
-                )
-              )}
-            </div>
+              )
+            )}
+          </div>
 
-            <div class="flex h-16 w-full items-center">
+          <div class="flex h-16 w-full items-end">
+            <div class="flex h-12 w-full items-center">
               <Button
                 look="ghost"
                 class="h-10 bg-ring hover:bg-indigo-300 text-white w-fit select-none ml-2 rounded-2xl"

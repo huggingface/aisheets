@@ -8,7 +8,7 @@ describe.runIf(accessToken)(
   () => {
     it('should return subsets with splits and parquet files for a public dataset', async () => {
       const result = await getDatasetInfo({
-        repoid: 'argilla/synthetic-domain-text-classification',
+        repoId: 'argilla/synthetic-domain-text-classification',
         accessToken: accessToken!,
       });
 
@@ -29,7 +29,7 @@ describe.runIf(accessToken)(
 
     it('should return subsets with splits and parquet files for a private dataset', async () => {
       const result = await getDatasetInfo({
-        repoid: 'frascuchon/new_finepersonas-v0.1-tiny-flux-schnell',
+        repoId: 'frascuchon/new_finepersonas-v0.1-tiny-flux-schnell',
         accessToken: accessToken!,
       });
 

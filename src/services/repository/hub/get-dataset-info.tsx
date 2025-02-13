@@ -23,7 +23,7 @@ export interface DatasetInfo {
  * Retrieves information about a dataset from a repository.
  *
  * @param {Object} params - The parameters for the function.
- * @param {string} params.repoid - The ID of the repository.
+ * @param {string} params.repoId - The ID of the repository.
  * @param {string} params.accessToken - The access token for authentication.
  * @returns {Promise<DatasetInfo>} A promise that resolves to the dataset information.
  *
@@ -32,11 +32,11 @@ export interface DatasetInfo {
  * For each subset, it retrieves the splits and includes them in the result if any splits are found.
  */
 export const getDatasetInfo = async ({
-  repoid,
+  repoId,
   accessToken,
-}: { repoid: string; accessToken: string }): Promise<DatasetInfo> => {
+}: { repoId: string; accessToken: string }): Promise<DatasetInfo> => {
   const repo = {
-    name: repoid,
+    name: repoId,
     type: 'dataset' as RepoType,
   };
   const revision = '~parquet';

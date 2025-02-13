@@ -1,14 +1,14 @@
 import { DuckDBInstance } from '@duckdb/node-api';
 
 export interface DatasetRows {
-  rows: Record<string, any>[];
+  rows: Array<Record<string, any>>;
 }
 
 /**
  * Loads dataset rows from specified parquet files in a Hugging Face repository.
  *
  * @param {Object} params - The parameters for loading dataset rows.
- * @param {string} params.repoid - The repository ID of the Hugging Face dataset.
+ * @param {string} params.repoId - The repository ID of the Hugging Face dataset.
  * @param {string} params.accessToken - The access token for authenticating with Hugging Face.
  * @param {string[]} params.parquetFiles - An array of parquet file names to load data from.
  * @param {number} [params.limit=500] - The maximum number of rows to load (default is 500).
@@ -17,7 +17,7 @@ export interface DatasetRows {
  *
  * @example
  * const datasetRows = await loadDatasetRows({
- *   repoid: 'my-repo-id',
+ *   repoId: 'my-repo-id',
  *   accessToken: 'my-access-token',
  *   parquetFiles: ['file1.parquet', 'file2.parquet'],
  *   limit: 100,
@@ -26,20 +26,20 @@ export interface DatasetRows {
  * console.log(datasetRows.rows);
  */
 export const loadDatasetRows = async ({
-  repoid,
+  repoId,
   accessToken,
   parquetFiles,
   limit,
   offset,
 }: {
-  repoid: string;
+  repoId: string;
   accessToken: string;
   parquetFiles: string[];
   limit?: number;
   offset?: number;
 }): Promise<DatasetRows> => {
   const uris = parquetFiles
-    .map((file) => `'hf://datasets/${repoid}@~parquet/${file}'`)
+    .map((file) => `'hf://datasets/${repoId}@~parquet/${file}'`)
     .join(',');
 
   const instance = await DuckDBInstance.create(':memory:');
@@ -75,6 +75,6 @@ export const loadDatasetRows = async ({
       }),
     };
   } finally {
-    await db.close();
+    db.close();
   }
 };

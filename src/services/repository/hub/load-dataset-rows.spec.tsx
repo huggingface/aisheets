@@ -8,7 +8,7 @@ describe.runIf(accessToken)(
   () => {
     it('should load a dataset for a public dataset', async () => {
       const result = await loadDatasetRows({
-        repoid: 'open-thoughts/OpenThoughts-114k',
+        repoId: 'open-thoughts/OpenThoughts-114k',
         accessToken: accessToken!,
         parquetFiles: ['default/train/0000.parquet'],
       });
@@ -19,7 +19,7 @@ describe.runIf(accessToken)(
 
     it('should read a dataset for a private dataset', async () => {
       const result = await loadDatasetRows({
-        repoid: 'frascuchon/awesome-chatgpt-prompts',
+        repoId: 'frascuchon/awesome-chatgpt-prompts',
         accessToken: accessToken!,
         parquetFiles: ['default/train/0000.parquet'],
         limit: 50,
@@ -33,7 +33,7 @@ describe.runIf(accessToken)(
       t.skip();
 
       const result = await loadDatasetRows({
-        repoid: 'argilla/synthetic-domain-text-classification',
+        repoId: 'argilla/synthetic-domain-text-classification',
         accessToken: accessToken!,
         parquetFiles: ['default/train/0000.parquet'],
       });

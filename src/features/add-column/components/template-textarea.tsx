@@ -101,11 +101,11 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
     };
 
     const charOffset = measureTextWidth(lines[lines.length - 1]);
-    const verticalAlignPerLines = lines.length - 1 || 0.1;
+    const verticalAlignPerLines = lines.length - 1 || 0.5;
 
     const position = {
       x: charOffset,
-      y: verticalAlignPerLines * 0.7 * popover.lineHeight,
+      y: verticalAlignPerLines * 0.73 * popover.lineHeight,
     };
 
     popover.position = {
@@ -192,7 +192,7 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
     <div class="relative">
       {popover.options.length > 0 && (
         <div
-          class="absolute top-0 left-0 w-full h-full whitespace-pre-wrap break-words text-transparent pointer-events-none overflow-hidden text-base p-2"
+          class="p-4 absolute top-0 left-0 w-full h-full whitespace-pre-wrap break-words text-transparent pointer-events-none overflow-hidden text-base"
           aria-hidden="true"
         >
           <Highlights
@@ -204,7 +204,7 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
 
       <Textarea
         ref={textarea}
-        class="w-full h-full min-h-72 resize-none overflow-hidden p-2 border border-secondary-foreground bg-primary text-base rounded-sm pb-16"
+        class="p-4 w-full h-full min-h-72 resize-none overflow-hidden border border-secondary-foreground bg-primary text-base rounded-sm pb-16"
         onInput$={(event) =>
           handleTextInput(event.target as HTMLTextAreaElement)
         }
@@ -224,7 +224,7 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
           ref={firstOption}
           look="headless"
           hideIcon
-          class={`absolute border border-secondary bg-primary p-2 rounded shadow-lg ${popover.options.length === 0 ? 'invisible' : ''}`}
+          class={`px-6 absolute border border-secondary bg-primary p-2 rounded shadow-lg ${popover.options.length === 0 ? 'invisible' : ''}`}
           style={{
             left: `${popover.position.x + 20}px`,
             top: `${popover.position.y}px`,

@@ -44,7 +44,7 @@ export const Markdown = component$<MarkdownProps>(
 
     return (
       <div
-        class={`${className} break-words whitespace-normal`}
+        class={`${className} [overflow-wrap:anywhere] whitespace-normal`}
         dangerouslySetInnerHTML={
           marked.parse(content, {
             ...MARKED_OPTIONS,

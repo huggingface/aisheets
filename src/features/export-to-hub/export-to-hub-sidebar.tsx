@@ -1,4 +1,10 @@
-import { $, component$, useComputed$, useSignal } from '@builder.io/qwik';
+import {
+  $,
+  component$,
+  useComputed$,
+  useSignal,
+  useTask$,
+} from '@builder.io/qwik';
 import { LuArrowRightFromLine, LuXCircle } from '@qwikest/icons/lucide';
 
 import { Button, Checkbox, Input, Label, Sidebar } from '~/components';
@@ -25,8 +31,13 @@ export const ExportToHubSidebar = component$(() => {
   const error = useSignal<string | null>(null);
 
   const owner = useSignal<string>(session.value.user.username);
-  const name = useSignal<string | undefined>(undefined);
+  const name = useSignal<string>(defaultExportName.value);
   const exportedRepoId = useSignal<string | undefined>(undefined);
+
+  useTask$(({ track }) => {
+    track(() => defaultExportName.value);
+    name.value = defaultExportName.value;
+  });
 
   const exportedUrl = useComputed$(
     () => `https://huggingface.co/datasets/${exportedRepoId.value}`,

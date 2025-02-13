@@ -71,6 +71,29 @@ export const getDatasetById = async (id: string): Promise<Dataset | null> => {
   };
 };
 
+export const updateDataset = async ({
+  id,
+  name,
+}: {
+  id: string;
+  name: string;
+}): Promise<Dataset> => {
+  const model = await DatasetModel.findByPk(id);
+  if (!model) {
+    throw new Error('Dataset not found');
+  }
+
+  model.set({ name });
+  await model.save();
+
+  return {
+    id: model.id,
+    name: model.name,
+    createdBy: model.createdBy,
+    columns: [],
+  };
+};
+
 export const listDatasetRows = async function* ({
   dataset,
   conditions,

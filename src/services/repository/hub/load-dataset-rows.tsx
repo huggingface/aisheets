@@ -29,12 +29,14 @@ export const loadDatasetRows = async ({
   repoId,
   accessToken,
   parquetFiles,
+  columnNames,
   limit,
   offset,
 }: {
   repoId: string;
   accessToken: string;
   parquetFiles: string[];
+  columnNames?: string[];
   limit?: number;
   offset?: number;
 }): Promise<DatasetRows> => {
@@ -42,35 +44,29 @@ export const loadDatasetRows = async ({
     .map((file) => `'hf://datasets/${repoId}@~parquet/${file}'`)
     .join(',');
 
+  const columnsSelect = columnNames ? columnNames.join(', ') : '*';
+
   const instance = await DuckDBInstance.create(':memory:');
   const db = await instance.connect();
   try {
     await db.run(
-      [
-        `CREATE SECRET hf_token (TYPE HUGGINGFACE, TOKEN ${accessToken})`,
-        `CREATE VIEW tbl AS (SELECT * FROM read_parquet([${uris}]))`,
-      ].join(';'),
+      `CREATE SECRET hf_token (TYPE HUGGINGFACE, TOKEN ${accessToken})`,
     );
 
     const _limit = limit || 500;
     const _offset = offset || 0;
 
     const result = await db.run(
-      `SELECT * FROM tbl LIMIT ${_limit} OFFSET ${_offset}`,
+      `SELECT ${columnsSelect}, file_row_number FROM read_parquet([${uris}], file_row_number=true) LIMIT ${_limit} OFFSET ${_offset}`,
     );
-
-    const columns = result.columnTypes().map((type, index) => ({
-      name: result.columnName(index),
-      type,
-    }));
 
     const rows = await result.getRowObjectsJson();
 
     return {
-      rows: rows.map((row, idx) => {
+      rows: rows.map((row) => {
         return {
           ...row,
-          idx: idx + _offset,
+          idx: Number.parseInt(String(row.file_row_number)),
         };
       }),
     };

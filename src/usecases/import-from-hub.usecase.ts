@@ -81,9 +81,9 @@ export const useImportFromHub = () =>
     const { rows } = await loadDatasetRows({
       repoId,
       accessToken: session.token,
-      parquetFiles: [selectedSplit.files[0]],
+      parquetFiles: selectedSplit.files,
       limit: 100,
-      // TODO: Add column names as a parameter
+      columnNames: supportedColumns.map((col) => col.name),
     });
 
     consola.info('Creating cells...');

@@ -29,17 +29,36 @@ describe.runIf(accessToken)(
       expect(result.rows).toHaveLength(50);
     });
 
-    it("should read class labels for a dataset with 'labels' column", async (t) => {
-      t.skip();
-
+    it('should load rows with idx attribute', async (t) => {
       const result = await loadDatasetRows({
-        repoId: 'argilla/synthetic-domain-text-classification',
+        repoId: 'argilla/magpie-ultra-v1.0',
         accessToken: accessToken!,
         parquetFiles: ['default/train/0000.parquet'],
+        offset: 500,
+        limit: 5,
       });
 
       expect(result).toBeDefined();
+      expect(result.rows).toHaveLength(5);
+      expect(result.rows.map((row) => row.idx)).toEqual([
+        500, 501, 502, 503, 504,
+      ]);
+    });
+
+    it('should load rows with provided columns', async () => {
+      const result = await loadDatasetRows({
+        repoId: 'argilla/magpie-ultra-v1.0',
+        accessToken: accessToken!,
+        parquetFiles: ['default/train/0000.parquet'],
+        columnNames: ['system_prompt_key', 'instruction'],
+        limit: 1,
+      });
+
+      expect(result).toBeDefined();
+      expect(Object.keys(result.rows[0])).toHaveLength(3);
+      expect(result.rows[0]).toHaveProperty('system_prompt_key');
+      expect(result.rows[0]).toHaveProperty('instruction');
     });
   },
-  { timeout: 10000 },
+  { timeout: 15000 },
 );

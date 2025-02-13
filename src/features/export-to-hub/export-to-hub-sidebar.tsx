@@ -56,7 +56,7 @@ export const ExportToHubSidebar = component$(() => {
 
       exportedRepoId.value = repoId;
     } catch (e: any) {
-      error.value = `Failed to push dataset to hub: ${e.message || 'Unknown error'}`;
+      error.value = `${e.message || 'Unknown error'}`;
       console.error('Export error:', e);
     } finally {
       isSubmitting.value = false;
@@ -85,7 +85,7 @@ export const ExportToHubSidebar = component$(() => {
 
       <Sidebar
         name="exportToHubSidebar"
-        class="fixed !right-4 !top-[6.5rem] h-[340px] shadow-md"
+        class="fixed !right-4 !top-[6.5rem] h-[320px] shadow-md"
       >
         <div class="flex h-full flex-col justify-between p-4">
           <div class="flex flex-col gap-2">
@@ -132,41 +132,39 @@ export const ExportToHubSidebar = component$(() => {
                 <Checkbox id="dataset-private" bind:checked={isPrivate} />
               </div>
             </div>
-          </div>
 
-          <div>
-            {error.value ? (
-              <div class="text-sm text-red-500 text-left max-w-full overflow-x-auto">
-                {error.value}
-              </div>
-            ) : (
-              exportedRepoId.value && (
-                <div class="text-sm text-left">
-                  🥳 Published at{' '}
-                  <a
-                    href={exportedUrl.value}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="text-blue-500 hover:underline"
-                  >
-                    {exportedRepoId.value}
-                  </a>
+            <div class="h-6 text-sm text-left max-w-full">
+              {error.value ? (
+                <div class="text-sm text-red-500 text-left max-w-full overflow-x-auto">
+                  {error.value}
                 </div>
-              )
-            )}
+              ) : (
+                exportedRepoId.value && (
+                  <div class="text-sm text-left">
+                    🥳 Published at{' '}
+                    <a
+                      href={exportedUrl.value}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="text-blue-500 hover:underline"
+                    >
+                      {exportedRepoId.value}
+                    </a>
+                  </div>
+                )
+              )}
+            </div>
           </div>
 
-          <div class="flex h-16 w-full items-end">
-            <div class="flex h-12 w-full items-center">
-              <Button
-                look="ghost"
-                class="h-10 bg-ring hover:bg-indigo-300 text-white w-fit select-none ml-2 rounded-2xl"
-                onClick$={onButtonClick}
-                disabled={isSubmitting.value}
-              >
-                {isSubmitting.value ? 'Pushing...' : 'Push to Hub'}
-              </Button>
-            </div>
+          <div class="flex h-12 w-full items-center -ml-2">
+            <Button
+              look="ghost"
+              class="h-10 bg-ring hover:bg-indigo-300 text-white w-fit select-none ml-2 rounded-2xl"
+              onClick$={onButtonClick}
+              disabled={isSubmitting.value}
+            >
+              {isSubmitting.value ? 'Pushing...' : 'Push to Hub'}
+            </Button>
           </div>
         </div>
       </Sidebar>

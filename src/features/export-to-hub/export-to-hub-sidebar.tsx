@@ -14,8 +14,12 @@ export const ExportToHubSidebar = component$(() => {
 
   const { activeDataset } = useDatasetsStore();
 
+  const defaultExportName = useComputed$(() =>
+    activeDataset.value.name.replace(/\s/g, '_'),
+  );
+
   const owner = useSignal<string | undefined>(undefined); // TODO: Read the default owner from the session.
-  const name = useSignal<string>(activeDataset.value.name.replace(/\s/g, '_'));
+  const name = useSignal<string | undefined>(undefined);
   const isPrivate = useSignal<boolean>(true);
   const exportedRepoId = useSignal<string | undefined>(undefined);
 
@@ -27,7 +31,7 @@ export const ExportToHubSidebar = component$(() => {
     const repoId = await exportDataset({
       dataset: activeDataset.value,
       owner: owner.value,
-      name: name.value,
+      name: name.value ? name.value : defaultExportName.value,
       private: isPrivate.value,
     });
 
@@ -99,7 +103,11 @@ export const ExportToHubSidebar = component$(() => {
               <Input
                 id="dataset-name"
                 class="h-10"
-                placeholder="Enter the dataset name"
+                placeholder={
+                  'Enter the dataset name (default: ' +
+                  defaultExportName.value +
+                  ')'
+                }
                 bind:value={name}
               />
 

@@ -58,11 +58,9 @@ export const loadDataset = async ({
 
     await db.run(
       [
-        'BEGIN TRANSACTION',
-        `CREATE SECRET hf_token (TYPE HUGGINGFACE, TOKEN ${accessToken})`,
+        // TODO: Keep secrets scoped to the current user
+        `CREATE OR REPLACE SECRET hf_token (TYPE HUGGINGFACE, TOKEN ${accessToken})`,
         `CREATE TABLE IF NOT EXISTS ${tableName} AS SELECT *, CAST(file_row_number AS INTEGER) as rowIdx FROM read_parquet([${uris}], file_row_number=true)`,
-        'DROP SECRET hf_token',
-        'COMMIT',
       ].join(';'),
     );
 

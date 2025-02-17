@@ -9,13 +9,15 @@ import { LuArrowRightFromLine, LuXCircle } from '@qwikest/icons/lucide';
 
 import { Button, Checkbox, Input, Label, Sidebar } from '~/components';
 import { useModals } from '~/components/hooks/modals/use-modals';
-import { useSession } from '~/routes';
-import { TEMPORAL_ID, useDatasetsStore } from '~/state';
+import { TEMPORAL_ID, useDatasetsStore, useSession } from '~/state';
 import { useExportDataset } from '~/usecases/export-to-hub.usecase';
 
-const exportDataset = useExportDataset();
+export { useSession } from '~/state';
 
 export const ExportToHubSidebar = component$(() => {
+  const exportDataset = useExportDataset();
+  const session = useSession();
+
   const { openExportToHubSidebar, closeExportToHubSidebar } =
     useModals('exportToHubSidebar');
 
@@ -23,7 +25,6 @@ export const ExportToHubSidebar = component$(() => {
   const defaultExportName = useComputed$(() =>
     activeDataset.value.name.replace(/\s/g, '_'),
   );
-  const session = useSession();
 
   const isSubmitting = useSignal(false);
   const isPrivate = useSignal<boolean>(true);

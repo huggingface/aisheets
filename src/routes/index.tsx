@@ -1,20 +1,8 @@
-import { component$, isDev } from '@builder.io/qwik';
-import {
-  type DocumentHead,
-  type RequestEvent,
-  routeLoader$,
-} from '@builder.io/qwik-city';
-import { Execution } from '~/features';
-
+import { isDev } from '@builder.io/qwik';
+import type { RequestEvent } from '@builder.io/qwik-city';
 import * as hub from '@huggingface/hub';
-
-import { DatasetName } from '~/features/datasets/dataset-name';
-import { Table } from '~/features/table/table';
+import { getDatasetIDByUser } from '~/services';
 import { saveSession } from '~/services/auth/session';
-import { useDatasetsStore, useLoadDatasets } from '~/state';
-import { useServerSession } from '~/state/session';
-
-export { useDatasetsLoader } from '~/state';
 
 export const onGet = async ({
   cookie,
@@ -25,7 +13,11 @@ export const onGet = async ({
 }: RequestEvent) => {
   const session = sharedMap.get('session');
   if (session) {
-    return next();
+    const datasetId = await getDatasetIDByUser({
+      createdBy: session.user.username,
+    });
+
+    throw redirect(301, `/dataset/${datasetId}`);
   }
 
   const CLIENT_ID = process.env.OAUTH_CLIENT_ID;
@@ -89,35 +81,4 @@ export const onGet = async ({
   }
 
   throw Error('Missing HF_TOKEN or OAUTH_CLIENT_ID');
-};
-
-export const useSession = routeLoader$(useServerSession);
-
-export default component$(() => {
-  useLoadDatasets();
-  const session = useSession();
-  const { activeDataset } = useDatasetsStore();
-
-  return (
-    <div class="min-w-screen px-6">
-      <div class="flex justify-end items-center w-full mt-6">
-        <span>{session.value.user.username}</span>
-      </div>
-      <div class="flex justify-between items-center w-full mb-4 pt-4">
-        <DatasetName dataset={activeDataset.value} />
-        <Execution />
-      </div>
-      <Table />
-    </div>
-  );
-});
-
-export const head: DocumentHead = {
-  title: 'easydatagen',
-  meta: [
-    {
-      name: 'description',
-      content: 'easydatagen',
-    },
-  ],
 };

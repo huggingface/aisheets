@@ -1,13 +1,19 @@
 import { DuckDBInstance } from '@duckdb/node-api';
+import type { Dataset } from '~/state';
+
+const instance = await DuckDBInstance.create(':memory:', {
+  threads: '10',
+});
 
 export interface DatasetRows {
   rows: Array<Record<string, any>>;
 }
 
 /**
- * Loads dataset rows from specified parquet files in a Hugging Face repository.
+ * Loads dataset from specified parquet files in a Hugging Face repository.
  *
  * @param {Object} params - The parameters for loading dataset rows.
+ * @param {string} params.name - The name of the loaded table. Must be unique.
  * @param {string} params.repoId - The repository ID of the Hugging Face dataset.
  * @param {string} params.accessToken - The access token for authenticating with Hugging Face.
  * @param {string[]} params.parquetFiles - An array of parquet file names to load data from.
@@ -16,7 +22,7 @@ export interface DatasetRows {
  * @returns {Promise<DatasetRows>} A promise that resolves to an object containing the loaded dataset rows.
  *
  * @example
- * const datasetRows = await loadDatasetRows({
+ * const datasetRows = await loadDataset({
  *   repoId: 'my-repo-id',
  *   accessToken: 'my-access-token',
  *   parquetFiles: ['file1.parquet', 'file2.parquet'],
@@ -25,7 +31,8 @@ export interface DatasetRows {
  * });
  * console.log(datasetRows.rows);
  */
-export const loadDatasetRows = async ({
+export const loadDataset = async ({
+  dataset,
   repoId,
   accessToken,
   parquetFiles,
@@ -33,6 +40,7 @@ export const loadDatasetRows = async ({
   limit,
   offset,
 }: {
+  dataset: Dataset;
   repoId: string;
   accessToken: string;
   parquetFiles: string[];
@@ -40,36 +48,46 @@ export const loadDatasetRows = async ({
   limit?: number;
   offset?: number;
 }): Promise<DatasetRows> => {
-  const uris = parquetFiles
-    .map((file) => `'hf://datasets/${repoId}@~parquet/${file}'`)
-    .join(',');
-
-  const columnsSelect = columnNames ? columnNames.join(', ') : '*';
-
-  const instance = await DuckDBInstance.create(':memory:');
   const db = await instance.connect();
+  const tableName = `tbl_${dataset.id.replaceAll('-', '_')}`;
+
   try {
+    const uris = parquetFiles
+      .map((file) => `'hf://datasets/${repoId}@~parquet/${file}'`)
+      .join(',');
+
     await db.run(
-      `CREATE SECRET hf_token (TYPE HUGGINGFACE, TOKEN ${accessToken})`,
+      [
+        'BEGIN TRANSACTION',
+        `CREATE SECRET hf_token (TYPE HUGGINGFACE, TOKEN ${accessToken})`,
+        `CREATE TABLE IF NOT EXISTS ${tableName} AS SELECT *, CAST(file_row_number AS INTEGER) as rowIdx FROM read_parquet([${uris}], file_row_number=true)`,
+        'DROP SECRET hf_token',
+        'COMMIT',
+      ].join(';'),
     );
 
-    const _limit = limit || 500;
-    const _offset = offset || 0;
+    const columnsSelect = columnNames
+      ? columnNames.concat(['rowIdx']).join(', ')
+      : '*';
 
-    const result = await db.run(
-      `SELECT ${columnsSelect}, file_row_number FROM read_parquet([${uris}], file_row_number=true) LIMIT ${_limit} OFFSET ${_offset}`,
-    );
+    let selectClause = `SELECT ${columnsSelect} FROM ${tableName}`;
 
+    if (limit) {
+      selectClause += ` LIMIT ${limit}`;
+    }
+
+    if (offset) {
+      selectClause += ` OFFSET ${offset}`;
+    }
+
+    const result = await db.run(selectClause);
     const rows = await result.getRowObjectsJson();
 
     return {
-      rows: rows.map((row) => {
-        return {
-          ...row,
-          idx: Number.parseInt(String(row.file_row_number)),
-        };
-      }),
+      rows,
     };
+  } catch (error) {
+    throw new Error(`Failed to load dataset: ${error}`);
   } finally {
     db.close();
   }

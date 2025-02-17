@@ -6,7 +6,7 @@ import { createCell, createColumn, createDataset } from '~/services';
 import {
   describeDatasetSplit,
   getDatasetInfo,
-  loadDatasetRows,
+  loadDataset,
 } from '~/services/repository/hub';
 
 export interface ImportFromHubParams {
@@ -78,11 +78,13 @@ export const useImportFromHub = () =>
     }
 
     consola.info('Loading dataset rows');
-    const { rows } = await loadDatasetRows({
+    const { rows } = await loadDataset({
+      dataset: createdDataset,
+      // TODO: Move all these parameters to a single object and link them to the created dataset.
       repoId,
       accessToken: session.token,
-      parquetFiles: selectedSplit.files,
-      limit: 100,
+      parquetFiles: [selectedSplit.files[0]],
+      // END TODO
       columnNames: supportedColumns.map((col) => col.name),
     });
 
@@ -93,7 +95,7 @@ export const useImportFromHub = () =>
 
         const createdCell = await createCell({
           cell: {
-            idx: row.idx,
+            idx: row.rowIdx,
             value: value,
           },
           column,

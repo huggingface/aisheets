@@ -83,8 +83,9 @@ export const useImportFromHub = () =>
       // TODO: Move all these parameters to a single object and link them to the created dataset.
       repoId,
       accessToken: session.token,
-      parquetFiles: [selectedSplit.files[0]],
+      parquetFiles: selectedSplit.files,
       // END TODO
+      limit: 500,
       columnNames: supportedColumns.map((col) => col.name),
     });
 

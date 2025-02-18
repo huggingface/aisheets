@@ -11,7 +11,7 @@ interface CreateDatasetParams {
 
 // This function should be removed when the main sidebar is implemented
 // Or define the user navigation.
-export const getDatasetIDByUser = async ({
+export const getOrCreateDatasetIDByUser = async ({
   createdBy,
 }: { createdBy: string }): Promise<string> => {
   const [model] = await DatasetModel.findOrCreate({

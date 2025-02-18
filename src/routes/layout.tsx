@@ -4,11 +4,7 @@ import type { RequestHandler } from '@builder.io/qwik-city';
 import { ModalsProvider } from '~/components';
 import { MainSidebar } from '~/components/ui/main-sidebar/main-sidebar';
 
-export const onGet: RequestHandler = async ({
-  cacheControl,
-  cookie,
-  sharedMap,
-}) => {
+export const onGet: RequestHandler = async ({ cacheControl }) => {
   cacheControl({
     staleWhileRevalidate: 60 * 60 * 24 * 7,
     maxAge: 5,

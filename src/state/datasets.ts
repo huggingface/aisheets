@@ -52,9 +52,8 @@ export const useDatasetsStore = () => {
 
   return {
     activeDataset,
-
     updateActiveDataset: $((dataset: Dataset) => {
-      activeDataset.value = dataset;
+      activeDataset.value = { ...dataset };
     }),
   };
 };

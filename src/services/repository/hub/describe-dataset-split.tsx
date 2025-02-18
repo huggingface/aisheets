@@ -21,7 +21,7 @@ export const describeDatasetSplit = async ({
   try {
     await db.run(
       [
-        `CREATE SECRET hf_token (TYPE HUGGINGFACE, TOKEN ${accessToken})`,
+        `CREATE SECRET hf_token (TYPE HUGGINGFACE, TOKEN '${accessToken}')`,
         `CREATE VIEW tbl AS (SELECT * FROM read_parquet(${`'hf://datasets/${repoId}@~parquet/${subset}/${split}/0000.parquet'`}))`,
       ].join(';'),
     );

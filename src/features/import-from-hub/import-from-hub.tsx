@@ -2,7 +2,6 @@ import { $, component$, useSignal } from '@builder.io/qwik';
 import { useNavigate } from '@builder.io/qwik-city';
 
 import { Button, Input, Label } from '~/components';
-import { useDatasetsStore } from '~/state';
 import { useImportFromHub } from '~/usecases/import-from-hub.usecase';
 
 const importFromHub = useImportFromHub();
@@ -11,16 +10,13 @@ export const ImportFromHub = component$(() => {
   const nav = useNavigate();
   const repoId = useSignal<string | undefined>(undefined);
 
-  const { updateActiveDataset } = useDatasetsStore();
-
   const handleOnClickImportFromHub = $(async () => {
     try {
-      const result = await importFromHub({
+      const { id } = await importFromHub({
         repoId: repoId.value!,
         // TODO: compute subset and splits when selecting repoId, and pass them here
       });
-      updateActiveDataset(result);
-      nav('/dataset/' + result.id);
+      nav('/dataset/' + id);
     } catch (error) {
       console.error(error);
     }

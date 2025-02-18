@@ -24,7 +24,7 @@ const EMPTY_DATASET = {
 };
 
 export const datasetsContext =
-  createContextId<Signal<Dataset | undefined>>('datasets.context');
+  createContextId<Signal<Dataset>>('datasets.context');
 
 export const useDatasetsLoader = routeLoader$<Dataset>(async ({ params }) => {
   const id = params.id;

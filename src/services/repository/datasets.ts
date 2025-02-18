@@ -16,7 +16,6 @@ export const getOrCreateDatasetIDByUser = async ({
 }: { createdBy: string }): Promise<string> => {
   const [model] = await DatasetModel.findOrCreate({
     where: { createdBy },
-    order: [['createdAt', 'DESC']],
     defaults: {
       name: 'New dataset',
       createdBy,

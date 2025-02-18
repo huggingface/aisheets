@@ -14,7 +14,11 @@ import { Skeleton } from '~/components/ui/skeleton/skeleton';
 import { type Cell, useColumnsStore } from '~/state';
 import { useValidateCellUseCase } from '~/usecases/validate-cell.usecase';
 
-export const TableCell = component$<{ cell: Cell }>(({ cell }) => {
+export const TableCell = component$<{
+  cell: Cell;
+  isExpanded: boolean;
+  onToggleExpand$: () => void;
+}>(({ cell, isExpanded, onToggleExpand$ }) => {
   const isEditing = useSignal(false);
   const originalValue = useSignal(cell.value);
   const newCellValue = useSignal(cell.value);
@@ -113,19 +117,38 @@ export const TableCell = component$<{ cell: Cell }>(({ cell }) => {
   return (
     <td
       class={cn(
-        'relative min-w-80 w-80 max-w-80 min-h-[100px] h-[100px] cursor-pointer border-[0.5px]',
+        'relative min-w-80 w-80 max-w-80 cursor-pointer border-[0.5px] break-words align-top',
         {
           'bg-green-50 border-green-200': cell.validated,
           'border-secondary': !cell.validated,
+          'min-h-[100px] h-[100px]': !isExpanded,
+          'min-h-[100px]': isExpanded,
         },
       )}
-      onDblClick$={() => {
+      onClick$={(e) => {
+        const target = e.target as HTMLElement;
+        if (target.closest('button')) return;
+
+        onToggleExpand$();
+      }}
+      onDblClick$={(e) => {
+        e.stopPropagation();
         isEditing.value = true;
       }}
       ref={ref}
     >
-      <div class="h-full relative">
-        <div ref={contentRef} class="relative flex flex-col h-full">
+      <div class={cn('relative', { 'h-full': !isExpanded })}>
+        <div
+          ref={contentRef}
+          class={cn('relative flex flex-col', {
+            'h-full': !isExpanded,
+            'max-h-none': isExpanded,
+            'overflow-hidden': !isExpanded,
+          })}
+          style={{
+            maxHeight: isExpanded ? 'none' : '8.5rem',
+          }}
+        >
           {originalValue.value ? (
             <>
               <Button
@@ -141,7 +164,7 @@ export const TableCell = component$<{ cell: Cell }>(({ cell }) => {
               >
                 <LuThumbsUp />
               </Button>
-              <div class="h-full flex items-start mt-2 p-4">
+              <div class="h-full mt-2 p-4">
                 <Markdown class="text-gray-900" content={originalValue.value} />
               </div>
             </>
@@ -176,7 +199,7 @@ export const TableCell = component$<{ cell: Cell }>(({ cell }) => {
           )}
         </div>
 
-        {isTruncated.value && (
+        {isTruncated.value && !isExpanded && (
           <div class="absolute bottom-0 left-0 h-6 w-full bg-gradient-to-t from-white/75 to-transparent pointer-events-none" />
         )}
       </div>

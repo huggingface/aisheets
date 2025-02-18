@@ -58,7 +58,7 @@ export const MainSidebar = component$(() => {
           <>
             <div class="block space-y-2 p-4 mb-4">
               <Link
-                href="/datasets/create/from-hub"
+                href="/dataset/create/from-hub"
                 class="flex items-center gap-2 px-2 py-1 hover:bg-gray-100 rounded text-sm font-light truncate max-w-full"
               >
                 <Logo

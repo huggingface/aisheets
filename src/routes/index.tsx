@@ -1,7 +1,7 @@
 import { isDev } from '@builder.io/qwik';
 import type { RequestEvent } from '@builder.io/qwik-city';
 import * as hub from '@huggingface/hub';
-import { getDatasetIDByUser } from '~/services';
+import { getOrCreateDatasetIDByUser } from '~/services';
 import { saveSession } from '~/services/auth/session';
 
 export const onGet = async ({
@@ -13,7 +13,7 @@ export const onGet = async ({
 }: RequestEvent) => {
   const session = sharedMap.get('session');
   if (session) {
-    const datasetId = await getDatasetIDByUser({
+    const datasetId = await getOrCreateDatasetIDByUser({
       createdBy: session.user.username,
     });
 

@@ -1,5 +1,9 @@
 import { component$ } from '@builder.io/qwik';
-import { Link } from '@builder.io/qwik-city';
+import {
+  Link,
+  type RequestEventBase,
+  routeLoader$,
+} from '@builder.io/qwik-city';
 import { useToggle } from '~/components/hooks';
 import { Logo } from '~/components/ui/logo/logo';
 
@@ -8,9 +12,22 @@ import {
   LuPanelLeftClose,
   LuPanelLeftOpen,
 } from '@qwikest/icons/lucide';
+import { getAllDatasetsByUser } from '~/services';
+import { useServerSession } from '~/state';
+
+export const useAllDatasets = routeLoader$(async function (
+  this: RequestEventBase<QwikCityPlatform>,
+) {
+  const session = useServerSession(this);
+
+  const dataset = await getAllDatasetsByUser(session.user.username);
+
+  return dataset;
+});
 
 export const MainSidebar = component$(() => {
   const { isOpen, toggle } = useToggle();
+  const datasets = useAllDatasets();
 
   const mockedItems = [
     'Lorem ipsum dolor',
@@ -82,31 +99,16 @@ export const MainSidebar = component$(() => {
                 Today
               </p>
               <div class="block space-y-2 p-4 mb-4">
-                {mockedItems.splice(0, 1).map((item, index) => (
-                  <button
+                {datasets.value.map((item) => (
+                  <Link
                     type="button"
-                    key={index}
+                    key={item.id}
+                    href={`/dataset/${item.id}`}
                     class="block px-2 py-1 hover:bg-gray-100 rounded text-sm font-light truncate max-w-full"
                   >
-                    {item}
-                  </button>
+                    {item.name}
+                  </Link>
                 ))}
-              </div>
-              <p class="text-muted-foreground px-6 text-sm font-semibold">
-                7 days
-              </p>
-              <div class="block space-y-2 p-4 mb-4">
-                {mockedItems
-                  .splice(1, mockedItems.length)
-                  .map((item, index) => (
-                    <button
-                      type="button"
-                      key={index}
-                      class="block px-2 py-1 hover:bg-gray-100 rounded text-sm font-light truncate max-w-full"
-                    >
-                      {item}
-                    </button>
-                  ))}
               </div>
             </div>
           </>

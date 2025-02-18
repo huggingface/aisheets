@@ -166,7 +166,7 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
                   <Input
                     bind:value={modelName}
                     class="px-4 h-10 border-secondary-foreground bg-primary"
-                    placeholder="Cannot find any model. Please, enter the model name manually."
+                    placeholder="Cannot load model suggestions. Please enter the model ID manually."
                   />
                 );
               }}

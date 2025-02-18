@@ -56,12 +56,14 @@ export const loadDataset = async ({
       .map((file) => `'hf://datasets/${repoId}@~parquet/${file}'`)
       .join(',');
 
+    // This is not working when running in a hf space
+    // await db.run(
+    //   // TODO: Keep secrets scoped to the current user
+    //   `CREATE OR REPLACE SECRET hf_token (TYPE HUGGINGFACE, TOKEN '${accessToken}')`,
+    // );
+
     await db.run(
-      [
-        // TODO: Keep secrets scoped to the current user
-        `CREATE OR REPLACE SECRET hf_token (TYPE HUGGINGFACE, TOKEN '${accessToken}')`,
-        `CREATE TABLE IF NOT EXISTS ${tableName} AS SELECT *, CAST(file_row_number AS INTEGER) as rowIdx FROM read_parquet([${uris}], file_row_number=true)`,
-      ].join(';'),
+      `CREATE TABLE IF NOT EXISTS ${tableName} AS SELECT *, CAST(file_row_number AS INTEGER) as rowIdx FROM read_parquet([${uris}], file_row_number=true)`,
     );
 
     const columnsSelect = columnNames

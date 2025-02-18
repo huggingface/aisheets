@@ -4,8 +4,8 @@ import { LuZap } from '@qwikest/icons/lucide';
 import { useActiveModal } from '~/components';
 import { CellGeneration } from '~/features/table/components/header/cell-generation';
 import { CellName } from '~/features/table/components/header/cell-name';
-import { CellSettings } from '~/features/table/components/header/cell-settings';
 import type { Column } from '~/state';
+import { CellSettings } from './cell-settings';
 
 export const TableCellHeader = component$<{ column: Column }>(({ column }) => {
   const { args } = useActiveModal();
@@ -25,9 +25,12 @@ export const TableCellHeader = component$<{ column: Column }>(({ column }) => {
         </div>
 
         <div class="flex items-center w-[20%]">
-          <CellGeneration column={column} />
-
-          <CellSettings column={column} />
+          {column.kind === 'dynamic' ? (
+            <div>
+              <CellGeneration column={column} />
+              <CellSettings column={column} />
+            </div>
+          ) : undefined}
         </div>
       </div>
     </th>

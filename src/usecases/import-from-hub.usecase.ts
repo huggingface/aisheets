@@ -95,7 +95,7 @@ export const useImportFromHub = () =>
         const createdCell = await createCell({
           cell: {
             idx: row.rowIdx,
-            value: String(value),
+            value: JSON.stringify(value),
           },
           column,
         });

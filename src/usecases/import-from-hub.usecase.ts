@@ -46,9 +46,9 @@ export const useImportFromHub = () =>
     );
     const splitColumns = await describeDatasetSplit({
       repoId,
+      accessToken: session.token,
       subset: selectedSubset.name,
       split: selectedSplit.name,
-      accessToken: session.token,
     });
 
     const supportedColumns = splitColumns.filter(
@@ -72,7 +72,7 @@ export const useImportFromHub = () =>
         dataset: createdDataset,
         name: column.name,
         type: 'text',
-        kind: 'dynamic',
+        kind: 'static',
       });
       createdDataset.columns.push(createdColumn);
     }
@@ -83,9 +83,9 @@ export const useImportFromHub = () =>
       // TODO: Move all these parameters to a single object and link them to the created dataset.
       repoId,
       accessToken: session.token,
-      parquetFiles: selectedSplit.files,
+      parquetFiles: [selectedSplit.files[0]],
       // END TODO
-      limit: 500,
+      limit: 100,
       columnNames: supportedColumns.map((col) => col.name),
     });
 

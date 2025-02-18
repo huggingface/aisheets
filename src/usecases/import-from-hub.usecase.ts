@@ -51,9 +51,7 @@ export const useImportFromHub = () =>
       split: selectedSplit.name,
     });
 
-    const supportedColumns = splitColumns.filter(
-      (col) => col.type === 'VARCHAR',
-    );
+    const supportedColumns = splitColumns;
 
     if (supportedColumns.length === 0) {
       throw new Error('No supported columns found');
@@ -97,7 +95,7 @@ export const useImportFromHub = () =>
         const createdCell = await createCell({
           cell: {
             idx: row.rowIdx,
-            value: value,
+            value: String(value),
           },
           column,
         });

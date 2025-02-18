@@ -20,7 +20,7 @@ export const ImportFromHub = component$(() => {
         // TODO: compute subset and splits when selecting repoId, and pass them here
       });
       updateActiveDataset(result);
-      nav('/');
+      nav('/dataset/' + result.id);
     } catch (error) {
       console.error(error);
     }

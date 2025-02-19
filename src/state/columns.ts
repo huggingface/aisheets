@@ -20,7 +20,14 @@ export interface CreateColumn {
   type: ColumnType;
   kind: ColumnKind;
   dataset: Omit<Dataset, 'columns'>;
-  process?: Process;
+  process?: {
+    modelName: string;
+    modelProvider?: string;
+    prompt: string;
+    columnsReferences?: string[];
+    offset: number;
+    limit: number;
+  };
 }
 
 export type Cell = {

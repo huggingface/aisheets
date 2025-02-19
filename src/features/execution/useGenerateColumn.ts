@@ -55,13 +55,14 @@ export const useGenerateColumn = () => {
     return columns.value.find((c) => c.id === column.id)!;
   });
 
-  const onGenerateColumn = $(async (column: Column): Promise<Column> => {
-    if (column.id === TEMPORAL_ID) {
-      return onCreateColumn(column);
-    }
-
-    return onUpdateCell(column);
-  });
+  const onGenerateColumn = $(
+    async (column: Column | CreateColumn): Promise<Column> => {
+      if ('id' in column && column.id === TEMPORAL_ID) {
+        return onCreateColumn(column);
+      }
+      return onUpdateCell(column as Column);
+    },
+  );
 
   return onGenerateColumn;
 };

@@ -1,7 +1,9 @@
 import { isDev } from '@builder.io/qwik';
 import type { RequestEvent } from '@builder.io/qwik-city';
 import * as hub from '@huggingface/hub';
-import { getDatasetIDByUser } from '~/services';
+
+import { CLIENT_ID, HF_TOKEN, OAUTH_SCOPES } from '~/config';
+import { getOrCreateDatasetIDByUser } from '~/services';
 import { saveSession } from '~/services/auth/session';
 
 export const onGet = async ({
@@ -13,15 +15,12 @@ export const onGet = async ({
 }: RequestEvent) => {
   const session = sharedMap.get('session');
   if (session) {
-    const datasetId = await getDatasetIDByUser({
+    const datasetId = await getOrCreateDatasetIDByUser({
       createdBy: session.user.username,
     });
 
     throw redirect(301, `/dataset/${datasetId}`);
   }
-
-  const CLIENT_ID = process.env.OAUTH_CLIENT_ID;
-  const HF_TOKEN = process.env.HF_TOKEN;
 
   if (CLIENT_ID) {
     const sessionCode = crypto.randomUUID();
@@ -33,7 +32,7 @@ export const onGet = async ({
     const authData = {
       state: sessionCode,
       clientId: CLIENT_ID,
-      scopes: process.env.OAUTH_SCOPES || 'openid profile inference-api',
+      scopes: OAUTH_SCOPES || 'openid profile inference-api',
       redirectUrl: `${redirectOrigin}/auth/callback/`,
       localStorage: {
         codeVerifier: undefined,

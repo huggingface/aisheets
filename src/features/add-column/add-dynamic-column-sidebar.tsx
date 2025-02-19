@@ -15,11 +15,16 @@ import {
   TemplateTextArea,
   type Variable,
 } from '~/features/add-column/components/template-textarea';
-import { type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
-import { useListModels } from '~/usecases/list-models';
+import {
+  type Column,
+  type CreateColumn,
+  TEMPORAL_ID,
+  useColumnsStore,
+} from '~/state';
+import { type Model, useListModels } from '~/usecases/list-models';
 
 interface SidebarProps {
-  onGenerateColumn: QRL<(column: Column) => Promise<Column>>;
+  onGenerateColumn: QRL<(column: CreateColumn) => Promise<Column>>;
 }
 
 export const AddDynamicColumnSidebar = component$<SidebarProps>(
@@ -31,16 +36,20 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
     const isSubmitting = useSignal(false);
 
     const currentColumn = useSignal<Column | undefined>();
-    const rowsToGenerate = useSignal('5');
+
     const prompt = useSignal<string>('');
-    const modelName = useSignal<string>('');
-    const modelProvider = useSignal<string>('');
     const columnsReferences = useSignal<string[]>([]);
     const variables = useSignal<Variable[]>([]);
+
+    const selectedModel = useSignal<Model>();
+    const inputModelId = useSignal<string | undefined>();
+    const rowsToGenerate = useSignal('5');
 
     const onSelectedVariables = $((variables: { id: string }[]) => {
       columnsReferences.value = variables.map((v) => v.id);
     });
+
+    const uniqueModelid = (model: Model) => `${model.id}-${model.provider}`;
 
     useTask$(({ track }) => {
       track(currentColumn);
@@ -66,10 +75,18 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
 
       if (!currentColumn.value) return;
 
-      prompt.value = currentColumn.value.process!.prompt;
-      modelName.value = currentColumn.value.process!.modelName!;
-      modelProvider.value = currentColumn.value.process!.modelProvider!;
-      rowsToGenerate.value = String(currentColumn.value.process!.limit);
+      const process = currentColumn.value.process!;
+
+      prompt.value = process.prompt;
+
+      selectedModel.value = {
+        id: process.modelName,
+        provider: process.modelProvider!,
+      };
+
+      inputModelId.value = selectedModel.value.id;
+
+      rowsToGenerate.value = String(process.limit);
     });
 
     const loadModels = useResource$(async () => {
@@ -80,12 +97,16 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
       if (!args.value) return;
       isSubmitting.value = true;
 
+      const modelName = inputModelId.value || selectedModel.value!.id;
+      const modelProvider = selectedModel.value?.provider;
+
       const columnToSave = {
         ...currentColumn.value!,
         process: {
           ...currentColumn.value!.process,
-          modelName: modelName.value!,
-          modelProvider: modelProvider.value!,
+          modelName,
+          modelProvider,
+
           prompt: prompt.value!,
           columnsReferences: columnsReferences.value,
           offset: 0,
@@ -131,27 +152,27 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
                 <Select.Disabled>Loading models...</Select.Disabled>
               )}
               onResolved={(models) => {
-                if (models.length > 0 && !modelName.value) {
-                  const defaultModel = models[0];
-                  modelName.value = defaultModel.id;
-                  modelProvider.value = defaultModel.provider;
+                if (!selectedModel.value?.id) {
+                  selectedModel.value = models[0];
                 }
 
                 return (
-                  <Select.Root bind:value={modelName}>
+                  <Select.Root value={uniqueModelid(selectedModel.value)}>
                     <Select.Trigger class="px-4 bg-primary rounded-base border-secondary-foreground">
                       <Select.DisplayValue />
                     </Select.Trigger>
                     <Select.Popover class="bg-primary border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto">
-                      {models.map((model) => (
+                      {models.map((model, idx) => (
                         <Select.Item
-                          key={model.id}
+                          key={idx}
                           class="text-foreground hover:bg-accent"
+                          value={uniqueModelid(model)}
                           onClick$={() => {
-                            modelProvider.value = model.provider;
+                            selectedModel.value = model;
+                            console.log(selectedModel.value);
                           }}
                         >
-                          <Select.ItemLabel>{model.id}</Select.ItemLabel>
+                          <Select.ItemLabel>{`${model.id} (${model.provider})`}</Select.ItemLabel>
                           <Select.ItemIndicator>
                             <LuCheck class="h-4 w-4" />
                           </Select.ItemIndicator>
@@ -164,7 +185,7 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
               onRejected={(error) => {
                 return (
                   <Input
-                    bind:value={modelName}
+                    bind:value={inputModelId}
                     class="px-4 h-10 border-secondary-foreground bg-primary"
                     placeholder="Cannot load model suggestions. Please enter the model ID manually."
                   />

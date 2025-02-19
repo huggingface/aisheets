@@ -28,6 +28,7 @@ export const TableCell = component$<{
   const contentRef = useSignal<HTMLElement>();
   const isTruncated = useSignal(false);
   const validateCell = useValidateCellUseCase();
+  const isClickingButton = useSignal(false);
 
   useTask$(({ track }) => {
     track(isEditing);
@@ -123,11 +124,8 @@ export const TableCell = component$<{
           'min-h-[100px]': isExpanded,
         },
       )}
-      onClick$={(e) => {
-        const target = e.target as HTMLElement;
-        if (target.closest('button')) return;
-        if (isEditing.value) return;
-
+      onClick$={() => {
+        if (isClickingButton.value || isEditing.value) return;
         onToggleExpand$();
       }}
       onDblClick$={(e) => {
@@ -157,9 +155,11 @@ export const TableCell = component$<{
                 class={`absolute text-base top-0 right-0 ${
                   cell.validated ? 'text-green-200' : 'text-primary-foreground'
                 }`}
-                onClick$={() =>
-                  onValidateCell(originalValue.value!, !cell.validated)
-                }
+                onClick$={() => {
+                  isClickingButton.value = true;
+                  onValidateCell(originalValue.value!, !cell.validated);
+                  isClickingButton.value = false;
+                }}
               >
                 <LuThumbsUp />
               </Button>

@@ -12,7 +12,7 @@ import {
   LuPanelLeftClose,
   LuPanelLeftOpen,
 } from '@qwikest/icons/lucide';
-import { getAllDatasetsByUser } from '~/services';
+import { listUserDatasets } from '~/services';
 import { useServerSession } from '~/state';
 
 export const useAllDatasets = routeLoader$(async function (
@@ -20,23 +20,12 @@ export const useAllDatasets = routeLoader$(async function (
 ) {
   const session = useServerSession(this);
 
-  const dataset = await getAllDatasetsByUser(session.user.username);
-
-  return dataset;
+  return await listUserDatasets(session.user);
 });
 
 export const MainSidebar = component$(() => {
   const { isOpen, toggle } = useToggle();
   const datasets = useAllDatasets();
-
-  const mockedItems = [
-    'Lorem ipsum dolor',
-    'Ipsum dolor sit amet',
-    'Dolor sit amet consectetur',
-    'Sit amet consectetur adipiscing',
-    'Amet consectetur adipiscing elit consectetur',
-    'Consectetur adipiscing elit',
-  ];
 
   return (
     <div

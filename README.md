@@ -5,12 +5,12 @@
 - **In-context learning using human demonstrations**: One of the biggest frustrations when building datasets with AI is prompts' brittleness. You often need to spend hours tuning the language of your prompt to avoid specific failures, ensure correct formatting, etc. Adding few-shot examples to your prompt is one of the most effective solutions to these issues. However, writing these examples by hand is time-consuming and challenging. In `unnamed`, you just need to edit/select good examples, which are automatically included in the data generation process.   
 - **The latest open-source models**: `unnamed` enables you to use the most advanced, fast, and powerful models, thanks to [Hugging Face Inference Providers](https://huggingface.co/blog/inference-providers).
 - **Cost-efficiency**: Instead of launching 100s of inference calls to experiment with prompts and pipelines, `unnamed` enables you to test and build in smol steps (a few rows at a time!). This saves money and energy and leads to higher-quality datasets; you get to look at your data and tune the generation process as you go.
-- **Go from smol to great**:  Many big things, like the universe, start from something very smol. To build great datasets, it's better to build the perfect smol dataset for your use case and then scale. `unnamed` enables you to build datasets and pipelines progressively. Once you're satisfied with your dataset, you can use the generated configuration to scale up the size of your dataset (if needed).
+- **Go from smol to great**:  Many big things, like the universe, start from something very smol. To build great datasets, it's better to build the perfect smol dataset for your use case and then scale it up. `unnamed` enables you to build datasets and pipelines progressively. Once you're satisfied with your dataset, you can use the generated configuration to scale up the size of your dataset (if needed).
 
 ## Quick demo (TBD)
 
 1. Launch the app locally or duplicate this space 
-2. Select a prompt and tune it for your use case, or import a Hugging Dataset.
+2. Select a prompt and tune it for your use case, or import a Hugging Face Dataset.
 3. Start adding columns and rows.
 4. Push your dataset and pipeline config to the Hub.
 

@@ -214,7 +214,6 @@ export const runPromptExecutionStream = async function* ({
         accessToken,
       ),
       {
-        use_cache: false,
         signal: AbortSignal.timeout(timeout ?? DEFAULT_TIMEOUT),
       },
     );

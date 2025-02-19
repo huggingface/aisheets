@@ -1,6 +1,5 @@
 import { type RequestEventBase, server$ } from '@builder.io/qwik-city';
 import consola from 'consola';
-import { INFERENCE_PROVIDER } from '~/config';
 import { useServerSession } from '~/state';
 
 import { INFERENCE_PROVIDERS } from '@huggingface/inference';

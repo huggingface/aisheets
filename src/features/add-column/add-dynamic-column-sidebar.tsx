@@ -15,11 +15,16 @@ import {
   TemplateTextArea,
   type Variable,
 } from '~/features/add-column/components/template-textarea';
-import { type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
+import {
+  type Column,
+  type CreateColumn,
+  TEMPORAL_ID,
+  useColumnsStore,
+} from '~/state';
 import { type Model, useListModels } from '~/usecases/list-models';
 
 interface SidebarProps {
-  onGenerateColumn: QRL<(column: Column) => Promise<Column>>;
+  onGenerateColumn: QRL<(column: CreateColumn) => Promise<Column>>;
 }
 
 export const AddDynamicColumnSidebar = component$<SidebarProps>(
@@ -91,7 +96,7 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
       isSubmitting.value = true;
 
       const modelName = inputModelId.value || selectedModel.value!.id;
-      const modelProvider = selectedModel.value?.provider || 'hf-inference'; // Default provider. Use the config once https://github.com/huggingface/easy-datagen/pull/60 is merged.
+      const modelProvider = selectedModel.value?.provider;
 
       const columnToSave = {
         ...currentColumn.value!,
@@ -162,7 +167,7 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
                           value={model.id}
                           onClick$={() => {
                             selectedModel.value = model;
-                            console.log(selectedModel.value);
+                            console.log(selectedModel.value, idx);
                           }}
                         >
                           <Select.ItemLabel>{`${model.id} (${model.provider})`}</Select.ItemLabel>

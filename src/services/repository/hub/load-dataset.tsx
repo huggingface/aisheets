@@ -67,7 +67,10 @@ export const loadDataset = async ({
     );
 
     const columnsSelect = columnNames
-      ? columnNames.concat(['rowIdx']).join(', ')
+      ? columnNames
+          .concat(['rowIdx'])
+          .map((column) => `"${column}"`)
+          .join(', ')
       : '*';
 
     let selectClause = `SELECT ${columnsSelect} FROM ${tableName}`;

@@ -12,12 +12,14 @@ interface DatasetNameProps {
 export const DatasetName = component$(({ dataset }: DatasetNameProps) => {
   const state = useStore({
     isEditing: false,
-    name: dataset.name,
+    name: '',
   });
 
   const { updateActiveDataset } = useDatasetsStore();
 
   const handleSave = $(() => {
+    if (!state.isEditing) return;
+
     if (state.name.trim() === '') {
       state.name = dataset.name; // Prevent empty names
       return;
@@ -43,6 +45,7 @@ export const DatasetName = component$(({ dataset }: DatasetNameProps) => {
 
   const handleEditClick = $(() => {
     state.isEditing = true;
+    state.name = dataset.name;
   });
 
   const handleChange = $((event: Event) => {
@@ -54,7 +57,7 @@ export const DatasetName = component$(({ dataset }: DatasetNameProps) => {
     if (event.key === 'Enter') {
       handleSave();
     } else if (event.key === 'Escape') {
-      state.name = dataset.name; // Reset to original name
+      state.name = '';
       state.isEditing = false;
     }
   });
@@ -77,7 +80,7 @@ export const DatasetName = component$(({ dataset }: DatasetNameProps) => {
           }`}
           onClick$={handleEditClick}
         >
-          {state.name}
+          {dataset.name}
         </h1>
       )}
     </div>

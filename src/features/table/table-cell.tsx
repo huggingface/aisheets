@@ -46,8 +46,6 @@ export const TableCell = component$<{
     track(newCellValue);
 
     editCellValueInput.value.focus();
-    editCellValueInput.value.style.height = 'auto';
-    editCellValueInput.value.style.height = `${editCellValueInput.value?.scrollHeight}px`;
   });
 
   // Check truncation after DOM is ready and content is rendered
@@ -128,6 +126,7 @@ export const TableCell = component$<{
       onClick$={(e) => {
         const target = e.target as HTMLElement;
         if (target.closest('button')) return;
+        if (isEditing.value) return;
 
         onToggleExpand$();
       }}
@@ -177,7 +176,17 @@ export const TableCell = component$<{
 
           {isEditing.value && (
             <div
-              class="absolute top-1/2 w-[45rem] h-[calc(100%+50px)] left-0 transform -translate-y-1/2 z-10 flex items-center justify-center bg-white border border-green-200 focus:border-green-200 focus:outline-none shadow-lg cursor-text"
+              class="fixed z-10 bg-white border border-green-200 focus:border-green-200 focus:outline-none shadow-lg cursor-text"
+              style={{
+                left:
+                  Math.min(
+                    ref.value?.getBoundingClientRect().left ?? 0,
+                    window.innerWidth - 720, // 45rem = 720px
+                  ) + 'px',
+                top: ref.value?.getBoundingClientRect().top + 'px',
+                width: '45rem',
+                height: '300px',
+              }}
               onClick$={() => {
                 editCellValueInput.value!.focus();
               }}
@@ -186,7 +195,7 @@ export const TableCell = component$<{
                 ref={editCellValueInput}
                 bind:value={newCellValue}
                 preventEnterNewline
-                class="w-full h-full overflow-hidden p-4 rounded-none text-sm resize-none focus-visible:outline-none focus-visible:ring-0 border-none shadow-none"
+                class="absolute inset-0 w-full h-full p-4 rounded-none text-sm resize-none focus-visible:outline-none focus-visible:ring-0 border-none shadow-none overflow-auto whitespace-pre-wrap break-words"
                 onKeyDown$={(e) => {
                   if (e.key === 'Enter') {
                     if (e.shiftKey) return;

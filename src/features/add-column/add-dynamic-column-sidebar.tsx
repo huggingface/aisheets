@@ -16,7 +16,7 @@ import {
   type Variable,
 } from '~/features/add-column/components/template-textarea';
 import { type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
-import { listModels } from '~/usecases/list-models';
+import { useListModels } from '~/usecases/list-models';
 
 interface SidebarProps {
   onGenerateColumn: QRL<(column: Column) => Promise<Column>>;
@@ -73,7 +73,7 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
     });
 
     const loadModels = useResource$(async () => {
-      return await listModels();
+      return await useListModels();
     });
 
     const onGenerate = $(async () => {
@@ -159,6 +159,15 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
                       ))}
                     </Select.Popover>
                   </Select.Root>
+                );
+              }}
+              onRejected={(error) => {
+                return (
+                  <Input
+                    bind:value={modelName}
+                    class="px-4 h-10 border-secondary-foreground bg-primary"
+                    placeholder="Cannot load model suggestions. Please enter the model ID manually."
+                  />
                 );
               }}
             />

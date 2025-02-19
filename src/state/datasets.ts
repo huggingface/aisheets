@@ -5,10 +5,9 @@ import {
   useContext,
   useContextProvider,
 } from '@builder.io/qwik';
-import { type RequestEventBase, routeLoader$ } from '@builder.io/qwik-city';
-import { getOrCreateDataset } from '~/services/repository';
+import { routeLoader$ } from '@builder.io/qwik-city';
+import { getDatasetById } from '~/services/repository';
 import type { Column } from '~/state/columns';
-import { useServerSession } from '~/state/session';
 
 export interface Dataset {
   id: string;
@@ -20,12 +19,17 @@ export interface Dataset {
 export const datasetsContext =
   createContextId<Signal<Dataset>>('datasets.context');
 
-export const useDatasetsLoader = routeLoader$<Dataset>(async function (
-  this: RequestEventBase<QwikCityPlatform>,
-) {
-  const session = useServerSession(this);
+export const useDatasetsLoader = routeLoader$<Dataset>(async ({ params }) => {
+  const id = params.id;
 
-  return await getOrCreateDataset({ createdBy: session.user.username });
+  const dataset = await getDatasetById(id);
+
+  if (!dataset) {
+    //TODO: Redirect to 404 ?
+    throw new Error('Dataset not found');
+  }
+
+  return dataset;
 });
 
 export const useLoadDatasets = () => {

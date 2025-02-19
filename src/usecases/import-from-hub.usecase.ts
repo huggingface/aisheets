@@ -90,12 +90,16 @@ export const useImportFromHub = () =>
     consola.info('Creating cells...');
     for (const row of rows) {
       for (const column of createdDataset.columns) {
-        const value = row[column.name];
+        let value = row[column.name];
+
+        if (Array.isArray(value) || typeof value === 'object') {
+          value = JSON.stringify(value);
+        }
 
         const createdCell = await createCell({
           cell: {
             idx: row.rowIdx,
-            value: JSON.stringify(value),
+            value,
           },
           column,
         });

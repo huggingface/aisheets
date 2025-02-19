@@ -49,6 +49,8 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
       columnsReferences.value = variables.map((v) => v.id);
     });
 
+    const uniqueModelid = (model: Model) => `${model.id}-${model.provider}`;
+
     useTask$(({ track }) => {
       track(currentColumn);
       if (!currentColumn.value) return;
@@ -155,7 +157,7 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
                 }
 
                 return (
-                  <Select.Root value={selectedModel.value.id}>
+                  <Select.Root value={uniqueModelid(selectedModel.value)}>
                     <Select.Trigger class="px-4 bg-primary rounded-base border-secondary-foreground">
                       <Select.DisplayValue />
                     </Select.Trigger>
@@ -164,10 +166,10 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
                         <Select.Item
                           key={idx}
                           class="text-foreground hover:bg-accent"
-                          value={model.id}
+                          value={uniqueModelid(model)}
                           onClick$={() => {
                             selectedModel.value = model;
-                            console.log(selectedModel.value, idx);
+                            console.log(selectedModel.value);
                           }}
                         >
                           <Select.ItemLabel>{`${model.id} (${model.provider})`}</Select.ItemLabel>

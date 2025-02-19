@@ -8,6 +8,7 @@ export interface Model {
   id: string;
   provider: string;
   tags?: string[];
+  safetensors?: unknown; // Probably the model weights
 }
 
 export const useListModels = server$(async function (
@@ -24,7 +25,10 @@ export const useListModels = server$(async function (
       direction: '-1',
     }),
     ...INFERENCE_PROVIDERS.map((provider) => ['inference_provider', provider]),
-    ...['inferenceProviderMapping'].map((key) => ['expand', key]),
+    ...['inferenceProviderMapping', 'safetensors'].map((key) => [
+      'expand',
+      key,
+    ]),
   ]).toString();
 
   const response = await fetch(`${url}?${params}`, {
@@ -48,7 +52,10 @@ export const useListModels = server$(async function (
 
     return providers
       ? providers.map((provider: any) => {
-          return { ...model, provider: provider.provider };
+          return {
+            ...model,
+            provider: provider.provider,
+          };
         })
       : [];
   }) as Model[];

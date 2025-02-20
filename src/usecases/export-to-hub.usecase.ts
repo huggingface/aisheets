@@ -82,8 +82,13 @@ export const useExportDataset = () =>
 
 async function generateDatasetConfig(
   dataset: Dataset,
-): Promise<Record<string, Process & { userPrompt: string }>> {
-  const columnConfigs: Record<string, Process & { userPrompt: string }> = {};
+): Promise<
+  Record<string, Omit<Process, 'offset' | 'limit'> & { userPrompt: string }>
+> {
+  const columnConfigs: Record<
+    string,
+    Omit<Process, 'offset' | 'limit'> & { userPrompt: string }
+  > = {};
 
   for (const column of dataset.columns) {
     if (!column.process) continue;

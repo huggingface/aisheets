@@ -14,7 +14,11 @@ import { Skeleton } from '~/components/ui/skeleton/skeleton';
 import { type Cell, useColumnsStore } from '~/state';
 import { useValidateCellUseCase } from '~/usecases/validate-cell.usecase';
 
-export const TableCell = component$<{ cell: Cell }>(({ cell }) => {
+export const TableCell = component$<{
+  cell: Cell;
+  isExpanded: boolean;
+  onToggleExpand$: () => void;
+}>(({ cell, isExpanded, onToggleExpand$ }) => {
   const isEditing = useSignal(false);
   const originalValue = useSignal(cell.value);
   const newCellValue = useSignal(cell.value);
@@ -24,6 +28,7 @@ export const TableCell = component$<{ cell: Cell }>(({ cell }) => {
   const contentRef = useSignal<HTMLElement>();
   const isTruncated = useSignal(false);
   const validateCell = useValidateCellUseCase();
+  const isClickingButton = useSignal(false);
 
   useTask$(({ track }) => {
     track(isEditing);
@@ -42,8 +47,6 @@ export const TableCell = component$<{ cell: Cell }>(({ cell }) => {
     track(newCellValue);
 
     editCellValueInput.value.focus();
-    editCellValueInput.value.style.height = 'auto';
-    editCellValueInput.value.style.height = `${editCellValueInput.value?.scrollHeight}px`;
   });
 
   // Check truncation after DOM is ready and content is rendered
@@ -113,19 +116,36 @@ export const TableCell = component$<{ cell: Cell }>(({ cell }) => {
   return (
     <td
       class={cn(
-        'relative min-w-80 w-80 max-w-80 min-h-[100px] h-[100px] cursor-pointer border-[0.5px]',
+        'relative min-w-80 w-80 max-w-80 cursor-pointer border-[0.5px] break-words align-top',
         {
           'bg-green-50 border-green-200': cell.validated,
           'border-secondary': !cell.validated,
+          'min-h-[100px] h-[100px]': !isExpanded,
+          'min-h-[100px]': isExpanded,
         },
       )}
-      onDblClick$={() => {
+      onClick$={() => {
+        if (isClickingButton.value || isEditing.value) return;
+        onToggleExpand$();
+      }}
+      onDblClick$={(e) => {
+        e.stopPropagation();
         isEditing.value = true;
       }}
       ref={ref}
     >
-      <div class="h-full relative">
-        <div ref={contentRef} class="relative flex flex-col h-full">
+      <div class={cn('relative', { 'h-full': !isExpanded })}>
+        <div
+          ref={contentRef}
+          class={cn('relative flex flex-col', {
+            'h-full': !isExpanded,
+            'max-h-none': isExpanded,
+            'overflow-hidden': !isExpanded,
+          })}
+          style={{
+            maxHeight: isExpanded ? 'none' : '8.5rem',
+          }}
+        >
           {originalValue.value ? (
             <>
               <Button
@@ -135,13 +155,15 @@ export const TableCell = component$<{ cell: Cell }>(({ cell }) => {
                 class={`absolute text-base top-0 right-0 ${
                   cell.validated ? 'text-green-200' : 'text-primary-foreground'
                 }`}
-                onClick$={() =>
-                  onValidateCell(originalValue.value!, !cell.validated)
-                }
+                onClick$={() => {
+                  isClickingButton.value = true;
+                  onValidateCell(originalValue.value!, !cell.validated);
+                  isClickingButton.value = false;
+                }}
               >
                 <LuThumbsUp />
               </Button>
-              <div class="h-full flex items-start mt-2 p-4">
+              <div class="h-full mt-2 p-4">
                 <Markdown class="text-gray-900" content={originalValue.value} />
               </div>
             </>
@@ -154,7 +176,17 @@ export const TableCell = component$<{ cell: Cell }>(({ cell }) => {
 
           {isEditing.value && (
             <div
-              class="absolute top-1/2 w-[45rem] h-[calc(100%+50px)] left-0 transform -translate-y-1/2 z-10 flex items-center justify-center bg-white border border-green-200 focus:border-green-200 focus:outline-none shadow-lg cursor-text"
+              class="fixed z-10 bg-white border border-green-200 focus:border-green-200 focus:outline-none shadow-lg cursor-text"
+              style={{
+                left:
+                  Math.min(
+                    ref.value?.getBoundingClientRect().left ?? 0,
+                    window.innerWidth - 720, // 45rem = 720px
+                  ) + 'px',
+                top: ref.value?.getBoundingClientRect().top + 'px',
+                width: '45rem',
+                height: '300px',
+              }}
               onClick$={() => {
                 editCellValueInput.value!.focus();
               }}
@@ -163,7 +195,7 @@ export const TableCell = component$<{ cell: Cell }>(({ cell }) => {
                 ref={editCellValueInput}
                 bind:value={newCellValue}
                 preventEnterNewline
-                class="w-full h-full overflow-hidden p-4 rounded-none text-sm resize-none focus-visible:outline-none focus-visible:ring-0 border-none shadow-none"
+                class="absolute inset-0 w-full h-full p-4 rounded-none text-sm resize-none focus-visible:outline-none focus-visible:ring-0 border-none shadow-none overflow-auto whitespace-pre-wrap break-words"
                 onKeyDown$={(e) => {
                   if (e.key === 'Enter') {
                     if (e.shiftKey) return;
@@ -176,7 +208,7 @@ export const TableCell = component$<{ cell: Cell }>(({ cell }) => {
           )}
         </div>
 
-        {isTruncated.value && (
+        {isTruncated.value && !isExpanded && (
           <div class="absolute bottom-0 left-0 h-6 w-full bg-gradient-to-t from-white/75 to-transparent pointer-events-none" />
         )}
       </div>

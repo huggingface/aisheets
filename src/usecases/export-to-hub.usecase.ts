@@ -121,8 +121,6 @@ async function generateDatasetConfig(
         const refColumn = dataset.columns.find((c) => c.id === colId);
         return refColumn?.name || colId;
       }),
-      offset: column.process.offset,
-      limit: column.process.limit,
     };
   }
 

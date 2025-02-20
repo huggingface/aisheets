@@ -1,4 +1,10 @@
-import { $, component$, useStore, useVisibleTask$ } from '@builder.io/qwik';
+import {
+  $,
+  component$,
+  useStore,
+  useVisibleTask$,
+  useSignal,
+} from '@builder.io/qwik';
 import { server$ } from '@builder.io/qwik-city';
 import { Input } from '~/components';
 import { updateDataset } from '~/services/repository/datasets';
@@ -16,6 +22,8 @@ export const DatasetName = component$(({ dataset }: DatasetNameProps) => {
   });
 
   const { updateActiveDataset } = useDatasetsStore();
+
+  const inputRef = useSignal<HTMLInputElement>();
 
   const handleSave = $(() => {
     if (!state.isEditing) return;
@@ -38,12 +46,9 @@ export const DatasetName = component$(({ dataset }: DatasetNameProps) => {
 
   useVisibleTask$(({ track }) => {
     track(() => state.isEditing);
-    if (state.isEditing) {
-      const input = document.querySelector('input') as HTMLInputElement;
-      if (input) {
-        input.focus();
-        input.select();
-      }
+    if (state.isEditing && inputRef.value) {
+      inputRef.value.focus();
+      inputRef.value.select();
     }
   });
 
@@ -71,6 +76,7 @@ export const DatasetName = component$(({ dataset }: DatasetNameProps) => {
     <div class="h-[40px] flex items-center">
       {state.isEditing ? (
         <Input
+          ref={inputRef}
           type="text"
           value={state.name}
           onInput$={handleChange}

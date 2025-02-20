@@ -1,7 +1,6 @@
 import { $, component$, useStore, useVisibleTask$ } from '@builder.io/qwik';
 import { server$ } from '@builder.io/qwik-city';
 import { Input } from '~/components';
-import { useClickOutside } from '~/components/hooks/click/outside';
 import { updateDataset } from '~/services/repository/datasets';
 import { type Dataset, useDatasetsStore } from '~/state';
 
@@ -13,6 +12,7 @@ export const DatasetName = component$(({ dataset }: DatasetNameProps) => {
   const state = useStore({
     isEditing: false,
     name: '',
+    displayName: dataset.name,
   });
 
   const { updateActiveDataset } = useDatasetsStore();
@@ -21,31 +21,36 @@ export const DatasetName = component$(({ dataset }: DatasetNameProps) => {
     if (!state.isEditing) return;
 
     if (state.name.trim() === '') {
-      state.name = dataset.name; // Prevent empty names
+      state.name = dataset.name;
+      state.isEditing = false;
       return;
     }
 
+    const newName = state.name;
+    state.displayName = newName;
     state.isEditing = false;
+    updateActiveDataset({ ...dataset, name: newName });
 
     server$(async (datasetId: string, newName: string) => {
       await updateDataset({ id: datasetId, name: newName });
-    })(dataset.id, state.name);
-
-    updateActiveDataset({ ...dataset, name: state.name });
+    })(dataset.id, newName);
   });
-
-  const ref = useClickOutside(handleSave);
 
   useVisibleTask$(({ track }) => {
     track(() => state.isEditing);
     if (state.isEditing) {
-      (ref.value as HTMLInputElement)?.focus();
+      const input = document.querySelector('input') as HTMLInputElement;
+      if (input) {
+        input.focus();
+        input.select();
+      }
     }
   });
 
   const handleEditClick = $(() => {
     state.isEditing = true;
     state.name = dataset.name;
+    state.displayName = dataset.name;
   });
 
   const handleChange = $((event: Event) => {
@@ -57,7 +62,7 @@ export const DatasetName = component$(({ dataset }: DatasetNameProps) => {
     if (event.key === 'Enter') {
       handleSave();
     } else if (event.key === 'Escape') {
-      state.name = '';
+      state.name = dataset.name;
       state.isEditing = false;
     }
   });
@@ -67,7 +72,6 @@ export const DatasetName = component$(({ dataset }: DatasetNameProps) => {
       {state.isEditing ? (
         <Input
           type="text"
-          ref={ref}
           value={state.name}
           onInput$={handleChange}
           onKeyDown$={handleKeyDown}
@@ -76,11 +80,11 @@ export const DatasetName = component$(({ dataset }: DatasetNameProps) => {
       ) : (
         <h1
           class={`text-3xl font-bold w-full min-w-[200px] truncate leading-none px-2 ${
-            dataset.name === 'New dataset' ? 'text-secondary' : ''
+            state.displayName === 'New dataset' ? 'text-secondary' : ''
           }`}
           onClick$={handleEditClick}
         >
-          {dataset.name}
+          {state.displayName}
         </h1>
       )}
     </div>

@@ -88,6 +88,15 @@ async function generateDatasetConfig(
   for (const column of dataset.columns) {
     if (!column.process) continue;
 
+    // Skip columns with empty model configuration
+    if (
+      !column.process.modelName &&
+      !column.process.modelProvider &&
+      !column.process.prompt
+    ) {
+      continue;
+    }
+
     const examples = await collectExamples({
       column,
       validatedCells: column.cells.filter((cell) => cell.validated),

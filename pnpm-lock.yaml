@@ -35,6 +35,9 @@ importers:
       sqlite3:
         specifier: ^5.1.7
         version: 5.1.7
+      yaml:
+        specifier: ^2.7.0
+        version: 2.7.0
     devDependencies:
       '@biomejs/biome':
         specifier: 1.9.4

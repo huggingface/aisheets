@@ -80,76 +80,85 @@ export const useExportDataset = () =>
     return repoId;
   });
 
-async function exportDatasetToParquet(foundDataset: Dataset): Promise<string> {
-  const jsonl = [];
+async function generateDatasetConfig(
+  dataset: Dataset,
+): Promise<Record<string, Process & { userPrompt: string }>> {
   const columnConfigs: Record<string, Process & { userPrompt: string }> = {};
 
-  // Collect process configurations from columns
-  for (const column of foundDataset.columns) {
-    if (column.process) {
-      const examples = await collectExamples({
-        column,
-        validatedCells: column.cells.filter((cell) => cell.validated),
-        columnsReferences: column.process.columnsReferences,
-      });
+  for (const column of dataset.columns) {
+    if (!column.process) continue;
 
-      // Get data from first row for materialization
-      let data = {};
-      if (column.process.columnsReferences?.length) {
-        const firstRowCells = await getRowCells({
-          rowIdx: 0,
-          columns: column.process.columnsReferences,
-        });
-        data = Object.fromEntries(
-          firstRowCells.map((cell) => [cell.column!.name, cell.value]),
-        );
-      }
+    const examples = await collectExamples({
+      column,
+      validatedCells: column.cells.filter((cell) => cell.validated),
+      columnsReferences: column.process.columnsReferences,
+    });
 
-      columnConfigs[column.name] = {
-        modelName: column.process.modelName,
-        modelProvider: column.process.modelProvider,
-        userPrompt: column.process.prompt,
-        prompt: materializePrompt({
-          instruction: column.process.prompt,
-          examples: examples.length > 0 ? examples : undefined,
-          data: Object.keys(data).length > 0 ? data : undefined,
-        }),
-        columnsReferences: column.process.columnsReferences?.map((colId) => {
-          const refColumn = foundDataset.columns.find((c) => c.id === colId);
-          return refColumn?.name || colId;
-        }),
-        offset: column.process.offset,
-        limit: column.process.limit,
-      };
-    }
+    // Get data for prompt materialization
+    const data = column.process.columnsReferences?.length
+      ? await getFirstRowData(column.process.columnsReferences)
+      : {};
+
+    columnConfigs[column.name] = {
+      modelName: column.process.modelName,
+      modelProvider: column.process.modelProvider,
+      userPrompt: column.process.prompt,
+      prompt: materializePrompt({
+        instruction: column.process.prompt,
+        examples: examples.length > 0 ? examples : undefined,
+        data: Object.keys(data).length > 0 ? data : undefined,
+      }),
+      columnsReferences: column.process.columnsReferences?.map((colId) => {
+        const refColumn = dataset.columns.find((c) => c.id === colId);
+        return refColumn?.name || colId;
+      }),
+      offset: column.process.offset,
+      limit: column.process.limit,
+    };
   }
 
-  // Collect data rows
-  for await (const row of listDatasetRows({ dataset: foundDataset })) {
+  return columnConfigs;
+}
+
+async function getFirstRowData(columnsReferences: string[]) {
+  const firstRowCells = await getRowCells({
+    rowIdx: 0,
+    columns: columnsReferences,
+  });
+  return Object.fromEntries(
+    firstRowCells.map((cell) => [cell.column!.name, cell.value]),
+  );
+}
+
+async function exportDatasetToParquet(dataset: Dataset): Promise<string> {
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'tmp-'));
+  const jsonlPath = path.join(tempDir, 'file.jsonl');
+  const parquetPath = path.join(tempDir, 'file.parquet');
+  const configPath = path.join(tempDir, 'config.yml');
+
+  // Generate and write config file
+  const columnConfigs = await generateDatasetConfig(dataset);
+  await fs.writeFile(configPath, yaml.stringify({ columns: columnConfigs }));
+
+  // Collect and write data rows
+  const jsonl = [];
+  for await (const row of listDatasetRows({ dataset })) {
     jsonl.push(JSON.stringify(row));
   }
+  await fs.writeFile(jsonlPath, jsonl.join('\n'));
 
-  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'tmp-'));
-  const filePath = `${tempDir}/file.jsonl`;
-  const parquetFilepath = `${tempDir}/file.parquet`;
-  const configFilepath = `${tempDir}/config.yml`;
-
-  // Write the YAML configuration file
-  const yamlContent = yaml.stringify({ columns: columnConfigs });
-  await fs.writeFile(configFilepath, yamlContent);
-
-  await fs.writeFile(filePath, jsonl.join('\n'));
+  // Convert to parquet
   const instance = await DuckDBInstance.create(':memory:');
-  const connect = await instance.connect();
+  const connection = await instance.connect();
   try {
-    await connect.run(
-      `CREATE TABLE tbl AS SELECT * FROM read_json_auto('${filePath}')`,
+    await connection.run(
+      `CREATE TABLE tbl AS SELECT * FROM read_json_auto('${jsonlPath}')`,
     );
-    await connect.run(`COPY tbl TO '${parquetFilepath}' (FORMAT PARQUET)`);
+    await connection.run(`COPY tbl TO '${parquetPath}' (FORMAT PARQUET)`);
   } catch (error) {
-    throw new Error('Error exporting dataset to parquet: ' + error);
+    throw new Error(`Error converting to parquet: ${error}`);
   } finally {
-    await connect.close();
+    await connection.close();
   }
 
   return tempDir;

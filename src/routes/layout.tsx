@@ -11,6 +11,8 @@ export const onGet: RequestHandler = async ({ cacheControl }) => {
   });
 };
 
+export { useAllDatasets } from '~/components/ui/main-sidebar/main-sidebar';
+
 export default component$(() => {
   return (
     <div class="flex-row flex max-h-screen">

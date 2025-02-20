@@ -9,8 +9,6 @@ interface CreateDatasetParams {
   createdBy: string;
 }
 
-// This function should be removed when the main sidebar is implemented
-// Or define the user navigation.
 export const getOrCreateDatasetIDByUser = async ({
   createdBy,
 }: { createdBy: string }): Promise<string> => {
@@ -23,6 +21,23 @@ export const getOrCreateDatasetIDByUser = async ({
   });
 
   return model.id;
+};
+
+export const listUserDatasets = async (user: {
+  username: string;
+}): Promise<Dataset[]> => {
+  const model = await DatasetModel.findAll({
+    where: { createdBy: user.username },
+  });
+
+  const datasets = model.map((dataset) => ({
+    id: dataset.id,
+    name: dataset.name,
+    createdBy: dataset.createdBy,
+    columns: [],
+  }));
+
+  return datasets;
 };
 
 export const createDataset = async ({

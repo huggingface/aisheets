@@ -16,11 +16,21 @@ export interface Dataset {
   columns: Column[];
 }
 
+const EMPTY_DATASET = {
+  id: '',
+  name: '',
+  createdBy: '',
+  columns: [],
+};
+
 export const datasetsContext =
   createContextId<Signal<Dataset>>('datasets.context');
 
 export const useDatasetsLoader = routeLoader$<Dataset>(async ({ params }) => {
   const id = params.id;
+  if (!id) {
+    return EMPTY_DATASET;
+  }
 
   const dataset = await getDatasetById(id);
 
@@ -42,9 +52,8 @@ export const useDatasetsStore = () => {
 
   return {
     activeDataset,
-
     updateActiveDataset: $((dataset: Dataset) => {
-      activeDataset.value = dataset;
+      activeDataset.value = { ...dataset };
     }),
   };
 };

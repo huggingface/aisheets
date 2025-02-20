@@ -65,7 +65,6 @@ export const runPromptExecution = async ({
         accessToken,
       ),
       {
-        use_cache: false,
         signal: AbortSignal.timeout(timeout ?? DEFAULT_TIMEOUT),
       },
     );

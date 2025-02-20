@@ -7,16 +7,14 @@ export interface ColumnInfo {
   type: string;
 }
 
-export const describeDatasetSplit = async ({
+export const describeDatasetFile = async ({
   repoId,
+  file,
   accessToken,
-  subset,
-  split,
 }: {
   repoId: string;
+  file: string;
   accessToken: string;
-  subset: string;
-  split: string;
 }): Promise<ColumnInfo[]> => {
   const db = await instance.connect();
 
@@ -28,7 +26,7 @@ export const describeDatasetSplit = async ({
     // );
 
     const result = await db.run(
-      `DESCRIBE (SELECT * FROM read_parquet(${`'hf://datasets/${repoId}@~parquet/${subset}/${split}/0000.parquet'`}) LIMIT 10)`,
+      `DESCRIBE (SELECT * FROM ${`'hf://datasets/${repoId}/${file}'`} LIMIT 10)`,
     );
 
     const rows = await result.getRowObjectsJson();

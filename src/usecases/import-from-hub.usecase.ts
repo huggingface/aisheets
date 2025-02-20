@@ -4,15 +4,14 @@ import { type Dataset, useServerSession } from '~/state';
 import consola from 'consola';
 import { createCell, createColumn, createDataset } from '~/services';
 import {
-  describeDatasetSplit,
+  describeDatasetFile,
   getDatasetInfo,
   loadDataset,
 } from '~/services/repository/hub';
 
 export interface ImportFromHubParams {
   repoId: string;
-  subset?: string;
-  split?: string;
+  filePath: string;
 }
 
 export const useImportFromHub = () =>
@@ -20,7 +19,7 @@ export const useImportFromHub = () =>
     this: RequestEventBase<QwikCityPlatform>,
     importParams: ImportFromHubParams,
   ): Promise<Dataset> {
-    const { repoId, subset, split } = importParams;
+    const { repoId, filePath } = importParams;
     const session = useServerSession(this);
 
     consola.info('Getting dataset info for repoId:', repoId);
@@ -29,26 +28,11 @@ export const useImportFromHub = () =>
       accessToken: session.token,
     });
 
-    const selectedSubset =
-      (subset
-        ? datasetInfo.subsets.find((s) => s.name === subset)
-        : undefined) || datasetInfo.subsets[0];
-    const selectedSplit =
-      (split
-        ? selectedSubset.splits.find((s) => s.name === split)
-        : undefined) || selectedSubset.splits[0];
-
-    consola.info(
-      'Describing split columns',
+    consola.info('Describing file columns', repoId, filePath);
+    const splitColumns = await describeDatasetFile({
       repoId,
-      selectedSubset.name,
-      selectedSplit.name,
-    );
-    const splitColumns = await describeDatasetSplit({
-      repoId,
+      file: filePath,
       accessToken: session.token,
-      subset: selectedSubset.name,
-      split: selectedSplit.name,
     });
 
     const supportedColumns = splitColumns;
@@ -80,8 +64,8 @@ export const useImportFromHub = () =>
       dataset: createdDataset,
       // TODO: Move all these parameters to a single object and link them to the created dataset.
       repoId,
+      file: filePath,
       accessToken: session.token,
-      parquetFiles: [selectedSplit.files[0]],
       // END TODO
       limit: 100,
       columnNames: supportedColumns.map((col) => col.name),

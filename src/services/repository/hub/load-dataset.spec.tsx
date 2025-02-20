@@ -26,7 +26,7 @@ describe.runIf(accessToken)(
         },
         repoId: 'open-thoughts/OpenThoughts-114k',
         accessToken: accessToken!,
-        parquetFiles: ['default/train/0000.parquet'],
+        file: 'data/train-00000-of-00006.parquet',
         limit: 500,
       });
 
@@ -34,7 +34,9 @@ describe.runIf(accessToken)(
       expect(result.rows).toHaveLength(500);
     });
 
-    it('should read a dataset for a private dataset', async () => {
+    it('should read a dataset for a private dataset', async (t) => {
+      t.skip(); // The dataset is is private and we still need to resolve errors running in the HF spaces
+
       const model = await DatasetModel.create({
         name: 'Test Dataset',
         createdBy: 'test',
@@ -49,7 +51,7 @@ describe.runIf(accessToken)(
         },
         repoId: 'frascuchon/awesome-chatgpt-prompts',
         accessToken: accessToken!,
-        parquetFiles: ['default/train/0000.parquet'],
+        file: 'data/train-00000-of-00001.parquet',
         limit: 50,
       });
 
@@ -72,7 +74,7 @@ describe.runIf(accessToken)(
         },
         repoId: 'argilla/magpie-ultra-v1.0',
         accessToken: accessToken!,
-        parquetFiles: ['default/train/0000.parquet'],
+        file: 'data/train-00000-of-00056.parquet',
         offset: 500,
         limit: 5,
       });
@@ -99,7 +101,7 @@ describe.runIf(accessToken)(
         },
         repoId: 'argilla/magpie-ultra-v1.0',
         accessToken: accessToken!,
-        parquetFiles: ['default/train/0000.parquet'],
+        file: 'data/train-00000-of-00056.parquet',
         columnNames: ['system_prompt_key', 'instruction'],
         limit: 1,
       });

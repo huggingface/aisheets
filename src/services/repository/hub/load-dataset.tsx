@@ -34,27 +34,24 @@ export interface DatasetRows {
 export const loadDataset = async ({
   dataset,
   repoId,
+  file,
   accessToken,
-  parquetFiles,
   columnNames,
   limit,
   offset,
 }: {
   dataset: Dataset;
   repoId: string;
+  file: string;
   accessToken: string;
-  parquetFiles: string[];
   columnNames?: string[];
   limit?: number;
   offset?: number;
 }): Promise<DatasetRows> => {
   const db = await instance.connect();
-  const tableName = `tbl_${dataset.id.replaceAll('-', '_')}`;
 
   try {
-    const uris = parquetFiles
-      .map((file) => `'hf://datasets/${repoId}@~parquet/${file}'`)
-      .join(',');
+    const uri = `'hf://datasets/${repoId}/${file}'`;
 
     // This is not working when running in a hf space
     // await db.run(
@@ -62,18 +59,11 @@ export const loadDataset = async ({
     //   `CREATE OR REPLACE SECRET hf_token (TYPE HUGGINGFACE, TOKEN '${accessToken}')`,
     // );
 
-    await db.run(
-      `CREATE TABLE IF NOT EXISTS ${tableName} AS SELECT *, CAST(file_row_number AS INTEGER) as rowIdx FROM read_parquet([${uris}], file_row_number=true)`,
-    );
-
     const columnsSelect = columnNames
-      ? columnNames
-          .concat(['rowIdx'])
-          .map((column) => `"${column}"`)
-          .join(', ')
+      ? columnNames.map((column) => `"${column}"`).join(', ')
       : '*';
 
-    let selectClause = `SELECT ${columnsSelect} FROM ${tableName}`;
+    let selectClause = `SELECT ${columnsSelect} FROM ${uri}`;
 
     if (limit) {
       selectClause += ` LIMIT ${limit}`;
@@ -87,7 +77,12 @@ export const loadDataset = async ({
     const rows = await result.getRowObjectsJson();
 
     return {
-      rows,
+      rows: rows.map((row, idx) => {
+        return {
+          ...row,
+          rowIdx: (offset || 0) + idx,
+        };
+      }),
     };
   } catch (error) {
     throw new Error(`Failed to load dataset: ${error}`);

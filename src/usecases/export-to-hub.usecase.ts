@@ -139,15 +139,21 @@ async function getFirstRowData(columnsReferences: string[]) {
   );
 }
 
-async function exportDatasetToParquet(dataset: Dataset): Promise<string> {
-  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'tmp-'));
-  const jsonlPath = path.join(tempDir, 'file.jsonl');
-  const parquetPath = path.join(tempDir, 'file.parquet');
+async function createDatasetConfig(
+  tempDir: string,
+  dataset: Dataset,
+): Promise<void> {
   const configPath = path.join(tempDir, 'config.yml');
-
-  // Generate and write config file
   const columnConfigs = await generateDatasetConfig(dataset);
   await fs.writeFile(configPath, yaml.stringify({ columns: columnConfigs }));
+}
+
+async function createDatasetContent(
+  tempDir: string,
+  dataset: Dataset,
+): Promise<void> {
+  const jsonlPath = path.join(tempDir, 'file.jsonl');
+  const parquetPath = path.join(tempDir, 'file.parquet');
 
   // Collect and write data rows
   const jsonl = [];
@@ -169,6 +175,16 @@ async function exportDatasetToParquet(dataset: Dataset): Promise<string> {
   } finally {
     await connection.close();
   }
+}
 
-  return tempDir;
+async function exportDatasetToParquet(dataset: Dataset): Promise<string> {
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'tmp-'));
+
+  try {
+    await createDatasetConfig(tempDir, dataset);
+    await createDatasetContent(tempDir, dataset);
+    return tempDir;
+  } catch (error) {
+    throw new Error(`Error exporting dataset: ${error}`);
+  }
 }

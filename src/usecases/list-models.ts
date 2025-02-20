@@ -4,6 +4,36 @@ import { useServerSession } from '~/state';
 
 import { INFERENCE_PROVIDERS } from '@huggingface/inference';
 
+const MODEL_EXPANDABLE_KEYS = [
+  'author',
+  //'cardData',
+  //'config',
+  'createdAt',
+  //'disabled',
+  'downloads',
+  //'downloadsAllTime',
+  //'gated',
+  //'inference',
+  'inferenceProviderMapping',
+  //'lastModified',
+  //'library_name',
+  'likes',
+  //'mask_token',
+  //'model-index',
+  //'pipeline_tag',
+  'private',
+  'safetensors',
+  //'sha',
+  //'siblings',
+  //'spaces',
+  'tags',
+  //'transformersInfo',
+  'trendingScore',
+  //'widgetData',
+  //'gguf',
+  //'resourceGroup',
+];
+
 export interface Model {
   id: string;
   provider: string;
@@ -25,10 +55,7 @@ export const useListModels = server$(async function (
       direction: '-1',
     }),
     ...INFERENCE_PROVIDERS.map((provider) => ['inference_provider', provider]),
-    ...['inferenceProviderMapping', 'safetensors'].map((key) => [
-      'expand',
-      key,
-    ]),
+    ...MODEL_EXPANDABLE_KEYS.map((key) => ['expand', key]),
   ]).toString();
 
   const response = await fetch(`${url}?${params}`, {
@@ -51,12 +78,14 @@ export const useListModels = server$(async function (
     const providers = model.inferenceProviderMapping;
 
     return providers
-      ? providers.map((provider: any) => {
-          return {
-            ...model,
-            provider: provider.provider,
-          };
-        })
+      ? providers
+          .filter((provider: any) => provider.status === 'live')
+          .map((provider: any) => {
+            return {
+              ...model,
+              provider: provider.provider,
+            };
+          })
       : [];
   }) as Model[];
 });

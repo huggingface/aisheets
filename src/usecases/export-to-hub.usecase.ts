@@ -1,7 +1,6 @@
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import url from 'node:url';
 import yaml from 'yaml';
 
 import { DuckDBInstance } from '@duckdb/node-api';
@@ -9,10 +8,13 @@ import { DuckDBInstance } from '@duckdb/node-api';
 import { type HubApiError, createRepo, uploadFiles } from '@huggingface/hub';
 
 import { type RequestEventBase, server$ } from '@builder.io/qwik-city';
-
-import { getRowCells } from '~/services';
-import { getDatasetById, listDatasetRows } from '~/services/repository';
+import { getRowCells } from '~/services/repository/cells';
+import {
+  getDatasetById,
+  listDatasetRows,
+} from '~/services/repository/datasets';
 import { type Dataset, type Process, useServerSession } from '~/state';
+import { collectExamples } from './collect-examples';
 import { materializePrompt } from './materialize-prompt';
 
 export interface ExportDatasetParams {
@@ -59,7 +61,9 @@ export const useExportDataset = () =>
         files: [
           {
             path: 'train.parquet',
-            content: url.pathToFileURL(filePath),
+            content: new Blob([
+              await fs.readFile(path.join(filePath, 'file.parquet')),
+            ]),
           },
           {
             path: 'config.yml',
@@ -83,38 +87,15 @@ async function exportDatasetToParquet(foundDataset: Dataset): Promise<string> {
   // Collect process configurations from columns
   for (const column of foundDataset.columns) {
     if (column.process) {
-      const hasReferredColumns =
-        column.process.columnsReferences &&
-        column.process.columnsReferences.length > 0;
+      const examples = await collectExamples({
+        column,
+        validatedCells: column.cells.filter((cell) => cell.validated),
+        columnsReferences: column.process.columnsReferences,
+      });
 
-      // Get validated examples for this column
-      const validatedCells = column.cells.filter((cell) => cell.validated);
-      const examples = await Promise.all(
-        validatedCells.map(async (cell) => {
-          if (hasReferredColumns) {
-            // Get referenced column values for this row
-            const rowCells = await getRowCells({
-              rowIdx: cell.idx,
-              columns: column.process!.columnsReferences!,
-            });
-
-            const inputs = Object.fromEntries(
-              rowCells
-                .filter((rcell): rcell is typeof rcell & { value: string } =>
-                  Boolean(rcell.column?.name && rcell.value),
-                )
-                .map((rcell) => [rcell.column!.name, rcell.value]),
-            );
-
-            return { output: cell.value || '', inputs };
-          }
-          return { output: cell.value || '', inputs: {} };
-        }),
-      );
-
-      // Get data from the first row with referenced columns (for materialization)
+      // Get data from first row for materialization
       let data = {};
-      if (hasReferredColumns) {
+      if (column.process.columnsReferences?.length) {
         const firstRowCells = await getRowCells({
           rowIdx: 0,
           columns: column.process.columnsReferences,
@@ -127,14 +108,16 @@ async function exportDatasetToParquet(foundDataset: Dataset): Promise<string> {
       columnConfigs[column.name] = {
         modelName: column.process.modelName,
         modelProvider: column.process.modelProvider,
-        userPrompt: column.process.prompt, // Store original prompt
+        userPrompt: column.process.prompt,
         prompt: materializePrompt({
-          // Store materialized prompt
           instruction: column.process.prompt,
           examples: examples.length > 0 ? examples : undefined,
           data: Object.keys(data).length > 0 ? data : undefined,
         }),
-        columnsReferences: column.process.columnsReferences,
+        columnsReferences: column.process.columnsReferences?.map((colId) => {
+          const refColumn = foundDataset.columns.find((c) => c.id === colId);
+          return refColumn?.name || colId;
+        }),
         offset: column.process.offset,
         limit: column.process.limit,
       };

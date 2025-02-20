@@ -67,7 +67,7 @@ export const useImportFromHub = () =>
       file: filePath,
       accessToken: session.token,
       // END TODO
-      limit: 100,
+      limit: 500,
       columnNames: supportedColumns.map((col) => col.name),
     });
 

@@ -1,5 +1,5 @@
 import { $ } from '@builder.io/qwik';
-import { useModals } from '~/components';
+import { useExecution } from '~/features/add-column';
 import {
   type Column,
   type CreateColumn,
@@ -10,7 +10,7 @@ import { useAddColumnUseCase } from '~/usecases/add-column.usecase';
 import { useEditColumnUseCase } from '~/usecases/edit-column.usecase';
 
 export const useGenerateColumn = () => {
-  const { openAddDynamicColumnSidebar } = useModals('addDynamicColumnSidebar');
+  const { open } = useExecution();
   const {
     state: columns,
     addColumn,
@@ -27,10 +27,7 @@ export const useGenerateColumn = () => {
       if (column) {
         await addColumn(column);
 
-        openAddDynamicColumnSidebar({
-          columnId: column.id,
-          mode: 'edit',
-        });
+        open(column.id, 'edit');
       }
       if (cell) {
         replaceCell(cell);

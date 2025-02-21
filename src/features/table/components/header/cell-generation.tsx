@@ -2,7 +2,7 @@ import { component$, useComputed$ } from '@builder.io/qwik';
 import { LuEgg, LuEggOff } from '@qwikest/icons/lucide';
 import { Button } from '~/components';
 import { Tooltip } from '~/components/ui/tooltip/tooltip';
-import { useGenerateColumn } from '~/features/execution/useGenerateColumn';
+import { useGenerateColumn } from '~/features/execution';
 import { type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
 
 export const CellGeneration = component$<{ column: Column }>(({ column }) => {

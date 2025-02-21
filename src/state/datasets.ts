@@ -26,21 +26,22 @@ const EMPTY_DATASET = {
 export const datasetsContext =
   createContextId<Signal<Dataset>>('datasets.context');
 
-export const useDatasetsLoader = routeLoader$<Dataset>(async ({ params }) => {
-  const id = params.id;
-  if (!id) {
-    return EMPTY_DATASET;
-  }
+export const useDatasetsLoader = routeLoader$<Dataset>(
+  async ({ redirect, params }) => {
+    const id = params.id;
+    if (!id) {
+      return EMPTY_DATASET;
+    }
 
-  const dataset = await getDatasetById(id);
+    const dataset = await getDatasetById(id);
 
-  if (!dataset) {
-    //TODO: Redirect to 404 ?
-    throw new Error('Dataset not found');
-  }
+    if (!dataset) {
+      throw redirect(302, '/');
+    }
 
-  return dataset;
-});
+    return dataset;
+  },
+);
 
 export const useLoadDatasets = () => {
   const dataset = useDatasetsLoader();

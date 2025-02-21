@@ -3,7 +3,7 @@ import { QwikCityMockProvider } from '@builder.io/qwik-city';
 import { createDOM } from '@builder.io/qwik/testing';
 import { expect, test, vi } from 'vitest';
 import { ModalsProvider } from '~/components';
-import { AddDynamicColumnSidebar } from '~/features/add-column/add-dynamic-column-sidebar';
+import { ExecutionForm } from '~/features';
 import type { CreateColumn } from '~/state';
 import { useAddColumnUseCase } from '~/usecases/add-column.usecase';
 
@@ -17,7 +17,7 @@ test('should AddDynamicColumnSidebar does not call onCreateColumn initially', as
   await render(
     <ModalsProvider>
       <QwikCityMockProvider>
-        <AddDynamicColumnSidebar onGenerateColumn={onCreateColumn} />
+        <ExecutionForm onGenerateColumn={onCreateColumn} />
       </QwikCityMockProvider>
     </ModalsProvider>,
   );

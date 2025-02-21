@@ -1,6 +1,6 @@
 import { component$ } from '@builder.io/qwik';
 import type { DocumentHead } from '@builder.io/qwik-city';
-import { Execution } from '~/features';
+import { ExportToHub } from '~/features';
 
 import { DatasetName } from '~/features/datasets/dataset-name';
 import { Table } from '~/features/table/table';
@@ -22,7 +22,8 @@ export default component$(() => {
       </div>
       <div class="flex justify-between items-center w-full mb-4 pt-4">
         <DatasetName dataset={activeDataset.value} />
-        <Execution />
+
+        <ExportToHub />
       </div>
       <Table />
     </div>

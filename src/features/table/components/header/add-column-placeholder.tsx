@@ -1,12 +1,12 @@
 import { $, component$, useComputed$, useVisibleTask$ } from '@builder.io/qwik';
 import { LuPlus } from '@qwikest/icons/lucide';
-import { Button, useModals } from '~/components';
+import { Button } from '~/components';
 import { nextTick } from '~/components/hooks/tick';
+import { useExecution } from '~/features/add-column';
 import { TEMPORAL_ID, useColumnsStore } from '~/state';
 
 export const TableAddCellHeaderPlaceHolder = component$(() => {
-  const { openAddDynamicColumnSidebar, closeAddDynamicColumnSidebar } =
-    useModals('addDynamicColumnSidebar');
+  const { open, close } = useExecution();
   const { state: columns, addTemporalColumn } = useColumnsStore();
 
   const lastColumnId = useComputed$(
@@ -18,25 +18,18 @@ export const TableAddCellHeaderPlaceHolder = component$(() => {
 
     if (columns.value.length === 1 && lastColumnId.value === TEMPORAL_ID) {
       nextTick(() => {
-        openAddDynamicColumnSidebar({
-          columnId: lastColumnId.value,
-          mode: 'create',
-        });
+        open(lastColumnId.value, 'add');
       });
 
-      cleanup(closeAddDynamicColumnSidebar);
+      cleanup(close);
     }
   });
 
   const handleNewColumn = $(async () => {
     await addTemporalColumn();
-    await closeAddDynamicColumnSidebar();
 
     nextTick(() => {
-      openAddDynamicColumnSidebar({
-        columnId: TEMPORAL_ID,
-        mode: 'create',
-      });
+      open(TEMPORAL_ID, 'add');
     });
   });
 

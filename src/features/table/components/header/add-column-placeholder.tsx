@@ -13,7 +13,7 @@ export const TableAddCellHeaderPlaceHolder = component$(() => {
     () => columns.value[columns.value.length - 1].id,
   );
 
-  useVisibleTask$(async ({ track, cleanup }) => {
+  useVisibleTask$(({ track, cleanup }) => {
     track(columns);
 
     if (columns.value.length === 1 && lastColumnId.value === TEMPORAL_ID) {

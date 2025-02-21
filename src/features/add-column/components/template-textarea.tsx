@@ -81,14 +81,17 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
   });
 
   const updateBracketsSelectorPosition = $((textarea: HTMLTextAreaElement) => {
+    const verticalPadding = 10;
+
     const { selectionStart } = textarea;
+    const style = getComputedStyle(textarea);
+
     const textBeforeCursor = textarea.value.slice(0, selectionStart || 0);
     const lines = textBeforeCursor.split('\n');
-
     const canvas = document.createElement('canvas');
     const context = canvas.getContext('2d');
+
     if (context) {
-      const style = getComputedStyle(textarea);
       context.font = `${style.fontSize} ${style.fontFamily}`;
     }
 
@@ -102,10 +105,12 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
 
     const charOffset = measureTextWidth(lines[lines.length - 1]);
     const verticalAlignPerLines = lines.length - 1 || 0.5;
+    popover.lineHeight = Number.parseInt(style.lineHeight) + verticalPadding;
 
     const position = {
-      x: charOffset,
-      y: verticalAlignPerLines * 0.73 * popover.lineHeight,
+      x: charOffset + 20,
+      y:
+        Math.round(verticalAlignPerLines * 0.72 * popover.lineHeight * 10) / 10,
     };
 
     popover.position = {
@@ -134,8 +139,6 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
       textarea.value = props['bind:value'].value = removedInconsistentBrackets;
       return;
     }
-
-    await updateBracketsSelectorPosition(textarea);
 
     if (isRequestingVariable) {
       firstOption.value?.focus();
@@ -166,23 +169,11 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
     });
   });
 
-  useVisibleTask$(({ track }) => {
+  useVisibleTask$(async ({ track }) => {
     track(props['bind:value']);
 
     if (textarea.value) {
-      const verticalPadding = 10;
-      popover.lineHeight =
-        Number.parseInt(getComputedStyle(textarea.value).lineHeight || '20') +
-        verticalPadding;
-
-      popover.position = {
-        x: 0,
-        y: popover.lineHeight,
-      };
-
-      nextTick(() => {
-        updateBracketsSelectorPosition(textarea.value!);
-      });
+      await updateBracketsSelectorPosition(textarea.value!);
     }
 
     popover.options = props.variables.value.map((variable) => variable.name);
@@ -226,7 +217,7 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
           hideIcon
           class={`px-6 absolute border border-secondary bg-primary p-2 rounded shadow-lg ${popover.options.length === 0 ? 'invisible' : ''}`}
           style={{
-            left: `${popover.position.x + 20}px`,
+            left: `${popover.position.x}px`,
             top: `${popover.position.y}px`,
           }}
         >

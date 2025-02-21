@@ -2,15 +2,18 @@ import {
   $,
   component$,
   useSignal,
+  useStore,
   useTask$,
   useVisibleTask$,
 } from '@builder.io/qwik';
+import { server$ } from '@builder.io/qwik-city';
 import { cn } from '@qwik-ui/utils';
 import { LuThumbsUp } from '@qwikest/icons/lucide';
 import { Button, Textarea } from '~/components';
 import { useClickOutside } from '~/components/hooks/click/outside';
 import { Markdown } from '~/components/ui/markdown/markdown';
 import { Skeleton } from '~/components/ui/skeleton/skeleton';
+import { getColumnCellById } from '~/services';
 import { type Cell, useColumnsStore } from '~/state';
 import { useValidateCellUseCase } from '~/usecases/validate-cell.usecase';
 
@@ -18,8 +21,9 @@ export const TableCell = component$<{
   cell: Cell;
   isExpanded: boolean;
   onToggleExpand$: () => void;
-}>(({ cell, isExpanded, onToggleExpand$ }) => {
+}>(({ cell: baseCell, isExpanded, onToggleExpand$ }) => {
   const isEditing = useSignal(false);
+  const cell = useStore(baseCell);
   const originalValue = useSignal(cell.value);
   const newCellValue = useSignal(cell.value);
   const { replaceCell } = useColumnsStore();
@@ -29,6 +33,32 @@ export const TableCell = component$<{
   const isTruncated = useSignal(false);
   const validateCell = useValidateCellUseCase();
   const isClickingButton = useSignal(false);
+
+  useVisibleTask$(({ track }) => {
+    track(() => baseCell.value);
+    track(() => baseCell.error);
+
+    cell.error = baseCell.error;
+    cell.value = baseCell.value;
+  });
+
+  useVisibleTask$(async () => {
+    if (cell.error || cell.value) return;
+
+    const persistedCell = await server$(async (cellId: string) => {
+      const persistedCell = await getColumnCellById(cellId);
+
+      return {
+        error: persistedCell?.error,
+        value: persistedCell?.value,
+        validated: persistedCell?.validated,
+      };
+    })(cell.id);
+    if (!persistedCell) return;
+    cell.error = persistedCell.error;
+    cell.value = persistedCell.value;
+    cell.validated = persistedCell.validated;
+  });
 
   useTask$(({ track }) => {
     track(isEditing);
@@ -125,11 +155,15 @@ export const TableCell = component$<{
         },
       )}
       onClick$={() => {
-        if (isClickingButton.value || isEditing.value) return;
+        if (isClickingButton.value || isEditing.value || !cell.value) return;
+
         onToggleExpand$();
       }}
       onDblClick$={(e) => {
         e.stopPropagation();
+
+        if (!cell.value) return;
+
         isEditing.value = true;
       }}
       ref={ref}

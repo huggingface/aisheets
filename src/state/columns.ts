@@ -33,8 +33,10 @@ export interface CreateColumn {
 export type Cell = {
   id: string;
   idx: number;
-  column?: Column;
-  validated: boolean;
+  column?: {
+    id: string;
+  };
+  validated?: boolean;
   value?: string;
   error?: string;
   updatedAt: Date;

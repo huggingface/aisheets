@@ -59,11 +59,10 @@ export const getDatasetColumns = async (
       cells: model.cells.map((cell) => ({
         id: cell.id,
         idx: cell.idx,
-        value: cell.value,
-        error: cell.error,
-        validated: cell.validated,
         updatedAt: cell.updatedAt,
-        column,
+        column: {
+          id: column.id,
+        },
       })),
     };
   });
@@ -121,8 +120,6 @@ export const getColumnById = async (id: string): Promise<Column | null> => {
     cells: model.cells.map((cell) => ({
       id: cell.id,
       idx: cell.idx,
-      value: cell.value,
-      error: cell.error,
       validated: cell.validated,
       updatedAt: cell.updatedAt,
       column,

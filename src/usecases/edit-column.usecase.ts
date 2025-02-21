@@ -20,7 +20,7 @@ export const useEditColumnUseCase = () =>
     };
 
     const validatedCells = await getColumnCells({
-      column,
+      columnId: column.id,
       conditions: { validated: true },
     });
 

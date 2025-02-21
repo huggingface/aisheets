@@ -1,6 +1,6 @@
 import { Op } from 'sequelize';
 import { ColumnCellModel } from '~/services/db/models/cell';
-import type { Cell, Column } from '~/state';
+import type { Cell } from '~/state';
 
 interface GetRowCellsParams {
   rowIdx: number;
@@ -25,16 +25,16 @@ export const getRowCells = async ({
 };
 
 export const getColumnCellByIdx = async ({
-  column,
+  columnId,
   idx,
 }: {
-  column: Column;
+  columnId: string;
   idx: number;
 }): Promise<Cell | null> => {
   const model = await ColumnCellModel.findOne({
     where: {
       idx,
-      columnId: column.id,
+      columnId,
     },
   });
 
@@ -48,8 +48,9 @@ export const getColumnCellByIdx = async ({
     value: model.value,
     error: model.error,
     validated: model.validated,
-    updatedAt: model.updatedAt,
-    column,
+    column: {
+      id: model.columnId,
+    },
   };
 };
 
@@ -66,20 +67,22 @@ export const getColumnCellById = async (id: string): Promise<Cell | null> => {
     value: model.value,
     error: model.error,
     validated: model.validated,
-    updatedAt: model.updatedAt,
+    column: {
+      id: model.columnId,
+    },
   };
 };
 
 export const getColumnCells = async ({
-  column,
+  columnId,
   conditions,
 }: {
-  column: Column;
+  columnId: string;
   conditions?: Record<string, any>;
 }): Promise<Cell[]> => {
   const models = await ColumnCellModel.findAll({
     where: {
-      columnId: column.id,
+      columnId,
       ...conditions,
     },
     order: [['createdAt', 'ASC']],
@@ -91,20 +94,20 @@ export const getColumnCells = async ({
     value: cell.value,
     error: cell.error,
     validated: cell.validated,
-    columnId: cell.columnId,
-    updatedAt: cell.updatedAt,
-    column,
+    column: {
+      id: cell.columnId,
+    },
   }));
 };
 
 export const createCell = async ({
   cell,
-  column,
+  columnId,
 }: {
-  cell: Omit<Cell, 'id' | 'validated' | 'updatedAt'>;
-  column: Column;
+  cell: Omit<Cell, 'id' | 'validated'>;
+  columnId: string;
 }): Promise<Cell> => {
-  const model = await ColumnCellModel.create({ ...cell, columnId: column.id });
+  const model = await ColumnCellModel.create({ ...cell, columnId });
 
   return {
     id: model.id,
@@ -112,8 +115,9 @@ export const createCell = async ({
     value: model.value,
     error: model.error,
     validated: model.validated,
-    updatedAt: model.updatedAt,
-    column,
+    column: {
+      id: model.columnId,
+    },
   };
 };
 
@@ -133,7 +137,8 @@ export const updateCell = async (cell: Partial<Cell>): Promise<Cell> => {
     value: model.value,
     error: model.error,
     validated: model.validated,
-    updatedAt: model.updatedAt,
-    column: cell.column,
+    column: {
+      id: model.columnId,
+    },
   };
 };

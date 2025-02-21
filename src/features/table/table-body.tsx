@@ -5,7 +5,7 @@ import { type Cell, type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
 
 export const TableBody = component$(() => {
   const { state: columns } = useColumnsStore();
-  const rowCount = columns.value[0]?.cells.length || 0;
+  const rowCount = useComputed$(() => columns.value[0].process?.limit || 0);
   const expandedRows = useSignal<Set<number>>(new Set());
 
   const getCell = (column: Column, rowIndex: number): Cell => {
@@ -14,12 +14,13 @@ export const TableBody = component$(() => {
     if (!cell) {
       return {
         id: `${column.id}-${rowIndex}`,
+        idx: rowIndex,
         value: '',
         error: '',
         validated: false,
-        column,
-        updatedAt: new Date(),
-        idx: rowIndex,
+        column: {
+          id: column.id,
+        },
       };
     }
 
@@ -28,8 +29,8 @@ export const TableBody = component$(() => {
 
   return (
     <tbody>
-      {Array.from({ length: rowCount }).map((_, rowIndex) => (
-        <tr key={rowIndex} class="hover:bg-gray-50/50 transition-colors">
+      {Array.from({ length: rowCount.value }).map((_, rowIndex) => (
+        <tr key={rowCount.value} class="hover:bg-gray-50/50 transition-colors">
           {columns.value.map((column, index) => {
             const cell = getCell(column, rowIndex);
 
@@ -42,7 +43,7 @@ export const TableBody = component$(() => {
                   />
                 ) : (
                   <TableCell
-                    key={`${cell.id}-${cell.updatedAt}`}
+                    key={cell.id}
                     cell={cell}
                     isExpanded={expandedRows.value.has(rowIndex)}
                     onToggleExpand$={() => {

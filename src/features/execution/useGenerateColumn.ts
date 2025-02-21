@@ -15,6 +15,7 @@ export const useGenerateColumn = () => {
     state: columns,
     addColumn,
     updateColumn,
+    addCell,
     replaceCell,
   } = useColumnsStore();
   const addNewColumn = useAddColumnUseCase();
@@ -33,7 +34,7 @@ export const useGenerateColumn = () => {
         });
       }
       if (cell) {
-        replaceCell(cell);
+        addCell(cell);
       }
     }
 

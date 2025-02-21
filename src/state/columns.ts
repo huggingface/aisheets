@@ -39,7 +39,6 @@ export type Cell = {
   validated?: boolean;
   value?: string;
   error?: string;
-  updatedAt: Date;
 };
 
 export interface Column {
@@ -80,35 +79,30 @@ export const useColumnsStore = () => {
           id: TEMPORAL_ID,
           idx: 0,
           validated: false,
-          updatedAt: new Date(),
           value: '',
         },
         {
           id: TEMPORAL_ID,
           idx: 1,
           validated: false,
-          updatedAt: new Date(),
           value: '',
         },
         {
           id: TEMPORAL_ID,
           idx: 2,
           validated: false,
-          updatedAt: new Date(),
           value: '',
         },
         {
           id: TEMPORAL_ID,
           idx: 3,
           validated: false,
-          updatedAt: new Date(),
           value: '',
         },
         {
           id: TEMPORAL_ID,
           idx: 4,
           validated: false,
-          updatedAt: new Date(),
           value: '',
         },
       ],

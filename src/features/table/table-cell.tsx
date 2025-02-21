@@ -2,7 +2,6 @@ import {
   $,
   component$,
   useSignal,
-  useStore,
   useTask$,
   useVisibleTask$,
 } from '@builder.io/qwik';
@@ -21,26 +20,18 @@ export const TableCell = component$<{
   cell: Cell;
   isExpanded: boolean;
   onToggleExpand$: () => void;
-}>(({ cell: baseCell, isExpanded, onToggleExpand$ }) => {
+}>(({ cell, isExpanded, onToggleExpand$ }) => {
+  const { replaceCell } = useColumnsStore();
+  const validateCell = useValidateCellUseCase();
+
   const isEditing = useSignal(false);
-  const cell = useStore(baseCell);
   const originalValue = useSignal(cell.value);
   const newCellValue = useSignal(cell.value);
-  const { replaceCell } = useColumnsStore();
+  const isTruncated = useSignal(false);
+  const isClickingButton = useSignal(false);
 
   const editCellValueInput = useSignal<HTMLElement>();
   const contentRef = useSignal<HTMLElement>();
-  const isTruncated = useSignal(false);
-  const validateCell = useValidateCellUseCase();
-  const isClickingButton = useSignal(false);
-
-  useVisibleTask$(({ track }) => {
-    track(() => baseCell.value);
-    track(() => baseCell.error);
-
-    cell.error = baseCell.error;
-    cell.value = baseCell.value;
-  });
 
   useVisibleTask$(async () => {
     if (cell.error || cell.value) return;
@@ -54,10 +45,13 @@ export const TableCell = component$<{
         validated: persistedCell?.validated,
       };
     })(cell.id);
+
     if (!persistedCell) return;
-    cell.error = persistedCell.error;
-    cell.value = persistedCell.value;
-    cell.validated = persistedCell.validated;
+
+    replaceCell({
+      ...cell,
+      ...persistedCell,
+    });
   });
 
   useTask$(({ track }) => {
@@ -137,7 +131,10 @@ export const TableCell = component$<{
 
   if (!cell.value && !cell.error) {
     return (
-      <td class="min-w-80 w-80 max-w-80 p-4 min-h-[100px] h-[100px] border last:border-r-0 border-secondary">
+      <td
+        class="min-w-80 w-80 max-w-80 p-4 min-h-[100px] h-[100px] border last:border-r-0
+       border-secondary"
+      >
         <Skeleton />
       </td>
     );

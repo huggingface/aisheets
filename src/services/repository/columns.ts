@@ -54,77 +54,18 @@ export const getDatasetColumns = async (
       cells: [],
     };
 
+    // Partially cell loading
     return {
       ...column,
       cells: model.cells.map((cell) => ({
         id: cell.id,
         idx: cell.idx,
-        updatedAt: cell.updatedAt,
         column: {
           id: column.id,
         },
       })),
     };
   });
-};
-
-export const getColumnById = async (id: string): Promise<Column | null> => {
-  const model = await ColumnModel.findByPk(id, {
-    include: [
-      {
-        association: ColumnModel.associations.cells,
-        separate: true,
-        order: [['idx', 'ASC']],
-      },
-      {
-        association: ColumnModel.associations.process,
-        include: [ProcessModel.associations.referredColumns],
-      },
-      {
-        association: ColumnModel.associations.dataset,
-      },
-    ],
-  });
-
-  if (!model) return null;
-
-  const column = {
-    id: model.id,
-    name: model.name,
-    type: model.type as ColumnType,
-    kind: model.kind as ColumnKind,
-
-    dataset: {
-      id: model.dataset.id,
-      name: model.dataset.name,
-      createdBy: model.dataset.createdBy,
-    },
-
-    process: {
-      id: model.process?.id,
-      columnsReferences: (model.process?.referredColumns ?? []).map(
-        (column) => column.id,
-      ),
-      limit: model.process?.limit ?? 0,
-      modelName: model.process?.modelName ?? '',
-      modelProvider: model.process?.modelProvider ?? '',
-      offset: model.process?.offset ?? 0,
-      prompt: model.process?.prompt ?? '',
-    },
-
-    cells: [],
-  };
-
-  return {
-    ...column,
-    cells: model.cells.map((cell) => ({
-      id: cell.id,
-      idx: cell.idx,
-      validated: cell.validated,
-      updatedAt: cell.updatedAt,
-      column,
-    })),
-  };
 };
 
 export const createColumn = async (

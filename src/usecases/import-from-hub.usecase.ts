@@ -3,11 +3,8 @@ import { type Dataset, useServerSession } from '~/state';
 
 import consola from 'consola';
 import { createCell, createColumn, createDataset } from '~/services';
-import {
-  describeDatasetFile,
-  getDatasetInfo,
-  loadDataset,
-} from '~/services/repository/hub';
+import { describeFromURI, loadDatasetFromURI } from '~/services/repository/hub';
+import { downloadDatasetFile } from '~/services/repository/hub/download-file';
 
 export interface ImportFromHubParams {
   repoId: string;
@@ -22,20 +19,23 @@ export const useImportFromHub = () =>
     const { repoId, filePath } = importParams;
     const session = useServerSession(this);
 
-    consola.info('Getting dataset info for repoId:', repoId);
-    const datasetInfo = await getDatasetInfo({
-      repoId,
-      accessToken: session.token,
-    });
-
-    consola.info('Describing file columns', repoId, filePath);
-    const splitColumns = await describeDatasetFile({
+    consola.info('Downloading file', repoId, filePath);
+    const downloadedFilePath = await downloadDatasetFile({
       repoId,
       file: filePath,
       accessToken: session.token,
     });
 
-    const supportedColumns = splitColumns;
+    consola.info('Describing file columns', repoId, filePath);
+    const fileInfo = await describeFromURI({
+      uri: downloadedFilePath,
+    });
+
+    const totalRows = fileInfo.numberOfRows;
+    const supportedColumns = fileInfo.columns;
+
+    consola.info('File columns:', supportedColumns);
+    consola.info('Total rows:', totalRows);
 
     if (supportedColumns.length === 0) {
       throw new Error('No supported columns found');
@@ -43,7 +43,7 @@ export const useImportFromHub = () =>
 
     consola.info('Creating Dataset...');
     const createdDataset = await createDataset({
-      name: repoId,
+      name: `${repoId} [${filePath}]`,
       // TODO: pass the user instead of the username and let the repository handle the createdBy
       createdBy: session.user.username,
     });
@@ -60,15 +60,10 @@ export const useImportFromHub = () =>
     }
 
     consola.info('Loading dataset rows');
-    const { rows } = await loadDataset({
-      dataset: createdDataset,
-      // TODO: Move all these parameters to a single object and link them to the created dataset.
-      repoId,
-      file: filePath,
-      accessToken: session.token,
-      // END TODO
-      limit: 500,
+    const { rows } = await loadDatasetFromURI({
+      uri: downloadedFilePath,
       columnNames: supportedColumns.map((col) => col.name),
+      limit: 1000,
     });
 
     consola.info('Creating cells...');

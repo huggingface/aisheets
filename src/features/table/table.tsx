@@ -7,7 +7,7 @@ export const Table = component$(() => {
   return (
     <ExecutionProvider>
       <div class="overflow-x-auto">
-        <table class="min-w-max min-h-screen h-full border-separate border-spacing-0 mt-4 text-sm">
+        <table class="min-w-max border-separate border-spacing-0 mt-4 text-sm">
           <TableHeader />
           <TableBody />
         </table>

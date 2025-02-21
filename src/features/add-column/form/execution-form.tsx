@@ -126,8 +126,8 @@ export const ExecutionForm = component$<SidebarProps>(
     });
 
     return (
-      <div class="relative w-[600px]">
-        <div class="absolute h-[85%] w-[600px] bg-white border-r border-t border-secondary flex flex-col p-4 gap-4">
+      <div class="relative w-[600px] bg-white">
+        <div class="absolute h-full w-[600px] border-t border-secondary flex flex-col p-4 gap-4">
           <Button
             size="sm"
             look="ghost"

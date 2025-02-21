@@ -3,8 +3,9 @@ import {
   getColumnCellByIdx,
   getRowCells,
   updateCell,
-} from '~/services';
+} from '~/services/repository/cells';
 import type { Cell, Column, Process, Session } from '~/state';
+import { collectExamples } from './collect-examples';
 import {
   runPromptExecution,
   runPromptExecutionStream,
@@ -47,38 +48,11 @@ export const generateCells = async function* ({
 }: GenerateCellsParams) {
   const { columnsReferences, modelName, modelProvider, prompt } = process;
 
-  const hasReferredColumns = columnsReferences && columnsReferences.length > 0;
-  const hasValidatedCells = validatedCells && validatedCells.length > 0;
-
-  // Build examples array with outputs and inputs
-  const examples: Array<{ output: string; inputs: Record<string, string> }> =
-    [];
-
-  // Add validated cells as examples
-  if (hasValidatedCells) {
-    for (const validatedCell of validatedCells!) {
-      if (!validatedCell.value) continue;
-
-      if (hasReferredColumns) {
-        const rowCells = await getRowCells({
-          rowIdx: validatedCell.idx,
-          columns: columnsReferences,
-        });
-
-        const inputs = Object.fromEntries(
-          rowCells
-            .filter((cell): cell is typeof cell & { value: string } =>
-              Boolean(cell.column?.name && cell.value),
-            )
-            .map((cell) => [cell.column!.name, cell.value]),
-        ) as Record<string, string>;
-
-        examples.push({ output: validatedCell.value, inputs });
-      } else {
-        examples.push({ output: validatedCell.value, inputs: {} });
-      }
-    }
-  }
+  const examples = await collectExamples({
+    column,
+    validatedCells,
+    columnsReferences,
+  });
 
   const validatedIdxs = validatedCells?.map((cell) => cell.idx);
 
@@ -97,7 +71,7 @@ export const generateCells = async function* ({
       data: {},
     };
 
-    if (hasReferredColumns) {
+    if (columnsReferences?.length) {
       const rowCells = await getRowCells({
         rowIdx: i,
         columns: columnsReferences,
@@ -130,7 +104,7 @@ export const generateCells = async function* ({
     yield { cell };
 
     // Add newly generated values as examples when there are no validated cells or referred columns
-    if (cell.value && !(hasValidatedCells || hasReferredColumns)) {
+    if (cell.value && !(validatedCells?.length || columnsReferences?.length)) {
       examples.push({ output: cell.value, inputs: {} });
     }
   }

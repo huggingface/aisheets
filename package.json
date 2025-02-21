@@ -74,7 +74,8 @@
     "marked": "^15.0.7",
     "mustache": "^4.2.0",
     "sequelize": "^6.37.5",
-    "sqlite3": "^5.1.7"
+    "sqlite3": "^5.1.7",
+    "yaml": "^2.7.0"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

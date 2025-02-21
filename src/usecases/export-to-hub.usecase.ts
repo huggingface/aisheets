@@ -1,16 +1,21 @@
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import url from 'node:url';
+import yaml from 'yaml';
 
 import { DuckDBInstance } from '@duckdb/node-api';
 
 import { type HubApiError, createRepo, uploadFiles } from '@huggingface/hub';
 
 import { type RequestEventBase, server$ } from '@builder.io/qwik-city';
-
-import { getDatasetById, listDatasetRows } from '~/services/repository';
-import { type Dataset, useServerSession } from '~/state';
+import { getRowCells } from '~/services/repository/cells';
+import {
+  getDatasetById,
+  listDatasetRows,
+} from '~/services/repository/datasets';
+import { type Dataset, type Process, useServerSession } from '~/state';
+import { collectExamples } from './collect-examples';
+import { materializePrompt } from './materialize-prompt';
 
 export interface ExportDatasetParams {
   dataset: Dataset;
@@ -56,7 +61,15 @@ export const useExportDataset = () =>
         files: [
           {
             path: 'train.parquet',
-            content: url.pathToFileURL(filePath),
+            content: new Blob([
+              await fs.readFile(path.join(filePath, 'file.parquet')),
+            ]),
+          },
+          {
+            path: 'config.yml',
+            content: new Blob([
+              await fs.readFile(path.join(filePath, 'config.yml')),
+            ]),
           },
         ],
       });
@@ -67,31 +80,114 @@ export const useExportDataset = () =>
     return repoId;
   });
 
-async function exportDatasetToParquet(foundDataset: Dataset): Promise<string> {
+async function generateDatasetConfig(
+  dataset: Dataset,
+): Promise<
+  Record<string, Omit<Process, 'offset' | 'limit'> & { userPrompt: string }>
+> {
+  const columnConfigs: Record<
+    string,
+    Omit<Process, 'offset' | 'limit'> & { userPrompt: string }
+  > = {};
+
+  for (const column of dataset.columns) {
+    if (!column.process) continue;
+
+    // Skip columns with empty model configuration
+    if (
+      !column.process.modelName &&
+      !column.process.modelProvider &&
+      !column.process.prompt
+    ) {
+      continue;
+    }
+
+    const examples = await collectExamples({
+      column,
+      validatedCells: column.cells.filter((cell) => cell.validated),
+      columnsReferences: column.process.columnsReferences,
+    });
+
+    // Get data for prompt materialization
+    const data = column.process.columnsReferences?.length
+      ? await getFirstRowData(column.process.columnsReferences)
+      : {};
+
+    columnConfigs[column.name] = {
+      modelName: column.process.modelName,
+      modelProvider: column.process.modelProvider,
+      userPrompt: column.process.prompt,
+      prompt: materializePrompt({
+        instruction: column.process.prompt,
+        examples: examples.length > 0 ? examples : undefined,
+        data: Object.keys(data).length > 0 ? data : undefined,
+      }),
+      columnsReferences: column.process.columnsReferences?.map((colId) => {
+        const refColumn = dataset.columns.find((c) => c.id === colId);
+        return refColumn?.name || colId;
+      }),
+    };
+  }
+
+  return columnConfigs;
+}
+
+async function getFirstRowData(columnsReferences: string[]) {
+  const firstRowCells = await getRowCells({
+    rowIdx: 0,
+    columns: columnsReferences,
+  });
+  return Object.fromEntries(
+    firstRowCells.map((cell) => [cell.column!.name, cell.value]),
+  );
+}
+
+async function createDatasetConfig(
+  tempDir: string,
+  dataset: Dataset,
+): Promise<void> {
+  const configPath = path.join(tempDir, 'config.yml');
+  const columnConfigs = await generateDatasetConfig(dataset);
+  await fs.writeFile(configPath, yaml.stringify({ columns: columnConfigs }));
+}
+
+async function createDatasetContent(
+  tempDir: string,
+  dataset: Dataset,
+): Promise<void> {
+  const jsonlPath = path.join(tempDir, 'file.jsonl');
+  const parquetPath = path.join(tempDir, 'file.parquet');
+
+  // Collect and write data rows
   const jsonl = [];
-  for await (const row of listDatasetRows({ dataset: foundDataset })) {
+  for await (const row of listDatasetRows({ dataset })) {
     jsonl.push(JSON.stringify(row));
   }
+  await fs.writeFile(jsonlPath, jsonl.join('\n'));
 
-  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'tmp-'));
-  const filePath = `${tempDir}/file.jsonl`;
-  const parquetFielpath = `${tempDir}/file.parquet`;
-
-  await fs.writeFile(filePath, jsonl.join('\n'));
-  // TODO: We can clearly improve this by avoiding the creation of an intermediate file
-  // Anyway the first step is to generate the parquet file from the dataset. cc @dvsuero
+  // Convert to parquet
   const instance = await DuckDBInstance.create(':memory:');
-  const connect = await instance.connect();
+  const connection = await instance.connect();
   try {
-    await connect.run(
-      `CREATE TABLE tbl AS SELECT * FROM read_json_auto('${filePath}')`,
+    await connection.run(
+      `CREATE TABLE tbl AS SELECT * FROM read_json_auto('${jsonlPath}')`,
     );
-    await connect.run(`COPY tbl TO '${parquetFielpath}' (FORMAT PARQUET)`);
+    await connection.run(`COPY tbl TO '${parquetPath}' (FORMAT PARQUET)`);
   } catch (error) {
-    throw new Error('Error exporting dataset to parquet: ' + error);
+    throw new Error(`Error converting to parquet: ${error}`);
   } finally {
-    await connect.close();
+    await connection.close();
   }
+}
 
-  return parquetFielpath;
+async function exportDatasetToParquet(dataset: Dataset): Promise<string> {
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'tmp-'));
+
+  try {
+    await createDatasetConfig(tempDir, dataset);
+    await createDatasetContent(tempDir, dataset);
+    return tempDir;
+  } catch (error) {
+    throw new Error(`Error exporting dataset: ${error}`);
+  }
 }

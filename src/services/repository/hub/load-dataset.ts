@@ -1,34 +1,18 @@
-import { DuckDBInstance } from '@duckdb/node-api';
-
-const instance = await DuckDBInstance.create(':memory:', {
-  threads: '10',
-});
+import { connectAndClose } from '~/services/db/duckdb';
 
 export interface DatasetRows {
   rows: Array<Record<string, any>>;
 }
 
 /**
- * Loads dataset from specified parquet files in a Hugging Face repository.
+ * Loads a dataset from the specified URI with optional column selection, limit, and offset.
  *
- * @param {Object} params - The parameters for loading dataset rows.
+ * @param {Object} params - The parameters for loading the dataset.
  * @param {string} params.uri - The URI of the dataset to load.
- * @param {string} params.repoId - The repository ID of the Hugging Face dataset.
- * @param {string} params.accessToken - The access token for authenticating with Hugging Face.
- * @param {string[]} params.parquetFiles - An array of parquet file names to load data from.
- * @param {number} [params.limit=500] - The maximum number of rows to load (default is 500).
- * @param {number} [params.offset=0] - The number of rows to skip before starting to load (default is 0).
- * @returns {Promise<DatasetRows>} A promise that resolves to an object containing the loaded dataset rows.
- *
- * @example
- * const datasetRows = await loadDataset({
- *   repoId: 'my-repo-id',
- *   accessToken: 'my-access-token',
- *   parquetFiles: ['file1.parquet', 'file2.parquet'],
- *   limit: 100,
- *   offset: 0,
- * });
- * console.log(datasetRows.rows);
+ * @param {string[]} [params.columnNames] - An optional array of column names to select. If not provided, all columns will be selected.
+ * @param {number} [params.limit] - An optional limit on the number of rows to retrieve.
+ * @param {number} [params.offset] - An optional offset to start retrieving rows from.
+ * @returns {Promise<DatasetRows>} A promise that resolves to an object containing the dataset rows.
  */
 export const loadDatasetFromURI = async ({
   uri,
@@ -41,9 +25,7 @@ export const loadDatasetFromURI = async ({
   limit?: number;
   offset?: number;
 }): Promise<DatasetRows> => {
-  const db = await instance.connect();
-
-  try {
+  return await connectAndClose(async (db) => {
     const columnsSelect = columnNames
       ? columnNames.map((column) => `"${column}"`).join(', ')
       : '*';
@@ -69,9 +51,5 @@ export const loadDatasetFromURI = async ({
         };
       }),
     };
-  } catch (error) {
-    throw new Error(`Failed to load dataset: ${error}`);
-  } finally {
-    db.close();
-  }
+  });
 };

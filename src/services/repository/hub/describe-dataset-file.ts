@@ -1,6 +1,4 @@
-import { DuckDBInstance } from '@duckdb/node-api';
-
-const instance = await DuckDBInstance.create(':memory:');
+import { connectAndClose } from '~/services/db/duckdb';
 
 export interface FileInfo {
   columns: ColumnInfo[];
@@ -17,15 +15,12 @@ export const describeFromURI = async ({
 }: {
   uri: string;
 }): Promise<FileInfo> => {
-  const db = await instance.connect();
-
-  try {
+  return await connectAndClose(async (db) => {
     // This is not working when running in a hf space
     // await db.run(
     //   // TODO: Keep secrets scoped to the current user
     //   `CREATE OR REPLACE SECRET hf_token (TYPE HUGGINGFACE, TOKEN '${accessToken}')`,
     // );
-
     const totalRows = (
       await (
         await db.run(`SELECT COUNT(1) as total FROM '${uri}'`)
@@ -35,7 +30,6 @@ export const describeFromURI = async ({
     }, 0);
 
     const result = await db.run(`DESCRIBE (SELECT * FROM '${uri}' LIMIT 10)`);
-
     const columns: ColumnInfo[] = (await result.getRowObjectsJson()).map(
       (column) => {
         return {
@@ -49,9 +43,7 @@ export const describeFromURI = async ({
       columns,
       numberOfRows: totalRows,
     };
-  } finally {
-    db.close();
-  }
+  });
 };
 
 export const describeDatasetFile = async ({

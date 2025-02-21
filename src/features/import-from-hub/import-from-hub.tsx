@@ -12,13 +12,12 @@ import { useNavigate } from '@builder.io/qwik-city';
 import { LuCheck, LuLoader } from '@qwikest/icons/lucide';
 
 import { Button, Input, Label, Select } from '~/components';
+import { useSession } from '~/loaders';
 import { listHubDatasetDataFiles } from '~/services/repository/hub/list-hub-dataset-files';
-import { useSession } from '~/state';
 import { useImportFromHub } from '~/usecases/import-from-hub.usecase';
 
-const importFromHub = useImportFromHub();
-
 export const ImportFromHub = component$(() => {
+  const importFromHub = useImportFromHub();
   const nav = useNavigate();
 
   const showFileSelection = useSignal(false);

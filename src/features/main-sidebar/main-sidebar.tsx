@@ -1,9 +1,5 @@
 import { component$ } from '@builder.io/qwik';
-import {
-  Link,
-  type RequestEventBase,
-  routeLoader$,
-} from '@builder.io/qwik-city';
+import { Link } from '@builder.io/qwik-city';
 import { useToggle } from '~/components/hooks';
 import { Logo } from '~/components/ui/logo/logo';
 
@@ -12,20 +8,11 @@ import {
   LuPanelLeftClose,
   LuPanelLeftOpen,
 } from '@qwikest/icons/lucide';
-import { listUserDatasets } from '~/services';
-import { useServerSession } from '~/state';
-
-export const useAllDatasets = routeLoader$(async function (
-  this: RequestEventBase<QwikCityPlatform>,
-) {
-  const session = useServerSession(this);
-
-  return await listUserDatasets(session.user);
-});
+import { useAllDatasetsLoader } from '~/loaders';
 
 export const MainSidebar = component$(() => {
   const { isOpen, toggle } = useToggle();
-  const datasets = useAllDatasets();
+  const datasets = useAllDatasetsLoader();
 
   return (
     <div

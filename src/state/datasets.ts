@@ -5,8 +5,7 @@ import {
   useContext,
   useContextProvider,
 } from '@builder.io/qwik';
-import { routeLoader$ } from '@builder.io/qwik-city';
-import { getDatasetById } from '~/services/repository';
+import { useActiveDatasetLoader } from '~/loaders';
 import type { Column } from '~/state/columns';
 
 export interface Dataset {
@@ -16,34 +15,12 @@ export interface Dataset {
   columns: Column[];
 }
 
-const EMPTY_DATASET = {
-  id: '',
-  name: '',
-  createdBy: '',
-  columns: [],
-};
-
 export const datasetsContext =
   createContextId<Signal<Dataset>>('datasets.context');
 
-export const useDatasetsLoader = routeLoader$<Dataset>(async ({ params }) => {
-  const id = params.id;
-  if (!id) {
-    return EMPTY_DATASET;
-  }
+export const useLoadActiveDatasetProvider = () => {
+  const dataset = useActiveDatasetLoader();
 
-  const dataset = await getDatasetById(id);
-
-  if (!dataset) {
-    //TODO: Redirect to 404 ?
-    throw new Error('Dataset not found');
-  }
-
-  return dataset;
-});
-
-export const useLoadDatasets = () => {
-  const dataset = useDatasetsLoader();
   useContextProvider(datasetsContext, dataset);
 };
 

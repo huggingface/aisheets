@@ -23,7 +23,7 @@ export const getOrCreateDatasetIDByUser = async ({
   return model.id;
 };
 
-export const listUserDatasets = async (user: {
+export const getUserDatasets = async (user: {
   username: string;
 }): Promise<Dataset[]> => {
   const model = await DatasetModel.findAll({

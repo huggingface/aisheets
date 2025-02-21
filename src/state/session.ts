@@ -1,5 +1,5 @@
 import { isBrowser } from '@builder.io/qwik';
-import { type RequestEventBase, routeLoader$ } from '@builder.io/qwik-city';
+import type { RequestEventBase } from '@builder.io/qwik-city';
 
 export interface Session {
   token: string;
@@ -29,5 +29,3 @@ export const useServerSession = (request: RequestEventBase): Session => {
     },
   };
 };
-
-export const useSession = routeLoader$(useServerSession);

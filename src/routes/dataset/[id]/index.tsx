@@ -1,17 +1,14 @@
 import { component$ } from '@builder.io/qwik';
 import type { DocumentHead } from '@builder.io/qwik-city';
-import { Execution } from '~/features';
+import { DatasetName } from '~/features/datasets';
+import { Execution } from '~/features/execution';
+import { Table } from '~/features/table';
 
-import { DatasetName } from '~/features/datasets/dataset-name';
-import { Table } from '~/features/table/table';
-import { useDatasetsStore, useLoadDatasets, useSession } from '~/state';
-
-export { useDatasetsLoader } from '~/state';
-
-export { useSession } from '~/state';
+import { useSession } from '~/loaders';
+import { useDatasetsStore, useLoadActiveDatasetProvider } from '~/state';
 
 export default component$(() => {
-  useLoadDatasets();
+  useLoadActiveDatasetProvider();
   const session = useSession();
   const { activeDataset } = useDatasetsStore();
 

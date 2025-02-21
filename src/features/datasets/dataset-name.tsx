@@ -1,27 +1,25 @@
 import {
   $,
   component$,
+  useSignal,
   useStore,
   useVisibleTask$,
-  useSignal,
 } from '@builder.io/qwik';
 import { server$ } from '@builder.io/qwik-city';
 import { Input } from '~/components';
 import { updateDataset } from '~/services/repository/datasets';
-import { type Dataset, useDatasetsStore } from '~/state';
+import { useDatasetsStore } from '~/state';
 
-interface DatasetNameProps {
-  dataset: Dataset;
-}
+export const DatasetName = component$(() => {
+  const { activeDataset } = useDatasetsStore();
 
-export const DatasetName = component$(({ dataset }: DatasetNameProps) => {
   const state = useStore({
     isEditing: false,
     name: '',
-    displayName: dataset.name,
+    displayName: activeDataset.value.name,
   });
 
-  const { updateActiveDataset } = useDatasetsStore();
+  const { updateOnActiveDataset } = useDatasetsStore();
 
   const inputRef = useSignal<HTMLInputElement>();
 
@@ -29,7 +27,7 @@ export const DatasetName = component$(({ dataset }: DatasetNameProps) => {
     if (!state.isEditing) return;
 
     if (state.name.trim() === '') {
-      state.name = dataset.name;
+      state.name = activeDataset.value.name;
       state.isEditing = false;
       return;
     }
@@ -37,11 +35,11 @@ export const DatasetName = component$(({ dataset }: DatasetNameProps) => {
     const newName = state.name;
     state.displayName = newName;
     state.isEditing = false;
-    updateActiveDataset({ ...dataset, name: newName });
+    updateOnActiveDataset({ name: newName });
 
     server$(async (datasetId: string, newName: string) => {
       await updateDataset({ id: datasetId, name: newName });
-    })(dataset.id, newName);
+    })(activeDataset.value.id, newName);
   });
 
   useVisibleTask$(({ track }) => {
@@ -54,8 +52,8 @@ export const DatasetName = component$(({ dataset }: DatasetNameProps) => {
 
   const handleEditClick = $(() => {
     state.isEditing = true;
-    state.name = dataset.name;
-    state.displayName = dataset.name;
+    state.name = activeDataset.value.name;
+    state.displayName = activeDataset.value.name;
   });
 
   const handleChange = $((event: Event) => {
@@ -67,7 +65,7 @@ export const DatasetName = component$(({ dataset }: DatasetNameProps) => {
     if (event.key === 'Enter') {
       handleSave();
     } else if (event.key === 'Escape') {
-      state.name = dataset.name;
+      state.name = activeDataset.value.name;
       state.isEditing = false;
     }
   });

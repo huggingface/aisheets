@@ -1,5 +1,4 @@
 import {
-  type Signal,
   Slot,
   component$,
   useContextProvider,
@@ -8,13 +7,9 @@ import {
 import type { State } from '~/components/hooks/modals/config';
 import { initialState, modalsContext } from '~/components/hooks/modals/context';
 
-const useModalsProvider = (modals: Signal<State>) => {
-  useContextProvider(modalsContext, modals);
-};
-
 export const ModalsProvider = component$(() => {
-  const internalState = useSignal<State>(initialState);
-  useModalsProvider(internalState);
+  const modal = useSignal<State>(initialState);
+  useContextProvider(modalsContext, modal);
 
   return <Slot />;
 });

@@ -1,6 +1,8 @@
 import {
   $,
   type Signal,
+  Slot,
+  component$,
   createContextId,
   useContext,
   useContextProvider,
@@ -15,22 +17,22 @@ export interface Dataset {
   columns: Column[];
 }
 
-export const datasetsContext =
-  createContextId<Signal<Dataset>>('datasets.context');
+const datasetsContext = createContextId<Signal<Dataset>>('datasets.context');
 
-export const useLoadActiveDatasetProvider = () => {
+export const ActiveDatasetProvider = component$(() => {
   const dataset = useActiveDatasetLoader();
-
   useContextProvider(datasetsContext, dataset);
-};
+
+  return <Slot />;
+});
 
 export const useDatasetsStore = () => {
   const activeDataset = useContext(datasetsContext);
 
   return {
     activeDataset,
-    updateActiveDataset: $((dataset: Dataset) => {
-      activeDataset.value = { ...dataset };
+    updateOnActiveDataset: $((dataset: Partial<Dataset>) => {
+      activeDataset.value = { ...activeDataset.value, ...dataset };
     }),
   };
 };

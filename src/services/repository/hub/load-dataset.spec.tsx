@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { DatasetModel } from '~/services/db/models';
-import { loadDataset } from './load-dataset';
+import { loadDatasetFromURI } from './load-dataset';
 
 const accessToken = process.env.HF_TOKEN;
 
@@ -17,16 +17,11 @@ describe.runIf(accessToken)(
         createdBy: 'test',
       });
 
-      const result = await loadDataset({
-        dataset: {
-          id: model.id,
-          name: model.name,
-          createdBy: model.createdBy,
-          columns: [],
-        },
-        repoId: 'open-thoughts/OpenThoughts-114k',
-        accessToken: accessToken!,
-        file: 'data/train-00000-of-00006.parquet',
+      const uri =
+        'hf://datasets/open-thoughts/OpenThoughts-114k/data/train-00000-of-00006.parquet';
+
+      const result = await loadDatasetFromURI({
+        uri,
         limit: 500,
       });
 
@@ -41,17 +36,11 @@ describe.runIf(accessToken)(
         name: 'Test Dataset',
         createdBy: 'test',
       });
+      const uri =
+        'hf://datasets/argilla/magpie-ultra-v1.0/data/train-00000-of-00056.parquet';
 
-      const result = await loadDataset({
-        dataset: {
-          id: model.id,
-          name: model.name,
-          createdBy: model.createdBy,
-          columns: [],
-        },
-        repoId: 'frascuchon/awesome-chatgpt-prompts',
-        accessToken: accessToken!,
-        file: 'data/train-00000-of-00001.parquet',
+      const result = await loadDatasetFromURI({
+        uri,
         limit: 50,
       });
 
@@ -65,16 +54,8 @@ describe.runIf(accessToken)(
         createdBy: 'test',
       });
 
-      const result = await loadDataset({
-        dataset: {
-          id: model.id,
-          name: model.name,
-          createdBy: model.createdBy,
-          columns: [],
-        },
-        repoId: 'argilla/magpie-ultra-v1.0',
-        accessToken: accessToken!,
-        file: 'data/train-00000-of-00056.parquet',
+      const result = await loadDatasetFromURI({
+        uri: 'hf://datasets/argilla/magpie-ultra-v1.0/data/train-00000-of-00056.parquet',
         offset: 500,
         limit: 5,
       });
@@ -92,16 +73,8 @@ describe.runIf(accessToken)(
         createdBy: 'test',
       });
 
-      const result = await loadDataset({
-        dataset: {
-          id: model.id,
-          name: model.name,
-          createdBy: model.createdBy,
-          columns: [],
-        },
-        repoId: 'argilla/magpie-ultra-v1.0',
-        accessToken: accessToken!,
-        file: 'data/train-00000-of-00056.parquet',
+      const result = await loadDatasetFromURI({
+        uri: 'hf://datasets/argilla/magpie-ultra-v1.0/data/train-00000-of-00056.parquet',
         columnNames: ['system_prompt_key', 'instruction'],
         limit: 1,
       });

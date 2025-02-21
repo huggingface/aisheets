@@ -1,5 +1,4 @@
 import { DuckDBInstance } from '@duckdb/node-api';
-import type { Dataset } from '~/state';
 
 const instance = await DuckDBInstance.create(':memory:', {
   threads: '10',
@@ -13,7 +12,7 @@ export interface DatasetRows {
  * Loads dataset from specified parquet files in a Hugging Face repository.
  *
  * @param {Object} params - The parameters for loading dataset rows.
- * @param {string} params.name - The name of the loaded table. Must be unique.
+ * @param {string} params.uri - The URI of the dataset to load.
  * @param {string} params.repoId - The repository ID of the Hugging Face dataset.
  * @param {string} params.accessToken - The access token for authenticating with Hugging Face.
  * @param {string[]} params.parquetFiles - An array of parquet file names to load data from.
@@ -31,19 +30,13 @@ export interface DatasetRows {
  * });
  * console.log(datasetRows.rows);
  */
-export const loadDataset = async ({
-  dataset,
-  repoId,
-  file,
-  accessToken,
+export const loadDatasetFromURI = async ({
+  uri,
   columnNames,
   limit,
   offset,
 }: {
-  dataset: Dataset;
-  repoId: string;
-  file: string;
-  accessToken: string;
+  uri: string;
   columnNames?: string[];
   limit?: number;
   offset?: number;
@@ -51,19 +44,11 @@ export const loadDataset = async ({
   const db = await instance.connect();
 
   try {
-    const uri = `'hf://datasets/${repoId}/${file}'`;
-
-    // This is not working when running in a hf space
-    // await db.run(
-    //   // TODO: Keep secrets scoped to the current user
-    //   `CREATE OR REPLACE SECRET hf_token (TYPE HUGGINGFACE, TOKEN '${accessToken}')`,
-    // );
-
     const columnsSelect = columnNames
       ? columnNames.map((column) => `"${column}"`).join(', ')
       : '*';
 
-    let selectClause = `SELECT ${columnsSelect} FROM ${uri}`;
+    let selectClause = `SELECT ${columnsSelect} FROM '${uri}'`;
 
     if (limit) {
       selectClause += ` LIMIT ${limit}`;
@@ -74,7 +59,7 @@ export const loadDataset = async ({
     }
 
     const result = await db.run(selectClause);
-    const rows = await result.getRowObjectsJson();
+    const rows = await result.getRowObjects();
 
     return {
       rows: rows.map((row, idx) => {

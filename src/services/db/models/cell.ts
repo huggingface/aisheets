@@ -19,7 +19,7 @@ export class ColumnCellModel extends Model<
   declare idx: number;
   declare value?: string;
   declare error?: string;
-  declare generated: boolean;
+  declare generated?: boolean;
   declare validated: CreationOptional<boolean>;
 
   declare createdAt: NonAttribute<Date>;

@@ -1,15 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { describeDatasetSplit } from './describe-dataset-split';
+import { describeDatasetFile } from './describe-dataset-file';
 
 const accessToken = process.env.HF_TOKEN;
 
-describe.runIf(accessToken)('describeDatasetSplit', () => {
+describe('describeDatasetSplit', () => {
   it('should return the column info for a dataset split', async () => {
-    const columns = await describeDatasetSplit({
+    const columns = await describeDatasetFile({
       repoId: 'simplescaling/s1K',
+      file: 'data/train-00000-of-00001.parquet',
       accessToken: accessToken!,
-      subset: 'default',
-      split: 'train',
     });
 
     expect(columns).toEqual([

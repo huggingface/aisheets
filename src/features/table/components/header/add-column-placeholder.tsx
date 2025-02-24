@@ -6,7 +6,7 @@ import { useExecution } from '~/features/add-column';
 import { TEMPORAL_ID, useColumnsStore } from '~/state';
 
 export const TableAddCellHeaderPlaceHolder = component$(() => {
-  const { open, close } = useExecution();
+  const { open } = useExecution();
   const { state: columns, addTemporalColumn } = useColumnsStore();
 
   const lastColumnId = useComputed$(
@@ -20,8 +20,6 @@ export const TableAddCellHeaderPlaceHolder = component$(() => {
       nextTick(() => {
         open(lastColumnId.value, 'add');
       });
-
-      cleanup(close);
     }
   });
 

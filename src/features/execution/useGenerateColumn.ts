@@ -25,7 +25,7 @@ export const useGenerateColumn = () => {
 
     for await (const { column, cell } of response) {
       if (column) {
-        await addColumn(column);
+        addColumn(column);
 
         open(column.id, 'edit');
       }

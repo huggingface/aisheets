@@ -6,7 +6,7 @@ import { type Cell, type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
 export const TableBody = component$(() => {
   const { state: columns } = useColumnsStore();
   const { columnId } = useExecution();
-  const rowCount = columns.value[0]?.cells.length || 0;
+  const rowCount = columns.value[0]?.process?.limit ?? 0;
   const expandedRows = useSignal<Set<number>>(new Set());
 
   const getCell = (column: Column, rowIndex: number): Cell => {
@@ -45,7 +45,7 @@ export const TableBody = component$(() => {
                   />
                 ) : (
                   <TableCell
-                    key={`${cell.id}-${cell.updatedAt}`}
+                    key={cell.id}
                     cell={cell}
                     isExpanded={expandedRows.value.has(rowIndex)}
                     onToggleExpand$={() => {

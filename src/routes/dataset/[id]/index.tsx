@@ -1,7 +1,6 @@
 import { component$ } from '@builder.io/qwik';
 import type { DocumentHead } from '@builder.io/qwik-city';
 import { DatasetName } from '~/features/datasets';
-import { Execution } from '~/features/execution';
 import { Table } from '~/features/table';
 
 import { useSession } from '~/loaders';
@@ -18,7 +17,6 @@ export default component$(() => {
         </div>
         <div class="flex justify-between items-center w-full mb-4 pt-4">
           <DatasetName />
-          <Execution />
         </div>
         <Table />
       </div>

@@ -9,12 +9,12 @@ import {
 } from '@builder.io/qwik';
 import { LuBookmark, LuCheck, LuEgg, LuXCircle } from '@qwikest/icons/lucide';
 
-import { Button, Input, Label, Select, Sidebar } from '~/components';
-import { useModals } from '~/components/hooks/modals/use-modals';
+import { Button, Input, Label, Select } from '~/components';
 import {
   TemplateTextArea,
   type Variable,
 } from '~/features/add-column/components/template-textarea';
+import { useExecution } from '~/features/add-column/form/execution';
 import {
   type Column,
   type CreateColumn,
@@ -27,14 +27,11 @@ interface SidebarProps {
   onGenerateColumn: QRL<(column: CreateColumn) => Promise<Column>>;
 }
 
-export const AddDynamicColumnSidebar = component$<SidebarProps>(
+export const ExecutionForm = component$<SidebarProps>(
   ({ onGenerateColumn }) => {
-    const { args, closeAddDynamicColumnSidebar } = useModals(
-      'addDynamicColumnSidebar',
-    );
+    const { columnId, mode, close } = useExecution();
     const { state: columns, removeTemporalColumn } = useColumnsStore();
     const isSubmitting = useSignal(false);
-
     const currentColumn = useSignal<Column | undefined>();
 
     const prompt = useSignal<string>('');
@@ -49,7 +46,7 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
       columnsReferences.value = variables.map((v) => v.id);
     });
 
-    const uniqueModelid = (model: Model) => `${model.id}-${model.provider}`;
+    const uniqueModelId = (model: Model) => `${model.id}-${model.provider}`;
 
     useTask$(({ track }) => {
       track(currentColumn);
@@ -66,12 +63,10 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
     });
 
     useTask$(({ track }) => {
-      track(args);
-      if (!args.value?.columnId) return;
+      track(columnId);
+      if (!columnId.value) return;
 
-      currentColumn.value = columns.value.find(
-        (c) => c.id === args.value!.columnId,
-      );
+      currentColumn.value = columns.value.find((c) => c.id === columnId.value);
 
       if (!currentColumn.value) return;
 
@@ -94,7 +89,6 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
     });
 
     const onGenerate = $(async () => {
-      if (!args.value) return;
       isSubmitting.value = true;
 
       const modelName = inputModelId.value || selectedModel.value!.id;
@@ -124,16 +118,16 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
     });
 
     const handleCloseForm = $(async () => {
-      if (args.value?.mode === 'create') {
+      if (mode.value === 'add') {
         await removeTemporalColumn();
       }
 
-      closeAddDynamicColumnSidebar();
+      close();
     });
 
     return (
-      <Sidebar name="addDynamicColumnSidebar">
-        <div class="h-full border-r border-t border-secondary relative flex flex-col p-4 gap-4">
+      <div class="relative w-[600px] bg-white">
+        <div class="absolute h-full w-[600px] border-t border-secondary flex flex-col p-4 gap-4">
           <Button
             size="sm"
             look="ghost"
@@ -157,7 +151,7 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
                 }
 
                 return (
-                  <Select.Root value={uniqueModelid(selectedModel.value)}>
+                  <Select.Root value={uniqueModelId(selectedModel.value)}>
                     <Select.Trigger class="px-4 bg-primary rounded-base border-secondary-foreground">
                       <Select.DisplayValue />
                     </Select.Trigger>
@@ -166,7 +160,7 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
                         <Select.Item
                           key={idx}
                           class="text-foreground hover:bg-accent"
-                          value={uniqueModelid(model)}
+                          value={uniqueModelId(model)}
                           onClick$={() => {
                             selectedModel.value = model;
                             console.log(selectedModel.value);
@@ -182,7 +176,7 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
                   </Select.Root>
                 );
               }}
-              onRejected={(error) => {
+              onRejected={() => {
                 return (
                   <Input
                     bind:value={inputModelId}
@@ -233,7 +227,7 @@ export const AddDynamicColumnSidebar = component$<SidebarProps>(
             </div>
           </div>
         </div>
-      </Sidebar>
+      </div>
     );
   },
 );

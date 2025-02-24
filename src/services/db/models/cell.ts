@@ -19,6 +19,7 @@ export class ColumnCellModel extends Model<
   declare idx: number;
   declare value?: string;
   declare error?: string;
+  declare generated: CreationOptional<boolean>;
   declare validated: CreationOptional<boolean>;
 
   declare createdAt: NonAttribute<Date>;
@@ -56,6 +57,10 @@ ColumnCellModel.init(
       allowNull: true,
     },
     validated: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
+    generated: {
       type: DataTypes.BOOLEAN,
       defaultValue: false,
     },

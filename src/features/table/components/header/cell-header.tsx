@@ -1,17 +1,17 @@
 import { component$, useComputed$ } from '@builder.io/qwik';
 import { cn } from '@qwik-ui/utils';
 import { LuZap } from '@qwikest/icons/lucide';
-import { useActiveModal } from '~/components';
+import { useExecution } from '~/features/add-column';
 import { CellGeneration } from '~/features/table/components/header/cell-generation';
 import { CellName } from '~/features/table/components/header/cell-name';
 import { CellSettings } from '~/features/table/components/header/cell-settings';
 import type { Column } from '~/state';
 
 export const TableCellHeader = component$<{ column: Column }>(({ column }) => {
-  const { args } = useActiveModal();
+  const { columnId } = useExecution();
 
   const classes = useComputed$(() =>
-    cn({ 'bg-primary': args.value?.columnId === column.id }),
+    cn({ 'bg-primary': columnId.value === column.id }),
   );
   return (
     <th
@@ -25,12 +25,12 @@ export const TableCellHeader = component$<{ column: Column }>(({ column }) => {
         </div>
 
         <div class="flex items-center w-[20%]">
-          {column.kind === 'dynamic' ? (
+          {column.kind === 'dynamic' && (
             <>
               <CellGeneration column={column} />
               <CellSettings column={column} />
             </>
-          ) : undefined}
+          )}
         </div>
       </div>
     </th>

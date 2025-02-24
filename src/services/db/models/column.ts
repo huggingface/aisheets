@@ -25,6 +25,7 @@ export class ColumnModel extends Model<
   declare name: string;
   declare type: string;
   declare kind: string;
+  declare visible: CreationOptional<boolean>;
 
   declare datasetId: ForeignKey<DatasetModel['id']>;
 
@@ -62,6 +63,11 @@ ColumnModel.init(
     kind: {
       type: DataTypes.STRING,
       allowNull: false,
+    },
+    visible: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: true,
     },
     datasetId: {
       type: DataTypes.UUID,

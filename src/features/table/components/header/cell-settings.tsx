@@ -1,25 +1,20 @@
 import { $, component$ } from '@builder.io/qwik';
 import { LuSettings2 } from '@qwikest/icons/lucide';
-import { Button, useModals } from '~/components';
+import { Button } from '~/components';
 import { nextTick } from '~/components/hooks/tick';
+import { useExecution } from '~/features/add-column';
 import { type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
 
 export const CellSettings = component$<{ column: Column }>(({ column }) => {
-  const { openAddDynamicColumnSidebar, closeAddDynamicColumnSidebar } =
-    useModals('addDynamicColumnSidebar');
+  const { open, close } = useExecution();
   const { removeTemporalColumn } = useColumnsStore();
 
   const editCell = $(async () => {
     if (column.id === TEMPORAL_ID) return;
-
     await removeTemporalColumn();
-    await closeAddDynamicColumnSidebar();
 
     nextTick(() => {
-      openAddDynamicColumnSidebar({
-        columnId: column.id,
-        mode: 'edit',
-      });
+      open(column.id, 'edit');
     });
   });
 

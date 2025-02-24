@@ -15,13 +15,13 @@ export * from '~/loaders';
 
 export default component$(() => {
   return (
-    <div class="flex-row flex max-h-screen">
-      <MainSidebar />
-      <div class="w-full h-screen overflow-auto">
-        <ModalsProvider>
+    <ModalsProvider>
+      <div class="flex-row flex max-h-screen">
+        <MainSidebar />
+        <div class="w-full h-screen overflow-auto">
           <Slot />
-        </ModalsProvider>
+        </div>
       </div>
-    </div>
+    </ModalsProvider>
   );
 });

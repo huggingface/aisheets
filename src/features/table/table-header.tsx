@@ -1,25 +1,27 @@
 import { component$ } from '@builder.io/qwik';
+import { ExecutionForm, useExecution } from '~/features/add-column';
+import { useGenerateColumn } from '~/features/execution';
 import {
   TableAddCellHeaderPlaceHolder,
   TableCellHeader,
-  TableCellHeaderForExecution,
 } from '~/features/table/components/header';
 import { useColumnsStore } from '~/state';
 
 export const TableHeader = component$(() => {
+  const onGenerateColumn = useGenerateColumn();
   const { state: columns } = useColumnsStore();
+  const { columnId } = useExecution();
 
   return (
     <thead>
       <tr>
-        {columns.value.map((column, index) => (
+        {columns.value.map((column) => (
           <>
             <TableCellHeader key={column.id} column={column} />
 
-            <TableCellHeaderForExecution
-              key={`${column.id}-${index}`}
-              index={index}
-            />
+            {columnId.value === column.id && (
+              <ExecutionForm onGenerateColumn={onGenerateColumn} />
+            )}
           </>
         ))}
 

@@ -9,7 +9,7 @@ import {
   useTask$,
 } from '@builder.io/qwik';
 import { useNavigate } from '@builder.io/qwik-city';
-import { LuCheck, LuLoader } from '@qwikest/icons/lucide';
+import { LuCheck, LuLoader, LuTerminalSquare } from '@qwikest/icons/lucide';
 
 import { Button, Input, Label, Select } from '~/components';
 import { useSession } from '~/loaders';
@@ -17,6 +17,7 @@ import { listHubDatasetDataFiles } from '~/services/repository/hub/list-hub-data
 import { useImportFromHub } from '~/usecases/import-from-hub.usecase';
 
 export const ImportFromHub = component$(() => {
+  const session = useSession();
   const importFromHub = useImportFromHub();
   const nav = useNavigate();
 
@@ -46,75 +47,74 @@ export const ImportFromHub = component$(() => {
     return repoId.value && filePath.value && !isImportingData.value;
   });
 
-  const session = useSession();
-
   return (
-    <>
-      <div class="flex h-full flex-col justify-between p-4">
-        <div class="h-full">
-          <div class="flex flex-col gap-4">
-            <div class="flex items-center justify-between">
-              <Label for="dataset-repoid">Repo id</Label>
-            </div>
-            <div class="flex w-full max-w-sm items-center space-x-2">
-              <Input
-                id="dataset-repoid"
-                class="h-10"
-                placeholder="Enter the repo id"
-                bind:value={repoId}
-                onChange$={(e) => {
-                  showFileSelection.value = false;
-                  filePath.value = undefined;
-                }}
-              />
-              <Button
-                id="explore-dataset"
-                size="sm"
-                class="h-10 rounded-sm"
-                onClick$={() => {
-                  showFileSelection.value = true;
-                }}
-              >
-                Explore files
-              </Button>
-            </div>
+    <div class="flex flex-col justify-between gap-4">
+      <h1 class="text-3xl font-bold w-full">Import you dataset from the hub</h1>
 
-            {showFileSelection.value ? (
-              <div>
-                <FileSelection
-                  repoId={repoId.value!}
-                  accessToken={session.value!.token}
-                  onSelectedFile$={(file) => {
-                    filePath.value = file;
-                  }}
-                />
-              </div>
-            ) : (
-              <div />
-            )}
-          </div>
+      <div class="flex flex-col gap-4">
+        <div class="flex items-center justify-between">
+          <Label for="dataset-repo-id">Repo id</Label>
         </div>
-
-        <div class="flex h-16 w-full items-center justify-center">
+        <div class="flex w-full max-w-sm items-center space-x-2">
+          <Input
+            id="dataset-repo-id"
+            class="h-10"
+            placeholder="Enter the repo id"
+            bind:value={repoId}
+            onChange$={(e) => {
+              showFileSelection.value = false;
+              filePath.value = undefined;
+            }}
+          />
           <Button
-            id="import-dataset"
+            id="explore-dataset"
             size="sm"
-            class="w-full rounded-sm p-2"
-            disabled={!enableImportButton.value}
-            onClick$={handleOnClickImportFromHub}
+            class="h-10 rounded-sm"
+            onClick$={() => {
+              showFileSelection.value = true;
+            }}
           >
-            {isImportingData.value ? (
-              <div class="flex items -center space-x-2">
-                <LuLoader class="h-6 w-6 animate-spin" />
-                <span>Importing dataset...</span>
-              </div>
-            ) : (
-              'Import dataset'
-            )}
+            Explore files
           </Button>
         </div>
+
+        {showFileSelection.value ? (
+          <div>
+            <FileSelection
+              repoId={repoId.value!}
+              accessToken={session.value!.token}
+              onSelectedFile$={(file) => {
+                filePath.value = file;
+              }}
+            />
+          </div>
+        ) : (
+          <div />
+        )}
       </div>
-    </>
+
+      <div class="w-full flex flex-col gap-2">
+        <Button
+          look="primary"
+          disabled={!enableImportButton.value}
+          onClick$={handleOnClickImportFromHub}
+        >
+          {isImportingData.value ? (
+            <div class="flex items-center gap-4">
+              <LuLoader class="text-xl animate-spin" />
+              <span>Importing dataset...</span>
+            </div>
+          ) : (
+            <div class="flex items-center gap-4">
+              <LuTerminalSquare class="text-xl" />
+
+              <span>Import dataset</span>
+            </div>
+          )}
+        </Button>
+        <p class="text-sm">Only the first 1000 rows will be imported.</p>
+      </div>
+    </div>
   );
 });
 

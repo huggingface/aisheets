@@ -69,22 +69,22 @@ export const ExportToHub = component$(() => {
   return (
     <>
       <Button
-        look="primary"
-        size="sm"
-        class="flex w-32 justify-between px-3 text-muted-foreground hover:text-foreground transition-colors"
+        look="secondary"
         onClick$={handleOpenExportToHubSidebar}
         disabled={
           activeDataset.value.columns.filter((c) => c.id !== TEMPORAL_ID)
             .length === 0
         }
       >
-        <LuArrowRightFromLine />
-        Push to Hub
+        <div class="flex items-center gap-4">
+          <LuArrowRightFromLine class="text-md" />
+          Push to Hub
+        </div>
       </Button>
 
       <Modal
         name="exportToHub"
-        title="Export to Hub"
+        title="Push your dataset to the Hub"
         class="fixed !right-4 !top-[6.5rem] h-[320px] shadow-md"
       >
         <div class="flex flex-col gap-2">
@@ -144,16 +144,13 @@ export const ExportToHub = component$(() => {
           </div>
         </div>
 
-        <div class="flex h-12 w-full items-center -ml-2">
-          <Button
-            look="ghost"
-            class="h-10 bg-ring hover:bg-indigo-300 text-white w-fit select-none ml-2 rounded-2xl"
-            onClick$={onButtonClick}
-            disabled={isSubmitting.value}
-          >
-            {isSubmitting.value ? 'Pushing...' : 'Push to Hub'}
-          </Button>
-        </div>
+        <Button
+          look="primary"
+          onClick$={onButtonClick}
+          disabled={isSubmitting.value}
+        >
+          {isSubmitting.value ? 'Pushing...' : 'Push to Hub'}
+        </Button>
       </Modal>
     </>
   );

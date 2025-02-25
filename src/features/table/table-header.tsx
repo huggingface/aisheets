@@ -19,8 +19,11 @@ export const TableHeader = component$(() => {
           <Fragment key={column.id}>
             <TableCellHeader column={column} />
 
-            {columnId.value === column.id && (
-              <ExecutionForm onGenerateColumn={onGenerateColumn} />
+            {column.id === columnId.value && (
+              <ExecutionForm
+                column={column}
+                onGenerateColumn={onGenerateColumn}
+              />
             )}
           </Fragment>
         ))}

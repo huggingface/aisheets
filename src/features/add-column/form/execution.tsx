@@ -9,6 +9,7 @@ import {
   useContextProvider,
   useSignal,
 } from '@builder.io/qwik';
+import { TEMPORAL_ID, useColumnsStore } from '~/state';
 
 export type Execution = {
   columnId?: string;
@@ -19,7 +20,14 @@ const executionContext =
   createContextId<Signal<Execution>>('execution.context');
 
 export const ExecutionProvider = component$(() => {
-  const internalState = useSignal<Execution>({});
+  const { state: columns } = useColumnsStore();
+  const lastColumnId = columns.value[columns.value.length - 1].id;
+
+  const internalState = useSignal<Execution>({
+    columnId: lastColumnId === TEMPORAL_ID ? lastColumnId : undefined,
+    mode: lastColumnId === TEMPORAL_ID ? 'add' : undefined,
+  });
+
   useContextProvider(executionContext, internalState);
 
   return <Slot />;

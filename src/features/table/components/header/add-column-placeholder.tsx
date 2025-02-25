@@ -1,4 +1,4 @@
-import { $, component$, useComputed$, useVisibleTask$ } from '@builder.io/qwik';
+import { $, component$, useComputed$ } from '@builder.io/qwik';
 import { LuPlus } from '@qwikest/icons/lucide';
 import { Button } from '~/components';
 import { nextTick } from '~/components/hooks/tick';
@@ -12,16 +12,6 @@ export const TableAddCellHeaderPlaceHolder = component$(() => {
   const lastColumnId = useComputed$(
     () => columns.value[columns.value.length - 1].id,
   );
-
-  useVisibleTask$(({ track, cleanup }) => {
-    track(columns);
-
-    if (columns.value.length === 1 && lastColumnId.value === TEMPORAL_ID) {
-      nextTick(() => {
-        open(lastColumnId.value, 'add');
-      });
-    }
-  });
 
   const handleNewColumn = $(async () => {
     await addTemporalColumn();

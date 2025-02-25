@@ -166,8 +166,11 @@ export const useColumnsStore = () => {
     };
   });
 
+  const firstColum = useComputed$(() => columns.value[0]);
+
   return {
     state: columns,
+    firstColum,
     canGenerate: $((column: Column) => canGenerate(column, columns.value)),
     addTemporalColumn: $(async () => {
       if (activeDataset.value.columns.some((c) => c.id === TEMPORAL_ID)) return;

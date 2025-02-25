@@ -11,6 +11,7 @@ import {
 import { LuBookmark, LuCheck, LuEgg, LuXCircle } from '@qwikest/icons/lucide';
 
 import { Button, Input, Label, Select } from '~/components';
+import { nextTick } from '~/components/hooks/tick';
 import {
   TemplateTextArea,
   type Variable,
@@ -33,6 +34,7 @@ export const ExecutionForm = component$<SidebarProps>(
     const { columnId, mode, close } = useExecution();
     const {
       state: columns,
+      firstColum,
       removeTemporalColumn,
       canGenerate,
     } = useColumnsStore();
@@ -87,24 +89,20 @@ export const ExecutionForm = component$<SidebarProps>(
 
     useTask$(({ track }) => {
       track(columnId);
-      if (!columnId.value) return;
-
       currentColumn.value = columns.value.find((c) => c.id === columnId.value);
-
       if (!currentColumn.value) return;
 
       const process = currentColumn.value.process!;
-
       prompt.value = process.prompt;
-
       selectedModel.value = {
         id: process.modelName,
         provider: process.modelProvider!,
       };
-
       inputModelId.value = selectedModel.value.id;
 
-      rowsToGenerate.value = String(process.limit);
+      rowsToGenerate.value = String(
+        Math.min(process.limit, firstColum.value.process.limit),
+      );
     });
 
     const loadModels = useResource$(async () => {
@@ -213,7 +211,20 @@ export const ExecutionForm = component$<SidebarProps>(
               id="column-rows"
               type="number"
               class="px-4 h-10 border-secondary-foreground bg-primary"
-              bind:value={rowsToGenerate}
+              max={firstColum.value.process.limit}
+              min="1"
+              onInput$={(_, el) => {
+                if (Number(el.value) > firstColum.value.process.limit) {
+                  nextTick(() => {
+                    rowsToGenerate.value = String(
+                      firstColum.value.process.limit,
+                    );
+                  });
+                }
+
+                rowsToGenerate.value = el.value;
+              }}
+              value={rowsToGenerate.value}
             />
 
             <div class="relative">

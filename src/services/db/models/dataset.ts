@@ -22,6 +22,9 @@ export class DatasetModel extends Model<
 
   declare columns: NonAttribute<ColumnModel[]>;
 
+  declare createdAt: NonAttribute<Date>;
+  declare updatedAt: NonAttribute<Date>;
+
   declare static associations: {
     columns: Association<DatasetModel, ColumnModel>;
   };

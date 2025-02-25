@@ -3,6 +3,7 @@ import {
   type QRL,
   Resource,
   component$,
+  useComputed$,
   useResource$,
   useSignal,
   useTask$,
@@ -30,7 +31,13 @@ interface SidebarProps {
 export const ExecutionForm = component$<SidebarProps>(
   ({ onGenerateColumn }) => {
     const { columnId, mode, close } = useExecution();
-    const { state: columns, removeTemporalColumn } = useColumnsStore();
+    const {
+      state: columns,
+      removeTemporalColumn,
+      canGenerate,
+    } = useColumnsStore();
+    const parseModelId = (model: Model) => `${model.id}-${model.provider}`;
+
     const isSubmitting = useSignal(false);
     const currentColumn = useSignal<Column | undefined>();
 
@@ -46,7 +53,23 @@ export const ExecutionForm = component$<SidebarProps>(
       columnsReferences.value = variables.map((v) => v.id);
     });
 
-    const uniqueModelId = (model: Model) => `${model.id}-${model.provider}`;
+    const isTouched = useComputed$(() => {
+      return (
+        prompt.value !== currentColumn.value?.process.prompt ||
+        selectedModel.value?.id !== currentColumn.value?.process.modelName ||
+        rowsToGenerate.value !== String(currentColumn.value?.process.limit)
+      );
+    });
+
+    const isDisabledGenerateButton = useComputed$(() => {
+      if (mode.value === 'add') return isSubmitting.value;
+
+      return (
+        !canGenerate(currentColumn.value!) ||
+        isSubmitting.value ||
+        !isTouched.value
+      );
+    });
 
     useTask$(({ track }) => {
       track(currentColumn);
@@ -100,7 +123,6 @@ export const ExecutionForm = component$<SidebarProps>(
           ...currentColumn.value!.process,
           modelName,
           modelProvider,
-
           prompt: prompt.value!,
           columnsReferences: columnsReferences.value,
           offset: 0,
@@ -151,7 +173,7 @@ export const ExecutionForm = component$<SidebarProps>(
                 }
 
                 return (
-                  <Select.Root value={uniqueModelId(selectedModel.value)}>
+                  <Select.Root value={parseModelId(selectedModel.value)}>
                     <Select.Trigger class="px-4 bg-primary rounded-base border-secondary-foreground">
                       <Select.DisplayValue />
                     </Select.Trigger>
@@ -160,7 +182,7 @@ export const ExecutionForm = component$<SidebarProps>(
                         <Select.Item
                           key={idx}
                           class="text-foreground hover:bg-accent"
-                          value={uniqueModelId(model)}
+                          value={parseModelId(model)}
                           onClick$={() => {
                             selectedModel.value = model;
                             console.log(selectedModel.value);
@@ -210,7 +232,7 @@ export const ExecutionForm = component$<SidebarProps>(
                   key={isSubmitting.value.toString()}
                   look="primary"
                   onClick$={onGenerate}
-                  disabled={isSubmitting.value}
+                  disabled={isDisabledGenerateButton.value}
                 >
                   <div class="flex items-center gap-4">
                     <LuEgg class="text-xl" />

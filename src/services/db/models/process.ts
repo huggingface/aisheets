@@ -26,6 +26,9 @@ export class ProcessModel extends Model<
 
   declare referredColumns: NonAttribute<ColumnModel[]>; // This is a virtual attribute
 
+  declare createdAt: NonAttribute<Date>;
+  declare updatedAt: NonAttribute<Date>;
+
   declare static associations: {
     referredColumns: Association<ProcessModel, ColumnModel>;
   };

@@ -50,6 +50,7 @@ export const getDatasetColumns = async (
         modelProvider: model.process?.modelProvider ?? '',
         offset: model.process?.offset ?? 0,
         prompt: model.process?.prompt ?? '',
+        updatedAt: model.process?.updatedAt,
       },
       cells: [],
     };
@@ -112,6 +113,7 @@ export const getColumnById = async (id: string): Promise<Column | null> => {
       modelProvider: model.process?.modelProvider ?? '',
       offset: model.process?.offset ?? 0,
       prompt: model.process?.prompt ?? '',
+      updatedAt: model.process?.updatedAt,
     },
 
     cells: [],

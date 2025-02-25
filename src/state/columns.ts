@@ -10,9 +10,10 @@ export interface Process {
   modelName: string;
   modelProvider: string;
   prompt: string;
-  columnsReferences?: string[];
+  columnsReferences: string[];
   offset: number;
   limit: number;
+  updatedAt: Date;
 }
 
 export interface CreateColumn {
@@ -20,7 +21,7 @@ export interface CreateColumn {
   type: ColumnType;
   kind: ColumnKind;
   dataset: Omit<Dataset, 'columns'>;
-  process?: {
+  process: {
     modelName: string;
     modelProvider?: string;
     prompt: string;
@@ -46,10 +47,29 @@ export interface Column {
   name: string;
   type: ColumnType;
   kind: ColumnKind;
-  process?: Process;
+  process: Process;
   cells: Cell[];
   dataset: Omit<Dataset, 'columns'>;
 }
+
+export const canGenerate = (column: Column, columns: Column[]) => {
+  const isDirty = (column: Column) => {
+    if (!column.process) return false;
+
+    //TODO: what happen if the column has no validated cells ? should we consider it dirty ?
+    const isAnyCellUpdatedAfterProcess = column.cells
+      .filter((c) => c.validated)
+      .some((c) => c.updatedAt > column.process.updatedAt);
+
+    return isAnyCellUpdatedAfterProcess;
+  };
+
+  const columnsReferences = column.process.columnsReferences.map((id) =>
+    columns.find((c) => c.id === id),
+  );
+
+  return isDirty(column) && columnsReferences.every((c) => c && !isDirty(c));
+};
 
 export const TEMPORAL_ID = '-1';
 export const useColumnsStore = () => {
@@ -123,6 +143,7 @@ export const useColumnsStore = () => {
         limit: 5,
         prompt: '',
         columnsReferences: [],
+        updatedAt: new Date(),
       },
       dataset: {
         ...activeDataset.value,
@@ -147,6 +168,7 @@ export const useColumnsStore = () => {
 
   return {
     state: columns,
+    canGenerate: $((column: Column) => canGenerate(column, columns.value)),
     addTemporalColumn: $(async () => {
       if (activeDataset.value.columns.some((c) => c.id === TEMPORAL_ID)) return;
 

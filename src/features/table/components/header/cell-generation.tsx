@@ -6,15 +6,10 @@ import { useGenerateColumn } from '~/features/execution';
 import { type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
 
 export const CellGeneration = component$<{ column: Column }>(({ column }) => {
-  const { state: columns } = useColumnsStore();
+  const { canGenerate } = useColumnsStore();
   const onGenerateColumn = useGenerateColumn();
 
-  const hasAtLeastOneRowValidated = useComputed$(() => {
-    const thisColumn = columns.value.find((col) => col.id === column.id);
-    if (!thisColumn) return false;
-
-    return thisColumn.cells.some((cells) => cells.validated);
-  });
+  const canRegenerate = useComputed$(() => canGenerate(column));
 
   if (column.id === TEMPORAL_ID) {
     return null;
@@ -25,10 +20,10 @@ export const CellGeneration = component$<{ column: Column }>(({ column }) => {
       <Button
         look="ghost"
         size="sm"
-        disabled={!hasAtLeastOneRowValidated.value}
+        disabled={!canRegenerate.value}
         onClick$={() => onGenerateColumn(column)}
       >
-        {hasAtLeastOneRowValidated.value ? (
+        {canRegenerate.value ? (
           <LuEgg class="text-primary-foreground" />
         ) : (
           <LuEggOff class="text-primary-foreground" />

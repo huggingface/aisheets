@@ -23,9 +23,9 @@ export interface CreateColumn {
   dataset: Omit<Dataset, 'columns'>;
   process: {
     modelName: string;
-    modelProvider?: string;
+    modelProvider: string;
     prompt: string;
-    columnsReferences?: string[];
+    columnsReferences: string[];
     offset: number;
     limit: number;
   };
@@ -56,19 +56,26 @@ export const canGenerate = (column: Column, columns: Column[]) => {
   const isDirty = (column: Column) => {
     if (!column.process) return false;
 
-    //TODO: what happen if the column has no validated cells ? should we consider it dirty ?
-    const isAnyCellUpdatedAfterProcess = column.cells
-      .filter((c) => c.validated)
-      .some((c) => c.updatedAt > column.process.updatedAt);
+    if (column.cells.some((c) => c.validated)) {
+      const isAnyCellUpdatedAfterProcess = column.cells
+        .filter((c) => c.validated)
+        .some((c) => c.updatedAt > column.process.updatedAt);
 
-    return isAnyCellUpdatedAfterProcess;
+      return isAnyCellUpdatedAfterProcess;
+    }
+
+    return false;
   };
+  const refreshedColumn = columns.find((c) => c.id === column.id)!;
+  if (!refreshedColumn) return false;
 
-  const columnsReferences = column.process.columnsReferences.map((id) =>
-    columns.find((c) => c.id === id),
+  const columnsReferences = refreshedColumn.process.columnsReferences.map(
+    (id) => columns.find((c) => c.id === id),
   );
 
-  return isDirty(column) && columnsReferences.every((c) => c && !isDirty(c));
+  const amIDirty = isDirty(refreshedColumn);
+
+  return amIDirty && columnsReferences.every((c) => c && !isDirty(c));
 };
 
 export const TEMPORAL_ID = '-1';

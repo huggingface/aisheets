@@ -1,6 +1,4 @@
 import { type RequestEventBase, server$ } from '@builder.io/qwik-city';
-
-import { INFERENCE_PROVIDER } from '~/config';
 import { createColumn } from '~/services/repository';
 import {
   type Cell,
@@ -21,16 +19,7 @@ export const useAddColumnUseCase = () =>
       type: newColum.type,
       kind: newColum.kind,
       dataset: newColum.dataset,
-      process: newColum.process
-        ? {
-            modelName: newColum.process.modelName,
-            modelProvider: newColum.process.modelProvider || INFERENCE_PROVIDER,
-            prompt: newColum.process.prompt,
-            columnsReferences: newColum.process.columnsReferences,
-            offset: newColum.process.offset,
-            limit: newColum.process.limit,
-          }
-        : undefined,
+      process: newColum.process,
     });
 
     yield {

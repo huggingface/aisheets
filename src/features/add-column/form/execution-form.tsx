@@ -55,6 +55,8 @@ export const ExecutionForm = component$<SidebarProps>(
       columnsReferences.value = variables.map((v) => v.id);
     });
 
+    const isDisabledGenerateButton = useSignal(true);
+
     const isTouched = useComputed$(() => {
       return (
         prompt.value !== currentColumn.value?.process.prompt ||
@@ -63,14 +65,23 @@ export const ExecutionForm = component$<SidebarProps>(
       );
     });
 
-    const isDisabledGenerateButton = useComputed$(() => {
-      if (mode.value === 'add') return isSubmitting.value;
+    useTask$(async ({ track }) => {
+      track(isSubmitting);
 
-      return (
-        !canGenerate(currentColumn.value!) ||
-        isSubmitting.value ||
-        !isTouched.value
-      );
+      if (mode.value === 'add') {
+        isDisabledGenerateButton.value = isSubmitting.value;
+        return;
+      }
+
+      track(columns);
+      track(currentColumn);
+      track(isTouched);
+
+      if (!currentColumn.value) return;
+
+      const canRegenerate = await canGenerate(currentColumn.value!);
+      isDisabledGenerateButton.value =
+        !canRegenerate || isSubmitting.value || !isTouched.value;
     });
 
     useTask$(({ track }) => {
@@ -113,7 +124,7 @@ export const ExecutionForm = component$<SidebarProps>(
       isSubmitting.value = true;
 
       const modelName = inputModelId.value || selectedModel.value!.id;
-      const modelProvider = selectedModel.value?.provider;
+      const modelProvider = selectedModel.value?.provider!;
 
       const columnToSave = {
         ...currentColumn.value!,

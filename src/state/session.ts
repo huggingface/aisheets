@@ -1,5 +1,5 @@
 import { isBrowser } from '@builder.io/qwik';
-import type { RequestEventLoader } from '@builder.io/qwik-city';
+import type { RequestEventBase } from '@builder.io/qwik-city';
 
 export interface Session {
   token: string;
@@ -10,14 +10,16 @@ export interface Session {
   };
 }
 
-export const useServerSession = (request: RequestEventLoader): Session => {
+export const useServerSession = (
+  request: RequestEventBase<QwikCityPlatform>,
+): Session => {
   if (isBrowser)
     throw new Error('useServerSession must be used on the server.');
 
   const session = request.sharedMap.get('session')!;
 
   if (!session) {
-    throw request.redirect(302, '/');
+    throw (request as any).redirect(302, '/');
   }
 
   return {

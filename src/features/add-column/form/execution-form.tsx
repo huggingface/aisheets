@@ -110,10 +110,7 @@ export const ExecutionForm = component$<SidebarProps>(
         provider: process.modelProvider!,
       };
       inputModelId.value = selectedModel.value.id;
-
-      rowsToGenerate.value = String(
-        Math.min(process.limit, firstColum.value.process.limit),
-      );
+      rowsToGenerate.value = String(process.limit);
     });
 
     const loadModels = useResource$(async () => {

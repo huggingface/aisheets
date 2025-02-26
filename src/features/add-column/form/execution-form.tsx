@@ -59,6 +59,7 @@ export const ExecutionForm = component$<SidebarProps>(
         }));
 
       const { process } = column;
+      if (!process) return;
 
       prompt.value = process.prompt;
 

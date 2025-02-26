@@ -52,6 +52,9 @@ export const ExecutionForm = component$<SidebarProps>(
     const inputModelId = useSignal<string | undefined>();
     const rowsToGenerate = useSignal('5');
 
+    const selectedProvider = useSignal<string>();
+    const updateCounter = useSignal(0);
+
     const onSelectedVariables = $((variables: { id: string }[]) => {
       columnsReferences.value = variables.map((v) => v.id);
     });
@@ -80,11 +83,15 @@ export const ExecutionForm = component$<SidebarProps>(
         !canRegenerate || isSubmitting.value || !isTouched.value;
     });
 
-    useTask$(() => {
+    const loadModels = useResource$(async () => {
+      return await useListModels();
+    });
+
+    useTask$(async ({ track }) => {
+      const models = await loadModels.value;
+
       variables.value = columns.value
-        .filter(
-          (c) => c.id !== column.id, //Remove the column itself
-        )
+        .filter((c) => c.id !== column.id)
         .map((c) => ({
           id: c.id,
           name: c.name,
@@ -94,23 +101,22 @@ export const ExecutionForm = component$<SidebarProps>(
       if (!process) return;
 
       prompt.value = process.prompt;
-      selectedModel.value = {
+      selectedModel.value = models?.find((m) => m.id === process.modelName) || {
         id: process.modelName,
-        provider: process.modelProvider!,
+        providers: [process.modelProvider!],
       };
-      inputModelId.value = selectedModel.value.id;
-      rowsToGenerate.value = String(process.limit);
-    });
+      selectedProvider.value = process.modelProvider!;
 
-    const loadModels = useResource$(async () => {
-      return await useListModels();
+      inputModelId.value = process.modelName;
+      rowsToGenerate.value = String(process.limit);
     });
 
     const onGenerate = $(async () => {
       isSubmitting.value = true;
 
       const modelName = inputModelId.value || selectedModel.value!.id;
-      const modelProvider = selectedModel.value?.provider!;
+      // Fix: Use selectedProvider directly
+      const modelProvider = selectedProvider.value!;
 
       const columnToSave = {
         ...column,
@@ -162,32 +168,71 @@ export const ExecutionForm = component$<SidebarProps>(
                 onResolved={(models) => {
                   if (!selectedModel.value?.id) {
                     selectedModel.value = models[0];
+                    selectedProvider.value = models[0].providers[0];
                   }
 
                   return (
-                    <Select.Root value={parseModelId(selectedModel.value)}>
-                      <Select.Trigger class="px-4 bg-primary rounded-base border-secondary-foreground">
-                        <Select.DisplayValue />
-                      </Select.Trigger>
-                      <Select.Popover class="bg-primary border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto">
-                        {models.map((model, idx) => (
-                          <Select.Item
-                            key={idx}
-                            value={parseModelId(model)}
-                            class="text-foreground hover:bg-accent"
-                            onClick$={() => {
-                              selectedModel.value = model;
-                              console.log(selectedModel.value);
-                            }}
-                          >
-                            <Select.ItemLabel>{`${model.id} (${model.provider})`}</Select.ItemLabel>
-                            <Select.ItemIndicator>
-                              <LuCheck class="h-4 w-4" />
-                            </Select.ItemIndicator>
-                          </Select.Item>
-                        ))}
-                      </Select.Popover>
-                    </Select.Root>
+                    <div class="flex flex-col gap-4">
+                      <Select.Root value={selectedModel.value?.id}>
+                        <Select.Trigger class="px-4 bg-primary rounded-base border-secondary-foreground">
+                          <Select.DisplayValue />
+                        </Select.Trigger>
+                        <Select.Popover class="bg-primary border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto">
+                          {models.map((model, idx) => (
+                            <Select.Item
+                              key={idx}
+                              class="text-foreground hover:bg-accent"
+                              value={model.id}
+                              onClick$={$(() => {
+                                selectedModel.value = model;
+                                selectedProvider.value = model.providers[0];
+                                updateCounter.value++;
+                              })}
+                            >
+                              <Select.ItemLabel>{model.id}</Select.ItemLabel>
+                              <Select.ItemIndicator>
+                                <LuCheck class="h-4 w-4" />
+                              </Select.ItemIndicator>
+                            </Select.Item>
+                          ))}
+                        </Select.Popover>
+                      </Select.Root>
+
+                      <div key={`provider-section-${updateCounter.value}`}>
+                        <Label class="flex gap-1">Provider</Label>
+                        <Select.Root
+                          value={selectedProvider.value}
+                          onChange$={$((value: string | string[]) => {
+                            const provider = Array.isArray(value)
+                              ? value[0]
+                              : value;
+                            selectedProvider.value = provider;
+                          })}
+                        >
+                          <Select.Trigger class="px-4 bg-primary rounded-base border-secondary-foreground">
+                            <Select.DisplayValue />
+                          </Select.Trigger>
+                          <Select.Popover class="bg-primary border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto">
+                            {selectedModel.value?.providers?.map(
+                              (provider, idx) => (
+                                <Select.Item
+                                  key={idx}
+                                  class="text-foreground hover:bg-accent"
+                                  value={provider}
+                                >
+                                  <Select.ItemLabel>
+                                    {provider}
+                                  </Select.ItemLabel>
+                                  <Select.ItemIndicator>
+                                    <LuCheck class="h-4 w-4" />
+                                  </Select.ItemIndicator>
+                                </Select.Item>
+                              ),
+                            ) || []}
+                          </Select.Popover>
+                        </Select.Root>
+                      </div>
+                    </div>
                   );
                 }}
                 onRejected={() => {
@@ -223,7 +268,7 @@ export const ExecutionForm = component$<SidebarProps>(
 
               <div class="relative">
                 <div class="flex flex-col gap-4">
-                  <Label>Prompt</Label>
+                  <Label class="text-left">Prompt</Label>
 
                   <TemplateTextArea
                     bind:value={prompt}

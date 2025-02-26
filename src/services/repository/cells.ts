@@ -1,6 +1,6 @@
 import { Op } from 'sequelize';
 import { ColumnCellModel } from '~/services/db/models/cell';
-import type { Cell } from '~/state';
+import type { Cell, Column } from '~/state';
 
 interface GetRowCellsParams {
   rowIdx: number;
@@ -51,6 +51,8 @@ export const getColumnCellByIdx = async ({
     column: {
       id: model.columnId,
     },
+    updatedAt: model.updatedAt,
+    generated: model.generated,
   };
 };
 
@@ -70,6 +72,8 @@ export const getColumnCellById = async (id: string): Promise<Cell | null> => {
     column: {
       id: model.columnId,
     },
+    updatedAt: model.updatedAt,
+    generated: model.generated,
   };
 };
 
@@ -97,17 +101,24 @@ export const getColumnCells = async ({
     column: {
       id: cell.columnId,
     },
+    columnId: cell.columnId,
+    updatedAt: cell.updatedAt,
+    generated: cell.generated,
   }));
 };
 
 export const createCell = async ({
   cell,
-  columnId,
+  column,
 }: {
-  cell: Omit<Cell, 'id' | 'validated'>;
-  columnId: string;
+  cell: Omit<Cell, 'id' | 'validated' | 'updatedAt' | 'generated'>;
+  column: Column;
 }): Promise<Cell> => {
-  const model = await ColumnCellModel.create({ ...cell, columnId });
+  const model = await ColumnCellModel.create({
+    ...cell,
+    generated: false,
+    columnId: column.id,
+  });
 
   return {
     id: model.id,
@@ -118,6 +129,8 @@ export const createCell = async ({
     column: {
       id: model.columnId,
     },
+    updatedAt: model.updatedAt,
+    generated: model.generated,
   };
 };
 
@@ -140,5 +153,7 @@ export const updateCell = async (cell: Partial<Cell>): Promise<Cell> => {
     column: {
       id: model.columnId,
     },
+    updatedAt: model.updatedAt,
+    generated: model.generated,
   };
 };

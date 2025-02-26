@@ -8,9 +8,9 @@ export const buttonVariants = cva(
     variants: {
       look: {
         primary:
-          'border border-secondary bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 active:shadow-base active:press',
+          'p-4 rounded-2xl h-10 bg-ring hover:bg-indigo-300 text-white w-fit select-none',
         secondary:
-          'border border-primary text-secondary-foreground shadow-sm hover:bg-secondary/90 active:shadow-base active:press',
+          'p-4 rounded-2xl h-10 w-fit select-none border border-secondary bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 active:shadow-base active:press',
         alert:
           'border-base bg-alert text-alert-foreground shadow-sm hover:bg-alert/90 active:shadow-base active:press',
         outline:
@@ -26,8 +26,7 @@ export const buttonVariants = cva(
       },
     },
     defaultVariants: {
-      look: 'primary',
-      size: 'md',
+      look: 'secondary',
     },
   },
 );

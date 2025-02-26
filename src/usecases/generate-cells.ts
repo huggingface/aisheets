@@ -88,6 +88,8 @@ export const generateCells = async function* ({
         columnId: column.id,
       }));
 
+    cell.generated = true;
+
     if (stream) {
       for await (const response of runPromptExecutionStream(args)) {
         cell.value = response.value;

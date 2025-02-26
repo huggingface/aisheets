@@ -80,7 +80,7 @@ export const useImportFromHub = () =>
             idx: row.rowIdx,
             value,
           },
-          columnId: column.id,
+          column,
         });
 
         column.cells.push(createdCell);

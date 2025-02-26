@@ -16,7 +16,7 @@ export const CellName = component$<{ column: Column }>(({ column }) => {
       isEditingCellName.close();
 
       if (column.id === TEMPORAL_ID) {
-        column.name = newName.value;
+        updateColumn({ ...column, name: newName.value });
         return;
       }
 

@@ -2,7 +2,7 @@ import { Slot, component$ } from '@builder.io/qwik';
 import type { RequestHandler } from '@builder.io/qwik-city';
 
 import { ModalsProvider } from '~/components';
-import { MainSidebar } from '~/components/ui/main-sidebar/main-sidebar';
+import { MainSidebar } from '~/features/main-sidebar';
 
 export const onGet: RequestHandler = async ({ cacheControl }) => {
   cacheControl({
@@ -11,17 +11,17 @@ export const onGet: RequestHandler = async ({ cacheControl }) => {
   });
 };
 
-export { useAllDatasets } from '~/components/ui/main-sidebar/main-sidebar';
+export * from '~/loaders';
 
 export default component$(() => {
   return (
-    <div class="flex-row flex max-h-screen">
-      <MainSidebar />
-      <div class="w-full h-screen overflow-auto">
-        <ModalsProvider>
+    <ModalsProvider>
+      <div class="flex-row flex max-h-screen">
+        <MainSidebar />
+        <div class="min-w-screen h-screen px-4 pt-4 w-full overflow-auto">
           <Slot />
-        </ModalsProvider>
+        </div>
       </div>
-    </div>
+    </ModalsProvider>
   );
 });

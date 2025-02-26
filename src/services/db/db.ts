@@ -1,4 +1,3 @@
-import { isDev } from '@builder.io/qwik';
 import consola from 'consola';
 import { Sequelize } from 'sequelize';
 import { DATA_DIR } from '~/config';
@@ -10,11 +9,7 @@ const env = process.env.NODE_ENV || 'development';
 export const db = new Sequelize({
   storage: `${DATA_DIR}/${env}.db`,
   dialect: 'sqlite',
-  logging: (sql) => {
-    if (isDev) {
-      consola.info(sql.replace('Executing (default):', '🛢️:'));
-    }
-  },
+  logging: false,
 });
 
 db.beforeInit(async () => {

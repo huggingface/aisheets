@@ -1,31 +1,27 @@
 import { component$ } from '@builder.io/qwik';
 import type { DocumentHead } from '@builder.io/qwik-city';
-import { Execution } from '~/features';
-
-import { DatasetName } from '~/features/datasets/dataset-name';
-import { Table } from '~/features/table/table';
-import { useDatasetsStore, useLoadDatasets, useSession } from '~/state';
-
-export { useDatasetsLoader } from '~/state';
-
-export { useSession } from '~/state';
+import { DatasetName } from '~/features/datasets';
+import { ExportToHub } from '~/features/export-to-hub';
+import { Table } from '~/features/table';
+import { Username } from '~/features/user/username';
+import { ActiveDatasetProvider } from '~/state';
 
 export default component$(() => {
-  useLoadDatasets();
-  const session = useSession();
-  const { activeDataset } = useDatasetsStore();
-
   return (
-    <div class="min-w-screen px-6">
-      <div class="flex justify-end items-center w-full mt-6">
-        <span>{session.value.user.username}</span>
+    <ActiveDatasetProvider>
+      <div class="flex flex-col space-y-2">
+        <Username />
+        <div class="flex flex-col flex-1 gap-2">
+          <div class="flex justify-between items-center w-full">
+            <DatasetName />
+            <ExportToHub />
+          </div>
+          <div class="flex-1">
+            <Table />
+          </div>
+        </div>
       </div>
-      <div class="flex justify-between items-center w-full mb-4 pt-4">
-        <DatasetName dataset={activeDataset.value} />
-        <Execution />
-      </div>
-      <Table />
-    </div>
+    </ActiveDatasetProvider>
   );
 });
 

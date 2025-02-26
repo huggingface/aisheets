@@ -32,7 +32,6 @@ export const useModals = <N extends ID>(id: N) => {
   const isOpen = useComputed$(
     () => modalContext.value.modals[id].status === 'open',
   );
-  const args = useComputed$(() => modalContext.value.modals[id].args);
 
   const change = $((status: Status, args: unknown) => {
     modalContext.value = {
@@ -52,7 +51,7 @@ export const useModals = <N extends ID>(id: N) => {
     close: $(() => change('closed', null)),
   };
 
-  return wrap(id, isOpen, modal.open, modal.close, args);
+  return wrap(id, isOpen, modal.open, modal.close);
 };
 
 export const useActiveModal = () => {
@@ -66,11 +65,9 @@ export const useActiveModal = () => {
   });
 
   const isOpen = useComputed$(() => modal.value?.status === 'open');
-  const args = useComputed$(() => modal.value?.args);
 
   return {
     isOpen,
-    args,
     close: $(() => {
       modalContext.value = {
         ...modalContext.value,

@@ -5,10 +5,8 @@ describe('columns', () => {
   describe('canGenerate', () => {
     describe('column with out references columns', () => {
       test('should be false if all cells are not validated', () => {
-        const columns: Column[] = [];
-
         const column: Column = {
-          id: TEMPORAL_ID,
+          id: '1',
           name: 'FAKE COLUMN',
           kind: 'dynamic',
           type: 'text',
@@ -46,18 +44,19 @@ describe('columns', () => {
           },
         };
 
+        const columns = [column];
+
         expect(canGenerate(column, columns)).toBeFalsy();
       });
 
       test('should be true if some validated cells are updated after process execution', () => {
-        const columns: Column[] = [];
         const processExecutionUpdatedAt = new Date();
         const cellUpdatedAt = new Date(
           processExecutionUpdatedAt.getTime() + 1000,
         );
 
         const column: Column = {
-          id: TEMPORAL_ID,
+          id: '1',
           name: 'FAKE COLUMN',
           kind: 'dynamic',
           type: 'text',
@@ -95,18 +94,19 @@ describe('columns', () => {
           },
         };
 
+        const columns = [column];
+
         expect(canGenerate(column, columns)).toBeTruthy();
       });
 
       test('should be false if all validated cells are updated before process execution', () => {
-        const columns: Column[] = [];
         const processExecutionUpdatedAt = new Date();
         const cellUpdatedAt = new Date(
           processExecutionUpdatedAt.getTime() - 1000,
         );
 
         const column: Column = {
-          id: TEMPORAL_ID,
+          id: '1',
           name: 'FAKE COLUMN',
           kind: 'dynamic',
           type: 'text',
@@ -144,6 +144,8 @@ describe('columns', () => {
           },
         };
 
+        const columns = [column];
+
         expect(canGenerate(column, columns)).toBeFalsy();
       });
     });
@@ -156,7 +158,7 @@ describe('columns', () => {
         );
 
         const referencedColumn: Column = {
-          id: TEMPORAL_ID,
+          id: '1',
           name: 'FAKE COLUMN',
           kind: 'dynamic',
           type: 'text',
@@ -194,15 +196,13 @@ describe('columns', () => {
           },
         };
 
-        const columns = [referencedColumn];
-
         const processExecutionUpdatedAt = new Date();
         const cellUpdatedAt = new Date(
           processExecutionUpdatedAt.getTime() + 1000,
         );
 
         const column: Column = {
-          id: TEMPORAL_ID,
+          id: '2',
           name: 'FAKE COLUMN',
           kind: 'dynamic',
           type: 'text',
@@ -240,17 +240,20 @@ describe('columns', () => {
           },
         };
 
-        expect(canGenerate(column, columns)).toBeFalsy();
+        const columns = [referencedColumn, column];
+
+        const v = canGenerate(column, columns);
+        expect(v).toBeFalsy();
       });
 
-      test('should be true if all some are validated after process execution and the reference column is not dirty', () => {
+      test('should be true if all cells are validated after process execution and the reference column is not dirty', () => {
         const referencedColumnProcessExecution = new Date();
         const referencedCellUpdatedAt = new Date(
           referencedColumnProcessExecution.getTime() - 1000,
         );
 
         const referencedColumn: Column = {
-          id: TEMPORAL_ID,
+          id: '1',
           name: 'FAKE COLUMN',
           kind: 'dynamic',
           type: 'text',
@@ -288,15 +291,13 @@ describe('columns', () => {
           },
         };
 
-        const columns = [referencedColumn];
-
         const processExecutionUpdatedAt = new Date();
         const cellUpdatedAt = new Date(
           processExecutionUpdatedAt.getTime() + 1000,
         );
 
         const column: Column = {
-          id: TEMPORAL_ID,
+          id: '2',
           name: 'FAKE COLUMN',
           kind: 'dynamic',
           type: 'text',
@@ -333,6 +334,8 @@ describe('columns', () => {
             createdBy: 'FAKE USER',
           },
         };
+
+        const columns = [referencedColumn, column];
 
         expect(canGenerate(column, columns)).toBeTruthy();
       });

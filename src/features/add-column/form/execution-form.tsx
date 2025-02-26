@@ -42,6 +42,7 @@ export const ExecutionForm = component$<SidebarProps>(
     const parseModelId = (model: Model) => `${model.id}-${model.provider}`;
 
     const isSubmitting = useSignal(false);
+    const isDisabledGenerateButton = useSignal(true);
 
     const prompt = useSignal<string>('');
     const columnsReferences = useSignal<string[]>([]);
@@ -54,8 +55,6 @@ export const ExecutionForm = component$<SidebarProps>(
     const onSelectedVariables = $((variables: { id: string }[]) => {
       columnsReferences.value = variables.map((v) => v.id);
     });
-
-    const isDisabledGenerateButton = useSignal(true);
 
     const isTouched = useComputed$(() => {
       return (
@@ -72,6 +71,7 @@ export const ExecutionForm = component$<SidebarProps>(
         isDisabledGenerateButton.value = isSubmitting.value;
         return;
       }
+
       track(columns);
       track(isTouched);
 
@@ -237,7 +237,7 @@ export const ExecutionForm = component$<SidebarProps>(
                     key={isSubmitting.value.toString()}
                     look="primary"
                     onClick$={onGenerate}
-                    disabled={isSubmitting.value}
+                    disabled={isDisabledGenerateButton.value}
                   >
                     <div class="flex items-center gap-4">
                       <LuEgg class="text-xl" />

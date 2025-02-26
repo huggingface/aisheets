@@ -72,11 +72,11 @@ export const onGet = async ({
 
       saveSession(cookie, session);
       sharedMap.set('session', session);
-
-      return next();
     } catch (e: any) {
       throw Error(`Invalid HF_TOKEN: ${e.message}`);
     }
+
+    throw redirect(303, '/');
   }
 
   throw Error('Missing HF_TOKEN or OAUTH_CLIENT_ID');

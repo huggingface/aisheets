@@ -15,16 +15,17 @@ export const CellName = component$<{ column: Column }>(({ column }) => {
       if (!isEditingCellName.isOpen.value) return;
       isEditingCellName.close();
 
+      column.name = newName.value;
+
+      updateColumn({ ...column });
+
       if (column.id === TEMPORAL_ID) {
-        updateColumn({ ...column, name: newName.value });
         return;
       }
 
       server$(async (columnId: string, newName: string) => {
         await updateColumnName(columnId, newName);
       })(column.id, newName.value);
-
-      updateColumn({ ...column, name: newName.value });
     }),
   );
 

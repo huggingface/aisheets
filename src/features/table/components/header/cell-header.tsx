@@ -16,7 +16,7 @@ export const TableCellHeader = component$<{ column: Column }>(({ column }) => {
   return (
     <th
       id={column.id}
-      class={`min-w-80 w-80 max-w-80 p-2 text-left border-[0.5px] first:rounded-tl-sm border-l-secondary border-r-secondary ${classes.value}`}
+      class={`min-w-80 w-80 max-w-80 min-h-12 h-12 p-2 text-left border-[0.5px] first:rounded-tl-sm border-l-secondary border-r-secondary ${classes.value}`}
     >
       <div class="flex items-center justify-between gap-2 w-full">
         <div class="flex items-center gap-2 text-wrap w-[80%]">

@@ -4,8 +4,7 @@ import { TableCell } from '~/features/table/table-cell';
 import { type Cell, type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
 
 export const TableBody = component$(() => {
-  const { state: columns } = useColumnsStore();
-  const rowCount = useComputed$(() => columns.value[0].process?.limit || 0);
+  const { state: columns, firstColum } = useColumnsStore();
   const { columnId } = useExecution();
   const expandedRows = useSignal<Set<number>>(new Set());
 
@@ -30,6 +29,13 @@ export const TableBody = component$(() => {
 
     return cell;
   };
+
+  const rowCount = useComputed$(() => {
+    if (!firstColum.value.process)
+      throw new Error('No process, review this for static columns');
+
+    return firstColum.value.process.limit;
+  });
 
   return (
     <tbody>

@@ -26,7 +26,7 @@ export const useGenerateColumn = () => {
 
     for await (const { column, cell } of response) {
       if (column) {
-        await addColumn(column);
+        addColumn(column);
 
         open(column.id, 'edit');
       }
@@ -56,7 +56,7 @@ export const useGenerateColumn = () => {
   const onGenerateColumn = $(
     async (column: Column | CreateColumn): Promise<Column> => {
       if ('id' in column && column.id === TEMPORAL_ID) {
-        return onCreateColumn(column);
+        return onCreateColumn(column as CreateColumn);
       }
       return onUpdateCell(column as Column);
     },

@@ -33,6 +33,9 @@ export class ColumnModel extends Model<
   declare process: NonAttribute<ProcessModel>;
   declare cells: NonAttribute<ColumnCellModel[]>;
 
+  declare createdAt: NonAttribute<Date>;
+  declare updatedAt: NonAttribute<Date>;
+
   declare createCell: HasManyCreateAssociationMixin<
     ColumnCellModel,
     'columnId'

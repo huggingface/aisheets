@@ -28,6 +28,7 @@ describe('addColumn', () => {
         prompt: 'test prompt',
         offset: 0,
         limit: 10,
+        columnsReferences: [],
       },
       dataset: {
         id: dataset.id,

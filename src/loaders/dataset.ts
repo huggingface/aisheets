@@ -1,4 +1,4 @@
-import { type RequestEventBase, routeLoader$ } from '@builder.io/qwik-city';
+import { type RequestEventLoader, routeLoader$ } from '@builder.io/qwik-city';
 import { getDatasetById, getUserDatasets } from '~/services';
 import { type Dataset, useServerSession } from '~/state';
 
@@ -27,7 +27,7 @@ export const useActiveDatasetLoader = routeLoader$<Dataset>(
 );
 
 export const useAllDatasetsLoader = routeLoader$(async function (
-  this: RequestEventBase<QwikCityPlatform>,
+  this: RequestEventLoader,
 ) {
   const session = useServerSession(this);
 

@@ -55,6 +55,14 @@ export const useImportFromHub = () =>
         name: column.name,
         type: 'text',
         kind: 'static',
+        process: {
+          columnsReferences: [],
+          limit: 0,
+          modelName: '',
+          modelProvider: '',
+          offset: 0,
+          prompt: '',
+        },
       });
       createdDataset.columns.push(createdColumn);
     }

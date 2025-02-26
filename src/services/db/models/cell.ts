@@ -22,11 +22,11 @@ export class ColumnCellModel extends Model<
   declare generated: CreationOptional<boolean>;
   declare validated: CreationOptional<boolean>;
 
-  declare createdAt: NonAttribute<Date>;
-  declare updatedAt: NonAttribute<Date>;
-
   declare columnId: ForeignKey<ColumnModel['id']>;
   declare column?: NonAttribute<ColumnModel>;
+
+  declare createdAt: NonAttribute<Date>;
+  declare updatedAt: NonAttribute<Date>;
 
   declare static associations: {
     column: Association<ColumnCellModel, ColumnModel>;

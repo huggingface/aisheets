@@ -47,7 +47,7 @@ export interface Column {
   name: string;
   type: ColumnType;
   kind: ColumnKind;
-  process: Process;
+  process: Process | null;
   cells: Cell[];
   dataset: Omit<Dataset, 'columns'>;
 }
@@ -59,7 +59,7 @@ export const canGenerate = (column: Column, columns: Column[]) => {
     if (column.cells.some((c) => c.validated)) {
       const isAnyCellUpdatedAfterProcess = column.cells
         .filter((c) => c.validated)
-        .some((c) => c.updatedAt > column.process.updatedAt);
+        .some((c) => c.updatedAt > column.process!.updatedAt);
 
       return isAnyCellUpdatedAfterProcess;
     }
@@ -68,8 +68,9 @@ export const canGenerate = (column: Column, columns: Column[]) => {
   };
   const refreshedColumn = columns.find((c) => c.id === column.id)!;
   if (!refreshedColumn) return false;
+  if (!refreshedColumn.process) return false;
 
-  const columnsReferences = refreshedColumn.process.columnsReferences.map(
+  const columnsReferences = refreshedColumn.process!.columnsReferences.map(
     (id) => columns.find((c) => c.id === id),
   );
 

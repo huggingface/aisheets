@@ -59,9 +59,9 @@ export const ExecutionForm = component$<SidebarProps>(
 
     const isTouched = useComputed$(() => {
       return (
-        prompt.value !== column.process.prompt ||
-        selectedModel.value?.id !== column.process.modelName ||
-        rowsToGenerate.value !== String(column.process.limit)
+        prompt.value !== column.process!.prompt ||
+        selectedModel.value?.id !== column.process!.modelName ||
+        rowsToGenerate.value !== String(column.process!.limit)
       );
     });
 
@@ -205,13 +205,13 @@ export const ExecutionForm = component$<SidebarProps>(
                 id="column-rows"
                 type="number"
                 class="px-4 h-10 border-secondary-foreground bg-primary"
-                max={firstColum.value.process.limit}
+                max={firstColum.value.process!.limit}
                 min="1"
                 onInput$={(_, el) => {
-                  if (Number(el.value) > firstColum.value.process.limit) {
+                  if (Number(el.value) > firstColum.value.process!.limit) {
                     nextTick(() => {
                       rowsToGenerate.value = String(
-                        firstColum.value.process.limit,
+                        firstColum.value.process!.limit,
                       );
                     });
                   }

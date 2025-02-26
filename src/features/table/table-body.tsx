@@ -1,4 +1,4 @@
-import { component$, useSignal } from '@builder.io/qwik';
+import { component$, useComputed$, useSignal } from '@builder.io/qwik';
 import { useExecution } from '~/features/add-column';
 import { TableCell } from '~/features/table/table-cell';
 import { type Cell, type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
@@ -28,50 +28,55 @@ export const TableBody = component$(() => {
     return cell;
   };
 
+  const rowCount = useComputed$(() => {
+    if (!firstColum.value.process)
+      throw new Error('No process, review this for static columns');
+
+    return firstColum.value.process.limit;
+  });
+
   return (
     <tbody>
-      {Array.from({ length: firstColum.value.process.limit }).map(
-        (_, rowIndex) => (
-          <tr key={rowIndex} class="hover:bg-gray-50/50 transition-colors">
-            {columns.value.map((column) => {
-              const cell = getCell(column, rowIndex);
+      {Array.from({ length: rowCount.value }).map((_, rowIndex) => (
+        <tr key={rowIndex} class="hover:bg-gray-50/50 transition-colors">
+          {columns.value.map((column) => {
+            const cell = getCell(column, rowIndex);
 
-              return (
-                <>
-                  {column.id === TEMPORAL_ID ? (
-                    <td
-                      key={`temporal-${rowIndex}`}
-                      class="min-w-80 w-80 max-w-80 px-2 min-h-[100px] h-[100px] border-[0.5px]"
-                    />
-                  ) : (
-                    <TableCell
-                      key={cell.id}
-                      cell={cell}
-                      isExpanded={expandedRows.value.has(rowIndex)}
-                      onToggleExpand$={() => {
-                        const newSet = new Set(expandedRows.value);
-                        if (newSet.has(rowIndex)) {
-                          newSet.delete(rowIndex);
-                        } else {
-                          newSet.add(rowIndex);
-                        }
-                        expandedRows.value = newSet;
-                      }}
-                    />
-                  )}
+            return (
+              <>
+                {column.id === TEMPORAL_ID ? (
+                  <td
+                    key={`temporal-${rowIndex}`}
+                    class="min-w-80 w-80 max-w-80 px-2 min-h-[100px] h-[100px] border-[0.5px]"
+                  />
+                ) : (
+                  <TableCell
+                    key={cell.id}
+                    cell={cell}
+                    isExpanded={expandedRows.value.has(rowIndex)}
+                    onToggleExpand$={() => {
+                      const newSet = new Set(expandedRows.value);
+                      if (newSet.has(rowIndex)) {
+                        newSet.delete(rowIndex);
+                      } else {
+                        newSet.add(rowIndex);
+                      }
+                      expandedRows.value = newSet;
+                    }}
+                  />
+                )}
 
-                  {columnId.value === column.id && (
-                    <td class="min-w-[600px] w-[600px] bg-white" />
-                  )}
-                </>
-              );
-            })}
+                {columnId.value === column.id && (
+                  <td class="min-w-[600px] w-[600px] bg-white" />
+                )}
+              </>
+            );
+          })}
 
-            {/* td for (add + ) column */}
-            <td class="min-w-80 w-80 max-w-80 min-h-[100px] h-[100px] border-[0.5px] border-r-0" />
-          </tr>
-        ),
-      )}
+          {/* td for (add + ) column */}
+          <td class="min-w-80 w-80 max-w-80 min-h-[100px] h-[100px] border-[0.5px] border-r-0" />
+        </tr>
+      ))}
     </tbody>
   );
 });

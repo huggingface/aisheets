@@ -31,6 +31,7 @@ test('should AddDynamicColumnSidebar does not call onCreateColumn initially', as
       modelProvider: 'hf-inference',
       offset: 0,
       prompt: 'prompt',
+      updatedAt: new Date(),
     },
     cells: [],
   };

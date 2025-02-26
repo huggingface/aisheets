@@ -55,7 +55,7 @@ export const useGenerateColumn = () => {
   const onGenerateColumn = $(
     async (column: Column | CreateColumn): Promise<Column> => {
       if ('id' in column && column.id === TEMPORAL_ID) {
-        return onCreateColumn(column);
+        return onCreateColumn(column as CreateColumn);
       }
       return onUpdateCell(column as Column);
     },

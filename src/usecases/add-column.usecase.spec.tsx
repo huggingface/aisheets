@@ -4,7 +4,7 @@ import { createDOM } from '@builder.io/qwik/testing';
 import { expect, test, vi } from 'vitest';
 import { ModalsProvider } from '~/components';
 import { ExecutionForm } from '~/features/add-column';
-import type { CreateColumn } from '~/state';
+import type { Column, CreateColumn } from '~/state';
 import { useAddColumnUseCase } from '~/usecases/add-column.usecase';
 
 const fn = vi.fn();
@@ -14,10 +14,31 @@ test('should AddDynamicColumnSidebar does not call onCreateColumn initially', as
 
   const onCreateColumn = $(fn);
 
+  const newColumn: Column = {
+    id: 'id',
+    name: 'name',
+    type: 'text',
+    kind: 'dynamic',
+    dataset: {
+      id: 'id',
+      name: 'name',
+      createdBy: 'test',
+    },
+    process: {
+      limit: 10,
+      columnsReferences: [],
+      modelName: 'modelName',
+      modelProvider: 'hf-inference',
+      offset: 0,
+      prompt: 'prompt',
+    },
+    cells: [],
+  };
+
   await render(
     <ModalsProvider>
       <QwikCityMockProvider>
-        <ExecutionForm onGenerateColumn={onCreateColumn} />
+        <ExecutionForm column={newColumn} onGenerateColumn={onCreateColumn} />
       </QwikCityMockProvider>
     </ModalsProvider>,
   );

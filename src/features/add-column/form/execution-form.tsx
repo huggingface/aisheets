@@ -26,12 +26,13 @@ import {
 import { type Model, useListModels } from '~/usecases/list-models';
 
 interface SidebarProps {
+  column: Column;
   onGenerateColumn: QRL<(column: CreateColumn) => Promise<Column>>;
 }
 
 export const ExecutionForm = component$<SidebarProps>(
-  ({ onGenerateColumn }) => {
-    const { columnId, mode, close } = useExecution();
+  ({ column, onGenerateColumn }) => {
+    const { mode, close } = useExecution();
     const {
       state: columns,
       firstColum,
@@ -41,7 +42,6 @@ export const ExecutionForm = component$<SidebarProps>(
     const parseModelId = (model: Model) => `${model.id}-${model.provider}`;
 
     const isSubmitting = useSignal(false);
-    const currentColumn = useSignal<Column | undefined>();
 
     const prompt = useSignal<string>('');
     const columnsReferences = useSignal<string[]>([]);
@@ -59,9 +59,9 @@ export const ExecutionForm = component$<SidebarProps>(
 
     const isTouched = useComputed$(() => {
       return (
-        prompt.value !== currentColumn.value?.process.prompt ||
-        selectedModel.value?.id !== currentColumn.value?.process.modelName ||
-        rowsToGenerate.value !== String(currentColumn.value?.process.limit)
+        prompt.value !== column.process.prompt ||
+        selectedModel.value?.id !== column.process.modelName ||
+        rowsToGenerate.value !== String(column.process.limit)
       );
     });
 
@@ -72,38 +72,27 @@ export const ExecutionForm = component$<SidebarProps>(
         isDisabledGenerateButton.value = isSubmitting.value;
         return;
       }
-
       track(columns);
-      track(currentColumn);
       track(isTouched);
 
-      if (!currentColumn.value) return;
-
-      const canRegenerate = await canGenerate(currentColumn.value!);
+      const canRegenerate = await canGenerate(column);
       isDisabledGenerateButton.value =
         !canRegenerate || isSubmitting.value || !isTouched.value;
     });
 
-    useTask$(({ track }) => {
-      track(currentColumn);
-      if (!currentColumn.value) return;
-
+    useTask$(() => {
       variables.value = columns.value
         .filter(
-          (c) => c.id !== currentColumn.value?.id, //Remove the column itself
+          (c) => c.id !== column.id, //Remove the column itself
         )
         .map((c) => ({
           id: c.id,
           name: c.name,
         }));
-    });
 
-    useTask$(({ track }) => {
-      track(columnId);
-      currentColumn.value = columns.value.find((c) => c.id === columnId.value);
-      if (!currentColumn.value) return;
+      const { process } = column;
+      if (!process) return;
 
-      const process = currentColumn.value.process!;
       prompt.value = process.prompt;
       selectedModel.value = {
         id: process.modelName,
@@ -124,9 +113,9 @@ export const ExecutionForm = component$<SidebarProps>(
       const modelProvider = selectedModel.value?.provider!;
 
       const columnToSave = {
-        ...currentColumn.value!,
+        ...column,
         process: {
-          ...currentColumn.value!.process,
+          ...column.process,
           modelName,
           modelProvider,
           prompt: prompt.value!,
@@ -136,11 +125,7 @@ export const ExecutionForm = component$<SidebarProps>(
         },
       };
 
-      const synchronizedColum = await onGenerateColumn(columnToSave);
-
-      currentColumn.value = {
-        ...synchronizedColum,
-      };
+      await onGenerateColumn(columnToSave);
 
       isSubmitting.value = false;
     });
@@ -154,120 +139,122 @@ export const ExecutionForm = component$<SidebarProps>(
     });
 
     return (
-      <div class="relative w-[600px] bg-white">
-        <div class="absolute h-full w-[600px] border-t border-secondary flex flex-col p-4 gap-4">
-          <Button
-            size="sm"
-            look="ghost"
-            onClick$={handleCloseForm}
-            disabled={columns.value[0]?.id === TEMPORAL_ID}
-            class="absolute top-0 right-0 m-2"
-          >
-            <LuXCircle class="text-lg text-primary-foreground" />
-          </Button>
-          <div class="flex flex-col gap-4">
-            <Label class="flex gap-1">Model</Label>
+      <th class="w-[600px] bg-white font-normal border-t border-secondary">
+        <div class="relative h-full w-full">
+          <div class="absolute h-full w-full flex flex-col p-4 gap-4">
+            <Button
+              size="sm"
+              look="ghost"
+              onClick$={handleCloseForm}
+              disabled={columns.value[0]?.id === TEMPORAL_ID}
+              class="absolute top-0 right-0 m-2"
+            >
+              <LuXCircle class="text-lg text-primary-foreground" />
+            </Button>
+            <div class="flex flex-col gap-4">
+              <Label class="flex gap-1">Model</Label>
 
-            <Resource
-              value={loadModels}
-              onPending={() => (
-                <Select.Disabled>Loading models...</Select.Disabled>
-              )}
-              onResolved={(models) => {
-                if (!selectedModel.value?.id) {
-                  selectedModel.value = models[0];
-                }
+              <Resource
+                value={loadModels}
+                onPending={() => (
+                  <Select.Disabled>Loading models...</Select.Disabled>
+                )}
+                onResolved={(models) => {
+                  if (!selectedModel.value?.id) {
+                    selectedModel.value = models[0];
+                  }
 
-                return (
-                  <Select.Root value={parseModelId(selectedModel.value)}>
-                    <Select.Trigger class="px-4 bg-primary rounded-base border-secondary-foreground">
-                      <Select.DisplayValue />
-                    </Select.Trigger>
-                    <Select.Popover class="bg-primary border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto">
-                      {models.map((model, idx) => (
-                        <Select.Item
-                          key={idx}
-                          class="text-foreground hover:bg-accent"
-                          value={parseModelId(model)}
-                          onClick$={() => {
-                            selectedModel.value = model;
-                            console.log(selectedModel.value);
-                          }}
-                        >
-                          <Select.ItemLabel>{`${model.id} (${model.provider})`}</Select.ItemLabel>
-                          <Select.ItemIndicator>
-                            <LuCheck class="h-4 w-4" />
-                          </Select.ItemIndicator>
-                        </Select.Item>
-                      ))}
-                    </Select.Popover>
-                  </Select.Root>
-                );
-              }}
-              onRejected={() => {
-                return (
-                  <Input
-                    bind:value={inputModelId}
-                    class="px-4 h-10 border-secondary-foreground bg-primary"
-                    placeholder="Cannot load model suggestions. Please enter the model ID manually."
+                  return (
+                    <Select.Root value={parseModelId(selectedModel.value)}>
+                      <Select.Trigger class="px-4 bg-primary rounded-base border-secondary-foreground">
+                        <Select.DisplayValue />
+                      </Select.Trigger>
+                      <Select.Popover class="bg-primary border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto">
+                        {models.map((model, idx) => (
+                          <Select.Item
+                            key={idx}
+                            value={parseModelId(model)}
+                            class="text-foreground hover:bg-accent"
+                            onClick$={() => {
+                              selectedModel.value = model;
+                              console.log(selectedModel.value);
+                            }}
+                          >
+                            <Select.ItemLabel>{`${model.id} (${model.provider})`}</Select.ItemLabel>
+                            <Select.ItemIndicator>
+                              <LuCheck class="h-4 w-4" />
+                            </Select.ItemIndicator>
+                          </Select.Item>
+                        ))}
+                      </Select.Popover>
+                    </Select.Root>
+                  );
+                }}
+                onRejected={() => {
+                  return (
+                    <Input
+                      bind:value={inputModelId}
+                      class="px-4 h-10 border-secondary-foreground bg-primary"
+                      placeholder="Cannot load model suggestions. Please enter the model ID manually."
+                    />
+                  );
+                }}
+              />
+
+              <Input
+                id="column-rows"
+                type="number"
+                class="px-4 h-10 border-secondary-foreground bg-primary"
+                max={firstColum.value.process.limit}
+                min="1"
+                onInput$={(_, el) => {
+                  if (Number(el.value) > firstColum.value.process.limit) {
+                    nextTick(() => {
+                      rowsToGenerate.value = String(
+                        firstColum.value.process.limit,
+                      );
+                    });
+                  }
+
+                  rowsToGenerate.value = el.value;
+                }}
+                value={rowsToGenerate.value}
+              />
+
+              <div class="relative">
+                <div class="flex flex-col gap-4">
+                  <Label>Prompt</Label>
+
+                  <TemplateTextArea
+                    bind:value={prompt}
+                    variables={variables}
+                    onSelectedVariables={onSelectedVariables}
                   />
-                );
-              }}
-            />
+                </div>
 
-            <Input
-              id="column-rows"
-              type="number"
-              class="px-4 h-10 border-secondary-foreground bg-primary"
-              max={firstColum.value.process.limit}
-              min="1"
-              onInput$={(_, el) => {
-                if (Number(el.value) > firstColum.value.process.limit) {
-                  nextTick(() => {
-                    rowsToGenerate.value = String(
-                      firstColum.value.process.limit,
-                    );
-                  });
-                }
+                <div class="absolute bottom-14 flex justify-between items-center w-full px-4">
+                  <Button
+                    key={isSubmitting.value.toString()}
+                    look="primary"
+                    onClick$={onGenerate}
+                    disabled={isSubmitting.value}
+                  >
+                    <div class="flex items-center gap-4">
+                      <LuEgg class="text-xl" />
 
-                rowsToGenerate.value = el.value;
-              }}
-              value={rowsToGenerate.value}
-            />
+                      {isSubmitting.value ? 'Generating...' : 'Generate'}
+                    </div>
+                  </Button>
 
-            <div class="relative">
-              <div class="flex flex-col gap-4">
-                <Label>Prompt</Label>
-
-                <TemplateTextArea
-                  bind:value={prompt}
-                  variables={variables}
-                  onSelectedVariables={onSelectedVariables}
-                />
-              </div>
-
-              <div class="absolute bottom-14 flex justify-between items-center w-full px-4">
-                <Button
-                  key={isSubmitting.value.toString()}
-                  look="primary"
-                  onClick$={onGenerate}
-                  disabled={isDisabledGenerateButton.value}
-                >
-                  <div class="flex items-center gap-4">
-                    <LuEgg class="text-xl" />
-
-                    {isSubmitting.value ? 'Generating...' : 'Generate'}
-                  </div>
-                </Button>
-
-                <Button size="icon" look="ghost">
-                  <LuBookmark class="text-primary-foreground" />
-                </Button>
+                  <Button size="icon" look="ghost">
+                    <LuBookmark class="text-primary-foreground" />
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      </th>
     );
   },
 );

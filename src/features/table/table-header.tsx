@@ -1,4 +1,4 @@
-import { component$ } from '@builder.io/qwik';
+import { Fragment, component$ } from '@builder.io/qwik';
 import { ExecutionForm, useExecution } from '~/features/add-column';
 import { useGenerateColumn } from '~/features/execution';
 import {
@@ -16,13 +16,16 @@ export const TableHeader = component$(() => {
     <thead>
       <tr>
         {columns.value.map((column) => (
-          <>
-            <TableCellHeader key={column.id} column={column} />
+          <Fragment key={column.id}>
+            <TableCellHeader column={column} />
 
-            {columnId.value === column.id && (
-              <ExecutionForm onGenerateColumn={onGenerateColumn} />
+            {column.id === columnId.value && (
+              <ExecutionForm
+                column={column}
+                onGenerateColumn={onGenerateColumn}
+              />
             )}
-          </>
+          </Fragment>
         ))}
 
         <TableAddCellHeaderPlaceHolder />

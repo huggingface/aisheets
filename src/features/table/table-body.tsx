@@ -45,7 +45,7 @@ export const TableBody = component$(() => {
                     />
                   ) : (
                     <TableCell
-                      key={`${cell.id}-${cell.updatedAt}`}
+                      key={cell.id}
                       cell={cell}
                       isExpanded={expandedRows.value.has(rowIndex)}
                       onToggleExpand$={() => {

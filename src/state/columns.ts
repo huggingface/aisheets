@@ -140,11 +140,26 @@ export const useColumnsStore = () => {
     return activeDataset.value.columns;
   });
 
-  const replaceColumn = $((replaced: Column[]) => {
+  const replaceColumns = $((newColumns: Column[]) => {
     activeDataset.value = {
       ...activeDataset.value,
-      columns: [...replaced],
+      columns: [...newColumns],
     };
+  });
+
+  const replaceCell = $((cell: Cell) => {
+    const column = columns.value.find((c) => c.id === cell.column?.id);
+    if (!column) return;
+
+    if (column.cells.some((c) => c.id === cell.id)) {
+      column.cells = [
+        ...column.cells.map((c) => (c.id === cell.id ? cell : c)),
+      ];
+    } else {
+      column.cells.push(cell);
+    }
+
+    replaceColumns(columns.value);
   });
 
   return {
@@ -154,24 +169,28 @@ export const useColumnsStore = () => {
 
       const newTemporalColumn = await createPlaceholderColumn();
 
-      replaceColumn([...columns.value, newTemporalColumn]);
+      replaceColumns([...columns.value, newTemporalColumn]);
+    }),
+
+    replaceCells: $((cells: Cell[]) => {
+      cells.map(replaceCell);
     }),
     removeTemporalColumn: $(() => {
-      replaceColumn(columns.value.filter((c) => c.id !== TEMPORAL_ID));
+      replaceColumns(columns.value.filter((c) => c.id !== TEMPORAL_ID));
     }),
     addColumn: $((newbie: Column) => {
-      replaceColumn([
+      replaceColumns([
         ...columns.value.filter((c) => c.id !== TEMPORAL_ID),
         newbie,
       ]);
     }),
     updateColumn: $((updated: Column) => {
-      replaceColumn(
+      replaceColumns(
         columns.value.map((c) => (c.id === updated.id ? updated : c)),
       );
     }),
     deleteColumn: $((deleted: Column) => {
-      replaceColumn(columns.value.filter((c) => c.id !== deleted.id));
+      replaceColumns(columns.value.filter((c) => c.id !== deleted.id));
     }),
     addCell: $((cell: Cell) => {
       const column = columns.value.find((c) => c.id === cell.column?.id);
@@ -179,21 +198,10 @@ export const useColumnsStore = () => {
 
       column.cells.push(cell);
 
-      replaceColumn(columns.value);
+      replaceColumns(columns.value);
     }),
     replaceCell: $((cell: Cell) => {
-      const column = columns.value.find((c) => c.id === cell.column?.id);
-      if (!column) return;
-
-      if (column.cells.some((c) => c.id === cell.id)) {
-        column.cells = [
-          ...column.cells.map((c) => (c.id === cell.id ? cell : c)),
-        ];
-      } else {
-        column.cells.push(cell);
-      }
-
-      replaceColumn(columns.value);
+      replaceCell(cell);
     }),
   };
 };

@@ -75,9 +75,13 @@ export const ExecutionForm = component$<SidebarProps>(
       track(columns);
       track(isTouched);
 
+      if (isTouched.value) {
+        isDisabledGenerateButton.value = isSubmitting.value;
+        return;
+      }
+
       const canRegenerate = await canGenerate(column);
-      isDisabledGenerateButton.value =
-        !canRegenerate || isSubmitting.value || !isTouched.value;
+      isDisabledGenerateButton.value = !canRegenerate || isSubmitting.value;
     });
 
     useTask$(() => {
@@ -177,7 +181,6 @@ export const ExecutionForm = component$<SidebarProps>(
                             class="text-foreground hover:bg-accent"
                             onClick$={() => {
                               selectedModel.value = model;
-                              console.log(selectedModel.value);
                             }}
                           >
                             <Select.ItemLabel>{`${model.id} (${model.provider})`}</Select.ItemLabel>
@@ -205,10 +208,17 @@ export const ExecutionForm = component$<SidebarProps>(
                 id="column-rows"
                 type="number"
                 class="px-4 h-10 border-secondary-foreground bg-primary"
-                max={firstColum.value.process!.limit}
+                max={
+                  column.id === firstColum.value.id
+                    ? undefined
+                    : firstColum.value.process!.limit
+                }
                 min="1"
                 onInput$={(_, el) => {
-                  if (Number(el.value) > firstColum.value.process!.limit) {
+                  if (
+                    column.id !== firstColum.value.id &&
+                    Number(el.value) > firstColum.value.process!.limit
+                  ) {
                     nextTick(() => {
                       rowsToGenerate.value = String(
                         firstColum.value.process!.limit,

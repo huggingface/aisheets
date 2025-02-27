@@ -4,7 +4,7 @@ import { type Column, TEMPORAL_ID, canGenerate } from '~/state/columns';
 describe('columns', () => {
   describe('canGenerate', () => {
     describe('column with out references columns', () => {
-      test('should be false if all cells are not validated', () => {
+      test('should be true if all cells are not validated', () => {
         const column: Column = {
           id: '1',
           name: 'FAKE COLUMN',
@@ -46,7 +46,7 @@ describe('columns', () => {
 
         const columns = [column];
 
-        expect(canGenerate(column, columns)).toBeFalsy();
+        expect(canGenerate(column.id, columns)).toBeTruthy();
       });
 
       test('should be true if some validated cells are updated after process execution', () => {
@@ -96,7 +96,7 @@ describe('columns', () => {
 
         const columns = [column];
 
-        expect(canGenerate(column, columns)).toBeTruthy();
+        expect(canGenerate(column.id, columns)).toBeTruthy();
       });
 
       test('should be false if all validated cells are updated before process execution', () => {
@@ -146,7 +146,7 @@ describe('columns', () => {
 
         const columns = [column];
 
-        expect(canGenerate(column, columns)).toBeFalsy();
+        expect(canGenerate(column.id, columns)).toBeFalsy();
       });
     });
 
@@ -242,7 +242,7 @@ describe('columns', () => {
 
         const columns = [referencedColumn, column];
 
-        const v = canGenerate(column, columns);
+        const v = canGenerate(column.id, columns);
         expect(v).toBeFalsy();
       });
 
@@ -337,7 +337,7 @@ describe('columns', () => {
 
         const columns = [referencedColumn, column];
 
-        expect(canGenerate(column, columns)).toBeFalsy();
+        expect(canGenerate(column.id, columns)).toBeFalsy();
       });
     });
   });

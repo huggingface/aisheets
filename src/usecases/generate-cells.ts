@@ -84,8 +84,8 @@ export const generateCells = async function* ({
     const cell =
       (await getColumnCellByIdx({ idx: i, columnId: column.id })) ??
       (await createCell({
-        cell: { idx: i },
-        columnId: column.id,
+        cell: { idx: i, generated: false },
+        column,
       }));
 
     cell.generated = true;

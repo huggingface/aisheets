@@ -79,6 +79,7 @@ export const useImportFromHub = () =>
           cell: {
             idx: row.rowIdx,
             value,
+            generated: true, // TODO review this
           },
           column,
         });

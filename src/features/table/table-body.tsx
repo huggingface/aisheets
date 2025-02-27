@@ -4,7 +4,6 @@ import {
   component$,
   useComputed$,
   useSignal,
-  useVisibleTask$,
 } from '@builder.io/qwik';
 import { server$ } from '@builder.io/qwik-city';
 import { Button } from '~/components/ui';
@@ -48,7 +47,15 @@ export const TableBody = component$(() => {
   const { state: columns } = useColumnsStore();
 
   const rowsToShow = useComputed$(() => {
-    return columns.value[0].cells.length;
+    const column = columns.value[0];
+
+    if (column.kind === 'dynamic') {
+      return Math.max(
+        column.process?.limit || 0,
+        columns.value[0].cells.length,
+      );
+    }
+    return column.cells.length;
   });
 
   const { columnId } = useExecution();
@@ -133,31 +140,25 @@ export const TableBody = component$(() => {
 const LoaderContainer = component$(() => {
   const { state: columns, replaceCells } = useColumnsStore();
 
-  const lastRowIdx = useSignal<number>(0);
+  const lastRowIdx = useSignal(0);
   const isLoading = useSignal(false);
+
+  lastRowIdx.value = columns.value[0].cells.length;
 
   const loadMoreAction = $(async () => {
     isLoading.value = true;
+    try {
+      const { cells: newCells, rowIdx } = await loadColumnsCells({
+        columns: columns.value,
+        offset: lastRowIdx.value,
+        limit: 20,
+      });
 
-    const newOffset = lastRowIdx.value;
-    const { cells: newCells, rowIdx } = await loadColumnsCells({
-      columns: columns.value,
-      offset: newOffset,
-      limit: 20,
-    });
-
-    replaceCells(newCells);
-    lastRowIdx.value = rowIdx;
-    isLoading.value = false;
-  });
-
-  useVisibleTask$(async ({ cleanup }) => {
-    await loadMoreAction();
-
-    cleanup(() => {
-      lastRowIdx.value = 0;
+      replaceCells(newCells);
+      lastRowIdx.value = rowIdx;
+    } finally {
       isLoading.value = false;
-    });
+    }
   });
 
   return !isLoading.value ? (

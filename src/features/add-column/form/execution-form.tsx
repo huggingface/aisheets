@@ -114,7 +114,6 @@ export const ExecutionForm = component$<SidebarProps>(
       isSubmitting.value = true;
 
       const modelName = inputModelId.value || selectedModel.value!.id;
-      // Fix: Use selectedProvider directly
       const modelProvider = selectedProvider.value!;
 
       const columnToSave = {

@@ -89,7 +89,7 @@ export const useImportFromHub = () =>
             value,
             generated: true, // TODO review this
           },
-          columnId: column.id,
+          column,
         });
 
         column.cells.push(createdCell);

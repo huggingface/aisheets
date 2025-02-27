@@ -31,7 +31,7 @@ export const useGenerateColumn = () => {
         open(column.id, 'edit');
       }
       if (cell) {
-        addCell(cell);
+        replaceCell(cell);
       }
     }
 

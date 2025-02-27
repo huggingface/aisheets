@@ -190,9 +190,11 @@ export const useColumnsStore = () => {
 
     replaceColumns(columns.value);
   });
+  const firstColum = useComputed$(() => columns.value[0]);
 
   return {
     state: columns,
+    firstColum,
     canGenerate: $((column: Column) => canGenerate(column, columns.value)),
     addTemporalColumn: $(async () => {
       if (activeDataset.value.columns.some((c) => c.id === TEMPORAL_ID)) return;
@@ -201,7 +203,9 @@ export const useColumnsStore = () => {
 
       replaceColumns([...columns.value, newTemporalColumn]);
     }),
-
+    replaceCell: $((cell: Cell) => {
+      replaceCell(cell);
+    }),
     replaceCells: $((cells: Cell[]) => {
       cells.map(replaceCell);
     }),
@@ -229,9 +233,6 @@ export const useColumnsStore = () => {
       column.cells.push(cell);
 
       replaceColumns(columns.value);
-    }),
-    replaceCell: $((cell: Cell) => {
-      replaceCell(cell);
     }),
   };
 };

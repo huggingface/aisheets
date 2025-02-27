@@ -6,7 +6,7 @@ import { useGenerateColumn } from '~/features/execution';
 import { type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
 
 export const CellGeneration = component$<{ column: Column }>(({ column }) => {
-  const { state, canGenerate } = useColumnsStore();
+  const { state, isDirty } = useColumnsStore();
   const onGenerateColumn = useGenerateColumn();
 
   const canRegenerate = useSignal(false);
@@ -14,7 +14,7 @@ export const CellGeneration = component$<{ column: Column }>(({ column }) => {
   useTask$(async ({ track }) => {
     track(state);
 
-    canRegenerate.value = await canGenerate(column);
+    canRegenerate.value = await isDirty(column);
   });
 
   if (column.id === TEMPORAL_ID) {

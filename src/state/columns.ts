@@ -52,23 +52,24 @@ export interface Column {
   dataset: Omit<Dataset, 'columns'>;
 }
 
-export const canGenerate = (column: Column, columns: Column[]) => {
-  const isDirty = (column: Column) => {
-    if (!column.process) return false;
+export const isDirty = (column: Column) => {
+  if (!column.process) return false;
 
-    if (column.cells.every((c) => c.validated)) return false;
+  if (column.cells.every((c) => c.validated)) return false;
 
-    if (column.cells.some((c) => c.validated)) {
-      const isAnyCellUpdatedAfterProcess = column.cells
-        .filter((c) => c.validated)
-        .some((c) => c.updatedAt > column.process!.updatedAt);
+  if (column.cells.some((c) => c.validated)) {
+    const isAnyCellUpdatedAfterProcess = column.cells
+      .filter((c) => c.validated)
+      .some((c) => c.updatedAt > column.process!.updatedAt);
 
-      return isAnyCellUpdatedAfterProcess;
-    }
+    return isAnyCellUpdatedAfterProcess;
+  }
 
-    return false;
-  };
-  const refreshedColumn = columns.find((c) => c.id === column.id)!;
+  return false;
+};
+
+export const canGenerate = (columnId: string, columns: Column[]) => {
+  const refreshedColumn = columns.find((c) => c.id === columnId)!;
   if (!refreshedColumn) return false;
   if (!refreshedColumn.process) return false;
 
@@ -76,9 +77,16 @@ export const canGenerate = (column: Column, columns: Column[]) => {
     (id) => columns.find((c) => c.id === id),
   );
 
-  const amIDirty = isDirty(refreshedColumn);
+  if (
+    !columnsReferences.length &&
+    refreshedColumn.cells.every((c) => !c.validated)
+  ) {
+    return true;
+  }
 
-  return amIDirty && columnsReferences.every((c) => c && !isDirty(c));
+  return (
+    isDirty(refreshedColumn) && columnsReferences.every((c) => c && !isDirty(c))
+  );
 };
 
 export const TEMPORAL_ID = '-1';
@@ -150,7 +158,7 @@ export const useColumnsStore = () => {
         modelName: '',
         modelProvider: '',
         offset: 0,
-        limit: 1,
+        limit: 5,
         prompt: '',
         columnsReferences: [],
         updatedAt: new Date(),
@@ -181,7 +189,8 @@ export const useColumnsStore = () => {
   return {
     state: columns,
     firstColum,
-    canGenerate: $((column: Column) => canGenerate(column, columns.value)),
+    canGenerate: $((column: Column) => canGenerate(column.id, columns.value)),
+    isDirty: $((column: Column) => isDirty(column)),
     addTemporalColumn: $(async () => {
       if (activeDataset.value.columns.some((c) => c.id === TEMPORAL_ID)) return;
 

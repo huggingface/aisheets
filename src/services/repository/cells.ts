@@ -49,7 +49,7 @@ export const getColumnCellByIdx = async ({
     error: model.error,
     validated: model.validated,
     updatedAt: model.updatedAt,
-    generated: model.generated,
+    generating: model.generating,
     column,
   };
 };
@@ -68,7 +68,7 @@ export const getColumnCellById = async (id: string): Promise<Cell | null> => {
     error: model.error,
     validated: model.validated,
     updatedAt: model.updatedAt,
-    generated: model.generated,
+    generating: model.generating,
   };
 };
 
@@ -95,7 +95,7 @@ export const getColumnCells = async ({
     validated: cell.validated,
     columnId: cell.columnId,
     updatedAt: cell.updatedAt,
-    generated: cell.generated,
+    generating: cell.generating,
     column,
   }));
 };
@@ -104,12 +104,11 @@ export const createCell = async ({
   cell,
   column,
 }: {
-  cell: Omit<Cell, 'id' | 'validated' | 'updatedAt' | 'generated'>;
+  cell: Omit<Cell, 'id' | 'validated' | 'updatedAt' | 'generating'>;
   column: Column;
 }): Promise<Cell> => {
   const model = await ColumnCellModel.create({
     ...cell,
-    generated: false,
     columnId: column.id,
   });
 
@@ -120,7 +119,7 @@ export const createCell = async ({
     error: model.error,
     validated: model.validated,
     updatedAt: model.updatedAt,
-    generated: model.generated,
+    generating: model.generating,
     column,
   };
 };
@@ -142,7 +141,7 @@ export const updateCell = async (cell: Partial<Cell>): Promise<Cell> => {
     error: model.error,
     validated: model.validated,
     updatedAt: model.updatedAt,
-    generated: model.generated,
+    generating: model.generating,
     column: cell.column,
   };
 };

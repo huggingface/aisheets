@@ -34,7 +34,7 @@ export interface CreateColumn {
 export type Cell = {
   id: string;
   idx: number;
-  generated: boolean;
+  generating: boolean;
   column?: Column;
   validated: boolean;
   value?: string;
@@ -108,7 +108,7 @@ export const useColumnsStore = () => {
           idx: 0,
           validated: false,
           updatedAt: new Date(),
-          generated: true,
+          generating: true,
           value: '',
         },
         {
@@ -116,7 +116,7 @@ export const useColumnsStore = () => {
           idx: 1,
           validated: false,
           updatedAt: new Date(),
-          generated: true,
+          generating: true,
           value: '',
         },
         {
@@ -124,7 +124,7 @@ export const useColumnsStore = () => {
           idx: 2,
           validated: false,
           updatedAt: new Date(),
-          generated: true,
+          generating: true,
           value: '',
         },
         {
@@ -132,7 +132,7 @@ export const useColumnsStore = () => {
           idx: 3,
           validated: false,
           updatedAt: new Date(),
-          generated: true,
+          generating: true,
           value: '',
         },
         {
@@ -140,7 +140,7 @@ export const useColumnsStore = () => {
           idx: 4,
           validated: false,
           updatedAt: new Date(),
-          generated: true,
+          generating: true,
           value: '',
         },
       ],

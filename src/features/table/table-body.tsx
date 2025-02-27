@@ -20,7 +20,7 @@ export const TableBody = component$(() => {
         validated: false,
         column,
         updatedAt: new Date(),
-        generated: false,
+        generating: false,
         idx: rowIndex,
       };
     }

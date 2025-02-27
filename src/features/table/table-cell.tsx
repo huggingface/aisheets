@@ -105,7 +105,7 @@ export const TableCell = component$<{
     }),
   );
 
-  if (!cell.generated) {
+  if (cell.generating || !cell.value) {
     return (
       <td class="min-w-80 w-80 max-w-80 p-4 min-h-[100px] h-[100px] border last:border-r-0 border-secondary">
         <Skeleton />

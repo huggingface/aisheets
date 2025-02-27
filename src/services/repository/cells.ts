@@ -1,6 +1,6 @@
 import { Op } from 'sequelize';
 import { ColumnCellModel } from '~/services/db/models/cell';
-import type { Cell, Column } from '~/state';
+import type { Cell } from '~/state';
 
 interface GetRowCellsParams {
   rowIdx: number;
@@ -109,15 +109,15 @@ export const getColumnCells = async ({
 
 export const createCell = async ({
   cell,
-  column,
+  columnId,
 }: {
   cell: Omit<Cell, 'id' | 'validated' | 'updatedAt' | 'generated'>;
-  column: Column;
+  columnId: string;
 }): Promise<Cell> => {
   const model = await ColumnCellModel.create({
     ...cell,
     generated: false,
-    columnId: column.id,
+    columnId,
   });
 
   return {

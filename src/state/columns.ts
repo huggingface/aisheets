@@ -206,14 +206,6 @@ export const useColumnsStore = () => {
     deleteColumn: $((deleted: Column) => {
       replaceColumn(columns.value.filter((c) => c.id !== deleted.id));
     }),
-    addCell: $((cell: Cell) => {
-      const column = columns.value.find((c) => c.id === cell.column?.id);
-      if (!column) return;
-
-      column.cells.push(cell);
-
-      replaceColumn(columns.value);
-    }),
     replaceCell: $((cell: Cell) => {
       const column = columns.value.find((c) => c.id === cell.column?.id);
       if (!column) return;

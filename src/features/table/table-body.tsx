@@ -1,4 +1,9 @@
-import { component$, useComputed$, useSignal } from '@builder.io/qwik';
+import {
+  Fragment,
+  component$,
+  useComputed$,
+  useSignal,
+} from '@builder.io/qwik';
 import { useExecution } from '~/features/add-column';
 import { TableCell } from '~/features/table/table-cell';
 import { type Cell, type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
@@ -45,7 +50,7 @@ export const TableBody = component$(() => {
             const cell = getCell(column, rowIndex);
 
             return (
-              <>
+              <Fragment key={`${column.id}-${rowIndex}-${cell.id}`}>
                 {column.id === TEMPORAL_ID ? (
                   <td
                     key={`temporal-${rowIndex}`}
@@ -53,7 +58,6 @@ export const TableBody = component$(() => {
                   />
                 ) : (
                   <TableCell
-                    key={cell.id}
                     cell={cell}
                     isExpanded={expandedRows.value.has(rowIndex)}
                     onToggleExpand$={() => {
@@ -71,7 +75,7 @@ export const TableBody = component$(() => {
                 {columnId.value === column.id && (
                   <td class="min-w-[600px] w-[600px] bg-white" />
                 )}
-              </>
+              </Fragment>
             );
           })}
 

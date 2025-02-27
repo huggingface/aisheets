@@ -27,7 +27,7 @@ import { type Model, useListModels } from '~/usecases/list-models';
 
 interface SidebarProps {
   column: Column;
-  onGenerateColumn: QRL<(column: CreateColumn) => Promise<Column>>;
+  onGenerateColumn: QRL<(column: CreateColumn) => Promise<void>>;
 }
 
 export const ExecutionForm = component$<SidebarProps>(
@@ -139,7 +139,7 @@ export const ExecutionForm = component$<SidebarProps>(
     });
 
     return (
-      <th class="w-[600px] bg-white font-normal border-t border-secondary">
+      <th class="w-[600px] bg-white font-normal border-t border-secondary text-left">
         <div class="relative h-full w-full">
           <div class="absolute h-full w-full flex flex-col p-4 gap-4">
             <Button
@@ -177,7 +177,6 @@ export const ExecutionForm = component$<SidebarProps>(
                             class="text-foreground hover:bg-accent"
                             onClick$={() => {
                               selectedModel.value = model;
-                              console.log(selectedModel.value);
                             }}
                           >
                             <Select.ItemLabel>{`${model.id} (${model.provider})`}</Select.ItemLabel>
@@ -205,10 +204,22 @@ export const ExecutionForm = component$<SidebarProps>(
                 id="column-rows"
                 type="number"
                 class="px-4 h-10 border-secondary-foreground bg-primary"
-                max={firstColum.value.process!.limit}
+                max={
+                  column.id === firstColum.value.id
+                    ? 1000
+                    : firstColum.value.process!.limit
+                }
                 min="1"
                 onInput$={(_, el) => {
-                  if (Number(el.value) > firstColum.value.process!.limit) {
+                  if (column.id === firstColum.value.id) {
+                    if (Number(el.value) > 1000) {
+                      nextTick(() => {
+                        rowsToGenerate.value = '1000';
+                      });
+                    }
+                  } else if (
+                    Number(el.value) > firstColum.value.process!.limit
+                  ) {
                     nextTick(() => {
                       rowsToGenerate.value = String(
                         firstColum.value.process!.limit,

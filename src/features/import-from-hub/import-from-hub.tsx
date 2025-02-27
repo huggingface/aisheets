@@ -70,6 +70,7 @@ export const ImportFromHub = component$(() => {
             id="explore-dataset"
             size="sm"
             class="h-10 rounded-sm"
+            disabled={!repoId.value}
             onClick$={() => {
               showFileSelection.value = true;
             }}
@@ -112,7 +113,9 @@ export const ImportFromHub = component$(() => {
             </div>
           )}
         </Button>
-        <p class="text-sm">Only the first 1000 rows will be imported.</p>
+        {repoId.value && filePath.value && (
+          <p class="text-sm">Only the first 1000 rows will be imported.</p>
+        )}
       </div>
     </div>
   );

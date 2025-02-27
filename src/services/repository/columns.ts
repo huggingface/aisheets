@@ -28,7 +28,17 @@ export const modelToColumn = (model: ColumnModel): Column => {
       prompt: model.process?.prompt ?? '',
       updatedAt: model.process?.updatedAt,
     },
-    cells: [],
+    cells:
+      model.cells?.map((cell) => ({
+        id: cell.id,
+        validated: cell.validated,
+        column: {
+          id: cell.columnId,
+        },
+        updatedAt: cell.updatedAt,
+        generated: cell.generated,
+        idx: cell.idx,
+      })) ?? [],
   };
 };
 

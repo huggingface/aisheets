@@ -43,7 +43,8 @@ export const ExecutionForm = component$<SidebarProps>(
     } = useColumnsStore();
 
     const isSubmitting = useSignal(false);
-    const isGenerateButtonEnabled = useSignal(true);
+    const canRegenerate = useSignal(true);
+
     const isAnyColumnGenerating = useComputed$(() => {
       //TODO: Replace to "persisted" column on column.
       const isAnyGenerating = columns.value
@@ -85,13 +86,9 @@ export const ExecutionForm = component$<SidebarProps>(
       if (mode.value === 'add' && column.id === firstColum.value.id) {
         return;
       }
-
-      track(isSubmitting);
       track(columns);
-      track(isTouched);
 
-      const canRegenerate = await canGenerate(column);
-      isGenerateButtonEnabled.value = canRegenerate && isTouched.value;
+      canRegenerate.value = await canGenerate(column);
     });
 
     useTask$(async () => {
@@ -312,27 +309,42 @@ export const ExecutionForm = component$<SidebarProps>(
                   />
                 </div>
 
-                <div class="absolute bottom-14 flex justify-between items-center w-full px-4">
-                  <Button
-                    key={isSubmitting.value.toString()}
-                    look="primary"
-                    onClick$={onGenerate}
-                    disabled={
-                      !isGenerateButtonEnabled.value ||
-                      isSubmitting.value ||
-                      isAnyColumnGenerating.value
-                    }
-                  >
-                    <div class="flex items-center gap-4">
-                      <LuEgg class="text-xl" />
+                <div class="absolute bottom-14 flex flex-col px-4 gap-1 w-full">
+                  <div class="flex justify-between items-center gap-4 w-full">
+                    <Button
+                      key={isSubmitting.value.toString()}
+                      look="primary"
+                      onClick$={onGenerate}
+                      disabled={
+                        !canRegenerate.value ||
+                        !isTouched.value ||
+                        isSubmitting.value ||
+                        isAnyColumnGenerating.value
+                      }
+                    >
+                      <div class="flex items-center gap-4">
+                        <LuEgg class="text-xl" />
 
-                      {isSubmitting.value ? 'Generating...' : 'Generate'}
-                    </div>
-                  </Button>
+                        {isSubmitting.value ? 'Generating...' : 'Generate'}
+                      </div>
+                    </Button>
 
-                  <Button size="icon" look="ghost">
-                    <LuBookmark class="text-primary-foreground" />
-                  </Button>
+                    <Button size="icon" look="ghost">
+                      <LuBookmark class="text-primary-foreground" />
+                    </Button>
+                  </div>
+                  <span class="font-light text-sm">
+                    {isAnyColumnGenerating.value &&
+                      'Please wait for the current generation to finish.'}
+                  </span>
+                  <span class="font-light text-sm">
+                    {!canRegenerate.value &&
+                      'Some references columns are dirty, please, regenerate them first.'}
+                  </span>
+                  <span class="font-light text-sm">
+                    {!isTouched.value &&
+                      'Change some field to enable the generate button.'}
+                  </span>
                 </div>
               </div>
             </div>

@@ -246,7 +246,7 @@ describe('columns', () => {
         expect(v).toBeFalsy();
       });
 
-      test('should be true if all cells are validated after process execution and the reference column is not dirty', () => {
+      test('should be false if all cells are validated after process execution and the reference column is not dirty', () => {
         const referencedColumnProcessExecution = new Date();
         const referencedCellUpdatedAt = new Date(
           referencedColumnProcessExecution.getTime() - 1000,
@@ -337,7 +337,7 @@ describe('columns', () => {
 
         const columns = [referencedColumn, column];
 
-        expect(canGenerate(column, columns)).toBeTruthy();
+        expect(canGenerate(column, columns)).toBeFalsy();
       });
     });
   });

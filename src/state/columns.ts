@@ -56,6 +56,8 @@ export const canGenerate = (column: Column, columns: Column[]) => {
   const isDirty = (column: Column) => {
     if (!column.process) return false;
 
+    if (column.cells.every((c) => c.validated)) return false;
+
     if (column.cells.some((c) => c.validated)) {
       const isAnyCellUpdatedAfterProcess = column.cells
         .filter((c) => c.validated)

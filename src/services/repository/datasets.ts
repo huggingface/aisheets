@@ -1,7 +1,12 @@
 import { Sequelize } from 'sequelize';
-import { ColumnCellModel, DatasetModel } from '~/services/db/models';
+import {
+  ColumnCellModel,
+  ColumnModel,
+  DatasetModel,
+  ProcessModel,
+} from '~/services/db/models';
 import type { Dataset } from '~/state';
-import { getDatasetColumns } from './columns';
+import { modelToColumn } from './columns';
 
 interface CreateDatasetParams {
   name: string;
@@ -58,20 +63,34 @@ export const createDataset = async ({
 };
 
 export const getDatasetById = async (id: string): Promise<Dataset | null> => {
-  const model = await DatasetModel.findByPk(id);
+  const model = await DatasetModel.findByPk(id, {
+    include: [
+      {
+        association: DatasetModel.associations.columns,
+        separate: true,
+        order: [['createdAt', 'ASC']],
+        include: [
+          {
+            association: ColumnModel.associations.process,
+            include: [ProcessModel.associations.referredColumns],
+          },
+        ],
+      },
+    ],
+  });
 
   if (!model) {
     return null;
   }
 
-  // TODO: Improve this and use only one query. Model2Type mappers should be used.
-  const columns = await getDatasetColumns(model.id);
-
   return {
     id: model.id,
     name: model.name,
     createdBy: model.createdBy,
-    columns,
+    columns: model.columns.map((column) => {
+      column.dataset = model;
+      return modelToColumn(column);
+    }),
   };
 };
 

@@ -1,6 +1,6 @@
 import { Op } from 'sequelize';
 import { ColumnCellModel } from '~/services/db/models/cell';
-import type { Cell } from '~/state';
+import type { Cell, Column } from '~/state';
 
 interface GetRowCellsParams {
   rowIdx: number;
@@ -78,17 +78,23 @@ export const getColumnCellById = async (id: string): Promise<Cell | null> => {
 };
 
 export const getColumnCells = async ({
-  columnId,
+  column,
   conditions,
+  offset,
+  limit,
 }: {
-  columnId: string;
+  column: Column;
   conditions?: Record<string, any>;
+  offset?: number;
+  limit?: number;
 }): Promise<Cell[]> => {
   const models = await ColumnCellModel.findAll({
     where: {
-      columnId,
+      columnId: column.id,
       ...conditions,
     },
+    limit,
+    offset,
     order: [['createdAt', 'ASC']],
   });
 

@@ -4,6 +4,8 @@ import {
   component$,
   useComputed$,
   useSignal,
+  useStore,
+  useVisibleTask$,
 } from '@builder.io/qwik';
 import { server$ } from '@builder.io/qwik-city';
 import { Button } from '~/components/ui';
@@ -140,29 +142,40 @@ export const TableBody = component$(() => {
 const LoaderContainer = component$(() => {
   const { state: columns, replaceCells } = useColumnsStore();
 
-  const lastRowIdx = useSignal(0);
-  const isLoading = useSignal(false);
+  const store = useStore({
+    lastRowIdx: 0,
+    isLoading: false,
+  });
 
-  lastRowIdx.value = columns.value[0].cells.length;
+  useVisibleTask$(() => {
+    store.lastRowIdx = columns.value[0].cells.length;
+  });
 
   const loadMoreAction = $(async () => {
-    isLoading.value = true;
+    store.isLoading = true;
     try {
       const { cells: newCells, rowIdx } = await loadColumnsCells({
         columns: columns.value,
-        offset: lastRowIdx.value,
+        offset: store.lastRowIdx,
         limit: 20,
       });
 
       replaceCells(newCells);
-      lastRowIdx.value = rowIdx;
+
+      store.lastRowIdx = rowIdx;
     } finally {
-      isLoading.value = false;
+      store.isLoading = false;
     }
   });
 
-  return !isLoading.value ? (
-    <Button class="w-full text-center" onClick$={loadMoreAction}>
+  return !store.isLoading ? (
+    <Button
+      window:onVisibilityChange$={(e) => {
+        console.log('visibility', e);
+      }}
+      class="w-full text-center"
+      onClick$={loadMoreAction}
+    >
       Load more
     </Button>
   ) : (

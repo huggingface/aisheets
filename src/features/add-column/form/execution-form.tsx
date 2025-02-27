@@ -39,7 +39,6 @@ export const ExecutionForm = component$<SidebarProps>(
       removeTemporalColumn,
       canGenerate,
     } = useColumnsStore();
-    const parseModelId = (model: Model) => `${model.id}-${model.provider}`;
 
     const isSubmitting = useSignal(false);
     const isDisabledGenerateButton = useSignal(true);

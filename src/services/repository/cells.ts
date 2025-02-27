@@ -101,8 +101,6 @@ export const getColumnCells = async ({
   return models.map((cell) => ({
     id: cell.id,
     idx: cell.idx,
-    value: cell.value,
-    error: cell.error,
     validated: cell.validated,
     column: {
       id: cell.columnId,

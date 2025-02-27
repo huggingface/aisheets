@@ -168,6 +168,7 @@ export const useColumnsStore = () => {
 
     return activeDataset.value.columns;
   });
+  const firstColum = useComputed$(() => columns.value[0]);
 
   const replaceColumns = $((newColumns: Column[]) => {
     activeDataset.value = {
@@ -187,10 +188,7 @@ export const useColumnsStore = () => {
     } else {
       column.cells.push(cell);
     }
-
-    replaceColumns(columns.value);
   });
-  const firstColum = useComputed$(() => columns.value[0]);
 
   return {
     state: columns,
@@ -205,9 +203,15 @@ export const useColumnsStore = () => {
     }),
     replaceCell: $((cell: Cell) => {
       replaceCell(cell);
+
+      replaceColumns(columns.value);
     }),
     replaceCells: $((cells: Cell[]) => {
-      cells.map(replaceCell);
+      for (const cell of cells) {
+        replaceCell(cell);
+      }
+
+      replaceColumns(columns.value);
     }),
     removeTemporalColumn: $(() => {
       replaceColumns(columns.value.filter((c) => c.id !== TEMPORAL_ID));

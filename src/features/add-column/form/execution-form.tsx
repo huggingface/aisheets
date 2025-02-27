@@ -49,7 +49,7 @@ export const ExecutionForm = component$<SidebarProps>(
 
     const selectedModel = useSignal<Model>();
     const inputModelId = useSignal<string | undefined>();
-    const rowsToGenerate = useSignal('5');
+    const rowsToGenerate = useSignal(column.process!.limit.toString());
 
     const selectedProvider = useSignal<string>();
     const updateCounter = useSignal(0);
@@ -86,7 +86,7 @@ export const ExecutionForm = component$<SidebarProps>(
       return await useListModels();
     });
 
-    useTask$(async ({ track }) => {
+    useTask$(async () => {
       const models = await loadModels.value;
 
       variables.value = columns.value
@@ -248,10 +248,22 @@ export const ExecutionForm = component$<SidebarProps>(
                 id="column-rows"
                 type="number"
                 class="px-4 h-10 border-secondary-foreground bg-primary"
-                max={firstColum.value.process!.limit}
+                max={
+                  column.id !== firstColum.value.id
+                    ? firstColum.value.process!.limit
+                    : 1000
+                }
                 min="1"
                 onInput$={(_, el) => {
-                  if (Number(el.value) > firstColum.value.process!.limit) {
+                  if (column.id === firstColum.value.id) {
+                    if (Number(el.value) > 1000) {
+                      nextTick(() => {
+                        rowsToGenerate.value = '1000';
+                      });
+                    }
+                  } else if (
+                    Number(el.value) > firstColum.value.process!.limit
+                  ) {
                     nextTick(() => {
                       rowsToGenerate.value = String(
                         firstColum.value.process!.limit,

@@ -150,7 +150,7 @@ export const useColumnsStore = () => {
         modelName: '',
         modelProvider: '',
         offset: 0,
-        limit: 5,
+        limit: 1,
         prompt: '',
         columnsReferences: [],
         updatedAt: new Date(),

@@ -78,17 +78,23 @@ export const getColumnCellById = async (id: string): Promise<Cell | null> => {
 };
 
 export const getColumnCells = async ({
-  columnId,
+  column,
   conditions,
+  offset,
+  limit,
 }: {
-  columnId: string;
+  column: Column;
   conditions?: Record<string, any>;
+  offset?: number;
+  limit?: number;
 }): Promise<Cell[]> => {
   const models = await ColumnCellModel.findAll({
     where: {
-      columnId,
+      columnId: column.id,
       ...conditions,
     },
+    limit,
+    offset,
     order: [['createdAt', 'ASC']],
   });
 
@@ -111,12 +117,11 @@ export const createCell = async ({
   cell,
   column,
 }: {
-  cell: Omit<Cell, 'id' | 'validated' | 'updatedAt' | 'generated'>;
+  cell: Omit<Cell, 'id' | 'validated' | 'updatedAt'>;
   column: Column;
 }): Promise<Cell> => {
   const model = await ColumnCellModel.create({
     ...cell,
-    generated: false,
     columnId: column.id,
   });
 

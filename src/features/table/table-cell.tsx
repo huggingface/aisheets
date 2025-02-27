@@ -5,14 +5,12 @@ import {
   useTask$,
   useVisibleTask$,
 } from '@builder.io/qwik';
-import { server$ } from '@builder.io/qwik-city';
 import { cn } from '@qwik-ui/utils';
 import { LuThumbsUp } from '@qwikest/icons/lucide';
 import { Button, Textarea } from '~/components';
 import { useClickOutside } from '~/components/hooks/click/outside';
 import { Markdown } from '~/components/ui/markdown/markdown';
 import { Skeleton } from '~/components/ui/skeleton/skeleton';
-import { getColumnCellById } from '~/services';
 import { type Cell, useColumnsStore } from '~/state';
 import { useValidateCellUseCase } from '~/usecases/validate-cell.usecase';
 
@@ -33,27 +31,27 @@ export const TableCell = component$<{
   const editCellValueInput = useSignal<HTMLElement>();
   const contentRef = useSignal<HTMLElement>();
 
-  useVisibleTask$(async () => {
-    if (!cell.generated) return;
-    if (cell.error || cell.value) return;
+  // useVisibleTask$(async () => {
+  //   if (!cell.generated) return;
+  //   if (cell.error || cell.value) return;
 
-    const persistedCell = await server$(async (cellId: string) => {
-      const persistedCell = await getColumnCellById(cellId);
+  //   const persistedCell = await server$(async (cellId: string) => {
+  //     const persistedCell = await getColumnCellById(cellId);
 
-      return {
-        error: persistedCell?.error,
-        value: persistedCell?.value,
-        validated: persistedCell?.validated,
-      };
-    })(cell.id);
+  //     return {
+  //       error: persistedCell?.error,
+  //       value: persistedCell?.value,
+  //       validated: persistedCell?.validated,
+  //     };
+  //   })(cell.id);
 
-    if (!persistedCell) return;
+  //   if (!persistedCell) return;
 
-    replaceCell({
-      ...cell,
-      ...persistedCell,
-    });
-  });
+  //   replaceCell({
+  //     ...cell,
+  //     ...persistedCell,
+  //   });
+  // });
 
   useTask$(({ track }) => {
     track(isEditing);

@@ -32,6 +32,8 @@ export const modelToColumn = (model: ColumnModel): Column => {
       model.cells?.map((cell) => ({
         id: cell.id,
         validated: cell.validated,
+        value: cell.value,
+        error: cell.error,
         column: {
           id: cell.columnId,
         },

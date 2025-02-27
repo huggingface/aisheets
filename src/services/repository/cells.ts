@@ -102,6 +102,8 @@ export const getColumnCells = async ({
     id: cell.id,
     idx: cell.idx,
     validated: cell.validated,
+    value: cell.value,
+    error: cell.error,
     column: {
       id: cell.columnId,
     },

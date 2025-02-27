@@ -8,7 +8,6 @@ import {
   useVisibleTask$,
 } from '@builder.io/qwik';
 import { server$ } from '@builder.io/qwik-city';
-import { Button } from '~/components/ui';
 import { useExecution } from '~/features/add-column';
 import { TableCell } from '~/features/table/table-cell';
 import { getColumnCells } from '~/services/repository/cells';
@@ -144,41 +143,40 @@ const LoaderContainer = component$(() => {
 
   const store = useStore({
     lastRowIdx: 0,
+    currentRowIdx: 0,
     isLoading: false,
-  });
-
-  useVisibleTask$(() => {
-    store.lastRowIdx = columns.value[0].cells.length;
   });
 
   const loadMoreAction = $(async () => {
     store.isLoading = true;
+
     try {
       const { cells: newCells, rowIdx } = await loadColumnsCells({
         columns: columns.value,
         offset: store.lastRowIdx,
-        limit: 20,
+        limit: 25,
       });
 
       replaceCells(newCells);
-
+      store.currentRowIdx = store.lastRowIdx;
       store.lastRowIdx = rowIdx;
     } finally {
       store.isLoading = false;
     }
   });
 
-  return !store.isLoading ? (
-    <Button
-      window:onVisibilityChange$={(e) => {
-        console.log('visibility', e);
-      }}
-      class="w-full text-center"
-      onClick$={loadMoreAction}
-    >
-      Load more
-    </Button>
-  ) : (
-    <></>
-  );
+  useVisibleTask$(() => {
+    store.lastRowIdx = columns.value[0].cells.length;
+  });
+
+  useVisibleTask$(({ track }) => {
+    track(() => columns.value[0].cells.length);
+    if (store.isLoading) return;
+
+    if (store.currentRowIdx < columns.value[0].cells.length) {
+      loadMoreAction();
+    }
+  });
+
+  return <></>;
 });

@@ -16,7 +16,7 @@ export const useActiveDatasetLoader = routeLoader$<Dataset>(
       return EMPTY_DATASET;
     }
 
-    const dataset = await getDatasetById(id, { cellsByColumn: 20 });
+    const dataset = await getDatasetById(id, { cellsByColumn: 25 });
 
     if (!dataset) {
       throw redirect(302, '/');

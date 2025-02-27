@@ -37,7 +37,6 @@ export const TableCell = component$<{
     if (!cell.generated) return;
     if (cell.error || cell.value) return;
 
-    console.log('fetching cell', cell.id);
     const persistedCell = await server$(async (cellId: string) => {
       const persistedCell = await getColumnCellById(cellId);
 

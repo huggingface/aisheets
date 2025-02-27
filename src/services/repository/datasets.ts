@@ -62,19 +62,37 @@ export const createDataset = async ({
   };
 };
 
-export const getDatasetById = async (id: string): Promise<Dataset | null> => {
+export const getDatasetById = async (
+  id: string,
+  options?: {
+    cellsByColumn?: number;
+  },
+): Promise<Dataset | null> => {
+  const columnsInclude: any[] = [
+    {
+      association: ColumnModel.associations.process,
+      include: [ProcessModel.associations.referredColumns],
+    },
+  ];
+
+  const rows = options?.cellsByColumn;
+
+  if (rows && rows > 0) {
+    columnsInclude.push({
+      association: ColumnModel.associations.cells as any,
+      separate: true,
+      order: [['createdAt', 'ASC']],
+      limit: rows,
+    });
+  }
+
   const model = await DatasetModel.findByPk(id, {
     include: [
       {
         association: DatasetModel.associations.columns,
         separate: true,
         order: [['createdAt', 'ASC']],
-        include: [
-          {
-            association: ColumnModel.associations.process,
-            include: [ProcessModel.associations.referredColumns],
-          },
-        ],
+        include: columnsInclude,
       },
     ],
   });

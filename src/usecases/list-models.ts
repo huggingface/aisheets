@@ -36,9 +36,9 @@ const MODEL_EXPANDABLE_KEYS = [
 
 export interface Model {
   id: string;
-  provider: string;
+  providers: string[];
   tags?: string[];
-  safetensors?: unknown; // Probably the model weights
+  safetensors?: unknown;
 }
 
 export const useListModels = server$(async function (
@@ -74,18 +74,22 @@ export const useListModels = server$(async function (
 
   const data: any[] = await response.json();
 
-  return data.flatMap((model) => {
+  return data.reduce((acc: Model[], model) => {
     const providers = model.inferenceProviderMapping;
 
-    return providers
-      ? providers
-          .filter((provider: any) => provider.status === 'live')
-          .map((provider: any) => {
-            return {
-              ...model,
-              provider: provider.provider,
-            };
-          })
-      : [];
-  }) as Model[];
+    if (!providers?.length) return acc;
+
+    const availableProviders = providers
+      .filter((provider: any) => provider.status === 'live')
+      .map((provider: any) => provider.provider);
+
+    if (availableProviders.length > 0) {
+      acc.push({
+        ...model,
+        providers: availableProviders,
+      });
+    }
+
+    return acc;
+  }, []) as Model[];
 });

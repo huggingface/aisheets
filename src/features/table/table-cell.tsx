@@ -34,8 +34,10 @@ export const TableCell = component$<{
   const contentRef = useSignal<HTMLElement>();
 
   useVisibleTask$(async () => {
+    if (!cell.generated) return;
     if (cell.error || cell.value) return;
 
+    console.log('fetching cell', cell.id);
     const persistedCell = await server$(async (cellId: string) => {
       const persistedCell = await getColumnCellById(cellId);
 
@@ -129,13 +131,11 @@ export const TableCell = component$<{
     }),
   );
 
-  if (!cell.generated) {
+  // Is not loaded yet, the lazy loading will take care of it
+  if (!cell.value && !cell.error) {
     return (
-      <td
-        class="min-w-80 w-80 max-w-80 p-4 min-h-[100px] h-[100px] border last:border-r-0
-       border-secondary"
-      >
-        <Skeleton />
+      <td class="min-w-80 w-80 max-w-80 p-4 min-h-[100px] h-[100px] border last:border-r-0 border-secondary">
+        {!cell.generated && <Skeleton />}
       </td>
     );
   }

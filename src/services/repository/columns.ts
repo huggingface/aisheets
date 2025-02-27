@@ -1,6 +1,6 @@
 import { ColumnModel } from '~/services/db/models/column';
 import { ProcessModel } from '~/services/db/models/process';
-import type { Column, ColumnKind, ColumnType } from '~/state';
+import type { Column, ColumnKind, ColumnType, CreateColumn } from '~/state';
 import { createProcess, updateProcess } from './processes';
 
 export const modelToColumn = (model: ColumnModel): Column => {
@@ -26,6 +26,7 @@ export const modelToColumn = (model: ColumnModel): Column => {
       modelProvider: model.process?.modelProvider ?? '',
       offset: model.process?.offset ?? 0,
       prompt: model.process?.prompt ?? '',
+      updatedAt: model.process?.updatedAt,
     },
     cells: [],
   };
@@ -68,15 +69,14 @@ export const getColumnById = async (id: string): Promise<Column | null> => {
       modelProvider: model.process?.modelProvider ?? '',
       offset: model.process?.offset ?? 0,
       prompt: model.process?.prompt ?? '',
+      updatedAt: model.process?.updatedAt,
     },
 
     cells: [],
   };
 };
 
-export const createColumn = async (
-  column: Omit<Column, 'id' | 'cells'>,
-): Promise<Column> => {
+export const createColumn = async (column: CreateColumn): Promise<Column> => {
   const model = await ColumnModel.create({
     name: column.name,
     type: column.type,
@@ -84,24 +84,19 @@ export const createColumn = async (
     datasetId: column.dataset!.id,
   });
 
-  const newColumn = {
+  const process = await createProcess(column, model.id);
+
+  const newbie: Column = {
     id: model.id,
     name: model.name,
     type: model.type as ColumnType,
     kind: model.kind as ColumnKind,
     dataset: column.dataset,
-    process: column.process,
-    cells: [], // TODO: review this assigment
+    process,
+    cells: [],
   };
 
-  if (column.process) {
-    newColumn.process = await createProcess({
-      process: column.process,
-      column: newColumn,
-    });
-  }
-
-  return newColumn;
+  return newbie;
 };
 
 export const updateColumn = async (column: Column): Promise<Column> => {

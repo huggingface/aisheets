@@ -10,14 +10,16 @@ export interface Session {
   };
 }
 
-export const useServerSession = (request: RequestEventBase): Session => {
+export const useServerSession = (
+  request: RequestEventBase<QwikCityPlatform>,
+): Session => {
   if (isBrowser)
     throw new Error('useServerSession must be used on the server.');
 
   const session = request.sharedMap.get('session')!;
 
   if (!session) {
-    throw new Error('session is undefined');
+    throw (request as any).redirect(302, '/');
   }
 
   return {

@@ -1,4 +1,4 @@
-import { component$, useComputed$ } from '@builder.io/qwik';
+import { component$, useSignal, useTask$ } from '@builder.io/qwik';
 import { LuEgg, LuEggOff } from '@qwikest/icons/lucide';
 import { Button } from '~/components';
 import { Tooltip } from '~/components/ui/tooltip/tooltip';
@@ -6,14 +6,15 @@ import { useGenerateColumn } from '~/features/execution';
 import { type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
 
 export const CellGeneration = component$<{ column: Column }>(({ column }) => {
-  const { state: columns } = useColumnsStore();
+  const { state, canGenerate } = useColumnsStore();
   const onGenerateColumn = useGenerateColumn();
 
-  const hasAtLeastOneRowValidated = useComputed$(() => {
-    const thisColumn = columns.value.find((col) => col.id === column.id);
-    if (!thisColumn) return false;
+  const canRegenerate = useSignal(false);
 
-    return thisColumn.cells.some((cells) => cells.validated);
+  useTask$(async ({ track }) => {
+    track(state);
+
+    canRegenerate.value = await canGenerate(column);
   });
 
   if (column.id === TEMPORAL_ID) {
@@ -25,10 +26,10 @@ export const CellGeneration = component$<{ column: Column }>(({ column }) => {
       <Button
         look="ghost"
         size="sm"
-        disabled={!hasAtLeastOneRowValidated.value}
+        disabled={!canRegenerate.value}
         onClick$={() => onGenerateColumn(column)}
       >
-        {hasAtLeastOneRowValidated.value ? (
+        {canRegenerate.value ? (
           <LuEgg class="text-primary-foreground" />
         ) : (
           <LuEggOff class="text-primary-foreground" />

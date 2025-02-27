@@ -31,44 +31,6 @@ export const modelToColumn = (model: ColumnModel): Column => {
   };
 };
 
-export const getDatasetColumns = async (
-  datasetId: string,
-): Promise<Column[]> => {
-  const models = await ColumnModel.findAll({
-    where: {
-      datasetId,
-    },
-    include: [
-      {
-        association: ColumnModel.associations.process,
-        include: [ProcessModel.associations.referredColumns],
-      },
-      {
-        association: ColumnModel.associations.dataset,
-      },
-    ],
-    order: [['createdAt', 'ASC']],
-  });
-
-  return models.map((model) => {
-    const column = modelToColumn(model);
-
-    // Partially cell loading
-    return {
-      ...column,
-      cells: model.cells.map((cell) => ({
-        id: cell.id,
-        idx: cell.idx,
-        column: {
-          id: column.id,
-        },
-        updatedAt: cell.updatedAt,
-        generated: cell.generated,
-      })),
-    };
-  });
-};
-
 export const getColumnById = async (id: string): Promise<Column | null> => {
   const model = await ColumnModel.findByPk(id, {
     include: [

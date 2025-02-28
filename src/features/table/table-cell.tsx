@@ -34,7 +34,7 @@ export const TableCell = component$<{
   const contentRef = useSignal<HTMLElement>();
 
   useVisibleTask$(async () => {
-    if (!cell.generating) return;
+    if (cell.generating) return;
     if (cell.error || cell.value) return;
 
     console.log('fetching cell', cell.id);
@@ -88,12 +88,6 @@ export const TableCell = component$<{
       const maxHeight = lineHeight * 6;
       isTruncated.value = contentRef.value.scrollHeight > maxHeight;
     }
-  });
-
-  useVisibleTask$(({ track }) => {
-    track(() => cell);
-
-    console.log('cell updated', cell);
   });
 
   const onValidateCell = $(

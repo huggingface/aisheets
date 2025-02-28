@@ -28,14 +28,14 @@ import { type Model, useListModels } from '~/usecases/list-models';
 
 interface SidebarProps {
   column: Column;
-  onGenerateColumn: QRL<(column: CreateColumn) => Promise<Column>>;
+  onGenerateColumn: QRL<(column: CreateColumn) => Promise<void>>;
 }
 
 export const ExecutionForm = component$<SidebarProps>(
   ({ column, onGenerateColumn }) => {
     const { mode, close } = useExecution();
     const {
-      state: columns,
+      columns,
       firstColum,
       removeTemporalColumn,
       canGenerate,
@@ -325,7 +325,9 @@ export const ExecutionForm = component$<SidebarProps>(
                       <div class="flex items-center gap-4">
                         <LuEgg class="text-xl" />
 
-                        {isSubmitting.value ? 'Generating...' : 'Generate'}
+                        {isAnyColumnGenerating.value
+                          ? 'Generating...'
+                          : 'Generate'}
                       </div>
                     </Button>
 

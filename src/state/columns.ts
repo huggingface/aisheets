@@ -84,9 +84,7 @@ export const canGenerate = (columnId: string, columns: Column[]) => {
     return true;
   }
 
-  return (
-    isDirty(refreshedColumn) && columnsReferences.every((c) => c && !isDirty(c))
-  );
+  return columnsReferences.every((c) => c && !isDirty(c));
 };
 
 export const TEMPORAL_ID = '-1';
@@ -187,7 +185,7 @@ export const useColumnsStore = () => {
   const firstColum = useComputed$(() => columns.value[0]);
 
   return {
-    state: columns,
+    columns,
     firstColum,
     canGenerate: $((column: Column) => canGenerate(column.id, columns.value)),
     isDirty: $((column: Column) => isDirty(column)),
@@ -209,7 +207,14 @@ export const useColumnsStore = () => {
     }),
     updateColumn: $((updated: Column) => {
       replaceColumn(
-        columns.value.map((c) => (c.id === updated.id ? updated : c)),
+        columns.value.map((c) =>
+          c.id === updated.id
+            ? {
+                ...updated,
+                cells: c.cells,
+              }
+            : c,
+        ),
       );
     }),
     deleteColumn: $((deleted: Column) => {

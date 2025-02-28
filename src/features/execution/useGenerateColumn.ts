@@ -11,16 +11,11 @@ import { useEditColumnUseCase } from '~/usecases/edit-column.usecase';
 
 export const useGenerateColumn = () => {
   const { open } = useExecution();
-  const {
-    state: columns,
-    addColumn,
-    updateColumn,
-    replaceCell,
-  } = useColumnsStore();
+  const { addColumn, updateColumn, replaceCell } = useColumnsStore();
   const addNewColumn = useAddColumnUseCase();
   const editColumn = useEditColumnUseCase();
 
-  const onCreateColumn = $(async (newColumn: CreateColumn): Promise<Column> => {
+  const onCreateColumn = $(async (newColumn: CreateColumn) => {
     const response = await addNewColumn(newColumn);
 
     for await (const { column, cell } of response) {
@@ -33,11 +28,16 @@ export const useGenerateColumn = () => {
         replaceCell(cell);
       }
     }
-
-    return columns.value.slice(-1)[0];
   });
 
-  const onUpdateCell = $(async (column: Column): Promise<Column> => {
+  const onUpdateCell = $(async (column: Column) => {
+    for (const cell of column.cells.filter((c) => !c.validated)) {
+      replaceCell({
+        ...cell,
+        generating: true,
+      });
+    }
+
     const response = await editColumn(column);
 
     for await (const { column, cell } of response) {
@@ -48,18 +48,14 @@ export const useGenerateColumn = () => {
         replaceCell(cell);
       }
     }
-
-    return columns.value.find((c) => c.id === column.id)!;
   });
 
-  const onGenerateColumn = $(
-    async (column: Column | CreateColumn): Promise<Column> => {
-      if ('id' in column && column.id === TEMPORAL_ID) {
-        return onCreateColumn(column as CreateColumn);
-      }
-      return onUpdateCell(column as Column);
-    },
-  );
+  const onGenerateColumn = $(async (column: Column | CreateColumn) => {
+    if ('id' in column && column.id === TEMPORAL_ID) {
+      return onCreateColumn(column as CreateColumn);
+    }
+    return onUpdateCell(column as Column);
+  });
 
   return onGenerateColumn;
 };

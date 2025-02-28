@@ -6,18 +6,13 @@ import { generateCells } from './generate-cells';
 export const useEditColumnUseCase = () =>
   server$(async function* (
     this: RequestEventBase<QwikCityPlatform>,
-    toUpdate: Column,
+    column: Column,
   ): AsyncGenerator<{ column?: Column; cell?: Cell }> {
     const session = useServerSession(this);
-    const column = await updateColumn(toUpdate);
 
     if (!column.process) {
       return;
     }
-
-    yield {
-      column,
-    };
 
     const validatedCells = await getColumnCells({
       column,
@@ -32,4 +27,10 @@ export const useEditColumnUseCase = () =>
       offset: column.process!.offset,
       validatedCells,
     });
+
+    const updated = await updateColumn(column);
+
+    yield {
+      column: updated,
+    };
   });

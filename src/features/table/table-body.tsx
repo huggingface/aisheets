@@ -5,6 +5,7 @@ import {
   useComputed$,
   useOnWindow,
   useSignal,
+  useTask$,
   useVisibleTask$,
 } from '@builder.io/qwik';
 import { useExecution } from '~/features/add-column';
@@ -41,33 +42,38 @@ export const TableBody = component$(() => {
       rowCount.value,
     );
   });
+  const data = useSignal<Cell[][]>([]);
 
-  const getCell = (column: Column, rowIndex: number): Cell => {
-    const cell = column.cells[rowIndex];
+  useTask$(({ track }) => {
+    track(columns);
+    const getCell = (column: Column, rowIndex: number): Cell => {
+      const cell = column.cells[rowIndex];
 
-    if (!cell) {
-      // Temporal cell for skeleton
-      return {
-        id: `${column.id}-${rowIndex}`,
-        value: '',
-        error: '',
-        validated: false,
-        column: {
-          id: column.id,
-        },
-        updatedAt: new Date(),
-        generating: false,
-        idx: rowIndex,
-      };
-    }
+      if (!cell) {
+        // Temporal cell for skeleton
+        return {
+          id: `${column.id}-${rowIndex}`,
+          value: '',
+          error: '',
+          validated: false,
+          column: {
+            id: column.id,
+          },
+          updatedAt: new Date(),
+          generating: false,
+          idx: rowIndex,
+        };
+      }
 
-    return cell;
-  };
+      return cell;
+    };
 
-  const data = useSignal<number[][]>([]);
-  data.value = Array.from({ length: rowCount.value }, (_) =>
-    Array.from({ length: columns.value.length }, (_, colIndex) => colIndex),
-  );
+    data.value = Array.from({ length: rowCount.value }, (_, rowIndex) =>
+      Array.from({ length: columns.value.length }, (_, colIndex) =>
+        getCell(columns.value[colIndex], rowIndex),
+      ),
+    );
+  });
 
   useOnWindow(
     'scroll',
@@ -82,13 +88,10 @@ export const TableBody = component$(() => {
     <tbody ref={tableBody}>
       {data.value.slice().map((row, rowIndex) => (
         <tr key={rowIndex} class="hover:bg-gray-50/50 transition-colors">
-          {row.map((col) => {
-            const column = columns.value[col];
-            const cell = getCell(column, rowIndex);
-
+          {row.map((cell) => {
             return (
-              <Fragment key={`${column.id}-${rowIndex}-${cell.id}`}>
-                {column.id === TEMPORAL_ID ? (
+              <Fragment key={`${cell.column?.id}-${rowIndex}-${cell.id}`}>
+                {cell.column?.id === TEMPORAL_ID ? (
                   <td
                     key={`temporal-${rowIndex}`}
                     class="min-w-80 w-80 max-w-80 px-2 min-h-[100px] h-[100px] border-[0.5px]"
@@ -109,7 +112,7 @@ export const TableBody = component$(() => {
                   />
                 )}
 
-                {columnId.value === column.id && (
+                {columnId.value === cell.column?.id && (
                   <td class="min-w-[600px] w-[600px] bg-white" />
                 )}
               </Fragment>

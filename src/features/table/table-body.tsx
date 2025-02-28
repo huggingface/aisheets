@@ -2,6 +2,7 @@ import {
   $,
   Fragment,
   component$,
+  useComputed$,
   useOnWindow,
   useSignal,
   useTask$,
@@ -17,9 +18,9 @@ export const TableBody = component$(() => {
   const expandedRows = useSignal<Set<number>>(new Set());
 
   const tableBody = useSignal<HTMLElement>();
-  const rowHeight = 21;
-  const visibleRows = 9;
-  const buffer = 9;
+  const rowHeight = 100;
+  const visibleRowCount = 10;
+  const buffer = 2;
 
   const scrollTop = useSignal(0);
   const startIndex = useSignal(0);
@@ -27,6 +28,14 @@ export const TableBody = component$(() => {
 
   const data = useSignal<Cell[][]>([]);
   const rowCount = useSignal(0);
+
+  useOnWindow(
+    'scroll',
+    $((event) => {
+      scrollTop.value =
+        (event.target as HTMLElement).scrollTop - tableBody.value!.offsetTop;
+    }),
+  );
 
   useVisibleTask$(({ track }) => {
     track(scrollTop);
@@ -38,7 +47,7 @@ export const TableBody = component$(() => {
     );
 
     endIndex.value = Math.min(
-      startIndex.value + visibleRows + buffer,
+      startIndex.value + visibleRowCount + buffer * 2,
       rowCount.value,
     );
   });
@@ -77,39 +86,45 @@ export const TableBody = component$(() => {
     );
   });
 
-  useOnWindow(
-    'scroll',
-    $((event) => {
-      console.log('scroll', (event.target as HTMLElement).scrollTop);
-      scrollTop.value =
-        (event.target as HTMLElement).scrollTop - tableBody.value!.offsetTop;
-    }),
+  const topSpacerHeight = useComputed$(() => startIndex.value * rowHeight);
+  const bottomSpacerHeight = useComputed$(() =>
+    Math.max(0, (rowCount.value - endIndex.value) * rowHeight),
   );
 
   return (
     <tbody ref={tableBody}>
-      {data.value
-        .slice(startIndex.value, endIndex.value)
-        .map((row, rowIndex) => (
-          <tr key={rowIndex} class="hover:bg-gray-50/50 transition-colors">
+      {/* Top spacer row to maintain scroll position */}
+      {topSpacerHeight.value > 0 && (
+        <tr style={{ height: `${topSpacerHeight.value}px` }}>
+          <td
+            colSpan={columns.value.length + 1}
+            style={{ padding: 0, border: 'none' }}
+          />
+        </tr>
+      )}
+
+      {data.value.slice(startIndex.value, endIndex.value).map((row, index) => {
+        const actualRowIndex = startIndex.value + index;
+        return (
+          <tr
+            key={actualRowIndex}
+            class="hover:bg-gray-50/50 transition-colors"
+          >
             {row.map((cell) => {
               return (
-                <Fragment key={`${cell.column?.id}-${rowIndex}-${cell.id}`}>
+                <Fragment key={cell.id}>
                   {cell.column?.id === TEMPORAL_ID ? (
-                    <td
-                      key={`temporal-${rowIndex}`}
-                      class="min-w-80 w-80 max-w-80 px-2 min-h-[100px] h-[100px] border-[0.5px]"
-                    />
+                    <td class="min-w-80 w-80 max-w-80 px-2 min-h-[100px] h-[100px] border-[0.5px]" />
                   ) : (
                     <TableCell
                       cell={cell}
-                      isExpanded={expandedRows.value.has(rowIndex)}
+                      isExpanded={expandedRows.value.has(actualRowIndex)}
                       onToggleExpand$={() => {
                         const newSet = new Set(expandedRows.value);
-                        if (newSet.has(rowIndex)) {
-                          newSet.delete(rowIndex);
+                        if (newSet.has(actualRowIndex)) {
+                          newSet.delete(actualRowIndex);
                         } else {
-                          newSet.add(rowIndex);
+                          newSet.add(actualRowIndex);
                         }
                         expandedRows.value = newSet;
                       }}
@@ -126,7 +141,18 @@ export const TableBody = component$(() => {
             {/* td for (add + ) column */}
             <td class="min-w-80 w-80 max-w-80 min-h-[100px] h-[100px] border-[0.5px] border-r-0" />
           </tr>
-        ))}
+        );
+      })}
+
+      {/* Bottom spacer row */}
+      {bottomSpacerHeight.value > 0 && (
+        <tr style={{ height: `${bottomSpacerHeight.value}px` }}>
+          <td
+            colSpan={columns.value.length + 1}
+            style={{ padding: 0, border: 'none' }}
+          />
+        </tr>
+      )}
     </tbody>
   );
 });

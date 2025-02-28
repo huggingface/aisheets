@@ -66,6 +66,7 @@ export const getDatasetColumns = async (
         },
         updatedAt: cell.updatedAt,
         generating: cell.generating,
+        validated: cell.validated,
       })),
     };
   });

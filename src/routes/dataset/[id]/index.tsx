@@ -9,7 +9,7 @@ import { ActiveDatasetProvider } from '~/state';
 export default component$(() => {
   return (
     <ActiveDatasetProvider>
-      <div class="flex flex-col h-full space-y-2">
+      <div class="flex flex-col h-full min-w-full w-fit space-y-2">
         <Username />
         <div class="flex flex-col flex-none gap-2">
           <div class="flex justify-between items-center w-full">

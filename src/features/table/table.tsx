@@ -13,8 +13,8 @@ export const Table = component$(() => {
           </table>
         </div>
 
-        <div class="overflow-x-auto overflow-y-auto flex-grow">
-          <table class="border-separate border-spacing-0 text-sm">
+        <div class="flex-grow">
+          <table class="overflow-x-auto overflow-y-hidden border-separate border-spacing-0 text-sm">
             <TableBody />
           </table>
         </div>

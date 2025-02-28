@@ -7,7 +7,7 @@ export const Table = component$(() => {
   return (
     <ExecutionProvider>
       <div class="flex flex-col h-full">
-        <div class="sticky top-0 z-10 bg-white shadow-sm">
+        <div class="sticky -top-4 z-30 bg-white">
           <table class="border-separate border-spacing-0 text-sm">
             <TableHeader />
           </table>

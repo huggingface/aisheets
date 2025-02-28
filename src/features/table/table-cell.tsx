@@ -133,10 +133,10 @@ export const TableCell = component$<{
     }),
   );
 
-  if (!cell.value && !cell.error) {
+  if (cell.generating || (!cell.value && !cell.error)) {
     return (
       <td class="min-w-80 w-80 max-w-80 p-4 min-h-[100px] h-[100px] border last:border-r-0 border-secondary">
-        {cell.generating && <Skeleton />}
+        <Skeleton />
       </td>
     );
   }
@@ -207,7 +207,7 @@ export const TableCell = component$<{
 
           {isEditing.value && (
             <div
-              class="fixed z-10 bg-white border border-green-200 focus:border-green-200 focus:outline-none shadow-lg cursor-text"
+              class="fixed z-20 bg-white border border-green-200 focus:border-green-200 focus:outline-none shadow-lg cursor-text"
               style={{
                 left:
                   Math.min(

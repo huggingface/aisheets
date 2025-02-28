@@ -2,7 +2,6 @@ import {
   $,
   Fragment,
   component$,
-  useComputed$,
   useOnWindow,
   useSignal,
   useTask$,
@@ -26,12 +25,13 @@ export const TableBody = component$(() => {
   const startIndex = useSignal(0);
   const endIndex = useSignal(0);
 
-  const rowCount = useComputed$(() => {
-    return firstColum.value.process?.limit || firstColum.value.cells.length;
-  });
+  const data = useSignal<Cell[][]>([]);
+  const rowCount = useSignal(0);
 
   useVisibleTask$(({ track }) => {
     track(scrollTop);
+    track(data);
+
     startIndex.value = Math.max(
       Math.floor(scrollTop.value / rowHeight) - buffer,
       0,
@@ -42,10 +42,12 @@ export const TableBody = component$(() => {
       rowCount.value,
     );
   });
-  const data = useSignal<Cell[][]>([]);
 
   useTask$(({ track }) => {
     track(columns);
+    rowCount.value =
+      firstColum.value.process?.limit || firstColum.value.cells.length;
+
     const getCell = (column: Column, rowIndex: number): Cell => {
       const cell = column.cells[rowIndex];
 
@@ -86,43 +88,45 @@ export const TableBody = component$(() => {
 
   return (
     <tbody ref={tableBody}>
-      {data.value.slice().map((row, rowIndex) => (
-        <tr key={rowIndex} class="hover:bg-gray-50/50 transition-colors">
-          {row.map((cell) => {
-            return (
-              <Fragment key={`${cell.column?.id}-${rowIndex}-${cell.id}`}>
-                {cell.column?.id === TEMPORAL_ID ? (
-                  <td
-                    key={`temporal-${rowIndex}`}
-                    class="min-w-80 w-80 max-w-80 px-2 min-h-[100px] h-[100px] border-[0.5px]"
-                  />
-                ) : (
-                  <TableCell
-                    cell={cell}
-                    isExpanded={expandedRows.value.has(rowIndex)}
-                    onToggleExpand$={() => {
-                      const newSet = new Set(expandedRows.value);
-                      if (newSet.has(rowIndex)) {
-                        newSet.delete(rowIndex);
-                      } else {
-                        newSet.add(rowIndex);
-                      }
-                      expandedRows.value = newSet;
-                    }}
-                  />
-                )}
+      {data.value
+        .slice(startIndex.value, endIndex.value)
+        .map((row, rowIndex) => (
+          <tr key={rowIndex} class="hover:bg-gray-50/50 transition-colors">
+            {row.map((cell) => {
+              return (
+                <Fragment key={`${cell.column?.id}-${rowIndex}-${cell.id}`}>
+                  {cell.column?.id === TEMPORAL_ID ? (
+                    <td
+                      key={`temporal-${rowIndex}`}
+                      class="min-w-80 w-80 max-w-80 px-2 min-h-[100px] h-[100px] border-[0.5px]"
+                    />
+                  ) : (
+                    <TableCell
+                      cell={cell}
+                      isExpanded={expandedRows.value.has(rowIndex)}
+                      onToggleExpand$={() => {
+                        const newSet = new Set(expandedRows.value);
+                        if (newSet.has(rowIndex)) {
+                          newSet.delete(rowIndex);
+                        } else {
+                          newSet.add(rowIndex);
+                        }
+                        expandedRows.value = newSet;
+                      }}
+                    />
+                  )}
 
-                {columnId.value === cell.column?.id && (
-                  <td class="min-w-[600px] w-[600px] bg-white" />
-                )}
-              </Fragment>
-            );
-          })}
+                  {columnId.value === cell.column?.id && (
+                    <td class="min-w-[600px] w-[600px] bg-white" />
+                  )}
+                </Fragment>
+              );
+            })}
 
-          {/* td for (add + ) column */}
-          <td class="min-w-80 w-80 max-w-80 min-h-[100px] h-[100px] border-[0.5px] border-r-0" />
-        </tr>
-      ))}
+            {/* td for (add + ) column */}
+            <td class="min-w-80 w-80 max-w-80 min-h-[100px] h-[100px] border-[0.5px] border-r-0" />
+          </tr>
+        ))}
     </tbody>
   );
 });

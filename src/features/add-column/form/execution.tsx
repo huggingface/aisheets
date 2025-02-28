@@ -20,7 +20,7 @@ const executionContext =
   createContextId<Signal<Execution>>('execution.context');
 
 export const ExecutionProvider = component$(() => {
-  const { state: columns } = useColumnsStore();
+  const { columns } = useColumnsStore();
   const lastColumnId = columns.value[columns.value.length - 1].id;
 
   const internalState = useSignal<Execution>({

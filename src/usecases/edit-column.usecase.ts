@@ -1,5 +1,5 @@
 import { type RequestEventBase, server$ } from '@builder.io/qwik-city';
-import { getColumnCells, updateColumn } from '~/services';
+import { getColumnCells, updateColumn, updateProcess } from '~/services';
 import { type Cell, type Column, useServerSession } from '~/state';
 import { generateCells } from './generate-cells';
 
@@ -32,4 +32,13 @@ export const useEditColumnUseCase = () =>
       offset: column.process!.offset,
       validatedCells,
     });
+
+    const process = await updateProcess(column.process);
+
+    yield {
+      column: {
+        ...column,
+        process,
+      },
+    };
   });

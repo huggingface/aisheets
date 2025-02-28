@@ -34,17 +34,18 @@ export const TableCell = component$<{
   const contentRef = useSignal<HTMLElement>();
 
   useVisibleTask$(async () => {
-    if (!cell.generated) return;
+    if (!cell.generating) return;
     if (cell.error || cell.value) return;
 
     console.log('fetching cell', cell.id);
     const persistedCell = await server$(async (cellId: string) => {
       const persistedCell = await getColumnCellById(cellId);
+      if (!persistedCell) return;
 
       return {
-        error: persistedCell?.error,
-        value: persistedCell?.value,
-        validated: persistedCell?.validated,
+        error: persistedCell.error,
+        value: persistedCell.value,
+        validated: persistedCell.validated,
       };
     })(cell.id);
 
@@ -89,6 +90,12 @@ export const TableCell = component$<{
     }
   });
 
+  useVisibleTask$(({ track }) => {
+    track(() => cell);
+
+    console.log('cell updated', cell);
+  });
+
   const onValidateCell = $(
     async (validatedContent: string, validated: boolean) => {
       const ok = await validateCell({
@@ -101,6 +108,7 @@ export const TableCell = component$<{
         replaceCell({
           ...cell,
           value: validatedContent,
+          updatedAt: new Date(),
           validated,
         });
       }
@@ -131,11 +139,10 @@ export const TableCell = component$<{
     }),
   );
 
-  // Is not loaded yet, the lazy loading will take care of it
-  if (!cell.value && !cell.error) {
+  if (cell.generating || (!cell.value && !cell.error)) {
     return (
       <td class="min-w-80 w-80 max-w-80 p-4 min-h-[100px] h-[100px] border last:border-r-0 border-secondary">
-        {!cell.generated && <Skeleton />}
+        <Skeleton />
       </td>
     );
   }
@@ -152,8 +159,7 @@ export const TableCell = component$<{
         },
       )}
       onClick$={() => {
-        if (isClickingButton.value || isEditing.value || !cell.value) return;
-
+        if (isEditing.value) return;
         onToggleExpand$();
       }}
       onDblClick$={(e) => {
@@ -183,13 +189,13 @@ export const TableCell = component$<{
                 look="ghost"
                 hover={false}
                 size="sm"
-                class={`absolute text-base top-0 right-0 ${
+                class={`absolute z-10 text-base top-0 right-0 ${
                   cell.validated ? 'text-green-200' : 'text-primary-foreground'
                 }`}
-                onClick$={() => {
-                  isClickingButton.value = true;
+                onClick$={(e) => {
+                  e.stopPropagation();
+
                   onValidateCell(originalValue.value!, !cell.validated);
-                  isClickingButton.value = false;
                 }}
               >
                 <LuThumbsUp />

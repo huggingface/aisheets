@@ -4,7 +4,7 @@ import { type Column, TEMPORAL_ID, canGenerate } from '~/state/columns';
 describe('columns', () => {
   describe('canGenerate', () => {
     describe('column with out references columns', () => {
-      test('should be false if all cells are not validated', () => {
+      test('should be true if all cells are not validated', () => {
         const column: Column = {
           id: '1',
           name: 'FAKE COLUMN',
@@ -16,7 +16,7 @@ describe('columns', () => {
               idx: 0,
               validated: false,
               updatedAt: new Date(),
-              generated: true,
+              generating: true,
               value: '',
             },
             {
@@ -24,7 +24,7 @@ describe('columns', () => {
               idx: 1,
               validated: false,
               updatedAt: new Date(),
-              generated: true,
+              generating: true,
               value: '',
             },
           ],
@@ -46,7 +46,7 @@ describe('columns', () => {
 
         const columns = [column];
 
-        expect(canGenerate(column, columns)).toBeFalsy();
+        expect(canGenerate(column.id, columns)).toBeTruthy();
       });
 
       test('should be true if some validated cells are updated after process execution', () => {
@@ -66,7 +66,7 @@ describe('columns', () => {
               idx: 0,
               validated: true,
               updatedAt: cellUpdatedAt,
-              generated: true,
+              generating: true,
               value: '',
             },
             {
@@ -74,7 +74,7 @@ describe('columns', () => {
               idx: 1,
               validated: false,
               updatedAt: new Date(),
-              generated: true,
+              generating: true,
               value: '',
             },
           ],
@@ -96,7 +96,7 @@ describe('columns', () => {
 
         const columns = [column];
 
-        expect(canGenerate(column, columns)).toBeTruthy();
+        expect(canGenerate(column.id, columns)).toBeTruthy();
       });
 
       test('should be false if all validated cells are updated before process execution', () => {
@@ -116,7 +116,7 @@ describe('columns', () => {
               idx: 0,
               validated: true,
               updatedAt: cellUpdatedAt,
-              generated: true,
+              generating: true,
               value: '',
             },
             {
@@ -124,7 +124,7 @@ describe('columns', () => {
               idx: 1,
               validated: true,
               updatedAt: cellUpdatedAt,
-              generated: true,
+              generating: true,
               value: '',
             },
           ],
@@ -146,7 +146,7 @@ describe('columns', () => {
 
         const columns = [column];
 
-        expect(canGenerate(column, columns)).toBeFalsy();
+        expect(canGenerate(column.id, columns)).toBeFalsy();
       });
     });
 
@@ -168,7 +168,7 @@ describe('columns', () => {
               idx: 0,
               validated: true,
               updatedAt: referencedCellUpdatedAt,
-              generated: true,
+              generating: true,
               value: '',
             },
             {
@@ -176,7 +176,7 @@ describe('columns', () => {
               idx: 1,
               validated: true,
               updatedAt: new Date(),
-              generated: true,
+              generating: true,
               value: '',
             },
           ],
@@ -212,7 +212,7 @@ describe('columns', () => {
               idx: 0,
               validated: true,
               updatedAt: cellUpdatedAt,
-              generated: true,
+              generating: true,
               value: '',
             },
             {
@@ -220,7 +220,7 @@ describe('columns', () => {
               idx: 1,
               validated: true,
               updatedAt: processExecutionUpdatedAt,
-              generated: true,
+              generating: true,
               value: '',
             },
           ],
@@ -242,11 +242,11 @@ describe('columns', () => {
 
         const columns = [referencedColumn, column];
 
-        const v = canGenerate(column, columns);
+        const v = canGenerate(column.id, columns);
         expect(v).toBeFalsy();
       });
 
-      test('should be true if all cells are validated after process execution and the reference column is not dirty', () => {
+      test('should be false if all cells are validated after process execution and the reference column is not dirty', () => {
         const referencedColumnProcessExecution = new Date();
         const referencedCellUpdatedAt = new Date(
           referencedColumnProcessExecution.getTime() - 1000,
@@ -263,7 +263,7 @@ describe('columns', () => {
               idx: 0,
               validated: true,
               updatedAt: referencedCellUpdatedAt,
-              generated: true,
+              generating: true,
               value: '',
             },
             {
@@ -271,7 +271,7 @@ describe('columns', () => {
               idx: 1,
               validated: true,
               updatedAt: new Date(),
-              generated: true,
+              generating: true,
               value: '',
             },
           ],
@@ -307,7 +307,7 @@ describe('columns', () => {
               idx: 0,
               validated: true,
               updatedAt: cellUpdatedAt,
-              generated: true,
+              generating: true,
               value: '',
             },
             {
@@ -315,7 +315,7 @@ describe('columns', () => {
               idx: 1,
               validated: true,
               updatedAt: cellUpdatedAt,
-              generated: true,
+              generating: true,
               value: '',
             },
           ],
@@ -337,7 +337,7 @@ describe('columns', () => {
 
         const columns = [referencedColumn, column];
 
-        expect(canGenerate(column, columns)).toBeTruthy();
+        expect(canGenerate(column.id, columns)).toBeFalsy();
       });
     });
   });

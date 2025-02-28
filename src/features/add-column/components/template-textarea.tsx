@@ -223,7 +223,7 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
         >
           <LuBraces class="text-primary-foreground" />
         </Select.Trigger>
-        <Select.Popover>
+        <Select.Popover floating="bottom-start" class="!w-48">
           {popover.options.map((variable) => (
             <Select.Item
               key={variable}

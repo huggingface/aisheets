@@ -1,18 +1,23 @@
 import { type RequestEventBase, server$ } from '@builder.io/qwik-city';
-import { getColumnCells, updateColumn } from '~/services';
+import { getColumnCells, updateColumn, updateProcess } from '~/services';
 import { type Cell, type Column, useServerSession } from '~/state';
 import { generateCells } from './generate-cells';
 
 export const useEditColumnUseCase = () =>
   server$(async function* (
     this: RequestEventBase<QwikCityPlatform>,
-    column: Column,
+    toUpdate: Column,
   ): AsyncGenerator<{ column?: Column; cell?: Cell }> {
     const session = useServerSession(this);
+    const column = await updateColumn(toUpdate);
 
     if (!column.process) {
       return;
     }
+
+    yield {
+      column,
+    };
 
     const validatedCells = await getColumnCells({
       column,
@@ -28,9 +33,12 @@ export const useEditColumnUseCase = () =>
       validatedCells,
     });
 
-    const updated = await updateColumn(column);
+    const process = await updateProcess(column.process);
 
     yield {
-      column: updated,
+      column: {
+        ...column,
+        process,
+      },
     };
   });

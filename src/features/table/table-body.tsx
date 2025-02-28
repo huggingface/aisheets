@@ -32,8 +32,11 @@ export const TableBody = component$(() => {
   useOnWindow(
     'scroll',
     $((event) => {
-      scrollTop.value =
-        (event.target as HTMLElement).scrollTop - tableBody.value!.offsetTop;
+      const target = event.target as HTMLElement;
+
+      if (!target.classList.contains('scrollable')) return;
+
+      scrollTop.value = target.scrollTop - tableBody.value!.offsetTop;
     }),
   );
 

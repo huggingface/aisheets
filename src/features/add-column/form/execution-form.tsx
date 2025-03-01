@@ -135,7 +135,8 @@ export const ExecutionForm = component$<SidebarProps>(
     const onGenerate = $(async () => {
       isSubmitting.value = true;
 
-      const modelName = inputModelId.value || selectedModel.value!.id;
+      // If we have a selectedModel, always use that. Only fall back to inputModelId if models failed to load
+      const modelName = selectedModel.value?.id || inputModelId.value!;
       const modelProvider = selectedProvider.value!;
 
       const columnToSave = {

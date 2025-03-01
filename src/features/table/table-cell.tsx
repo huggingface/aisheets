@@ -28,7 +28,6 @@ export const TableCell = component$<{
   const originalValue = useSignal(cell.value);
   const newCellValue = useSignal(cell.value);
   const isTruncated = useSignal(false);
-  const isClickingButton = useSignal(false);
 
   const editCellValueInput = useSignal<HTMLElement>();
   const contentRef = useSignal<HTMLElement>();

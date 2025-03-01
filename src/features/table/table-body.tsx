@@ -119,19 +119,30 @@ export const TableBody = component$(() => {
                   {cell.column?.id === TEMPORAL_ID ? (
                     <td class="min-w-80 w-80 max-w-80 px-2 min-h-[100px] h-[100px] border-[0.5px]" />
                   ) : (
-                    <TableCell
-                      cell={cell}
-                      isExpanded={expandedRows.value.has(actualRowIndex)}
-                      onToggleExpand$={() => {
-                        const newSet = new Set(expandedRows.value);
-                        if (newSet.has(actualRowIndex)) {
-                          newSet.delete(actualRowIndex);
-                        } else {
-                          newSet.add(actualRowIndex);
-                        }
-                        expandedRows.value = newSet;
-                      }}
-                    />
+                    <>
+                      <TableCell
+                        cell={cell}
+                        isExpanded={expandedRows.value.has(actualRowIndex)}
+                        onToggleExpand$={() => {
+                          const newSet = new Set(expandedRows.value);
+                          if (newSet.has(actualRowIndex)) {
+                            newSet.delete(actualRowIndex);
+                          } else {
+                            newSet.add(actualRowIndex);
+                          }
+                          expandedRows.value = newSet;
+                        }}
+                      />
+
+                      {/* When the user scrolls until this cell we should load
+                        If the user has 20 rows, on rowCount - buffer, should be fetch
+                        The buffer now is 2, so on cell number 18, we should fetch new rows
+                        Remember: we need just the cellId, no needed the value and the error.
+                      */}
+                      {actualRowIndex + 1 === rowCount.value - buffer && (
+                        <Loader actualRowIndex={actualRowIndex} />
+                      )}
+                    </>
                   )}
 
                   {columnId.value === cell.column?.id && (
@@ -158,4 +169,12 @@ export const TableBody = component$(() => {
       )}
     </tbody>
   );
+});
+
+const Loader = component$<{ actualRowIndex: number }>(({ actualRowIndex }) => {
+  useVisibleTask$(({ track }) => {
+    console.log('TODO: fetching next X rows from:', actualRowIndex);
+  });
+
+  return <Fragment />;
 });

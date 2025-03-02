@@ -194,7 +194,7 @@ export const ExecutionForm = component$<SidebarProps>(
                     return (
                       <div class="flex flex-col gap-4">
                         <div class="flex gap-4">
-                          <div class="flex-1">
+                          <div class="flex-[2]">
                             <Label class="flex gap-1 mb-2">Model</Label>
                             <Select.Root value={selectedModel.value?.id}>
                               <Select.Trigger class="px-4 bg-primary rounded-base border-secondary-foreground">
@@ -229,10 +229,7 @@ export const ExecutionForm = component$<SidebarProps>(
                               </Select.Popover>
                             </Select.Root>
                           </div>
-                          <div
-                            class="flex-1"
-                            key={`provider-section-${updateCounter.value}`}
-                          >
+                          <div class="flex-1">
                             <Label class="flex gap-1 mb-2">
                               Inference Provider
                             </Label>

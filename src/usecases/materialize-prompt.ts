@@ -9,15 +9,17 @@ export interface MaterializePromptParams {
   instruction: string;
   data?: object;
   examples?: Example[];
+  renderInstruction?: boolean;
 }
 
 export function materializePrompt({
   instruction,
   data,
   examples,
+  renderInstruction = true,
 }: MaterializePromptParams): string {
   return data && Object.keys(data).length > 0
-    ? materializePromptFromData(instruction, data, examples)
+    ? materializePromptFromData(instruction, data, examples, renderInstruction)
     : materializePromptFromScratch(instruction, examples);
 }
 
@@ -72,6 +74,7 @@ function materializePromptFromData(
   instruction: string,
   data: object,
   examples?: Example[],
+  renderInstruction = true,
 ): string {
   const formattedExamples = examples
     ?.map((example) => {
@@ -106,7 +109,9 @@ The following are correct, accurate example outputs with respect to the user ins
 # Output
     `,
     {
-      instruction: mustache.render(instruction, data),
+      instruction: renderInstruction
+        ? mustache.render(instruction, data)
+        : instruction,
       hasExamples: examples && examples.length > 0,
       formattedExamples,
     },

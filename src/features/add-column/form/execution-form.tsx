@@ -12,6 +12,7 @@ import {
 import { LuBookmark, LuCheck, LuEgg, LuXCircle } from '@qwikest/icons/lucide';
 
 import { Button, Input, Label, Select } from '~/components';
+import { nextTick } from '~/components/hooks/tick';
 import {
   TemplateTextArea,
   type Variable,
@@ -111,6 +112,12 @@ export const ExecutionForm = component$<SidebarProps>(
 
       rowsToGenerate.value =
         mode.value === 'add' ? '1' : process!.limit.toString();
+    });
+
+    const maxRows = useSignal(0);
+
+    useVisibleTask$(async (async) => {
+      maxRows.value = await maxNumberOfRows(column);
     });
 
     useVisibleTask$(({ track }) => {
@@ -281,12 +288,16 @@ export const ExecutionForm = component$<SidebarProps>(
                   id="column-rows"
                   type="number"
                   class="px-4 h-10 border-secondary-foreground bg-primary"
-                  max={maxNumberOfRows.value}
+                  max={maxRows.value}
                   min="1"
                   onInput$={(_, el) => {
-                    rowsToGenerate.value = String(
-                      Math.min(Number(el.value), maxNumberOfRows.value),
-                    );
+                    if (Number(el.value) > maxRows.value) {
+                      nextTick(() => {
+                        rowsToGenerate.value = String(maxRows.value);
+                      });
+                    }
+
+                    rowsToGenerate.value = el.value;
                   }}
                   value={rowsToGenerate.value}
                 />

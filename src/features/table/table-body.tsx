@@ -8,8 +8,10 @@ import {
   useTask$,
   useVisibleTask$,
 } from '@builder.io/qwik';
+import { server$ } from '@builder.io/qwik-city';
 import { useExecution } from '~/features/add-column';
 import { TableCell } from '~/features/table/table-cell';
+import { getColumnCells } from '~/services';
 import { type Cell, type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
 
 export const TableBody = component$(() => {
@@ -172,8 +174,46 @@ export const TableBody = component$(() => {
 });
 
 const Loader = component$<{ actualRowIndex: number }>(({ actualRowIndex }) => {
-  useVisibleTask$(({ track }) => {
-    console.log('TODO: fetching next X rows from:', actualRowIndex);
+  const { columns, replaceCell } = useColumnsStore();
+
+  const loadColumnsCells = server$(
+    async ({
+      columns,
+      offset,
+      limit,
+    }: {
+      columns: Column[];
+      offset: number;
+      limit: number;
+    }) => {
+      const allCells = [];
+
+      for (const column of columns) {
+        if (column.id === TEMPORAL_ID) {
+          continue;
+        }
+
+        const cells = await getColumnCells({
+          column,
+          offset,
+          limit,
+        });
+        allCells.push(cells);
+      }
+
+      return allCells.flat();
+    },
+  );
+  useVisibleTask$(async () => {
+    const newCells = await loadColumnsCells({
+      columns: columns.value,
+      offset: actualRowIndex,
+      limit: 10,
+    });
+
+    for (const cell of newCells) {
+      replaceCell(cell);
+    }
   });
 
   return <Fragment />;

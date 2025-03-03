@@ -91,8 +91,6 @@ export const TableCell = component$<{
 
   useVisibleTask$(({ track }) => {
     track(() => cell);
-
-    console.log('cell updated', cell);
   });
 
   const onValidateCell = $(

@@ -27,11 +27,11 @@ export default component$(() => {
 });
 
 export const head: DocumentHead = {
-  title: 'easydatagen',
+  title: 'Dataground',
   meta: [
     {
-      name: 'description',
-      content: 'easydatagen',
+      name: 'Dataground',
+      content: 'dataground',
     },
   ],
 };

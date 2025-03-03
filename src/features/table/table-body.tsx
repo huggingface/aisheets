@@ -178,23 +178,21 @@ const Loader = component$<{ actualRowIndex: number }>(({ actualRowIndex }) => {
 
   const loadColumnsCells = server$(
     async ({
-      columns,
+      columnIds,
       offset,
       limit,
     }: {
-      columns: Column[];
+      columnIds: string[];
       offset: number;
       limit: number;
     }) => {
       const allCells = [];
 
-      for (const column of columns) {
-        if (column.id === TEMPORAL_ID) {
-          continue;
-        }
-
+      for (const columnId of columnIds) {
         const cells = await getColumnCells({
-          column,
+          column: {
+            id: columnId,
+          },
           offset,
           limit,
         });
@@ -206,7 +204,9 @@ const Loader = component$<{ actualRowIndex: number }>(({ actualRowIndex }) => {
   );
   useVisibleTask$(async () => {
     const newCells = await loadColumnsCells({
-      columns: columns.value,
+      columnIds: columns.value
+        .filter((column) => column.id !== TEMPORAL_ID)
+        .map((column) => column.id),
       offset: actualRowIndex,
       limit: 10,
     });

@@ -1,6 +1,6 @@
 import { Op } from 'sequelize';
 import { ColumnCellModel } from '~/services/db/models/cell';
-import type { Cell, Column } from '~/state';
+import type { Cell } from '~/state';
 
 interface GetRowCellsParams {
   rowIdx: number;
@@ -83,7 +83,9 @@ export const getColumnCells = async ({
   offset,
   limit,
 }: {
-  column: Column;
+  column: {
+    id: string;
+  };
   conditions?: Record<string, any>;
   offset?: number;
   limit?: number;
@@ -107,10 +109,7 @@ export const getColumnCells = async ({
     value: cell.value,
     error: cell.error,
     validated: cell.validated,
-    column: {
-      id: cell.columnId,
-    },
-    columnId: cell.columnId,
+    column,
     updatedAt: cell.updatedAt,
     generating: cell.generating,
   }));

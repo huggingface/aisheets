@@ -12,7 +12,6 @@ import {
 import { LuBookmark, LuCheck, LuEgg, LuXCircle } from '@qwikest/icons/lucide';
 
 import { Button, Input, Label, Select } from '~/components';
-import { nextTick } from '~/components/hooks/tick';
 import {
   TemplateTextArea,
   type Variable,
@@ -36,7 +35,7 @@ export const ExecutionForm = component$<SidebarProps>(
     const { mode, close } = useExecution();
     const {
       columns,
-      firstColum,
+      maxNumberOfRows,
       removeTemporalColumn,
       canGenerate,
       updateColumn,
@@ -83,9 +82,6 @@ export const ExecutionForm = component$<SidebarProps>(
     });
 
     useVisibleTask$(async ({ track }) => {
-      if (mode.value === 'add' && column.id === firstColum.value.id) {
-        return;
-      }
       track(columns);
 
       canRegenerate.value = await canGenerate(column);
@@ -112,6 +108,7 @@ export const ExecutionForm = component$<SidebarProps>(
       selectedProvider.value = process.modelProvider!;
 
       inputModelId.value = process.modelName;
+
       rowsToGenerate.value =
         mode.value === 'add' ? '1' : process!.limit.toString();
     });
@@ -284,30 +281,12 @@ export const ExecutionForm = component$<SidebarProps>(
                   id="column-rows"
                   type="number"
                   class="px-4 h-10 border-secondary-foreground bg-primary"
-                  max={
-                    column.id !== firstColum.value.id
-                      ? firstColum.value.process!.limit
-                      : 1000
-                  }
+                  max={maxNumberOfRows.value}
                   min="1"
                   onInput$={(_, el) => {
-                    if (column.id === firstColum.value.id) {
-                      if (Number(el.value) > 1000) {
-                        nextTick(() => {
-                          rowsToGenerate.value = '1000';
-                        });
-                      }
-                    } else if (
-                      Number(el.value) > firstColum.value.process!.limit
-                    ) {
-                      nextTick(() => {
-                        rowsToGenerate.value = String(
-                          firstColum.value.process!.limit,
-                        );
-                      });
-                    }
-
-                    rowsToGenerate.value = el.value;
+                    rowsToGenerate.value = String(
+                      Math.min(Number(el.value), maxNumberOfRows.value),
+                    );
                   }}
                   value={rowsToGenerate.value}
                 />

@@ -201,9 +201,14 @@ export const useColumnsStore = () => {
 
   const firstColum = useComputed$(() => columns.value[0]);
 
+  const maxNumberOfRows = useComputed$(() => {
+    return 1000;
+  });
+
   return {
     columns,
     firstColum,
+    maxNumberOfRows,
     canGenerate: $((column: Column) => canGenerate(column.id, columns.value)),
     isDirty: $((column: Column) => isDirty(column)),
     addTemporalColumn: $(async () => {

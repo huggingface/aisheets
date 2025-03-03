@@ -57,6 +57,7 @@ export const TableBody = component$(() => {
 
   useTask$(({ track }) => {
     track(columns);
+
     rowCount.value =
       firstColum.value.process?.limit || firstColum.value.cells.length;
 

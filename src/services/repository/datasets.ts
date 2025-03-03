@@ -6,6 +6,7 @@ import {
   ProcessModel,
 } from '~/services/db/models';
 import type { Dataset } from '~/state';
+import { getColumnCells } from './cells';
 import { modelToColumn } from './columns';
 
 interface CreateDatasetParams {
@@ -75,17 +76,6 @@ export const getDatasetById = async (
     },
   ];
 
-  const rows = options?.cellsByColumn;
-
-  if (rows && rows > 0) {
-    columnsInclude.push({
-      association: ColumnModel.associations.cells as any,
-      separate: true,
-      order: [['createdAt', 'ASC']],
-      limit: rows,
-    });
-  }
-
   const model = await DatasetModel.findByPk(id, {
     include: [
       {
@@ -101,7 +91,7 @@ export const getDatasetById = async (
     return null;
   }
 
-  return {
+  const dataset = {
     id: model.id,
     name: model.name,
     createdBy: model.createdBy,
@@ -110,6 +100,15 @@ export const getDatasetById = async (
       return modelToColumn(column);
     }),
   };
+
+  for (const column of dataset.columns) {
+    column.cells = await getColumnCells({
+      column,
+      limit: options?.cellsByColumn,
+    });
+  }
+
+  return dataset;
 };
 
 export const updateDataset = async ({

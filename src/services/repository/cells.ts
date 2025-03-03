@@ -95,7 +95,10 @@ export const getColumnCells = async ({
     },
     limit,
     offset,
-    order: [['createdAt', 'ASC']],
+    order: [
+      ['idx', 'ASC'],
+      ['createdAt', 'ASC'],
+    ],
   });
 
   return models.map((cell) => ({

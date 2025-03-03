@@ -36,7 +36,7 @@ export const modelToColumn = (model: ColumnModel): Column => {
           id: cell.columnId,
         },
         updatedAt: cell.updatedAt,
-        generated: cell.generated,
+        generating: cell.generating,
         idx: cell.idx,
       })) ?? [],
   };

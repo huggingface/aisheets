@@ -5,29 +5,57 @@ import {
   useTask$,
   useVisibleTask$,
 } from '@builder.io/qwik';
+import { server$ } from '@builder.io/qwik-city';
 import { cn } from '@qwik-ui/utils';
 import { LuThumbsUp } from '@qwikest/icons/lucide';
 import { Button, Textarea } from '~/components';
 import { useClickOutside } from '~/components/hooks/click/outside';
 import { Markdown } from '~/components/ui/markdown/markdown';
 import { Skeleton } from '~/components/ui/skeleton/skeleton';
+import { getColumnCellById } from '~/services';
 import { type Cell, useColumnsStore } from '~/state';
 import { useValidateCellUseCase } from '~/usecases/validate-cell.usecase';
+
+const loadCell = server$(async (cellId: string) => {
+  const persistedCell = await getColumnCellById(cellId);
+  if (!persistedCell) return;
+
+  return {
+    error: persistedCell.error,
+    value: persistedCell.value,
+    validated: persistedCell.validated,
+  };
+});
 
 export const TableCell = component$<{
   cell: Cell;
   isExpanded: boolean;
   onToggleExpand$: () => void;
 }>(({ cell, isExpanded, onToggleExpand$ }) => {
+  const { replaceCell } = useColumnsStore();
+  const validateCell = useValidateCellUseCase();
+
   const isEditing = useSignal(false);
   const originalValue = useSignal(cell.value);
   const newCellValue = useSignal(cell.value);
-  const { replaceCell } = useColumnsStore();
+  const isTruncated = useSignal(false);
 
   const editCellValueInput = useSignal<HTMLElement>();
   const contentRef = useSignal<HTMLElement>();
-  const isTruncated = useSignal(false);
-  const validateCell = useValidateCellUseCase();
+
+  useVisibleTask$(async () => {
+    if (cell.generating) return;
+    if (cell.error || cell.value) return;
+
+    const persistedCell = await loadCell(cell.id);
+
+    if (!persistedCell) return;
+
+    replaceCell({
+      ...cell,
+      ...persistedCell,
+    });
+  });
 
   useTask$(({ track }) => {
     track(isEditing);
@@ -60,12 +88,6 @@ export const TableCell = component$<{
       const maxHeight = lineHeight * 6;
       isTruncated.value = contentRef.value.scrollHeight > maxHeight;
     }
-  });
-
-  useVisibleTask$(({ track }) => {
-    track(() => cell);
-
-    console.log('cell updated', cell);
   });
 
   const onValidateCell = $(
@@ -111,7 +133,7 @@ export const TableCell = component$<{
     }),
   );
 
-  if (cell.generating || (!cell.value && !cell.error)) {
+  if ((!cell.value && !cell.error) || (cell.generating && !cell.value)) {
     return (
       <td class="min-w-80 w-80 max-w-80 p-4 min-h-[100px] h-[100px] border last:border-r-0 border-secondary">
         <Skeleton />
@@ -136,6 +158,9 @@ export const TableCell = component$<{
       }}
       onDblClick$={(e) => {
         e.stopPropagation();
+
+        if (!cell.value) return;
+
         isEditing.value = true;
       }}
       ref={ref}
@@ -182,7 +207,7 @@ export const TableCell = component$<{
 
           {isEditing.value && (
             <div
-              class="fixed z-10 bg-white border border-green-200 focus:border-green-200 focus:outline-none shadow-lg cursor-text"
+              class="fixed z-20 bg-white border border-green-200 focus:border-green-200 focus:outline-none shadow-lg cursor-text"
               style={{
                 left:
                   Math.min(

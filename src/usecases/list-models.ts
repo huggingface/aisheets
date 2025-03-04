@@ -39,6 +39,7 @@ export interface Model {
   providers: string[];
   tags?: string[];
   safetensors?: unknown;
+  size?: string;
 }
 
 export const useListModels = server$(async function (
@@ -84,9 +85,24 @@ export const useListModels = server$(async function (
       .map((provider: any) => provider.provider);
 
     if (availableProviders.length > 0) {
+      let sizeInB = 0;
+      if (model.safetensors) {
+        const paramCounts = Object.entries(
+          model.safetensors.parameters || {},
+        ).map(([_, value]) => Number(value));
+
+        sizeInB = Math.max(...paramCounts) / 1e9;
+      }
+
+      let size: string | undefined;
+      if (Number.isFinite(sizeInB)) {
+        size = `${Math.floor(sizeInB)}B`;
+      }
+
       acc.push({
         ...model,
         providers: availableProviders,
+        size,
       });
     }
 

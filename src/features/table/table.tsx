@@ -7,12 +7,19 @@ import { TableView } from '~/features/table/table-view';
 export const Table = component$(() => {
   return (
     <ExecutionProvider>
-      <div class="overflow-x-auto overflow-y-hidden h-full py-1">
+      <div class="flex flex-col h-full">
         <TableView />
-        <table class="min-w-max h-full border-separate border-spacing-0 text-sm">
-          <TableHeader />
-          <TableBody />
-        </table>
+        <div class="sticky -top-4 z-30 bg-white">
+          <table class="border-separate border-spacing-0 text-sm">
+            <TableHeader />
+          </table>
+        </div>
+
+        <div class="flex-grow">
+          <table class="overflow-x-auto overflow-y-hidden border-separate border-spacing-0 text-sm">
+            <TableBody />
+          </table>
+        </div>
       </div>
     </ExecutionProvider>
   );

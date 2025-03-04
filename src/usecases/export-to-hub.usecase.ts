@@ -8,12 +8,17 @@ import { DuckDBInstance } from '@duckdb/node-api';
 import { type HubApiError, createRepo, uploadFiles } from '@huggingface/hub';
 
 import { type RequestEventBase, server$ } from '@builder.io/qwik-city';
-import { getRowCells } from '~/services/repository/cells';
+import { getColumnCellByIdx, getRowCells } from '~/services/repository/cells';
 import {
   getDatasetById,
   listDatasetRows,
 } from '~/services/repository/datasets';
-import { type Dataset, type Process, useServerSession } from '~/state';
+import {
+  type Cell,
+  type Dataset,
+  type Process,
+  useServerSession,
+} from '~/state';
 import { collectExamples } from './collect-examples';
 import { materializePrompt } from './materialize-prompt';
 
@@ -105,9 +110,23 @@ async function generateDatasetConfig(
       continue;
     }
 
+    // Fetch complete cell data for validated cells
+    const validatedCells = await Promise.all(
+      column.cells
+        .filter((cell) => cell.validated)
+        .map((cell) =>
+          getColumnCellByIdx({
+            idx: cell.idx,
+            columnId: column.id,
+          }),
+        ),
+    );
+
     const examples = await collectExamples({
       column,
-      validatedCells: column.cells.filter((cell) => cell.validated),
+      validatedCells: validatedCells.filter(
+        (cell): cell is Cell => cell !== null,
+      ),
       columnsReferences: column.process.columnsReferences,
     });
 
@@ -116,15 +135,18 @@ async function generateDatasetConfig(
       ? await getFirstRowData(column.process.columnsReferences)
       : {};
 
+    const prompt = materializePrompt({
+      instruction: column.process.prompt,
+      examples: examples.length > 0 ? examples : undefined,
+      data: Object.keys(data).length > 0 ? data : undefined,
+      renderInstruction: false,
+    });
+
     columnConfigs[column.name] = {
       modelName: column.process.modelName,
       modelProvider: column.process.modelProvider,
       userPrompt: column.process.prompt,
-      prompt: materializePrompt({
-        instruction: column.process.prompt,
-        examples: examples.length > 0 ? examples : undefined,
-        data: Object.keys(data).length > 0 ? data : undefined,
-      }),
+      prompt,
       columnsReferences: column.process.columnsReferences?.map((colId) => {
         const refColumn = dataset.columns.find((c) => c.id === colId);
         return refColumn?.name || colId;

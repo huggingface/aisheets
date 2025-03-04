@@ -1,32 +1,35 @@
 import { $, component$, useComputed$ } from '@builder.io/qwik';
 import { server$ } from '@builder.io/qwik-city';
-import { LuEyeOff } from '@qwikest/icons/lucide';
+import { LuEye, LuEyeOff } from '@qwikest/icons/lucide';
 import { Button } from '~/components';
 import { updateColumnPartially } from '~/services';
 import { type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
 
-export const HideColumn = component$<{ column: Column }>(({ column }) => {
+export const HideColumn = component$<{
+  column: Column;
+  label?: string;
+}>(({ column, label }) => {
   const { columns, updateColumn } = useColumnsStore();
-  const isTheUniqueColumn = useComputed$(
+  const isDisabled = useComputed$(
     () =>
-      columns.value.filter((c) => c.visible).filter((c) => c.id !== TEMPORAL_ID)
-        .length === 1,
+      columns.value.filter((c) => c.id !== TEMPORAL_ID).filter((c) => c.visible)
+        .length === 1 && column.visible,
   );
 
   const hideColumn = $(async () => {
-    column.visible = false;
+    column.visible = !column.visible;
     updateColumn({ ...column });
 
     if (column.id === TEMPORAL_ID) {
       return;
     }
 
-    server$(async (id: string) => {
-      await updateColumnPartially({ id, visible: false });
-    })(column.id);
+    server$(async (id: string, visible: boolean) => {
+      await updateColumnPartially({ id, visible });
+    })(column.id, column.visible);
   });
 
-  if (column.id === TEMPORAL_ID || isTheUniqueColumn.value) {
+  if (column.id === TEMPORAL_ID) {
     return null;
   }
 
@@ -36,9 +39,14 @@ export const HideColumn = component$<{ column: Column }>(({ column }) => {
       look="ghost"
       size="sm"
       onClick$={hideColumn}
+      disabled={isDisabled.value}
     >
-      <LuEyeOff class="text-primary-foreground" />
-      Hide column
+      {column.visible ? (
+        <LuEyeOff class="text-primary-foreground" />
+      ) : (
+        <LuEye class="text-primary-foreground" />
+      )}
+      {label ?? 'Hide column'}
     </Button>
   );
 });

@@ -80,7 +80,11 @@ export const useImportFromHub = () =>
         let value = row[column.name];
 
         if (Array.isArray(value) || typeof value === 'object') {
-          value = JSON.stringify(value);
+          value = JSON.stringify(
+            value,
+            (_, v) => (typeof v === 'bigint' ? v.toString() : v),
+            2,
+          );
         }
 
         await createCell({

@@ -18,7 +18,7 @@ export const CellSettings = component$<{ column: Column }>(({ column }) => {
     });
   });
 
-  if (column.id === TEMPORAL_ID) {
+  if (column.id === TEMPORAL_ID || column.kind !== 'dynamic') {
     return null;
   }
 

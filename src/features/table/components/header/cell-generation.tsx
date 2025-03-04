@@ -17,7 +17,7 @@ export const CellGeneration = component$<{ column: Column }>(({ column }) => {
     return isDirty(savedColumn);
   });
 
-  if (column.id === TEMPORAL_ID) {
+  if (column.id === TEMPORAL_ID || column.kind !== 'dynamic') {
     return null;
   }
 

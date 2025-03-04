@@ -25,12 +25,8 @@ export const TableCellHeader = component$<{ column: Column }>(({ column }) => {
         </div>
 
         <div class="flex items-center w-[20%]">
-          {column.kind === 'dynamic' && (
-            <>
-              <CellGeneration column={column} />
-              <CellSettings column={column} />
-            </>
-          )}
+          <CellGeneration column={column} />
+          <CellSettings column={column} />
         </div>
       </div>
     </th>

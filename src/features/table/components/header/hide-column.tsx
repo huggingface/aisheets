@@ -6,10 +6,10 @@ import { updateColumnPartially } from '~/services';
 import { type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
 
 export const HideColumn = component$<{ column: Column }>(({ column }) => {
-  const { state, updateColumn } = useColumnsStore();
+  const { columns, updateColumn } = useColumnsStore();
   const isTheUniqueColumn = useComputed$(
     () =>
-      state.value.filter((c) => c.visible).filter((c) => c.id !== TEMPORAL_ID)
+      columns.value.filter((c) => c.visible).filter((c) => c.id !== TEMPORAL_ID)
         .length === 1,
   );
 

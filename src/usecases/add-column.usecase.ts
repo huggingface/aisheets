@@ -31,6 +31,7 @@ export const useAddColumnUseCase = () =>
         cells: [],
         dataset: column.dataset,
         process: column.process,
+        visible: column.visible,
       },
     };
 

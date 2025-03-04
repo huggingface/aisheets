@@ -60,11 +60,9 @@ export const ExecutionForm = component$<SidebarProps>(
     const variables = useSignal<Variable[]>([]);
 
     const selectedModel = useSignal<Model>();
+    const selectedProvider = useSignal<string>();
     const inputModelId = useSignal<string | undefined>();
     const rowsToGenerate = useSignal('');
-
-    const selectedProvider = useSignal<string>();
-    const updateCounter = useSignal(0);
 
     const loadModels = useResource$(async () => {
       return await useListModels();
@@ -213,7 +211,6 @@ export const ExecutionForm = component$<SidebarProps>(
                                   onClick$={$(() => {
                                     selectedModel.value = model;
                                     selectedProvider.value = model.providers[0];
-                                    updateCounter.value++;
                                   })}
                                 >
                                   <Select.ItemLabel>
@@ -232,7 +229,7 @@ export const ExecutionForm = component$<SidebarProps>(
                             </Select.Popover>
                           </Select.Root>
                         </div>
-                        <div class="flex-1">
+                        <div class="flex-1" key={selectedModel.value.id}>
                           <Label class="flex gap-1 mb-2">
                             Inference Provider
                           </Label>

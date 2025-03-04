@@ -1,15 +1,16 @@
-# unnamed - A tool to build smol datasets
-`unnamed` is an app for building high-quality datasets using AI models. It offers:
+# dataground - A tool to build smol datasets
 
-- **Real-time iteration**: Building high-quality and diverse datasets involves carefully designing and combining prompts, trying out different models, a lot of trial and error, and spending time looking at your data. `unnamed` accelerates dataset iteration with an interactive and progressive workflow, enabling you to test many things and see the results instantly.
-- **In-context learning using human demonstrations**: One of the biggest frustrations when building datasets with AI is prompts' brittleness. You often need to spend hours tuning the language of your prompt to avoid specific failures, ensure correct formatting, etc. Adding few-shot examples to your prompt is one of the most effective solutions to these issues. However, writing these examples by hand is time-consuming and challenging. In `unnamed`, you just need to edit/select good examples, which are automatically included in the data generation process.   
-- **The latest open-source models**: `unnamed` enables you to use the most advanced, fast, and powerful models, thanks to [Hugging Face Inference Providers](https://huggingface.co/blog/inference-providers).
-- **Cost-efficiency**: Instead of launching 100s of inference calls to experiment with prompts and pipelines, `unnamed` enables you to test and build in smol steps (a few rows at a time!). This saves money and energy and leads to higher-quality datasets; you get to look at your data and tune the generation process as you go.
-- **Go from smol to great**:  Many big things, like the universe, start from something very smol. To build great datasets, it's better to build the perfect smol dataset for your use case and then scale it up. `unnamed` enables you to build datasets and pipelines progressively. Once you're satisfied with your dataset, you can use the generated configuration to scale up the size of your dataset (if needed).
+`dataground` is an app for building high-quality datasets using AI models. It offers:
+
+- **Real-time iteration**: Building high-quality and diverse datasets involves carefully designing and combining prompts, trying out different models, a lot of trial and error, and spending time looking at your data. `dataground` accelerates dataset iteration with an interactive and progressive workflow, enabling you to test many things and see the results instantly.
+- **In-context learning using human demonstrations**: One of the biggest frustrations when building datasets with AI is prompts' brittleness. You often need to spend hours tuning the language of your prompt to avoid specific failures, ensure correct formatting, etc. Adding few-shot examples to your prompt is one of the most effective solutions to these issues. However, writing these examples by hand is time-consuming and challenging. In `dataground`, you just need to edit/select good examples, which are automatically included in the data generation process.
+- **The latest open-source models**: `dataground` enables you to use the most advanced, fast, and powerful models, thanks to [Hugging Face Inference Providers](https://huggingface.co/blog/inference-providers).
+- **Cost-efficiency**: Instead of launching 100s of inference calls to experiment with prompts and pipelines, `dataground` enables you to test and build in smol steps (a few rows at a time!). This saves money and energy and leads to higher-quality datasets; you get to look at your data and tune the generation process as you go.
+- **Go from smol to great**:  Many big things, like the universe, start from something very smol. To build great datasets, it's better to build the perfect smol dataset for your use case and then scale it up. `dataground` enables you to build datasets and pipelines progressively. Once you're satisfied with your dataset, you can use the generated configuration to scale up the size of your dataset (if needed).
 
 ## Quick demo (TBD)
 
-1. Launch the app locally or duplicate this space 
+1. Launch the app locally or duplicate this space
 2. Select a prompt and tune it for your use case, or import a Hugging Face Dataset.
 3. Start adding columns and rows.
 4. Push your dataset and pipeline config to the Hub.
@@ -20,9 +21,7 @@ See the video below to build a code problems dataset incrementally:
 2. We create coding problems by iterating on the prompt, selecting a good example with the desired format, and re-generating (just one example fixes the format for all cells!)
 3. We create code solutions and so on.
 
-
-https://github.com/user-attachments/assets/bb0dae25-ed21-49c1-9be8-6b5866b90f52
-
+<https://github.com/user-attachments/assets/bb0dae25-ed21-49c1-9be8-6b5866b90f52>
 
 ## Developer docs
 
@@ -30,11 +29,11 @@ https://github.com/user-attachments/assets/bb0dae25-ed21-49c1-9be8-6b5866b90f52
 
 #### vitest runner
 
-https://marketplace.visualstudio.com/items?itemName=rluvaton.vscode-vitest
+<https://marketplace.visualstudio.com/items?itemName=rluvaton.vscode-vitest>
 
 #### biome
 
-https://marketplace.visualstudio.com/items?itemName=biomejs.biome
+<https://marketplace.visualstudio.com/items?itemName=biomejs.biome>
 
 ### Project Structure
 
@@ -63,6 +62,7 @@ Inside your project, you'll see the following directory structure:
 ### Development
 
 Run this on your root folder
+
 ```sh
 touch .env.local
 ```
@@ -73,6 +73,7 @@ Add in your `.env.local` file the following variables:
 OAUTH_CLIENT_ID
 HF_TOKEN=X
 ```
+
 Please note that if you define the `HF_TOKEN`, this variable will take priority over `OAUTH_CLIENT_ID`.
 
 Development mode uses [Vite's development server](https://vitejs.dev/). The `dev` command will server-side render (SSR) the output during development.

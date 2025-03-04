@@ -186,18 +186,17 @@ const Loader = component$<{ actualRowIndex: number }>(({ actualRowIndex }) => {
       offset: number;
       limit: number;
     }) => {
-      const allCells = [];
-
-      for (const columnId of columnIds) {
-        const cells = await getColumnCells({
-          column: {
-            id: columnId,
-          },
-          offset,
-          limit,
-        });
-        allCells.push(cells);
-      }
+      const allCells = await Promise.all(
+        columnIds.map((columnId) =>
+          getColumnCells({
+            column: {
+              id: columnId,
+            },
+            offset,
+            limit,
+          }),
+        ),
+      );
 
       return allCells.flat();
     },

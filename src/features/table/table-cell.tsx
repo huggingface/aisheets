@@ -89,10 +89,6 @@ export const TableCell = component$<{
     }
   });
 
-  useVisibleTask$(({ track }) => {
-    track(() => cell);
-  });
-
   const onValidateCell = $(
     async (validatedContent: string, validated: boolean) => {
       const ok = await validateCell({

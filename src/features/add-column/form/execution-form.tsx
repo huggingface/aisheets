@@ -60,11 +60,9 @@ export const ExecutionForm = component$<SidebarProps>(
     const variables = useSignal<Variable[]>([]);
 
     const selectedModel = useSignal<Model>();
+    const selectedProvider = useSignal<string>();
     const inputModelId = useSignal<string | undefined>();
     const rowsToGenerate = useSignal('');
-
-    const selectedProvider = useSignal<string>();
-    const updateCounter = useSignal(0);
 
     const loadModels = useResource$(async () => {
       return await useListModels();
@@ -78,6 +76,7 @@ export const ExecutionForm = component$<SidebarProps>(
       return (
         prompt.value !== column.process!.prompt ||
         selectedModel.value?.id !== column.process!.modelName ||
+        selectedProvider.value !== column.process!.modelProvider ||
         rowsToGenerate.value !== String(column.process!.limit)
       );
     });
@@ -171,187 +170,184 @@ export const ExecutionForm = component$<SidebarProps>(
 
     return (
       <th class="min-w-[700px] w-[700px] bg-white font-normal border-t border-secondary text-left">
+        <div class="flex justify-end px-4">
+          <Button
+            size="sm"
+            look="ghost"
+            onClick$={handleCloseForm}
+            disabled={columns.value[0]?.id === TEMPORAL_ID}
+          >
+            <LuXCircle class="text-lg text-primary-foreground" />
+          </Button>
+        </div>
         <div class="relative h-full w-full">
-          <div class="absolute h-full w-full flex flex-col p-4 gap-4">
-            <Button
-              size="sm"
-              look="ghost"
-              onClick$={handleCloseForm}
-              disabled={columns.value[0]?.id === TEMPORAL_ID}
-              class="absolute top-4 right-4"
-            >
-              <LuXCircle class="text-lg text-primary-foreground" />
-            </Button>
+          <div class="absolute h-full w-full flex flex-col px-4 gap-4">
             <div class="flex flex-col gap-4">
-              <div class="flex flex-col gap-4">
-                <Resource
-                  value={loadModels}
-                  onPending={() => (
-                    <Select.Disabled>Loading models...</Select.Disabled>
-                  )}
-                  onResolved={(models) => {
-                    if (!selectedModel.value?.id) {
-                      selectedModel.value = models[0];
-                      selectedProvider.value = models[0].providers[0];
-                    }
+              <Resource
+                value={loadModels}
+                onPending={() => (
+                  <Select.Disabled>Loading models...</Select.Disabled>
+                )}
+                onResolved={(models) => {
+                  if (!selectedModel.value?.id) {
+                    selectedModel.value = models[0];
+                    selectedProvider.value = models[0].providers[0];
+                  }
 
-                    return (
-                      <div class="flex flex-col gap-4">
-                        <div class="flex gap-4">
-                          <div class="flex-[2]">
-                            <Label class="flex gap-1 mb-2">Model</Label>
-                            <Select.Root value={selectedModel.value?.id}>
-                              <Select.Trigger class="px-4 bg-primary rounded-base border-secondary-foreground">
-                                <Select.DisplayValue />
-                              </Select.Trigger>
-                              <Select.Popover class="bg-primary border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto">
-                                {models.map((model, idx) => (
+                  return (
+                    <div class="flex flex-col gap-4">
+                      <div class="flex gap-4">
+                        <div class="flex-[2]">
+                          <Label class="flex gap-1 mb-2">Model</Label>
+                          <Select.Root value={selectedModel.value?.id}>
+                            <Select.Trigger class="px-4 bg-primary rounded-base border-secondary-foreground">
+                              <Select.DisplayValue />
+                            </Select.Trigger>
+                            <Select.Popover class="bg-primary border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto">
+                              {models.map((model, idx) => (
+                                <Select.Item
+                                  key={idx}
+                                  class="text-foreground hover:bg-accent"
+                                  value={model.id}
+                                  onClick$={$(() => {
+                                    selectedModel.value = model;
+                                    selectedProvider.value = model.providers[0];
+                                  })}
+                                >
+                                  <Select.ItemLabel>
+                                    {model.id}
+                                  </Select.ItemLabel>
+                                  {model.size && (
+                                    <span class="ml-2 bg-gray-100 text-gray-700 px-2 py-0.5 rounded text-sm">
+                                      {model.size}
+                                    </span>
+                                  )}
+                                  <Select.ItemIndicator>
+                                    <LuCheck class="h-4 w-4" />
+                                  </Select.ItemIndicator>
+                                </Select.Item>
+                              ))}
+                            </Select.Popover>
+                          </Select.Root>
+                        </div>
+                        <div class="flex-1" key={selectedModel.value.id}>
+                          <Label class="flex gap-1 mb-2">
+                            Inference Provider
+                          </Label>
+                          <Select.Root
+                            value={selectedProvider.value}
+                            onChange$={$((value: string | string[]) => {
+                              const provider = Array.isArray(value)
+                                ? value[0]
+                                : value;
+                              selectedProvider.value = provider;
+                            })}
+                          >
+                            <Select.Trigger class="px-4 bg-primary rounded-base border-secondary-foreground">
+                              <Select.DisplayValue />
+                            </Select.Trigger>
+                            <Select.Popover class="bg-primary border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto">
+                              {selectedModel.value?.providers?.map(
+                                (provider, idx) => (
                                   <Select.Item
                                     key={idx}
                                     class="text-foreground hover:bg-accent"
-                                    value={model.id}
-                                    onClick$={$(() => {
-                                      selectedModel.value = model;
-                                      selectedProvider.value =
-                                        model.providers[0];
-                                      updateCounter.value++;
-                                    })}
+                                    value={provider}
                                   >
                                     <Select.ItemLabel>
-                                      {model.id}
+                                      {provider}
                                     </Select.ItemLabel>
-                                    {model.size && (
-                                      <span class="ml-2 bg-gray-100 text-gray-700 px-2 py-0.5 rounded text-sm">
-                                        {model.size}
-                                      </span>
-                                    )}
                                     <Select.ItemIndicator>
                                       <LuCheck class="h-4 w-4" />
                                     </Select.ItemIndicator>
                                   </Select.Item>
-                                ))}
-                              </Select.Popover>
-                            </Select.Root>
-                          </div>
-                          <div class="flex-1">
-                            <Label class="flex gap-1 mb-2">
-                              Inference Provider
-                            </Label>
-                            <Select.Root
-                              value={selectedProvider.value}
-                              onChange$={$((value: string | string[]) => {
-                                const provider = Array.isArray(value)
-                                  ? value[0]
-                                  : value;
-                                selectedProvider.value = provider;
-                              })}
-                            >
-                              <Select.Trigger class="px-4 bg-primary rounded-base border-secondary-foreground">
-                                <Select.DisplayValue />
-                              </Select.Trigger>
-                              <Select.Popover class="bg-primary border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto">
-                                {selectedModel.value?.providers?.map(
-                                  (provider, idx) => (
-                                    <Select.Item
-                                      key={idx}
-                                      class="text-foreground hover:bg-accent"
-                                      value={provider}
-                                    >
-                                      <Select.ItemLabel>
-                                        {provider}
-                                      </Select.ItemLabel>
-                                      <Select.ItemIndicator>
-                                        <LuCheck class="h-4 w-4" />
-                                      </Select.ItemIndicator>
-                                    </Select.Item>
-                                  ),
-                                ) || []}
-                              </Select.Popover>
-                            </Select.Root>
-                          </div>
+                                ),
+                              ) || []}
+                            </Select.Popover>
+                          </Select.Root>
                         </div>
                       </div>
-                    );
-                  }}
-                  onRejected={() => {
-                    return (
-                      <Input
-                        bind:value={inputModelId}
-                        class="px-4 h-10 border-secondary-foreground bg-primary"
-                        placeholder="Cannot load model suggestions. Please enter the model ID manually."
-                      />
-                    );
-                  }}
-                />
-
-                <Input
-                  id="column-rows"
-                  type="number"
-                  class="px-4 h-10 border-secondary-foreground bg-primary"
-                  max={maxRows.value}
-                  min="1"
-                  onInput$={(_, el) => {
-                    if (Number(el.value) > maxRows.value) {
-                      nextTick(() => {
-                        rowsToGenerate.value = String(maxRows.value);
-                      });
-                    }
-
-                    rowsToGenerate.value = el.value;
-                  }}
-                  value={rowsToGenerate.value}
-                />
-
-                <div class="relative">
-                  <div class="flex flex-col gap-4">
-                    <Label class="text-left">Prompt</Label>
-
-                    <TemplateTextArea
-                      bind:value={prompt}
-                      variables={variables}
-                      onSelectedVariables={onSelectedVariables}
-                    />
-                  </div>
-
-                  <div class="absolute bottom-14 flex flex-col px-4 gap-1 w-full">
-                    <div class="flex justify-between items-center gap-4 w-full">
-                      <Button
-                        key={isSubmitting.value.toString()}
-                        look="primary"
-                        onClick$={onGenerate}
-                        disabled={
-                          !canRegenerate.value ||
-                          !isTouched.value ||
-                          isSubmitting.value ||
-                          isAnyColumnGenerating.value
-                        }
-                      >
-                        <div class="flex items-center gap-4">
-                          <LuEgg class="text-xl" />
-
-                          {isAnyColumnGenerating.value
-                            ? 'Generating...'
-                            : 'Generate'}
-                        </div>
-                      </Button>
-
-                      <Button size="icon" look="ghost">
-                        <LuBookmark class="text-primary-foreground" />
-                      </Button>
                     </div>
-                    <span class="font-light text-sm">
-                      {isAnyColumnGenerating.value &&
-                        'Please wait for the current generation to finish.'}
-                    </span>
-                    <span class="font-light text-sm">
-                      {!canRegenerate.value &&
-                        'Some references columns are dirty, please, regenerate them first.'}
-                    </span>
-                    <span class="font-light text-sm">
-                      {!isTouched.value &&
-                        'Change some field to enable the generate button.'}
-                    </span>
+                  );
+                }}
+                onRejected={() => {
+                  return (
+                    <Input
+                      bind:value={inputModelId}
+                      class="px-4 h-10 border-secondary-foreground bg-primary"
+                      placeholder="Cannot load model suggestions. Please enter the model ID manually."
+                    />
+                  );
+                }}
+              />
+
+              <Input
+                id="column-rows"
+                type="number"
+                class="px-4 h-10 border-secondary-foreground bg-primary"
+                max={maxRows.value}
+                min="1"
+                onInput$={(_, el) => {
+                  if (Number(el.value) > maxRows.value) {
+                    nextTick(() => {
+                      rowsToGenerate.value = String(maxRows.value);
+                    });
+                  }
+
+                  rowsToGenerate.value = el.value;
+                }}
+                value={rowsToGenerate.value}
+              />
+
+              <div class="relative">
+                <div class="flex flex-col gap-4">
+                  <Label class="text-left">Prompt</Label>
+
+                  <TemplateTextArea
+                    bind:value={prompt}
+                    variables={variables}
+                    onSelectedVariables={onSelectedVariables}
+                  />
+                </div>
+
+                <div class="absolute bottom-14 flex flex-col px-4 gap-1 w-full">
+                  <div class="flex justify-between items-center gap-4 w-full">
+                    <Button
+                      key={isSubmitting.value.toString()}
+                      look="primary"
+                      onClick$={onGenerate}
+                      disabled={
+                        !canRegenerate.value ||
+                        !isTouched.value ||
+                        isSubmitting.value ||
+                        isAnyColumnGenerating.value
+                      }
+                    >
+                      <div class="flex items-center gap-4">
+                        <LuEgg class="text-xl" />
+
+                        {isAnyColumnGenerating.value
+                          ? 'Generating...'
+                          : 'Generate'}
+                      </div>
+                    </Button>
+
+                    <Button size="icon" look="ghost">
+                      <LuBookmark class="text-primary-foreground" />
+                    </Button>
                   </div>
+                  <span class="font-light text-sm">
+                    {isAnyColumnGenerating.value &&
+                      'Please wait for the current generation to finish.'}
+                  </span>
+                  <span class="font-light text-sm">
+                    {!canRegenerate.value &&
+                      'Some references columns are dirty, please, regenerate them first.'}
+                  </span>
+                  <span class="font-light text-sm">
+                    {!isTouched.value &&
+                      'Change some field to enable the generate button.'}
+                  </span>
                 </div>
               </div>
             </div>

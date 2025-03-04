@@ -47,6 +47,7 @@ export interface Column {
   name: string;
   type: ColumnType;
   kind: ColumnKind;
+  visible: boolean;
   process: Process | null;
   cells: Cell[];
   dataset: Omit<Dataset, 'columns'>;
@@ -102,6 +103,7 @@ export const useColumnsStore = () => {
       name: getNextColumnName(),
       kind: 'dynamic',
       type: 'text',
+      visible: true,
       cells: [
         {
           id: TEMPORAL_ID,

@@ -33,6 +33,7 @@ export const getDatasetColumns = async (
       name: model.name,
       type: model.type as ColumnType,
       kind: model.kind as ColumnKind,
+      visible: model.visible,
 
       dataset: {
         id: model.dataset.id,
@@ -96,6 +97,7 @@ export const getColumnById = async (id: string): Promise<Column | null> => {
     name: model.name,
     type: model.type as ColumnType,
     kind: model.kind as ColumnKind,
+    visible: model.visible,
 
     dataset: {
       id: model.dataset.id,
@@ -150,6 +152,7 @@ export const createColumn = async (column: CreateColumn): Promise<Column> => {
     type: model.type as ColumnType,
     kind: model.kind as ColumnKind,
     dataset: column.dataset,
+    visible: model.visible,
     process,
     cells: [],
   };
@@ -181,21 +184,24 @@ export const updateColumn = async (column: Column): Promise<Column> => {
     name: model.name,
     type: model.type as ColumnType,
     kind: model.kind as ColumnKind,
+    visible: model.visible,
     dataset: column.dataset,
     process: column.process,
     cells: column.cells,
   };
 };
 
-export const updateColumnName = async (columnId: string, newName: string) => {
-  const model = await ColumnModel.findByPk(columnId);
+export const updateColumnPartially = async (
+  column: Partial<Column> & { id: Column['id'] },
+) => {
+  const model = await ColumnModel.findByPk(column.id);
 
   if (!model) {
     throw new Error('Column not found');
   }
 
   model.set({
-    name: newName,
+    ...column,
   });
 
   await model.save();

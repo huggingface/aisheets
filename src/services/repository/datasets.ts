@@ -101,11 +101,19 @@ export const updateDataset = async ({
 export const listDatasetRows = async function* ({
   dataset,
   conditions,
+  visibleOnly,
 }: {
   dataset: Dataset;
   conditions?: Record<string, any>;
+  visibleOnly?: boolean;
 }): AsyncGenerator<Record<string, any>> {
-  const caseWhen = dataset.columns?.map((column) =>
+  let columns = dataset.columns;
+
+  if (visibleOnly) {
+    columns = dataset.columns?.filter((column) => column.visible);
+  }
+
+  const caseWhen = columns?.map((column) =>
     Sequelize.literal(
       `MAX(CASE WHEN columnId = '${column.id}' THEN value END) AS '${column.name}'`,
     ),

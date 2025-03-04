@@ -34,12 +34,14 @@ export interface CreateColumn {
 export type Cell = {
   id: string;
   idx: number;
+  updatedAt: Date;
   generating: boolean;
-  column?: Column;
   validated: boolean;
   value?: string;
   error?: string;
-  updatedAt: Date;
+  column?: {
+    id: string;
+  };
 };
 
 export interface Column {
@@ -47,6 +49,7 @@ export interface Column {
   name: string;
   type: ColumnType;
   kind: ColumnKind;
+  visible: boolean;
   process: Process | null;
   cells: Cell[];
   dataset: Omit<Dataset, 'columns'>;
@@ -110,46 +113,62 @@ export const useColumnsStore = () => {
       name: getNextColumnName(),
       kind: 'dynamic',
       type: 'text',
+      visible: true,
       cells: [
         {
           id: TEMPORAL_ID,
           idx: 0,
           validated: false,
           updatedAt: new Date(),
-          generating: true,
+          generating: false,
           value: '',
+          column: {
+            id: TEMPORAL_ID,
+          },
         },
         {
           id: TEMPORAL_ID,
           idx: 1,
           validated: false,
           updatedAt: new Date(),
-          generating: true,
+          generating: false,
           value: '',
+          column: {
+            id: TEMPORAL_ID,
+          },
         },
         {
           id: TEMPORAL_ID,
           idx: 2,
           validated: false,
           updatedAt: new Date(),
-          generating: true,
+          generating: false,
           value: '',
+          column: {
+            id: TEMPORAL_ID,
+          },
         },
         {
           id: TEMPORAL_ID,
           idx: 3,
           validated: false,
           updatedAt: new Date(),
-          generating: true,
+          generating: false,
           value: '',
+          column: {
+            id: TEMPORAL_ID,
+          },
         },
         {
           id: TEMPORAL_ID,
           idx: 4,
           validated: false,
           updatedAt: new Date(),
-          generating: true,
+          generating: false,
           value: '',
+          column: {
+            id: TEMPORAL_ID,
+          },
         },
       ],
       process: {
@@ -183,10 +202,24 @@ export const useColumnsStore = () => {
   });
 
   const firstColum = useComputed$(() => columns.value[0]);
+  const firstDynamicColumn = useComputed$(() =>
+    columns.value.find((c) => c.kind === 'dynamic'),
+  );
 
   return {
     columns,
     firstColum,
+    maxNumberOfRows: $((column: Column) => {
+      if (
+        firstDynamicColumn.value &&
+        column.kind === 'dynamic' &&
+        column.id !== firstDynamicColumn.value?.id
+      ) {
+        return firstDynamicColumn.value.process!.limit;
+      }
+
+      return 1000;
+    }),
     canGenerate: $((column: Column) => canGenerate(column.id, columns.value)),
     isDirty: $((column: Column) => isDirty(column)),
     addTemporalColumn: $(async () => {
@@ -219,14 +252,6 @@ export const useColumnsStore = () => {
     }),
     deleteColumn: $((deleted: Column) => {
       replaceColumn(columns.value.filter((c) => c.id !== deleted.id));
-    }),
-    addCell: $((cell: Cell) => {
-      const column = columns.value.find((c) => c.id === cell.column?.id);
-      if (!column) return;
-
-      column.cells.push(cell);
-
-      replaceColumn(columns.value);
     }),
     replaceCell: $((cell: Cell) => {
       const column = columns.value.find((c) => c.id === cell.column?.id);

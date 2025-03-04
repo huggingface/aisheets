@@ -15,18 +15,20 @@ export const TableHeader = component$(() => {
   return (
     <thead>
       <tr>
-        {columns.value.map((column) => (
-          <Fragment key={column.id}>
-            <TableCellHeader column={column} />
+        {columns.value
+          .filter((c) => c.visible)
+          .map((column) => (
+            <Fragment key={column.id}>
+              <TableCellHeader column={column} />
 
-            {column.id === columnId.value && (
-              <ExecutionForm
-                column={column}
-                onGenerateColumn={onGenerateColumn}
-              />
-            )}
-          </Fragment>
-        ))}
+              {column.id === columnId.value && (
+                <ExecutionForm
+                  column={column}
+                  onGenerateColumn={onGenerateColumn}
+                />
+              )}
+            </Fragment>
+          ))}
 
         <TableAddCellHeaderPlaceHolder />
       </tr>

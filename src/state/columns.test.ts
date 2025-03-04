@@ -10,6 +10,7 @@ describe('columns', () => {
           name: 'FAKE COLUMN',
           kind: 'dynamic',
           type: 'text',
+          visible: true,
           cells: [
             {
               id: TEMPORAL_ID,
@@ -60,6 +61,7 @@ describe('columns', () => {
           name: 'FAKE COLUMN',
           kind: 'dynamic',
           type: 'text',
+          visible: true,
           cells: [
             {
               id: TEMPORAL_ID,
@@ -110,6 +112,7 @@ describe('columns', () => {
           name: 'FAKE COLUMN',
           kind: 'dynamic',
           type: 'text',
+          visible: true,
           cells: [
             {
               id: TEMPORAL_ID,
@@ -162,6 +165,7 @@ describe('columns', () => {
           name: 'FAKE COLUMN',
           kind: 'dynamic',
           type: 'text',
+          visible: true,
           cells: [
             {
               id: TEMPORAL_ID,
@@ -206,6 +210,7 @@ describe('columns', () => {
           name: 'FAKE COLUMN',
           kind: 'dynamic',
           type: 'text',
+          visible: true,
           cells: [
             {
               id: TEMPORAL_ID,
@@ -257,6 +262,7 @@ describe('columns', () => {
           name: 'FAKE COLUMN',
           kind: 'dynamic',
           type: 'text',
+          visible: true,
           cells: [
             {
               id: TEMPORAL_ID,
@@ -301,6 +307,7 @@ describe('columns', () => {
           name: 'FAKE COLUMN',
           kind: 'dynamic',
           type: 'text',
+          visible: true,
           cells: [
             {
               id: TEMPORAL_ID,

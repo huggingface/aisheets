@@ -83,15 +83,13 @@ export const useImportFromHub = () =>
           value = JSON.stringify(value);
         }
 
-        const createdCell = await createCell({
+        await createCell({
           cell: {
             idx: row.rowIdx,
             value,
           },
-          column,
+          columnId: column.id,
         });
-
-        column.cells.push(createdCell);
       }
     }
     consola.info('Dataset created:', createdDataset);

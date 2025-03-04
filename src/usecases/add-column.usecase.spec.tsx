@@ -19,6 +19,7 @@ test('should AddDynamicColumnSidebar does not call onCreateColumn initially', as
     name: 'name',
     type: 'text',
     kind: 'dynamic',
+    visible: true,
     dataset: {
       id: 'id',
       name: 'name',

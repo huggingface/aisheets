@@ -3,8 +3,8 @@ import { cn } from '@qwik-ui/utils';
 import { LuZap } from '@qwikest/icons/lucide';
 import { useExecution } from '~/features/add-column';
 import { CellGeneration } from '~/features/table/components/header/cell-generation';
-import { CellName } from '~/features/table/components/header/cell-name';
 import { CellSettings } from '~/features/table/components/header/cell-settings';
+import { ColumnProperties } from '~/features/table/components/header/column-properties';
 import type { Column } from '~/state';
 
 export const TableCellHeader = component$<{ column: Column }>(({ column }) => {
@@ -21,16 +21,12 @@ export const TableCellHeader = component$<{ column: Column }>(({ column }) => {
       <div class="flex items-center justify-between gap-2 w-full">
         <div class="flex items-center gap-2 text-wrap w-[80%]">
           <LuZap class="text-primary-foreground" />
-          <CellName column={column} />
+          <ColumnProperties column={column} />
         </div>
 
         <div class="flex items-center w-[20%]">
-          {column.kind === 'dynamic' && (
-            <>
-              <CellGeneration column={column} />
-              <CellSettings column={column} />
-            </>
-          )}
+          <CellGeneration column={column} />
+          <CellSettings column={column} />
         </div>
       </div>
     </th>

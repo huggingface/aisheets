@@ -8,12 +8,17 @@ import { DuckDBInstance } from '@duckdb/node-api';
 import { type HubApiError, createRepo, uploadFiles } from '@huggingface/hub';
 
 import { type RequestEventBase, server$ } from '@builder.io/qwik-city';
-import { getRowCells } from '~/services/repository/cells';
+import { getColumnCellByIdx, getRowCells } from '~/services/repository/cells';
 import {
   getDatasetById,
   listDatasetRows,
 } from '~/services/repository/datasets';
-import { type Dataset, type Process, useServerSession } from '~/state';
+import {
+  type Cell,
+  type Dataset,
+  type Process,
+  useServerSession,
+} from '~/state';
 import { collectExamples } from './collect-examples';
 import { materializePrompt } from './materialize-prompt';
 
@@ -37,7 +42,7 @@ export const useExportDataset = () =>
       throw new Error('Dataset not found');
     }
 
-    const filePath = await exportDatasetToParquet(foundDataset);
+    const tempFolder = await exportDatasetToFolder(foundDataset);
 
     const owner = requestedOwner || session.user.username;
     const repoId = `${owner}/${name}`;
@@ -62,13 +67,13 @@ export const useExportDataset = () =>
           {
             path: 'train.parquet',
             content: new Blob([
-              await fs.readFile(path.join(filePath, 'file.parquet')),
+              await fs.readFile(path.join(tempFolder, 'file.parquet')),
             ]),
           },
           {
             path: 'config.yml',
             content: new Blob([
-              await fs.readFile(path.join(filePath, 'config.yml')),
+              await fs.readFile(path.join(tempFolder, 'config.yml')),
             ]),
           },
         ],
@@ -105,9 +110,23 @@ async function generateDatasetConfig(
       continue;
     }
 
+    // Fetch complete cell data for validated cells
+    const validatedCells = await Promise.all(
+      column.cells
+        .filter((cell) => cell.validated)
+        .map((cell) =>
+          getColumnCellByIdx({
+            idx: cell.idx,
+            columnId: column.id,
+          }),
+        ),
+    );
+
     const examples = await collectExamples({
       column,
-      validatedCells: column.cells.filter((cell) => cell.validated),
+      validatedCells: validatedCells.filter(
+        (cell): cell is Cell => cell !== null,
+      ),
       columnsReferences: column.process.columnsReferences,
     });
 
@@ -116,15 +135,18 @@ async function generateDatasetConfig(
       ? await getFirstRowData(column.process.columnsReferences)
       : {};
 
+    const prompt = materializePrompt({
+      instruction: column.process.prompt,
+      examples: examples.length > 0 ? examples : undefined,
+      data: Object.keys(data).length > 0 ? data : undefined,
+      renderInstruction: false,
+    });
+
     columnConfigs[column.name] = {
       modelName: column.process.modelName,
       modelProvider: column.process.modelProvider,
       userPrompt: column.process.prompt,
-      prompt: materializePrompt({
-        instruction: column.process.prompt,
-        examples: examples.length > 0 ? examples : undefined,
-        data: Object.keys(data).length > 0 ? data : undefined,
-      }),
+      prompt,
       columnsReferences: column.process.columnsReferences?.map((colId) => {
         const refColumn = dataset.columns.find((c) => c.id === colId);
         return refColumn?.name || colId;
@@ -163,7 +185,7 @@ async function createDatasetContent(
 
   // Collect and write data rows
   const jsonl = [];
-  for await (const row of listDatasetRows({ dataset })) {
+  for await (const row of listDatasetRows({ dataset, visibleOnly: true })) {
     jsonl.push(JSON.stringify(row));
   }
   await fs.writeFile(jsonlPath, jsonl.join('\n'));
@@ -183,7 +205,7 @@ async function createDatasetContent(
   }
 }
 
-async function exportDatasetToParquet(dataset: Dataset): Promise<string> {
+async function exportDatasetToFolder(dataset: Dataset): Promise<string> {
   const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'tmp-'));
 
   try {

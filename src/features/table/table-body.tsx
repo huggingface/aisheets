@@ -4,7 +4,7 @@ import { TableCell } from '~/features/table/table-cell';
 import { type Cell, type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
 
 export const TableBody = component$(() => {
-  const { state: columns, firstColum } = useColumnsStore();
+  const { columns, firstColum } = useColumnsStore();
   const { columnId } = useExecution();
   const expandedRows = useSignal<Set<number>>(new Set());
 
@@ -20,7 +20,7 @@ export const TableBody = component$(() => {
         validated: false,
         column,
         updatedAt: new Date(),
-        generated: false,
+        generating: false,
         idx: rowIndex,
       };
     }

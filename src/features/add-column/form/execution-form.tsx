@@ -7,6 +7,7 @@ import {
   useResource$,
   useSignal,
   useTask$,
+  useVisibleTask$,
 } from '@builder.io/qwik';
 import { LuBookmark, LuCheck, LuEgg, LuXCircle } from '@qwikest/icons/lucide';
 
@@ -27,21 +28,32 @@ import { type Model, useListModels } from '~/usecases/list-models';
 
 interface SidebarProps {
   column: Column;
-  onGenerateColumn: QRL<(column: CreateColumn) => Promise<Column>>;
+  onGenerateColumn: QRL<(column: CreateColumn) => Promise<void>>;
 }
 
 export const ExecutionForm = component$<SidebarProps>(
   ({ column, onGenerateColumn }) => {
     const { mode, close } = useExecution();
     const {
-      state: columns,
+      columns,
       firstColum,
       removeTemporalColumn,
       canGenerate,
+      updateColumn,
     } = useColumnsStore();
 
     const isSubmitting = useSignal(false);
-    const isDisabledGenerateButton = useSignal(true);
+    const canRegenerate = useSignal(true);
+
+    const isAnyColumnGenerating = useComputed$(() => {
+      //TODO: Replace to "persisted" column on column.
+      const isAnyGenerating = columns.value
+        .filter((c) => c.id !== TEMPORAL_ID)
+        .flatMap((c) => c.cells)
+        .some((c) => c.generating);
+
+      return isAnyGenerating;
+    });
 
     const prompt = useSignal<string>('');
     const columnsReferences = useSignal<string[]>([]);
@@ -49,10 +61,14 @@ export const ExecutionForm = component$<SidebarProps>(
 
     const selectedModel = useSignal<Model>();
     const inputModelId = useSignal<string | undefined>();
-    const rowsToGenerate = useSignal('5');
+    const rowsToGenerate = useSignal('');
 
     const selectedProvider = useSignal<string>();
     const updateCounter = useSignal(0);
+
+    const loadModels = useResource$(async () => {
+      return await useListModels();
+    });
 
     const onSelectedVariables = $((variables: { id: string }[]) => {
       columnsReferences.value = variables.map((v) => v.id);
@@ -66,27 +82,16 @@ export const ExecutionForm = component$<SidebarProps>(
       );
     });
 
-    useTask$(async ({ track }) => {
-      track(isSubmitting);
-
-      if (mode.value === 'add') {
-        isDisabledGenerateButton.value = isSubmitting.value;
+    useVisibleTask$(async ({ track }) => {
+      if (mode.value === 'add' && column.id === firstColum.value.id) {
         return;
       }
-
       track(columns);
-      track(isTouched);
 
-      const canRegenerate = await canGenerate(column);
-      isDisabledGenerateButton.value =
-        !canRegenerate || isSubmitting.value || !isTouched.value;
+      canRegenerate.value = await canGenerate(column);
     });
 
-    const loadModels = useResource$(async () => {
-      return await useListModels();
-    });
-
-    useTask$(async ({ track }) => {
+    useTask$(async () => {
       const models = await loadModels.value;
 
       variables.value = columns.value
@@ -107,7 +112,24 @@ export const ExecutionForm = component$<SidebarProps>(
       selectedProvider.value = process.modelProvider!;
 
       inputModelId.value = process.modelName;
-      rowsToGenerate.value = String(process.limit);
+      rowsToGenerate.value =
+        mode.value === 'add' ? '1' : process!.limit.toString();
+    });
+
+    useVisibleTask$(({ track }) => {
+      track(rowsToGenerate);
+      track(selectedModel);
+      track(selectedProvider);
+      track(prompt);
+      track(columnsReferences);
+
+      updateColumn({
+        ...column,
+        process: {
+          ...column.process!,
+          columnsReferences: columnsReferences.value,
+        },
+      });
     });
 
     const onGenerate = $(async () => {
@@ -143,7 +165,7 @@ export const ExecutionForm = component$<SidebarProps>(
     });
 
     return (
-      <th class="w-[600px] bg-white font-normal border-t border-secondary">
+      <th class="w-[600px] bg-white font-normal border-t border-secondary text-left">
         <div class="relative h-full w-full">
           <div class="absolute h-full w-full flex flex-col p-4 gap-4">
             <Button
@@ -248,10 +270,22 @@ export const ExecutionForm = component$<SidebarProps>(
                 id="column-rows"
                 type="number"
                 class="px-4 h-10 border-secondary-foreground bg-primary"
-                max={firstColum.value.process!.limit}
+                max={
+                  column.id !== firstColum.value.id
+                    ? firstColum.value.process!.limit
+                    : 1000
+                }
                 min="1"
                 onInput$={(_, el) => {
-                  if (Number(el.value) > firstColum.value.process!.limit) {
+                  if (column.id === firstColum.value.id) {
+                    if (Number(el.value) > 1000) {
+                      nextTick(() => {
+                        rowsToGenerate.value = '1000';
+                      });
+                    }
+                  } else if (
+                    Number(el.value) > firstColum.value.process!.limit
+                  ) {
                     nextTick(() => {
                       rowsToGenerate.value = String(
                         firstColum.value.process!.limit,
@@ -275,23 +309,44 @@ export const ExecutionForm = component$<SidebarProps>(
                   />
                 </div>
 
-                <div class="absolute bottom-14 flex justify-between items-center w-full px-4">
-                  <Button
-                    key={isSubmitting.value.toString()}
-                    look="primary"
-                    onClick$={onGenerate}
-                    disabled={isDisabledGenerateButton.value}
-                  >
-                    <div class="flex items-center gap-4">
-                      <LuEgg class="text-xl" />
+                <div class="absolute bottom-14 flex flex-col px-4 gap-1 w-full">
+                  <div class="flex justify-between items-center gap-4 w-full">
+                    <Button
+                      key={isSubmitting.value.toString()}
+                      look="primary"
+                      onClick$={onGenerate}
+                      disabled={
+                        !canRegenerate.value ||
+                        !isTouched.value ||
+                        isSubmitting.value ||
+                        isAnyColumnGenerating.value
+                      }
+                    >
+                      <div class="flex items-center gap-4">
+                        <LuEgg class="text-xl" />
 
-                      {isSubmitting.value ? 'Generating...' : 'Generate'}
-                    </div>
-                  </Button>
+                        {isAnyColumnGenerating.value
+                          ? 'Generating...'
+                          : 'Generate'}
+                      </div>
+                    </Button>
 
-                  <Button size="icon" look="ghost">
-                    <LuBookmark class="text-primary-foreground" />
-                  </Button>
+                    <Button size="icon" look="ghost">
+                      <LuBookmark class="text-primary-foreground" />
+                    </Button>
+                  </div>
+                  <span class="font-light text-sm">
+                    {isAnyColumnGenerating.value &&
+                      'Please wait for the current generation to finish.'}
+                  </span>
+                  <span class="font-light text-sm">
+                    {!canRegenerate.value &&
+                      'Some references columns are dirty, please, regenerate them first.'}
+                  </span>
+                  <span class="font-light text-sm">
+                    {!isTouched.value &&
+                      'Change some field to enable the generate button.'}
+                  </span>
                 </div>
               </div>
             </div>

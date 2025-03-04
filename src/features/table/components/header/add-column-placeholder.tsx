@@ -7,7 +7,7 @@ import { TEMPORAL_ID, useColumnsStore } from '~/state';
 
 export const TableAddCellHeaderPlaceHolder = component$(() => {
   const { open } = useExecution();
-  const { state: columns, addTemporalColumn } = useColumnsStore();
+  const { columns, addTemporalColumn } = useColumnsStore();
 
   const lastColumnId = useComputed$(
     () => columns.value[columns.value.length - 1].id,

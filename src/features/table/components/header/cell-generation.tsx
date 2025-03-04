@@ -1,4 +1,4 @@
-import { component$, useSignal, useTask$ } from '@builder.io/qwik';
+import { component$, useComputed$ } from '@builder.io/qwik';
 import { LuEgg, LuEggOff } from '@qwikest/icons/lucide';
 import { Button } from '~/components';
 import { Tooltip } from '~/components/ui/tooltip/tooltip';
@@ -6,15 +6,15 @@ import { useGenerateColumn } from '~/features/execution';
 import { type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
 
 export const CellGeneration = component$<{ column: Column }>(({ column }) => {
-  const { state, canGenerate } = useColumnsStore();
+  const { columns, isDirty } = useColumnsStore();
   const onGenerateColumn = useGenerateColumn();
 
-  const canRegenerate = useSignal(false);
+  const canRegenerate = useComputed$(() => {
+    const savedColumn = columns.value.find((c) => c.id === column.id);
 
-  useTask$(async ({ track }) => {
-    track(state);
+    if (!savedColumn) return false;
 
-    canRegenerate.value = await canGenerate(column);
+    return isDirty(savedColumn);
   });
 
   if (column.id === TEMPORAL_ID) {

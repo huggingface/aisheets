@@ -34,7 +34,7 @@ export interface CreateColumn {
 export type Cell = {
   id: string;
   idx: number;
-  generated: boolean;
+  generating: boolean;
   column?: Column;
   validated: boolean;
   value?: string;
@@ -53,21 +53,24 @@ export interface Column {
   dataset: Omit<Dataset, 'columns'>;
 }
 
-export const canGenerate = (column: Column, columns: Column[]) => {
-  const isDirty = (column: Column) => {
-    if (!column.process) return false;
+export const isDirty = (column: Column) => {
+  if (!column.process) return false;
 
-    if (column.cells.some((c) => c.validated)) {
-      const isAnyCellUpdatedAfterProcess = column.cells
-        .filter((c) => c.validated)
-        .some((c) => c.updatedAt > column.process!.updatedAt);
+  if (column.cells.every((c) => c.validated)) return false;
 
-      return isAnyCellUpdatedAfterProcess;
-    }
+  if (column.cells.some((c) => c.validated)) {
+    const isAnyCellUpdatedAfterProcess = column.cells
+      .filter((c) => c.validated)
+      .some((c) => c.updatedAt > column.process!.updatedAt);
 
-    return false;
-  };
-  const refreshedColumn = columns.find((c) => c.id === column.id)!;
+    return isAnyCellUpdatedAfterProcess;
+  }
+
+  return false;
+};
+
+export const canGenerate = (columnId: string, columns: Column[]) => {
+  const refreshedColumn = columns.find((c) => c.id === columnId)!;
   if (!refreshedColumn) return false;
   if (!refreshedColumn.process) return false;
 
@@ -75,9 +78,14 @@ export const canGenerate = (column: Column, columns: Column[]) => {
     (id) => columns.find((c) => c.id === id),
   );
 
-  const amIDirty = isDirty(refreshedColumn);
+  if (
+    !columnsReferences.length &&
+    refreshedColumn.cells.every((c) => !c.validated)
+  ) {
+    return true;
+  }
 
-  return amIDirty && columnsReferences.every((c) => c && !isDirty(c));
+  return columnsReferences.every((c) => c && !isDirty(c));
 };
 
 export const TEMPORAL_ID = '-1';
@@ -110,7 +118,7 @@ export const useColumnsStore = () => {
           idx: 0,
           validated: false,
           updatedAt: new Date(),
-          generated: true,
+          generating: true,
           value: '',
         },
         {
@@ -118,7 +126,7 @@ export const useColumnsStore = () => {
           idx: 1,
           validated: false,
           updatedAt: new Date(),
-          generated: true,
+          generating: true,
           value: '',
         },
         {
@@ -126,7 +134,7 @@ export const useColumnsStore = () => {
           idx: 2,
           validated: false,
           updatedAt: new Date(),
-          generated: true,
+          generating: true,
           value: '',
         },
         {
@@ -134,7 +142,7 @@ export const useColumnsStore = () => {
           idx: 3,
           validated: false,
           updatedAt: new Date(),
-          generated: true,
+          generating: true,
           value: '',
         },
         {
@@ -142,7 +150,7 @@ export const useColumnsStore = () => {
           idx: 4,
           validated: false,
           updatedAt: new Date(),
-          generated: true,
+          generating: true,
           value: '',
         },
       ],
@@ -179,9 +187,10 @@ export const useColumnsStore = () => {
   const firstColum = useComputed$(() => columns.value[0]);
 
   return {
-    state: columns,
+    columns,
     firstColum,
-    canGenerate: $((column: Column) => canGenerate(column, columns.value)),
+    canGenerate: $((column: Column) => canGenerate(column.id, columns.value)),
+    isDirty: $((column: Column) => isDirty(column)),
     addTemporalColumn: $(async () => {
       if (activeDataset.value.columns.some((c) => c.id === TEMPORAL_ID)) return;
 
@@ -200,7 +209,14 @@ export const useColumnsStore = () => {
     }),
     updateColumn: $((updated: Column) => {
       replaceColumn(
-        columns.value.map((c) => (c.id === updated.id ? updated : c)),
+        columns.value.map((c) =>
+          c.id === updated.id
+            ? {
+                ...updated,
+                cells: c.cells,
+              }
+            : c,
+        ),
       );
     }),
     deleteColumn: $((deleted: Column) => {

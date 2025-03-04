@@ -28,7 +28,6 @@ export const TableCell = component$<{
   const contentRef = useSignal<HTMLElement>();
   const isTruncated = useSignal(false);
   const validateCell = useValidateCellUseCase();
-  const isClickingButton = useSignal(false);
 
   useTask$(({ track }) => {
     track(isEditing);
@@ -63,6 +62,12 @@ export const TableCell = component$<{
     }
   });
 
+  useVisibleTask$(({ track }) => {
+    track(() => cell);
+
+    console.log('cell updated', cell);
+  });
+
   const onValidateCell = $(
     async (validatedContent: string, validated: boolean) => {
       const ok = await validateCell({
@@ -75,6 +80,7 @@ export const TableCell = component$<{
         replaceCell({
           ...cell,
           value: validatedContent,
+          updatedAt: new Date(),
           validated,
         });
       }
@@ -105,7 +111,7 @@ export const TableCell = component$<{
     }),
   );
 
-  if (!cell.generated) {
+  if (cell.generating || (!cell.value && !cell.error)) {
     return (
       <td class="min-w-80 w-80 max-w-80 p-4 min-h-[100px] h-[100px] border last:border-r-0 border-secondary">
         <Skeleton />
@@ -125,7 +131,7 @@ export const TableCell = component$<{
         },
       )}
       onClick$={() => {
-        if (isClickingButton.value || isEditing.value) return;
+        if (isEditing.value) return;
         onToggleExpand$();
       }}
       onDblClick$={(e) => {
@@ -152,13 +158,13 @@ export const TableCell = component$<{
                 look="ghost"
                 hover={false}
                 size="sm"
-                class={`absolute text-base top-0 right-0 ${
+                class={`absolute z-10 text-base top-0 right-0 ${
                   cell.validated ? 'text-green-200' : 'text-primary-foreground'
                 }`}
-                onClick$={() => {
-                  isClickingButton.value = true;
+                onClick$={(e) => {
+                  e.stopPropagation();
+
                   onValidateCell(originalValue.value!, !cell.validated);
-                  isClickingButton.value = false;
                 }}
               >
                 <LuThumbsUp />

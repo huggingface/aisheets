@@ -9,16 +9,17 @@ import { ActiveDatasetProvider } from '~/state';
 export default component$(() => {
   return (
     <ActiveDatasetProvider>
-      <div class="flex flex-col space-y-2">
+      <div class="flex flex-col h-full space-y-2">
         <Username />
-        <div class="flex flex-col flex-1 gap-2">
+        <div class="flex flex-col flex-none gap-2">
           <div class="flex justify-between items-center w-full">
             <DatasetName />
             <ExportToHub />
           </div>
-          <div class="flex-1">
-            <Table />
-          </div>
+        </div>
+
+        <div class="flex-1">
+          <Table />
         </div>
       </div>
     </ActiveDatasetProvider>
@@ -26,11 +27,11 @@ export default component$(() => {
 });
 
 export const head: DocumentHead = {
-  title: 'easydatagen',
+  title: 'Dataground',
   meta: [
     {
-      name: 'description',
-      content: 'easydatagen',
+      name: 'Dataground',
+      content: 'dataground',
     },
   ],
 };

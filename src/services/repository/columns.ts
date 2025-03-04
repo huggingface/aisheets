@@ -65,7 +65,7 @@ export const getDatasetColumns = async (
         error: cell.error,
         validated: cell.validated,
         updatedAt: cell.updatedAt,
-        generated: cell.generated,
+        generating: cell.generating,
         column,
       })),
     };
@@ -130,7 +130,7 @@ export const getColumnById = async (id: string): Promise<Column | null> => {
       error: cell.error,
       validated: cell.validated,
       updatedAt: cell.updatedAt,
-      generated: cell.generated,
+      generating: cell.generating,
       column,
     })),
   };

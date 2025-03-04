@@ -36,7 +36,7 @@ export const ExecutionForm = component$<SidebarProps>(
     const { mode, close } = useExecution();
     const {
       columns,
-      firstColum,
+      maxNumberOfRows,
       removeTemporalColumn,
       canGenerate,
       updateColumn,
@@ -83,9 +83,6 @@ export const ExecutionForm = component$<SidebarProps>(
     });
 
     useVisibleTask$(async ({ track }) => {
-      if (mode.value === 'add' && column.id === firstColum.value.id) {
-        return;
-      }
       track(columns);
 
       canRegenerate.value = await canGenerate(column);
@@ -112,8 +109,15 @@ export const ExecutionForm = component$<SidebarProps>(
       selectedProvider.value = process.modelProvider!;
 
       inputModelId.value = process.modelName;
+
       rowsToGenerate.value =
         mode.value === 'add' ? '1' : process!.limit.toString();
+    });
+
+    const maxRows = useSignal(0);
+
+    useVisibleTask$(async (async) => {
+      maxRows.value = await maxNumberOfRows(column);
     });
 
     useVisibleTask$(({ track }) => {
@@ -284,26 +288,12 @@ export const ExecutionForm = component$<SidebarProps>(
                   id="column-rows"
                   type="number"
                   class="px-4 h-10 border-secondary-foreground bg-primary"
-                  max={
-                    column.id !== firstColum.value.id
-                      ? firstColum.value.process!.limit
-                      : 1000
-                  }
+                  max={maxRows.value}
                   min="1"
                   onInput$={(_, el) => {
-                    if (column.id === firstColum.value.id) {
-                      if (Number(el.value) > 1000) {
-                        nextTick(() => {
-                          rowsToGenerate.value = '1000';
-                        });
-                      }
-                    } else if (
-                      Number(el.value) > firstColum.value.process!.limit
-                    ) {
+                    if (Number(el.value) > maxRows.value) {
                       nextTick(() => {
-                        rowsToGenerate.value = String(
-                          firstColum.value.process!.limit,
-                        );
+                        rowsToGenerate.value = String(maxRows.value);
                       });
                     }
 

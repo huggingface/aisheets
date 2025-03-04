@@ -200,10 +200,24 @@ export const useColumnsStore = () => {
   });
 
   const firstColum = useComputed$(() => columns.value[0]);
+  const firstDynamicColumn = useComputed$(() =>
+    columns.value.find((c) => c.kind === 'dynamic'),
+  );
 
   return {
     columns,
     firstColum,
+    maxNumberOfRows: $((column: Column) => {
+      if (
+        firstDynamicColumn.value &&
+        column.kind === 'dynamic' &&
+        column.id !== firstDynamicColumn.value?.id
+      ) {
+        return firstDynamicColumn.value.process!.limit;
+      }
+
+      return 1000;
+    }),
     canGenerate: $((column: Column) => canGenerate(column.id, columns.value)),
     isDirty: $((column: Column) => isDirty(column)),
     addTemporalColumn: $(async () => {

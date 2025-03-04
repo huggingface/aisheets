@@ -16,6 +16,17 @@ import { getColumnCellById } from '~/services';
 import { type Cell, useColumnsStore } from '~/state';
 import { useValidateCellUseCase } from '~/usecases/validate-cell.usecase';
 
+const loadCell = server$(async (cellId: string) => {
+  const persistedCell = await getColumnCellById(cellId);
+  if (!persistedCell) return;
+
+  return {
+    error: persistedCell.error,
+    value: persistedCell.value,
+    validated: persistedCell.validated,
+  };
+});
+
 export const TableCell = component$<{
   cell: Cell;
   isExpanded: boolean;
@@ -36,17 +47,7 @@ export const TableCell = component$<{
     if (cell.generating) return;
     if (cell.error || cell.value) return;
 
-    console.log('fetching cell', cell.id);
-    const persistedCell = await server$(async (cellId: string) => {
-      const persistedCell = await getColumnCellById(cellId);
-      if (!persistedCell) return;
-
-      return {
-        error: persistedCell.error,
-        value: persistedCell.value,
-        validated: persistedCell.validated,
-      };
-    })(cell.id);
+    const persistedCell = await loadCell(cell.id);
 
     if (!persistedCell) return;
 

@@ -55,8 +55,8 @@ export const ImportFromHub = component$(() => {
   });
 
   return (
-    <div>
-      <div class="flex flex-col justify-between gap-4 mt-8">
+    <div class="flex flex-col w-fit mt-8 gap-4">
+      <div class="flex flex-col justify-between gap-4">
         <h1 class="text-3xl font-bold w-full">
           Import your dataset from the hub
         </h1>
@@ -85,31 +85,30 @@ export const ImportFromHub = component$(() => {
           )}
         </div>
       </div>
-      <div class="flex flex-row justify-between justify-items-end mt-8">
-        <div class="flex flex-col justify-left gap-4">
-          <Button
-            look="primary"
-            disabled={!enableImportButton.value}
-            onClick$={handleOnClickImportFromHub}
-          >
-            {isImportingData.value ? (
-              <div class="flex items-center gap-4">
-                <LuLoader class="text-xl animate-spin" />
-                <span>Importing dataset...</span>
-              </div>
-            ) : (
-              <div class="flex items-center gap-4">
-                <LuTerminalSquare class="text-xl" />
-                <span>Import dataset</span>
-              </div>
-            )}
-          </Button>
-          {repoId.value && filePath.value && (
-            <div class="text-foreground text-sm">
-              <span>Only the first 1000 rows will be imported</span>
+
+      <div class="flex flex-col w-full gap-4 items-end">
+        <Button
+          look="primary"
+          disabled={!enableImportButton.value}
+          onClick$={handleOnClickImportFromHub}
+        >
+          {isImportingData.value ? (
+            <div class="flex items-center gap-4">
+              <LuLoader class="text-xl animate-spin" />
+              <span>Importing dataset...</span>
+            </div>
+          ) : (
+            <div class="flex items-center gap-4">
+              <LuTerminalSquare class="text-xl" />
+              <span>Import dataset</span>
             </div>
           )}
-        </div>
+        </Button>
+        {repoId.value && filePath.value && (
+          <div class="text-foreground text-sm">
+            <span>Only the first 1000 rows will be imported</span>
+          </div>
+        )}
       </div>
     </div>
   );

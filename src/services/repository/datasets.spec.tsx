@@ -39,6 +39,7 @@ describe('listDatasetRows', () => {
             name: column.name,
             type: column.type as ColumnType,
             kind: column.kind as ColumnKind,
+            visible: true,
             cells: [],
             dataset: {
               id: dataset.id,
@@ -115,6 +116,7 @@ describe('listDatasetRows', () => {
           name: column.name,
           type: column.type as ColumnType,
           kind: column.kind as ColumnKind,
+          visible: true,
           cells: [],
           dataset: {
             id: dataset.id,

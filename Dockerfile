@@ -1,5 +1,5 @@
 # Use Debian-based Node.js image as the base for building
-FROM node:20-bullseye AS build
+FROM node:20-slim AS build
 
 # Set the working directory
 WORKDIR /usr/src/app
@@ -32,7 +32,7 @@ COPY ./ ./
 RUN pnpm build
 
 # Use a Debian-based Node.js image for production
-FROM node:20-bullseye AS production
+FROM node:20-slim AS production
 
 # Set the working directory
 WORKDIR /usr/src/app

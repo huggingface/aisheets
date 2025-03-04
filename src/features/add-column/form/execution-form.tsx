@@ -76,6 +76,7 @@ export const ExecutionForm = component$<SidebarProps>(
       return (
         prompt.value !== column.process!.prompt ||
         selectedModel.value?.id !== column.process!.modelName ||
+        selectedProvider.value !== column.process!.modelProvider ||
         rowsToGenerate.value !== String(column.process!.limit)
       );
     });

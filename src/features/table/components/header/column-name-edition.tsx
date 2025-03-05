@@ -13,8 +13,13 @@ export const ColumnNameEdition = component$<{ column: Column }>(
 
     const saveChanges = $(() => {
       if (!isClicking.value) return;
-      isClicking.value = false;
+      if (!newName.value.trim()) {
+        newName.value = column.name;
+        isClicking.value = false;
+        return;
+      }
 
+      isClicking.value = false;
       if (newName.value === column.name) return;
       column.name = newName.value;
 

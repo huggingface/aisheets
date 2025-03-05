@@ -149,7 +149,12 @@ export const updateCell = async (cell: Partial<Cell>): Promise<Cell> => {
     throw new Error('Cell not found');
   }
 
-  model.set({ ...cell });
+  const updatedCell = Object.entries(cell).map(([key, value]) => {
+    if (value === undefined) return [key, null];
+    return [key, value];
+  }) as Record<string, any>;
+
+  model.set(updatedCell);
   model = await model.save();
 
   return {

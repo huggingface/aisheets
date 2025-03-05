@@ -1,4 +1,5 @@
 import { type RepoType, downloadFileToCacheDir } from '@huggingface/hub';
+
 export const downloadDatasetFile = async ({
   repoId,
   file,
@@ -8,19 +9,19 @@ export const downloadDatasetFile = async ({
   file: string;
   accessToken: string;
 }): Promise<string> => {
-  const repo = {
-    name: repoId,
-    type: 'dataset' as RepoType,
-  };
-
-  const destination = await downloadFileToCacheDir({
-    repo: {
-      name: repoId,
-      type: 'dataset',
-    },
-    path: file,
-    accessToken,
-  });
-
-  return destination;
+  try {
+    return await downloadFileToCacheDir({
+      repo: {
+        name: repoId,
+        type: 'dataset' as RepoType,
+      },
+      path: file,
+      accessToken,
+    });
+  } catch (error: any) {
+    if (error.code === 'EEXIST') {
+      return error.dest;
+    }
+    throw error;
+  }
 };

@@ -30,7 +30,7 @@ describe('getRowCells', () => {
       columnId: column.id,
     });
 
-    const cells = await getRowCells({ rowIdx: 2 });
+    const cells = await getRowCells({ rowIdx: 2, columns: [column.id] });
     expect(cells).toEqual([]);
   });
 
@@ -86,7 +86,10 @@ describe('getRowCells', () => {
       },
     ]);
 
-    const rowCells = await getRowCells({ rowIdx: idx });
+    const rowCells = await getRowCells({
+      rowIdx: idx,
+      columns: columns.map((c) => c.id),
+    });
     expect(rowCells).toHaveLength(3);
 
     expect(rowCells[0].column!).toBeDefined();

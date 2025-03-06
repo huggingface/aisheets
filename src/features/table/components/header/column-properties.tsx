@@ -8,7 +8,9 @@ import type { Column } from '~/state';
 export const ColumnProperties = component$<{ column: Column }>(({ column }) => {
   return (
     <Popover.Root flip={false} gutter={8} floating="bottom-start">
-      <Popover.Trigger class={buttonVariants({ look: 'ghost' })}>
+      <Popover.Trigger
+        class={`${buttonVariants({ look: 'ghost' })} text-primary-foreground`}
+      >
         {column.name}
       </Popover.Trigger>
       <Popover.Panel>

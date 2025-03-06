@@ -122,7 +122,7 @@ export const TableBody = component$(() => {
               return (
                 <Fragment key={cell.id}>
                   {cell.column?.id === TEMPORAL_ID ? (
-                    <td class="min-w-80 w-80 max-w-80 px-2 min-h-[100px] h-[100px] border-[0.5px]" />
+                    <td class="min-w-80 w-80 max-w-80 px-2 min-h-[100px] h-[100px] border-[0.5px] border-t-0" />
                   ) : (
                     <>
                       <TableCell
@@ -158,7 +158,7 @@ export const TableBody = component$(() => {
             })}
 
             {/* td for (add + ) column */}
-            <td class="min-w-80 w-80 max-w-80 min-h-[100px] h-[100px] border-[0.5px] border-r-0" />
+            <td class="min-w-80 w-80 max-w-80 min-h-[100px] h-[100px] border-[0.5px] border-t-0 border-r-0" />
           </tr>
         );
       })}

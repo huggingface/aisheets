@@ -51,7 +51,7 @@ export const MainSidebar = component$(() => {
           <>
             <div class="block space-y-2 p-4 mb-4">
               <Link
-                href="/dataset/create/from-hub"
+                href="/"
                 class="flex items-center gap-2 px-2 py-1 hover:bg-gray-100 rounded text-sm font-light truncate max-w-full"
               >
                 <Logo
@@ -61,10 +61,7 @@ export const MainSidebar = component$(() => {
                 />
                 Create Dataset
               </Link>
-              <Link
-                href="/explore-prompts"
-                class="flex items-center gap-2 px-2 py-1 hover:bg-gray-100 rounded text-sm font-light truncate max-w-full"
-              >
+              <Link class="flex items-center select-none gap-2 px-2 py-1 hover:bg-gray-100 rounded text-sm font-light truncate max-w-full">
                 <LuLibrary class="w-5 h-5 text-muted-foreground" />
                 Prompt gallery
               </Link>

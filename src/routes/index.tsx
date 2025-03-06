@@ -104,6 +104,17 @@ export default component$(() => {
     nav(`/dataset/${datasetId}`);
   });
 
+  const handleCreateBlankDatasetWithTransition = $(async () => {
+    isTransitioning.value = true;
+
+    const [datasetId] = await Promise.all([
+      createDataset(),
+      new Promise((resolve) => setTimeout(resolve, 400)),
+    ]);
+
+    nav(`/dataset/${datasetId}`);
+  });
+
   return (
     <ActiveDatasetProvider>
       <div class="flex flex-col h-full w-fit overflow-hidden">
@@ -146,7 +157,7 @@ export default component$(() => {
               <tr class="min-h-12 h-12">
                 <th class="min-w-80 w-80 max-w-80 px-2 text-left border-[0.5px] border-r-0 border-b-0 rounded-tl-sm bg-primary">
                   <div class="flex items-center justify-between gap-2 w-full">
-                    <div class="flex items-center gap-2 text-wrap w-[80%]">
+                    <div class="flex items-center gap-2 text-wrap w-[80%] font-normal">
                       <LuZap class="text-primary-foreground" />
                       Column 1
                     </div>
@@ -158,11 +169,7 @@ export default component$(() => {
                     look="ghost"
                     size="sm"
                     class="bg-[#EBFFD6]"
-                    onClick$={async () => {
-                      isTransitioning.value = true;
-
-                      await handleCreateBlankDataset();
-                    }}
+                    onClick$={handleCreateBlankDatasetWithTransition}
                   >
                     <LuPlus class="text-primary-foreground" />
                   </Button>

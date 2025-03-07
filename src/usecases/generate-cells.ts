@@ -57,9 +57,7 @@ export const generateCells = async function* ({
   const validatedIdxs = validatedCells?.map((cell) => cell.idx);
 
   for (let i = offset; i < limit + offset; i++) {
-    if (validatedIdxs?.includes(i)) {
-      continue;
-    }
+    if (validatedIdxs?.includes(i)) continue;
 
     const args = {
       accessToken: session.token,
@@ -81,12 +79,13 @@ export const generateCells = async function* ({
       );
     }
 
-    const cell =
-      (await getColumnCellByIdx({ idx: i, columnId: column.id })) ??
-      (await createCell({
+    let cell = await getColumnCellByIdx({ idx: i, columnId: column.id });
+    if (!cell || !cell.id) {
+      cell = await createCell({
         cell: { idx: i },
         columnId: column.id,
-      }));
+      });
+    }
 
     cell.generating = true;
 

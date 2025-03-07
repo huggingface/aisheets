@@ -2,7 +2,7 @@ import { Op } from 'sequelize';
 import { ColumnCellModel } from '~/services/db/models/cell';
 import type { Cell } from '~/state';
 import { ColumnModel } from '../db/models';
-import { getColumnById } from './columns';
+import { getColumnById, listColumnsByIds } from './columns';
 import { listDatasetTableRows, upsertColumnValues } from './tables';
 
 const rowDataToCells = ({
@@ -85,15 +85,16 @@ export const getRowCells = async ({
     value?: string | undefined;
     error?: string | undefined;
     validated: boolean;
-    column?: { id: string; name?: string };
+    column?: { id: string; name: string };
     updatedAt: Date;
     generating: boolean;
   }[]
 > => {
-  const column = await getColumnById(columns[0]);
+  const storedColumns = await listColumnsByIds(columns);
+  if (storedColumns.length === 0) return [];
 
   const rows = await listDatasetTableRows({
-    dataset: column!.dataset,
+    dataset: storedColumns[0].dataset,
     columns: columns!.map((id) => ({ id })),
     limit: 1,
     offset: rowIdx,
@@ -101,7 +102,10 @@ export const getRowCells = async ({
 
   if (rows.length === 0) return [];
 
-  const cells = rowDataToCells({ rowIdx, rowData: rows[0] });
+  const cells = rowDataToCells({ rowIdx, rowData: rows[0] }).map((cell) => ({
+    ...cell,
+    column: storedColumns.find((c) => c.id === cell.column!.id),
+  }));
 
   const storedCells = await ColumnCellModel.findAll({
     where: {
@@ -152,6 +156,52 @@ export const getColumnCellByIdx = async ({
   if (model) mergeCellWithModel({ cell, model });
 
   return cell;
+};
+
+export const getValidateColumnCells = async ({
+  column,
+}: {
+  column: {
+    id: string;
+  };
+}): Promise<Cell[]> => {
+  const dbColumn = await getColumnById(column.id);
+  if (!dbColumn) throw new Error('Column not found');
+
+  const models = await ColumnCellModel.findAll({
+    where: {
+      columnId: column.id,
+      validated: true,
+    },
+    order: [
+      ['idx', 'ASC'],
+      ['createdAt', 'ASC'],
+    ],
+  });
+
+  if (models.length === 0) return [];
+
+  const rows = await listDatasetTableRows({
+    dataset: dbColumn.dataset,
+    columns: [column],
+    offset: models[0].idx,
+    limit: models[models.length - 1].idx - models[0].idx + 1,
+  });
+
+  const cells = models.map((model) => ({
+    id: model.id,
+    idx: model.idx,
+    value: rows[model.idx][column.id],
+    error: model.error,
+    validated: model.validated,
+    column: {
+      id: model.columnId,
+    },
+    updatedAt: model.updatedAt,
+    generating: model.generating,
+  }));
+
+  return cells;
 };
 
 export const getColumnCells = async ({

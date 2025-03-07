@@ -44,6 +44,23 @@ export const modelToColumn = (model: ColumnModel): Column => {
   };
 };
 
+export const listColumnsByIds = async (ids: string[]): Promise<Column[]> => {
+  const models = await ColumnModel.findAll({
+    where: {
+      id: ids,
+    },
+    include: [
+      ColumnModel.associations.dataset,
+      {
+        association: ColumnModel.associations.process,
+        include: [ProcessModel.associations.referredColumns],
+      },
+    ],
+  });
+
+  return models.map(modelToColumn);
+};
+
 export const getColumnById = async (id: string): Promise<Column | null> => {
   const model = await ColumnModel.findByPk(id, {
     include: [

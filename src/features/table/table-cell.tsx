@@ -60,11 +60,20 @@ export const TableCell = component$<{
   useTask$(({ track }) => {
     track(isEditing);
     track(() => cell.value);
+    const scrollable = document.querySelector('.scrollable');
 
     originalValue.value = cell.value;
 
     if (isEditing.value) {
       newCellValue.value = originalValue.value;
+    }
+
+    if (scrollable) {
+      if (isEditing.value) {
+        scrollable.classList.add('overflow-hidden');
+      } else {
+        scrollable.classList.remove('overflow-hidden');
+      }
     }
   });
 

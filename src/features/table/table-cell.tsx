@@ -194,7 +194,7 @@ export const TableCell = component$<{
               <div class="h-full mt-2 p-4">
                 <Markdown
                   class="text-gray-900"
-                  content={originalValue.value!}
+                  content={originalValue.value ?? ''}
                 />
               </div>
             </>

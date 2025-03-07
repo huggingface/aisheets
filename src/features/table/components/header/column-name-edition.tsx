@@ -11,25 +11,36 @@ export const ColumnNameEdition = component$<{ column: Column }>(
     const newName = useSignal(column.name);
     const { updateColumn } = useColumnsStore();
 
-    const ref = useClickOutside(
-      $(() => {
-        if (!isClicking.value) return;
+    const saveChanges = $(() => {
+      if (!isClicking.value) return;
+      if (!newName.value.trim()) {
+        newName.value = column.name;
         isClicking.value = false;
+        return;
+      }
 
-        if (newName.value === column.name) return;
-        column.name = newName.value;
+      isClicking.value = false;
+      if (newName.value === column.name) return;
+      column.name = newName.value;
 
-        updateColumn({ ...column });
+      updateColumn({ ...column });
 
-        if (column.id === TEMPORAL_ID) {
-          return;
-        }
+      if (column.id === TEMPORAL_ID) {
+        return;
+      }
 
-        server$(async (id: string, name: string) => {
-          await updateColumnPartially({ id, name });
-        })(column.id, newName.value);
-      }),
-    );
+      server$(async (id: string, name: string) => {
+        await updateColumnPartially({ id, name });
+      })(column.id, newName.value);
+    });
+
+    const ref = useClickOutside(saveChanges);
+
+    const handleKeyDown = $((event: KeyboardEvent) => {
+      if (event.key === 'Enter') {
+        saveChanges();
+      }
+    });
 
     return (
       <div
@@ -37,7 +48,12 @@ export const ColumnNameEdition = component$<{ column: Column }>(
         ref={ref}
         onClick$={() => (isClicking.value = true)}
       >
-        <Input type="text" class="h-8 bg-primary" bind:value={newName} />
+        <Input
+          type="text"
+          class="h-8 bg-primary"
+          bind:value={newName}
+          onKeyDown$={handleKeyDown}
+        />
       </div>
     );
   },

@@ -101,7 +101,7 @@ describe('columns', () => {
         expect(canGenerate(column.id, columns)).toBeTruthy();
       });
 
-      test('should be false if all validated cells are updated before process execution', () => {
+      test('should be true if all validated cells are updated before process execution', () => {
         const processExecutionUpdatedAt = new Date();
         const cellUpdatedAt = new Date(
           processExecutionUpdatedAt.getTime() - 1000,
@@ -149,7 +149,7 @@ describe('columns', () => {
 
         const columns = [column];
 
-        expect(canGenerate(column.id, columns)).toBeFalsy();
+        expect(canGenerate(column.id, columns)).toBeTruthy();
       });
     });
 
@@ -178,7 +178,7 @@ describe('columns', () => {
             {
               id: TEMPORAL_ID,
               idx: 1,
-              validated: true,
+              validated: false,
               updatedAt: new Date(),
               generating: true,
               value: '',
@@ -247,11 +247,10 @@ describe('columns', () => {
 
         const columns = [referencedColumn, column];
 
-        const v = canGenerate(column.id, columns);
-        expect(v).toBeFalsy();
+        expect(canGenerate(column.id, columns)).toBeFalsy();
       });
 
-      test('should be false if all cells are validated after process execution and the reference column is not dirty', () => {
+      test('should be true if all cells are validated after process execution and the reference column is not dirty', () => {
         const referencedColumnProcessExecution = new Date();
         const referencedCellUpdatedAt = new Date(
           referencedColumnProcessExecution.getTime() - 1000,
@@ -344,7 +343,7 @@ describe('columns', () => {
 
         const columns = [referencedColumn, column];
 
-        expect(canGenerate(column.id, columns)).toBeFalsy();
+        expect(canGenerate(column.id, columns)).toBeTruthy();
       });
     });
   });

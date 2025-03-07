@@ -24,7 +24,7 @@ export const TableAddCellHeaderPlaceHolder = component$(() => {
   return (
     <th
       id={lastColumnId.value}
-      class="min-w-80 w-80 max-w-80 px-2 border-[0.5px] border-t-0 border-r-0 border-b-0 border-secondary bg-primary text-left"
+      class="min-w-80 w-80 max-w-80 px-2 border-[0.5px] border-t-0 border-r-0 border-secondary bg-primary text-left"
     >
       <Button
         look="ghost"

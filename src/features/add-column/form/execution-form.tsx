@@ -138,26 +138,28 @@ export const ExecutionForm = component$<SidebarProps>(
     const onGenerate = $(async () => {
       isSubmitting.value = true;
 
-      // If we have a selectedModel, always use that. Only fall back to inputModelId if models failed to load
-      const modelName = selectedModel.value?.id || inputModelId.value!;
-      const modelProvider = selectedProvider.value!;
+      try {
+        // If we have a selectedModel, always use that. Only fall back to inputModelId if models failed to load
+        const modelName = selectedModel.value?.id || inputModelId.value!;
+        const modelProvider = selectedProvider.value!;
 
-      const columnToSave = {
-        ...column,
-        process: {
-          ...column.process,
-          modelName,
-          modelProvider,
-          prompt: prompt.value!,
-          columnsReferences: columnsReferences.value,
-          offset: 0,
-          limit: Number(rowsToGenerate.value),
-        },
-      };
+        const columnToSave = {
+          ...column,
+          process: {
+            ...column.process,
+            modelName,
+            modelProvider,
+            prompt: prompt.value!,
+            columnsReferences: columnsReferences.value,
+            offset: 0,
+            limit: Number(rowsToGenerate.value),
+          },
+        };
 
-      await onGenerateColumn(columnToSave);
-
-      isSubmitting.value = false;
+        await onGenerateColumn(columnToSave);
+      } finally {
+        isSubmitting.value = false;
+      }
     });
 
     const handleCloseForm = $(async () => {

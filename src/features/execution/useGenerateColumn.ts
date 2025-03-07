@@ -30,8 +30,12 @@ export const useGenerateColumn = () => {
     }
   });
 
-  const onUpdateCell = $(async (column: Column) => {
-    for (const cell of column.cells.filter((c) => !c.validated)) {
+  const onRegenerateCells = $(async (column: Column) => {
+    const limit = column.process?.limit!;
+
+    for (const cell of column.cells
+      .filter((c) => !c.validated)
+      .slice(0, limit)) {
       replaceCell({
         ...cell,
         generating: true,
@@ -54,7 +58,7 @@ export const useGenerateColumn = () => {
     if ('id' in column && column.id === TEMPORAL_ID) {
       return onCreateColumn(column as CreateColumn);
     }
-    return onUpdateCell(column as Column);
+    return onRegenerateCells(column as Column);
   });
 
   return onGenerateColumn;

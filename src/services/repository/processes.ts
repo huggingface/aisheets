@@ -5,7 +5,7 @@ export const createProcess = async (
   newColumn: CreateColumn,
   columnId: string,
 ): Promise<Process> => {
-  const { process } = newColumn;
+  const process = newColumn.process!;
 
   const model = await ProcessModel.create({
     limit: process.limit,
@@ -32,7 +32,7 @@ export const createProcess = async (
     modelProvider: model.modelProvider,
     offset: model.offset,
     prompt: model.prompt,
-    columnsReferences: process.columnsReferences,
+    columnsReferences: process?.columnsReferences || [],
     updatedAt: model.updatedAt,
   };
 };

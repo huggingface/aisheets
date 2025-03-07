@@ -2,6 +2,7 @@ import { ColumnModel } from '~/services/db/models/column';
 import { ProcessModel } from '~/services/db/models/process';
 import type { Column, ColumnKind, ColumnType, CreateColumn } from '~/state';
 import { createProcess, updateProcess } from './processes';
+import { createDatasetTableColumn } from './tables';
 
 export const modelToColumn = (model: ColumnModel): Column => {
   return {
@@ -29,7 +30,7 @@ export const modelToColumn = (model: ColumnModel): Column => {
       prompt: model.process?.prompt ?? '',
       updatedAt: model.process?.updatedAt,
     },
-    cells:
+    cells: // TODO: Cells should be loaded separately and this attribute should be removed
       model.cells?.map((cell) => ({
         id: cell.id,
         validated: cell.validated,
@@ -43,86 +44,45 @@ export const modelToColumn = (model: ColumnModel): Column => {
   };
 };
 
-export const getDatasetColumns = async (
-  datasetId: string,
-): Promise<Column[]> => {
-  const models = await ColumnModel.findAll({
-    where: {
-      datasetId,
-    },
-    include: [
-      {
-        association: ColumnModel.associations.process,
-        include: [ProcessModel.associations.referredColumns],
-      },
-      {
-        association: ColumnModel.associations.dataset,
-      },
-    ],
-    order: [['createdAt', 'ASC']],
-  });
-
-  return models.map((model) => {
-    const column = modelToColumn(model);
-
-    // Partially cell loading
-    return {
-      ...column,
-      cells: model.cells.map((cell) => ({
-        id: cell.id,
-        idx: cell.idx,
-        column: {
-          id: column.id,
-        },
-        updatedAt: cell.updatedAt,
-        generating: cell.generating,
-        validated: cell.validated,
-      })),
-    };
-  });
-};
-
 export const getColumnById = async (id: string): Promise<Column | null> => {
   const model = await ColumnModel.findByPk(id, {
     include: [
+      ColumnModel.associations.dataset,
       {
         association: ColumnModel.associations.process,
         include: [ProcessModel.associations.referredColumns],
-      },
-      {
-        association: ColumnModel.associations.dataset,
       },
     ],
   });
 
   if (!model) return null;
 
+  return modelToColumn(model);
+};
+
+export const createRawColumn = async (column: {
+  id: string;
+  name: string;
+  type: ColumnType;
+  kind: ColumnKind;
+  dataset: { id: string; name: string; createdBy: string };
+}): Promise<Column> => {
+  const model = await ColumnModel.create({
+    id: column.id,
+    name: column.name,
+    type: column.type,
+    kind: column.kind,
+    datasetId: column.dataset!.id,
+  });
+
   return {
     id: model.id,
     name: model.name,
     type: model.type as ColumnType,
     kind: model.kind as ColumnKind,
+    dataset: column.dataset,
     visible: model.visible,
-
-    dataset: {
-      id: model.dataset.id,
-      name: model.dataset.name,
-      createdBy: model.dataset.createdBy,
-    },
-
-    process: {
-      id: model.process?.id,
-      columnsReferences: (model.process?.referredColumns ?? []).map(
-        (column) => column.id,
-      ),
-      limit: model.process?.limit ?? 0,
-      modelName: model.process?.modelName ?? '',
-      modelProvider: model.process?.modelProvider ?? '',
-      offset: model.process?.offset ?? 0,
-      prompt: model.process?.prompt ?? '',
-      updatedAt: model.process?.updatedAt,
-    },
-
+    process: null,
     cells: [],
   };
 };
@@ -135,7 +95,12 @@ export const createColumn = async (column: CreateColumn): Promise<Column> => {
     datasetId: column.dataset!.id,
   });
 
-  const process = await createProcess(column, model.id);
+  await createDatasetTableColumn({
+    dataset: column.dataset,
+    column: model,
+  });
+
+  const process = column.process ? await createProcess(column, model.id) : null;
 
   const newbie: Column = {
     id: model.id,
@@ -152,34 +117,11 @@ export const createColumn = async (column: CreateColumn): Promise<Column> => {
 };
 
 export const updateColumn = async (column: Column): Promise<Column> => {
-  let model = await ColumnModel.findByPk(column.id);
+  await updateColumnPartially(column);
 
-  if (!model) {
-    throw new Error('Column not found');
-  }
+  if (column.process) column.process = await updateProcess(column.process);
 
-  model.set({
-    name: column.name,
-    type: column.type,
-    kind: column.kind,
-  });
-
-  model = await model.save();
-
-  if (column.process) {
-    column.process = await updateProcess(column.process);
-  }
-
-  return {
-    id: model.id,
-    name: model.name,
-    type: model.type as ColumnType,
-    kind: model.kind as ColumnKind,
-    visible: model.visible,
-    dataset: column.dataset,
-    process: column.process,
-    cells: column.cells,
-  };
+  return (await getColumnById(column.id))!;
 };
 
 export const updateColumnPartially = async (
@@ -187,13 +129,11 @@ export const updateColumnPartially = async (
 ) => {
   const model = await ColumnModel.findByPk(column.id);
 
-  if (!model) {
-    throw new Error('Column not found');
-  }
+  if (!model) throw new Error('Column not found');
 
-  model.set({
-    ...column,
-  });
+  model.set({ ...column });
+  // TODO: if type changes, we need to update the table column type
+  // await updateDatasetTableColumn({ column, type: column.type });
 
   await model.save();
 };

@@ -60,8 +60,7 @@ export const TableBody = component$(() => {
   useTask$(({ track }) => {
     track(columns);
 
-    rowCount.value =
-      firstColum.value.process?.limit || firstColum.value.cells.length;
+    rowCount.value = firstColum.value.cells.length;
 
     const getCell = (column: Column, rowIndex: number): Cell => {
       const cell = column.cells[rowIndex];

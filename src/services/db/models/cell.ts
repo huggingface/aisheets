@@ -17,7 +17,7 @@ export class ColumnCellModel extends Model<
 > {
   declare id: CreationOptional<string>;
   declare idx: number;
-  declare value?: string;
+
   declare error?: string;
   declare generating: CreationOptional<boolean>;
   declare validated: CreationOptional<boolean>;
@@ -47,10 +47,6 @@ ColumnCellModel.init(
     idx: {
       type: DataTypes.INTEGER,
       allowNull: false,
-    },
-    value: {
-      type: DataTypes.STRING,
-      allowNull: true,
     },
     error: {
       type: DataTypes.STRING,

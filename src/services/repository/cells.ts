@@ -233,7 +233,7 @@ export const createCell = async ({
   return {
     id: model.id,
     idx: model.idx,
-    value: model.value,
+    value: cell.value,
     error: model.error,
     validated: model.validated,
     column: {
@@ -264,7 +264,7 @@ export const updateCell = async (cell: Partial<Cell>): Promise<Cell> => {
   return {
     id: model.id,
     idx: model.idx,
-    value: model.value,
+    value: cell.value,
     error: model.error,
     validated: model.validated,
     column: {

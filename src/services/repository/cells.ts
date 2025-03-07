@@ -206,14 +206,12 @@ export const getValidateColumnCells = async ({
 
 export const getColumnCells = async ({
   column,
-  conditions,
   offset,
   limit,
 }: {
   column: {
     id: string;
   };
-  conditions?: Record<string, any>;
   offset?: number;
   limit?: number;
 }): Promise<Cell[]> => {
@@ -236,10 +234,11 @@ export const getColumnCells = async ({
   const storedCells = await ColumnCellModel.findAll({
     where: {
       columnId: column.id,
-      ...conditions,
+      idx: {
+        [Op.gte]: offset || 0,
+        [Op.lt]: (offset || 0) + (limit || 0),
+      },
     },
-    limit,
-    offset,
     order: [
       ['idx', 'ASC'],
       ['createdAt', 'ASC'],

@@ -46,6 +46,7 @@ export const TableCell = component$<{
   useVisibleTask$(async () => {
     if (cell.generating) return;
     if (cell.error || cell.value) return;
+    if (!cell.id) return;
 
     const persistedCell = await loadCell(cell.id);
 
@@ -92,22 +93,20 @@ export const TableCell = component$<{
 
   const onValidateCell = $(
     async (validatedContent: string, validated: boolean) => {
-      const ok = await validateCell({
+      const updatedCell = await validateCell({
         id: cell.id,
+        idx: cell.idx,
         value: validatedContent,
         validated,
+        column: cell.column!,
       });
 
-      if (ok) {
-        replaceCell({
-          ...cell,
-          value: validatedContent,
-          updatedAt: new Date(),
-          validated,
-        });
-      }
-
-      return ok;
+      replaceCell({
+        ...updatedCell,
+        value: validatedContent,
+        updatedAt: new Date(),
+        validated,
+      });
     },
   );
 
@@ -115,11 +114,9 @@ export const TableCell = component$<{
     const valueToUpdate = newCellValue.value;
 
     if (!!newCellValue.value && newCellValue.value !== originalValue.value) {
-      const success = await onValidateCell(newCellValue.value, true);
+      await onValidateCell(newCellValue.value, true);
 
-      if (success) {
-        originalValue.value = valueToUpdate;
-      }
+      originalValue.value = valueToUpdate;
     }
 
     isEditing.value = false;

@@ -21,7 +21,7 @@ export interface CreateColumn {
   type: ColumnType;
   kind: ColumnKind;
   dataset: Omit<Dataset, 'columns'>;
-  process: {
+  process?: {
     modelName: string;
     modelProvider: string;
     prompt: string;
@@ -32,7 +32,7 @@ export interface CreateColumn {
 }
 
 export type Cell = {
-  id: string;
+  id?: string;
   idx: number;
   updatedAt: Date;
   generating: boolean;
@@ -257,9 +257,9 @@ export const useColumnsStore = () => {
       const column = columns.value.find((c) => c.id === cell.column?.id);
       if (!column) return;
 
-      if (column.cells.some((c) => c.id === cell.id)) {
+      if (column.cells.some((c) => c.idx === cell.idx)) {
         column.cells = [
-          ...column.cells.map((c) => (c.id === cell.id ? cell : c)),
+          ...column.cells.map((c) => (c.idx === cell.idx ? cell : c)),
         ];
       } else {
         column.cells.push(cell);

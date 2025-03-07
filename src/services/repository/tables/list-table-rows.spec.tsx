@@ -1,30 +1,24 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import { ColumnModel, DatasetModel } from '~/services/db/models';
 import { createDatasetTableFromFile } from './create-table-from-file';
 import { deleteDatasetTable } from './delete-table';
 import { listDatasetTableRows } from './list-table-rows';
 
-const dataset = {
-  id: '1',
-  name: 'dataset',
-  createdBy: 'user',
-};
+let dataset: DatasetModel | undefined = undefined;
 
-const columns = [
-  {
-    id: '1',
-    name: 'column1',
-    type: 'INTEGER',
-  },
-  {
-    id: '2',
-    name: 'column2',
-    type: 'TEXT',
-  },
-];
+beforeEach(async () => {
+  dataset = await DatasetModel.create({
+    name: 'test-dataset',
+    createdBy: 'test',
+  });
+});
 
 afterEach(async () => {
-  await deleteDatasetTable(dataset);
+  await DatasetModel.destroy({ where: {} });
+  await ColumnModel.destroy({ where: {} });
+
+  await deleteDatasetTable(dataset!);
 });
 
 describe(
@@ -32,12 +26,12 @@ describe(
   () => {
     it('should return the rows of a dataset', async () => {
       const columns = await createDatasetTableFromFile({
-        dataset,
+        dataset: dataset!,
         file: 'tests/test.csv',
       });
 
       const rows = await listDatasetTableRows({
-        dataset,
+        dataset: dataset!,
         columns,
       });
 
@@ -45,34 +39,31 @@ describe(
 
       expect(rows).toEqual([
         {
-          age: 30n,
-          id: 1n,
-          name: ' John Doe',
-          rowIdx: 0n,
+          [columns[0].id]: 1n,
+          [columns[1].id]: ' John Doe',
+          [columns[2].id]: 30n,
         },
         {
-          age: 25n,
-          id: 2n,
-          name: ' Jane Smith',
-          rowIdx: 1n,
+          [columns[0].id]: 2n,
+          [columns[1].id]: ' Jane Smith',
+          [columns[2].id]: 25n,
         },
         {
-          age: 22n,
-          id: 3n,
-          name: ' Emily Jones',
-          rowIdx: 2n,
+          [columns[0].id]: 3n,
+          [columns[1].id]: ' Emily Jones',
+          [columns[2].id]: 22n,
         },
       ]);
     });
 
     it('should return the rows of a dataset with a limit', async () => {
       const columns = await createDatasetTableFromFile({
-        dataset,
+        dataset: dataset!,
         file: 'tests/test.csv',
       });
 
       const rows = await listDatasetTableRows({
-        dataset,
+        dataset: dataset!,
         columns,
         limit: 1,
       });
@@ -81,22 +72,21 @@ describe(
 
       expect(rows).toEqual([
         {
-          age: 30n,
-          id: 1n,
-          name: ' John Doe',
-          rowIdx: 0n,
+          [columns[0].id]: 1n,
+          [columns[1].id]: ' John Doe',
+          [columns[2].id]: 30n,
         },
       ]);
     });
 
     it('should return the rows of a dataset with an offset', async () => {
       const columns = await createDatasetTableFromFile({
-        dataset,
+        dataset: dataset!,
         file: 'tests/test.csv',
       });
 
       const rows = await listDatasetTableRows({
-        dataset,
+        dataset: dataset!,
         columns,
         offset: 1,
       });
@@ -105,16 +95,14 @@ describe(
 
       expect(rows).toEqual([
         {
-          age: 25n,
-          id: 2n,
-          name: ' Jane Smith',
-          rowIdx: 1n,
+          [columns[0].id]: 2n,
+          [columns[1].id]: ' Jane Smith',
+          [columns[2].id]: 25n,
         },
         {
-          age: 22n,
-          id: 3n,
-          name: ' Emily Jones',
-          rowIdx: 2n,
+          [columns[0].id]: 3n,
+          [columns[2].id]: 22n,
+          [columns[1].id]: ' Emily Jones',
         },
       ]);
     });

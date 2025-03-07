@@ -28,15 +28,13 @@ export const createDatasetTableFromFile = async ({
 
     const columns = await results.getRowObjects();
 
-    const dbColumns = await Promise.all(
-      columns.map((column) => {
-        return ColumnModel.create({
-          datasetId: dataset.id,
-          name: column.column_name as string,
-          type: column.column_type as string,
-          kind: 'static',
-        });
-      }),
+    const dbColumns = await ColumnModel.bulkCreate(
+      columns.map((column) => ({
+        datasetId: dataset.id,
+        name: column.column_name as string,
+        type: column.column_type as string,
+        kind: 'static',
+      })),
     );
 
     const selectColumnNames = dbColumns

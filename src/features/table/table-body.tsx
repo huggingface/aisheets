@@ -28,7 +28,7 @@ export const TableBody = component$(() => {
   const startIndex = useSignal(0);
   const endIndex = useSignal(0);
 
-  const data = useSignal<Cell[][]>([]);
+  const data = useSignal<(Cell | undefined)[][]>([]);
   const rowCount = useSignal(0);
 
   useOnWindow(
@@ -62,25 +62,8 @@ export const TableBody = component$(() => {
 
     rowCount.value = firstColum.value.cells.length;
 
-    const getCell = (column: Column, rowIndex: number): Cell => {
+    const getCell = (column: Column, rowIndex: number): Cell | undefined => {
       const cell = column.cells[rowIndex];
-
-      if (!cell) {
-        // Temporal cell for skeleton
-        return {
-          id: `${column.id}-${rowIndex}`,
-          value: '',
-          error: '',
-          validated: false,
-          column: {
-            id: column.id,
-          },
-          updatedAt: new Date(),
-          generating: false,
-          idx: rowIndex,
-        };
-      }
-
       return cell;
     };
 
@@ -110,22 +93,22 @@ export const TableBody = component$(() => {
         </tr>
       )}
 
-      {data.value.slice(startIndex.value, endIndex.value).map((row, index) => {
-        const actualRowIndex = startIndex.value + index;
+      {data.value.slice(startIndex.value, endIndex.value).map((row, i) => {
+        const actualRowIndex = startIndex.value + i;
         return (
           <tr
             key={actualRowIndex}
             class="hover:bg-gray-50/50 transition-colors"
           >
-            {row.map((cell) => {
+            {row.map((cell, j) => {
               return (
-                <Fragment key={cell.id}>
-                  {cell.column?.id === TEMPORAL_ID ? (
+                <Fragment key={`${i}-${j}`}>
+                  {!cell || cell?.column?.id === TEMPORAL_ID ? (
                     <td class="min-w-80 w-80 max-w-80 px-2 min-h-[100px] h-[100px] border-[0.5px] border-t-0" />
                   ) : (
                     <>
                       <TableCell
-                        cell={cell}
+                        cell={cell!}
                         isExpanded={expandedRows.value.has(actualRowIndex)}
                         onToggleExpand$={() => {
                           const newSet = new Set(expandedRows.value);
@@ -137,7 +120,6 @@ export const TableBody = component$(() => {
                           expandedRows.value = newSet;
                         }}
                       />
-
                       {/* When the user scrolls until this cell we should load
                         If the user has 20 rows, on rowCount - buffer, should be fetch
                         The buffer now is 2, so on cell number 18, we should fetch new rows
@@ -149,7 +131,7 @@ export const TableBody = component$(() => {
                     </>
                   )}
 
-                  {columnId.value === cell.column?.id && (
+                  {columnId.value === cell?.column?.id && (
                     <td class="min-w-[700px] w-[700px] bg-white" />
                   )}
                 </Fragment>
@@ -161,7 +143,6 @@ export const TableBody = component$(() => {
           </tr>
         );
       })}
-
       {/* Bottom spacer row */}
       {bottomSpacerHeight.value > 0 && (
         <tr style={{ height: `${bottomSpacerHeight.value}px` }}>

@@ -33,9 +33,11 @@ export const useGenerateColumn = () => {
   const onRegenerateCells = $(async (column: Column) => {
     const limit = column.process?.limit!;
 
+    const validatedCells = column.cells.filter((c) => c.validated).length;
+
     for (const cell of column.cells
       .filter((c) => !c.validated)
-      .slice(0, limit)) {
+      .slice(0, limit - validatedCells)) {
       replaceCell({
         ...cell,
         generating: true,

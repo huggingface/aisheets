@@ -202,10 +202,7 @@ export const getColumnCells = async ({
       (c) => c.column?.id === cellModel.columnId,
     );
 
-    if (cell) {
-      mergeCellWithModel({ cell, model: cellModel });
-      break;
-    }
+    if (cell) mergeCellWithModel({ cell, model: cellModel });
   }
 
   return cells.flat();

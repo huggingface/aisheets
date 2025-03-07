@@ -10,18 +10,15 @@ interface CreateDatasetParams {
   createdBy: string;
 }
 
-export const getOrCreateDatasetIDByUser = async ({
+export const createDatasetIdByUser = async ({
   createdBy,
 }: { createdBy: string }): Promise<string> => {
-  const [model, created] = await DatasetModel.findOrCreate({
-    where: { createdBy },
-    defaults: {
-      name: 'New dataset',
-      createdBy,
-    },
+  const model = await DatasetModel.create({
+    name: 'New dataset',
+    createdBy,
   });
 
-  if (created) await createDatasetTable({ dataset: model });
+  await createDatasetTable({ dataset: model });
 
   return model.id;
 };

@@ -165,7 +165,7 @@ export const TableCell = component$<{
       }}
       ref={ref}
     >
-      <div class={cn('relative', { 'h-full': !isExpanded })}>
+      <div class={cn('relative group', { 'h-full': !isExpanded })}>
         <div
           ref={contentRef}
           class={cn('relative flex flex-col', {
@@ -183,14 +183,14 @@ export const TableCell = component$<{
                 look="ghost"
                 hover={false}
                 size="sm"
-                class={`absolute z-10 text-base top-0 right-0 ${
+                class={cn(
+                  'absolute z-10 text-base top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity',
                   cell.validated
                     ? 'text-custom-green-60'
-                    : 'text-primary-foreground'
-                }`}
+                    : 'text-primary-foreground',
+                )}
                 onClick$={(e) => {
                   e.stopPropagation();
-
                   onValidateCell(originalValue.value!, !cell.validated);
                 }}
               >

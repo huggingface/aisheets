@@ -146,7 +146,7 @@ export const TableCell = component$<{
       class={cn(
         'relative min-w-80 w-80 max-w-80 cursor-pointer border-[0.5px] break-words align-top',
         {
-          'bg-green-50 border-green-200': cell.validated,
+          'bg-custom-green-0 border-custom-green-60': cell.validated,
           'border-secondary': !cell.validated,
           'min-h-[100px] h-[100px]': !isExpanded,
           'min-h-[100px]': isExpanded,
@@ -184,7 +184,9 @@ export const TableCell = component$<{
                 hover={false}
                 size="sm"
                 class={`absolute z-10 text-base top-0 right-0 ${
-                  cell.validated ? 'text-green-200' : 'text-primary-foreground'
+                  cell.validated
+                    ? 'text-custom-green-60'
+                    : 'text-primary-foreground'
                 }`}
                 onClick$={(e) => {
                   e.stopPropagation();
@@ -238,10 +240,6 @@ export const TableCell = component$<{
             </div>
           )}
         </div>
-
-        {isTruncated.value && !isExpanded && (
-          <div class="absolute bottom-0 left-0 h-6 w-full bg-gradient-to-t from-white/75 to-transparent pointer-events-none" />
-        )}
       </div>
     </td>
   );

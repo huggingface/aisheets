@@ -38,6 +38,14 @@ export default {
           DEFAULT: "hsl(var(--popover))",
           foreground: "hsl(var(--popover-foreground))",
         },
+        'custom-green': {
+          100: 'rgb(var(--custom-green-100))',
+          80: 'rgb(var(--custom-green-80))',
+          60: 'rgb(var(--custom-green-60))',
+          40: 'rgb(var(--custom-green-40))',
+          20: 'rgb(var(--custom-green-20))',
+          0: 'rgb(var(--custom-green-0))',
+        },
       },
       borderRadius: {
         base: "var(--border-radius)",

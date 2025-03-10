@@ -40,28 +40,36 @@ export const getUserDatasets = async (user: {
   return datasets;
 };
 
-export const importDatasetFromFile = async ({
-  name,
-  createdBy,
-  file,
-}: {
-  name: string;
-  createdBy: string;
-  file: string;
-}): Promise<Dataset> => {
+export const importDatasetFromFile = async (
+  {
+    name,
+    createdBy,
+    file,
+  }: {
+    name: string;
+    createdBy: string;
+    file: string;
+  },
+  options?: {
+    limit?: number;
+  },
+): Promise<Dataset> => {
   const model = await DatasetModel.create({
     name,
     createdBy,
   });
 
-  const columns = await createDatasetTableFromFile({
-    dataset: {
-      id: model.id,
-      name: model.name,
-      createdBy: model.createdBy,
+  const columns = await createDatasetTableFromFile(
+    {
+      dataset: {
+        id: model.id,
+        name: model.name,
+        createdBy: model.createdBy,
+      },
+      file,
     },
-    file,
-  });
+    options,
+  );
 
   return {
     id: model.id,

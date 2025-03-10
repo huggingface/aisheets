@@ -33,9 +33,14 @@ export const useImportFromHub = () =>
     const totalRows = fileInfo.numberOfRows;
     consola.info(`Importing ${totalRows} rows from ${filePath}`);
 
-    return await importDatasetFromFile({
-      name: `${repoId} [${filePath}]`,
-      createdBy: session.user.username,
-      file: downloadedFilePath,
-    });
+    return await importDatasetFromFile(
+      {
+        name: `${repoId} [${filePath}]`,
+        createdBy: session.user.username,
+        file: downloadedFilePath,
+      },
+      {
+        limit: 1000,
+      },
+    );
   });

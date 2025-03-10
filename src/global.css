@@ -41,15 +41,6 @@
     --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 1);
     --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.01);
     --transform-press: scale(0.95);
-
-    /* Custom Green Palette */
-    --custom-green-100: 82 114 49; /* #527231 */
-    --custom-green-80: 107 161 54; /* #6BA136 */
-    --custom-green-60: 158 226 90; /* #9EE25A */
-    --custom-green-40: 189 255 122; /* #BDFF7A */
-    --custom-green-20: 214 255 173; /* #D6FFAD */
-    --custom-green-10: 235 255 214; /* #EBFFD6 */
-    --custom-green-0: 248 254 242; /* #F8FEF2 */
   }
   .dark {
     --background: 222.2 84% 4.9%;

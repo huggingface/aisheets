@@ -38,13 +38,14 @@ export default {
           DEFAULT: "hsl(var(--popover))",
           foreground: "hsl(var(--popover-foreground))",
         },
-        'custom-green': {
-          100: 'rgb(var(--custom-green-100))',
-          80: 'rgb(var(--custom-green-80))',
-          60: 'rgb(var(--custom-green-60))',
-          40: 'rgb(var(--custom-green-40))',
-          20: 'rgb(var(--custom-green-20))',
-          0: 'rgb(var(--custom-green-0))',
+        green: {
+          50: 'hsl(90 100% 97%)',    // #F8FEF2
+          100: 'hsl(84 100% 93%)',   // #EBFFD6
+          200: 'hsl(84 100% 85%)',   // #D6FFAD
+          300: 'hsl(84 100% 74%)',   // #BDFF7A
+          400: 'hsl(84 60% 62%)',    // #9EE25A
+          500: 'hsl(84 50% 38%)',    // #6BA136
+          600: 'hsl(84 40% 32%)',    // #527231
         },
       },
       borderRadius: {

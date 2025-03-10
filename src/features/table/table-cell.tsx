@@ -144,9 +144,9 @@ export const TableCell = component$<{
   return (
     <td
       class={cn(
-        'relative min-w-80 w-80 max-w-80 cursor-pointer border-[0.5px] break-words align-top',
+        'relative min-w-80 w-80 max-w-80 cursor-pointer border-[0.5px] break-words align-top group',
         {
-          'bg-custom-green-0 border-custom-green-60': cell.validated,
+          'bg-green-50 border-green-300': cell.validated,
           'border-secondary': !cell.validated,
           'min-h-[100px] h-[100px]': !isExpanded,
           'min-h-[100px]': isExpanded,
@@ -165,7 +165,7 @@ export const TableCell = component$<{
       }}
       ref={ref}
     >
-      <div class={cn('relative group', { 'h-full': !isExpanded })}>
+      <div class={cn('relative', { 'h-full': !isExpanded })}>
         <div
           ref={contentRef}
           class={cn('relative flex flex-col', {
@@ -186,8 +186,8 @@ export const TableCell = component$<{
                 class={cn(
                   'absolute z-10 text-base top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity',
                   cell.validated
-                    ? 'text-custom-green-60'
-                    : 'text-primary-foreground',
+                    ? 'bg-green-50/50 text-green-400 hover:bg-green-100'
+                    : 'hover:bg-gray-100 text-gray-400',
                 )}
                 onClick$={(e) => {
                   e.stopPropagation();
@@ -209,7 +209,7 @@ export const TableCell = component$<{
 
           {isEditing.value && (
             <div
-              class="fixed z-20 bg-white border border-green-200 focus:border-green-200 focus:outline-none shadow-lg cursor-text"
+              class="fixed z-20 bg-white border border-green-300 focus:border-green-200 focus:outline-none shadow-lg cursor-text"
               style={{
                 left:
                   Math.min(
@@ -240,6 +240,10 @@ export const TableCell = component$<{
             </div>
           )}
         </div>
+
+        {isTruncated.value && !isExpanded && (
+          <div class="absolute bottom-0 left-0 h-6 w-full bg-gradient-to-t from-white/75 to-transparent pointer-events-none" />
+        )}
       </div>
     </td>
   );

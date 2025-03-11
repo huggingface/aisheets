@@ -24,6 +24,8 @@ export const TableCellHeader = component$<{ column: Column }>(({ column }) => {
           <ColumnProperties column={column} />
         </div>
 
+        <p>{column.type}</p>
+
         <div class="flex items-center w-[20%] h-0">
           <CellGeneration column={column} />
           <CellSettings column={column} />

@@ -145,16 +145,16 @@ export const createCell = async ({
 export const updateCell = async (cell: Partial<Cell>): Promise<Cell> => {
   let model = await ColumnCellModel.findByPk(cell.id!);
 
-  if (!model) {
-    throw new Error('Cell not found');
-  }
+  if (!model) throw new Error('Cell not found');
 
-  const updatedCell = Object.entries(cell).map(([key, value]) => {
-    if (value === undefined) return [key, null];
-    return [key, value];
-  }) as Record<string, any>;
+  const updatedCell = Object.fromEntries(
+    Object.entries(cell).map(([key, value]) => {
+      if (value === undefined) return [key, null];
+      return [key, value];
+    }),
+  );
 
-  model.set(updatedCell);
+  model.set({ ...updatedCell });
   model = await model.save();
 
   return {

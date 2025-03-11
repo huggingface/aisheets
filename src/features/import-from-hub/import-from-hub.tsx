@@ -10,7 +10,7 @@ import {
   useVisibleTask$,
 } from '@builder.io/qwik';
 import { useNavigate } from '@builder.io/qwik-city';
-import { LuCheck, LuLoader, LuTerminalSquare } from '@qwikest/icons/lucide';
+import { LuCheck, LuChevronRightSquare, LuLoader } from '@qwikest/icons/lucide';
 
 import { Button, Select, useToggle } from '~/components';
 import { useDebounce } from '~/components/hooks/debounce/debounce';
@@ -83,7 +83,12 @@ export const ImportFromHub = component$(() => {
         </div>
       </div>
 
-      <div class="flex flex-col w-full gap-4 items-end">
+      <div class="flex flex-col w-full gap-4 mt-8">
+        {repoId.value && filePath.value && (
+          <div class="text-foreground text-sm">
+            <span>Only the first 1000 rows will be imported.</span>
+          </div>
+        )}
         <Button
           look="primary"
           disabled={!enableImportButton.value}
@@ -96,16 +101,11 @@ export const ImportFromHub = component$(() => {
             </div>
           ) : (
             <div class="flex items-center gap-4">
-              <LuTerminalSquare class="text-xl" />
+              <LuChevronRightSquare class="text-xl" />
               <span>Import dataset</span>
             </div>
           )}
         </Button>
-        {repoId.value && filePath.value && (
-          <div class="text-foreground text-sm">
-            <span>Only the first 1000 rows will be imported</span>
-          </div>
-        )}
       </div>
     </div>
   );
@@ -182,15 +182,7 @@ const DatasetSearch = component$(
           <div class="flex flex-col gap-2">
             <Select.Root onChange$={handleChangeDataset$} bind:open={isOpen}>
               <Select.Label>Dataset id</Select.Label>
-              <Select.Trigger
-                onClear$={
-                  datasets.length
-                    ? $(() => {
-                        selectedDataset.value = undefined;
-                      })
-                    : undefined
-                }
-              >
+              <Select.Trigger>
                 <input
                   class="w-full h-8 outline-none"
                   placeholder="Type to search datasets"

@@ -165,3 +165,11 @@ export const updateCell = async (cell: Partial<Cell>): Promise<Cell> => {
     generating: model.generating,
   };
 };
+
+export const getCellsCount = async (
+  filter: Record<string, any>,
+): Promise<number> => {
+  return ColumnCellModel.count({
+    where: filter,
+  });
+};

@@ -1,3 +1,4 @@
+import { getColumnSize } from '~/services';
 import {
   createCell,
   getColumnCellByIdx,
@@ -15,8 +16,8 @@ export interface GenerateCellsParams {
   column: Column;
   process: Process;
   session: Session;
-  limit: number;
-  offset: number;
+  limit?: number;
+  offset?: number;
   validatedCells?: Cell[];
   stream?: boolean;
   timeout?: number;
@@ -56,10 +57,11 @@ export const generateCells = async function* ({
 
   const validatedIdxs = validatedCells?.map((cell) => cell.idx);
 
+  if (!limit) limit = await getColumnSize(column);
+  if (!offset) offset = 0;
+
   for (let i = offset; i < limit + offset; i++) {
-    if (validatedIdxs?.includes(i)) {
-      continue;
-    }
+    if (validatedIdxs?.includes(i)) continue;
 
     const args = {
       accessToken: session.token,

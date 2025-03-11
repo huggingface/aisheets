@@ -21,7 +21,7 @@ export interface CreateColumn {
   type: ColumnType;
   kind: ColumnKind;
   dataset: Omit<Dataset, 'columns'>;
-  process: {
+  process?: {
     modelName: string;
     modelProvider: string;
     prompt: string;
@@ -50,7 +50,7 @@ export interface Column {
   type: ColumnType;
   kind: ColumnKind;
   visible: boolean;
-  process: Process | null;
+  process?: Process | undefined;
   cells: Cell[];
   dataset: Omit<Dataset, 'columns'>;
 }

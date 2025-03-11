@@ -8,10 +8,9 @@ import {
 import { server$ } from '@builder.io/qwik-city';
 import { cn } from '@qwik-ui/utils';
 import { LuThumbsUp } from '@qwikest/icons/lucide';
-import { Button, Textarea } from '~/components';
+import { Button, Skeleton, Textarea } from '~/components';
 import { useClickOutside } from '~/components/hooks/click/outside';
 import { Markdown } from '~/components/ui/markdown/markdown';
-import { Skeleton } from '~/components/ui/skeleton/skeleton';
 import { getColumnCellById } from '~/services';
 import { type Cell, useColumnsStore } from '~/state';
 import { useValidateCellUseCase } from '~/usecases/validate-cell.usecase';
@@ -142,14 +141,6 @@ export const TableCell = component$<{
     }),
   );
 
-  if ((!cell.value && !cell.error) || (cell.generating && !cell.value)) {
-    return (
-      <td class="min-w-80 w-80 max-w-80 p-4 min-h-[100px] h-[100px] border last:border-r-0 border-secondary">
-        <Skeleton />
-      </td>
-    );
-  }
-
   return (
     <td
       class={cn(
@@ -168,8 +159,6 @@ export const TableCell = component$<{
       onDblClick$={(e) => {
         e.stopPropagation();
 
-        if (!cell.value) return;
-
         isEditing.value = true;
       }}
       ref={ref}
@@ -186,7 +175,18 @@ export const TableCell = component$<{
             maxHeight: isExpanded ? 'none' : '8.5rem',
           }}
         >
-          {originalValue.value ? (
+          {cell.generating && (
+            <div class="absolute inset-0 flex items-center justify-center">
+              <Skeleton />
+            </div>
+          )}
+
+          {cell.error ? (
+            <span class="mt-2 p-4 text-red-500 text-xs flex items-center gap-1">
+              <span>⚠</span>
+              <span>{cell.error}</span>
+            </span>
+          ) : (
             <>
               <Button
                 look="ghost"
@@ -203,17 +203,15 @@ export const TableCell = component$<{
                   onValidateCell(originalValue.value!, !cell.validated);
                 }}
               >
-                <LuThumbsUp />
+                <LuThumbsUp class="text-sm" />
               </Button>
               <div class="h-full mt-2 p-4">
-                <Markdown class="text-gray-900" content={originalValue.value} />
+                <Markdown
+                  class="text-gray-900"
+                  content={originalValue.value ?? ''}
+                />
               </div>
             </>
-          ) : (
-            <span class="mt-2 p-4 text-red-500 text-xs flex items-center gap-1">
-              <span>⚠</span>
-              <span>{cell.error}</span>
-            </span>
           )}
 
           {isEditing.value && (

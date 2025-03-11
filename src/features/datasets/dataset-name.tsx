@@ -43,6 +43,13 @@ export const DatasetName = component$(() => {
   });
 
   useVisibleTask$(({ track }) => {
+    track(activeDataset);
+
+    state.name = activeDataset.value.name;
+    state.displayName = activeDataset.value.name;
+  });
+
+  useVisibleTask$(({ track, cleanup }) => {
     track(() => state.isEditing);
     if (state.isEditing && inputRef.value) {
       inputRef.value.focus();

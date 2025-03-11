@@ -90,6 +90,8 @@ export const generateCells = async function* ({
 
     cell.generating = true;
 
+    yield { cell };
+
     if (stream) {
       for await (const response of runPromptExecutionStream(args)) {
         cell.value = response.value;

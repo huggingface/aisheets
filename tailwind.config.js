@@ -38,6 +38,15 @@ export default {
           DEFAULT: "hsl(var(--popover))",
           foreground: "hsl(var(--popover-foreground))",
         },
+        green: {
+          50: 'hsl(90 100% 97%)',    // #F8FEF2
+          100: 'hsl(84 100% 93%)',   // #EBFFD6
+          200: 'hsl(84 100% 85%)',   // #D6FFAD
+          300: 'hsl(84 100% 74%)',   // #BDFF7A
+          400: 'hsl(84 60% 62%)',    // #9EE25A
+          500: 'hsl(84 50% 38%)',    // #6BA136
+          600: 'hsl(84 40% 32%)',    // #527231
+        },
       },
       borderRadius: {
         base: "var(--border-radius)",

@@ -135,9 +135,9 @@ export const TableCell = component$<{
   return (
     <td
       class={cn(
-        'relative min-w-80 w-80 max-w-80 cursor-pointer border-[0.5px] break-words align-top',
+        'relative min-w-80 w-80 max-w-80 cursor-pointer border-[0.5px] break-words align-top group',
         {
-          'bg-green-50 border-green-200': cell.validated,
+          'bg-green-50 border-green-300': cell.validated,
           'border-secondary': !cell.validated,
           'min-h-[100px] h-[100px]': !isExpanded,
           'min-h-[100px]': isExpanded,
@@ -183,12 +183,14 @@ export const TableCell = component$<{
                 look="ghost"
                 hover={false}
                 size="sm"
-                class={`absolute z-10 text-base top-0 right-0 ${
-                  cell.validated ? 'text-green-200' : 'text-primary-foreground'
-                }`}
+                class={cn(
+                  'absolute z-10 text-base top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity',
+                  cell.validated
+                    ? 'bg-green-50/50 text-green-400 hover:bg-green-100'
+                    : 'hover:bg-gray-100 text-gray-400',
+                )}
                 onClick$={(e) => {
                   e.stopPropagation();
-
                   onValidateCell(originalValue.value!, !cell.validated);
                 }}
               >
@@ -205,7 +207,7 @@ export const TableCell = component$<{
 
           {isEditing.value && (
             <div
-              class="fixed z-20 bg-white border border-green-200 focus:border-green-200 focus:outline-none shadow-lg cursor-text"
+              class="fixed z-20 bg-white border border-green-300 focus:border-green-200 focus:outline-none shadow-lg cursor-text"
               style={{
                 left:
                   Math.min(

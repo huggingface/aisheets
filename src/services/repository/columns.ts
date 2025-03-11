@@ -100,7 +100,6 @@ export const createRawColumn = async (column: {
     kind: model.kind as ColumnKind,
     dataset: column.dataset,
     visible: model.visible,
-    process: null,
     cells: [],
   };
 };
@@ -118,7 +117,12 @@ export const createColumn = async (column: CreateColumn): Promise<Column> => {
     column: model,
   });
 
-  const process = column.process ? await createProcess(column, model.id) : null;
+  const process = column.process
+    ? await createProcess({
+        process: column.process,
+        column: { id: model.id },
+      })
+    : undefined;
 
   const newbie: Column = {
     id: model.id,

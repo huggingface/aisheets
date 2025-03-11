@@ -50,7 +50,7 @@ export interface Column {
   type: ColumnType;
   kind: ColumnKind;
   visible: boolean;
-  process: Process | null;
+  process?: Process | undefined;
   cells: Cell[];
   dataset: Omit<Dataset, 'columns'>;
 }

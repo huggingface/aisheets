@@ -68,7 +68,6 @@ export const createDatasetTableFromFile = async (
         kind: column.kind as ColumnKind,
         visible: column.visible,
         dataset,
-        process: null,
         cells: [],
       };
     });

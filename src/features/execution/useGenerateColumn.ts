@@ -41,17 +41,6 @@ export const useGenerateColumn = () => {
   });
 
   const onEditColumn = $(async (column: Column) => {
-    const limit = column.process?.limit!;
-
-    for (const cell of column.cells
-      .filter((c) => !c.validated)
-      .slice(0, limit)) {
-      replaceCell({
-        ...cell,
-        generating: true,
-      });
-    }
-
     const response = await editColumn(column);
 
     for await (const { column, cell } of response) {

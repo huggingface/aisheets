@@ -150,7 +150,7 @@ export const TableBody = component$(() => {
                   )}
 
                   {columnId.value === cell.column?.id && (
-                    <td class="min-w-[700px] w-[700px] bg-white" />
+                    <td class="min-w-[660px] w-[660px] bg-primary" />
                   )}
                 </Fragment>
               );

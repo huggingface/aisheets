@@ -174,7 +174,7 @@ export const ExecutionForm = component$<SidebarProps>(
       <th class="min-w-[660px] w-[660px] bg-primary font-normal border-t border-secondary text-left">
         <div class="flex justify-between items-center px-1">
           <Button size="sm" look="ghost">
-            <LuBookmark class="text-primary-foreground" />
+            <LuBookmark class="text-lg text-primary-foreground" />
           </Button>
 
           <Button

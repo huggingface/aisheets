@@ -23,8 +23,8 @@ export const MainSidebar = component$(() => {
       }`}
     >
       <div
-        class={`transition-all duration-300 flex items-center justify-between py-2 px-4 ${
-          isOpen.value ? 'min-w-[300px]' : 'min-w-0'
+        class={`transition-all duration-300 flex items-center justify-between p-2 ${
+          isOpen.value ? 'min-w-[200px]' : 'min-w-0'
         }`}
       >
         <button
@@ -43,11 +43,11 @@ export const MainSidebar = component$(() => {
       <div
         class="transition-all duration-300 shrink-0"
         style={{
-          width: isOpen.value ? '300px' : '0',
+          width: isOpen.value ? '200px' : '0',
           opacity: isOpen.value ? '1' : '0',
         }}
       >
-        <div class="transition-all duration-300 ease-in-out overflow-auto max-h-full">
+        <div class="transition-all duration-300 ease-in-out overflow-y-auto overflow-x-hidden max-h-full">
           <>
             <div class="block space-y-2 p-4 mb-4">
               <Link

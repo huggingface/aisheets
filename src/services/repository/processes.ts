@@ -1,19 +1,31 @@
 import { ProcessColumnModel, ProcessModel } from '~/services/db/models';
-import type { CreateColumn, Process } from '~/state';
+import type { Process } from '~/state';
 
-export const createProcess = async (
-  newColumn: CreateColumn,
-  columnId: string,
-): Promise<Process> => {
-  const { process } = newColumn;
+export interface CreateProcess {
+  limit: number;
+  modelName: string;
+  modelProvider: string;
+  offset: number;
+  prompt: string;
+  columnsReferences?: string[];
+}
 
+export const createProcess = async ({
+  process,
+  column,
+}: {
+  process: CreateProcess;
+  column: {
+    id: string;
+  };
+}): Promise<Process> => {
   const model = await ProcessModel.create({
     limit: process.limit,
     modelName: process.modelName,
     modelProvider: process.modelProvider,
     offset: process.offset,
     prompt: process.prompt,
-    columnId: columnId,
+    columnId: column.id,
   });
 
   // TODO: Try to create junction model when creating a process
@@ -32,7 +44,7 @@ export const createProcess = async (
     modelProvider: model.modelProvider,
     offset: model.offset,
     prompt: model.prompt,
-    columnsReferences: process.columnsReferences,
+    columnsReferences: process.columnsReferences || [],
     updatedAt: model.updatedAt,
   };
 };

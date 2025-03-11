@@ -12,7 +12,8 @@ import {
 import { useNavigate } from '@builder.io/qwik-city';
 import { LuCheck, LuLoader, LuTerminalSquare } from '@qwikest/icons/lucide';
 
-import { Button, Input, Label, Select } from '~/components';
+import { Button, Select, useToggle } from '~/components';
+import { useDebounce } from '~/components/hooks/debounce/debounce';
 import { useSession } from '~/loaders';
 import { listDatasets } from '~/services/repository/hub/list-datasets';
 import { listHubDatasetDataFiles } from '~/services/repository/hub/list-hub-dataset-files';
@@ -55,23 +56,21 @@ export const ImportFromHub = component$(() => {
   });
 
   return (
-    <div class="flex flex-col w-fit mt-8 gap-4">
+    <div class="flex flex-col w-fit mt-8 gap-12">
       <div class="flex flex-col justify-between gap-4">
         <h1 class="text-3xl font-bold w-full">
           Import your dataset from the hub
         </h1>
 
-        <div class="flex flex-row gap-4">
-          <div class="flex-1 max-w-xl">
-            <DatasetSearch
-              onSelectedDataset$={(dataset) => {
-                repoId.value = dataset;
-              }}
-            />
-          </div>
+        <div class="flex flex-col gap-12 w-full">
+          <DatasetSearch
+            onSelectedDataset$={(dataset) => {
+              repoId.value = dataset;
+            }}
+          />
 
-          {repoId.value ? (
-            <div class="flex-1 max-w-md">
+          {repoId.value && (
+            <div class="w-full">
               <FileSelection
                 repoId={repoId.value!}
                 accessToken={session.value!.token}
@@ -80,8 +79,6 @@ export const ImportFromHub = component$(() => {
                 }}
               />
             </div>
-          ) : (
-            <></>
           )}
         </div>
       </div>
@@ -115,75 +112,107 @@ export const ImportFromHub = component$(() => {
 });
 
 const DatasetSearch = component$(
-  (props: {
+  ({
+    onSelectedDataset$,
+  }: {
     onSelectedDataset$: QRL<(dataset: string) => void>;
   }) => {
+    const { isOpen, open, close } = useToggle();
     const session = useSession();
     const searchQuery = useSignal('');
+    const searchQueryDebounced = useSignal('');
     const selectedDataset = useSignal<string | undefined>(undefined);
 
+    useDebounce(
+      searchQuery,
+      $(() => {
+        searchQueryDebounced.value = searchQuery.value;
+      }),
+      300,
+    );
+
     const searchResults = useResource$(async ({ track }) => {
-      track(searchQuery);
-      if (searchQuery.value.trim() === '') return [];
-      return (
-        await listDatasets({
-          query: searchQuery.value,
-          accessToken: session.value!.token,
-          limit: 5,
-        })
-      ).map((dataset) => dataset.name);
+      track(searchQueryDebounced);
+      if (searchQueryDebounced.value.trim() === '') return [];
+
+      const datasets = await listDatasets({
+        query: searchQueryDebounced.value,
+        accessToken: session.value!.token,
+        limit: 5,
+      });
+
+      if (datasets.length) {
+        open();
+      } else {
+        close();
+      }
+
+      return datasets.map((dataset) => dataset.name);
+    });
+
+    const handleChangeDataset$ = $((value: string | string[]) => {
+      selectedDataset.value = value as string;
     });
 
     useTask$(({ track }) => {
       track(selectedDataset);
       if (selectedDataset.value) {
         searchQuery.value = selectedDataset.value;
-        props.onSelectedDataset$(selectedDataset.value);
+
+        onSelectedDataset$(selectedDataset.value);
+      } else {
+        searchQuery.value = '';
+        onSelectedDataset$('');
       }
     });
 
     return (
-      <div class="flex flex-col gap-4">
-        <Label for="dataset-search">Dataset id</Label>
-        <Input
-          id="dataset-search"
-          class="h-10"
-          placeholder="Type to search datasets"
-          bind:value={searchQuery}
-        />
-        <Resource
-          value={searchResults}
-          onRejected={(error) => {
-            console.error(error);
-            return (
-              <div class="flex items-center justify-center h-32 background-primary rounded-base">
-                <span class="text-foreground warning">
-                  Failed to fetch datasets. Please, try again.
-                </span>
-              </div>
-            );
-          }}
-          onResolved={(datasets) => (
-            <div class="flex flex-col gap-2">
-              {searchQuery.value.trim() !== '' && datasets.length === 0 ? (
-                <></>
-              ) : (
-                datasets.map((dataset, idx) => (
-                  <Button
-                    key={idx}
-                    class="text-left"
-                    onClick$={() => {
-                      selectedDataset.value = dataset;
-                    }}
-                  >
-                    {dataset}
-                  </Button>
-                ))
-              )}
+      <Resource
+        value={searchResults}
+        onRejected={(error) => {
+          return (
+            <div class="flex items-center justify-center h-32 background-primary rounded-base">
+              <span class="text-foreground warning">
+                Failed to fetch datasets. Please, try again.
+              </span>
             </div>
-          )}
-        />
-      </div>
+          );
+        }}
+        onResolved={(datasets) => (
+          <div class="flex flex-col gap-2">
+            <Select.Root onChange$={handleChangeDataset$} bind:open={isOpen}>
+              <Select.Label>Dataset id</Select.Label>
+              <Select.Trigger
+                onClear$={
+                  datasets.length
+                    ? $(() => {
+                        selectedDataset.value = undefined;
+                      })
+                    : undefined
+                }
+              >
+                <input
+                  class="w-full h-8 outline-none"
+                  placeholder="Type to search datasets"
+                  bind:value={searchQuery}
+                />
+              </Select.Trigger>
+              {!!datasets.length && (
+                <Select.Popover gutter={8}>
+                  {datasets.map((dataset) => (
+                    <Select.Item value={dataset} key={dataset}>
+                      <Select.ItemLabel>{dataset}</Select.ItemLabel>
+                      <Select.ItemIndicator>
+                        <LuCheck class="h-4 w-4" />
+                      </Select.ItemIndicator>
+                    </Select.Item>
+                  ))}
+                </Select.Popover>
+              )}
+            </Select.Root>
+          </div>
+        )}
+      />
     );
   },
 );
@@ -219,8 +248,6 @@ const FileSelection = component$(
       <Resource
         value={listDatasetFiles}
         onRejected={(error) => {
-          console.error(error);
-
           return (
             <div class="flex items-center justify-center h-32 background-primary rounded-base">
               <span class="text-foreground warning">
@@ -232,19 +259,18 @@ const FileSelection = component$(
         onResolved={(files) => {
           return (
             <div class="flex flex-col gap-4">
-              <Label for="dataset-file">File</Label>
-
               {files.length === 0 ? (
                 <span class="text-foreground warning">
                   No compatible files found in this dataset. Only jsonl, csv,
                   and parquet files are supported.
                 </span>
               ) : (
-                <Select.Root bind:value={selectedFile} class="relative">
-                  <Select.Trigger class="px-4 bg-primary rounded-base border-secondary-foreground">
+                <Select.Root bind:value={selectedFile}>
+                  <Select.Label>File</Select.Label>
+                  <Select.Trigger class="px-4 rounded-base border-secondary-foreground">
                     <Select.DisplayValue />
                   </Select.Trigger>
-                  <Select.Popover class="bg-primary border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto">
+                  <Select.Popover>
                     {files.map((file, idx) => (
                       <Select.Item
                         key={idx}

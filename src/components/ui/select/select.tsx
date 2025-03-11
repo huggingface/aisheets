@@ -7,7 +7,8 @@ import {
 } from '@builder.io/qwik';
 import { Select as HeadlessSelect } from '@qwik-ui/headless';
 import { cn } from '@qwik-ui/utils';
-import { LuCheck, LuChevronDown } from '@qwikest/icons/lucide';
+import { LuCheck, LuChevronDown, LuX } from '@qwikest/icons/lucide';
+import { buttonVariants } from '~/components/ui/button/button';
 
 const Root = (props: PropsOf<typeof HeadlessSelect.Root>) => (
   <HeadlessSelect.Root
@@ -37,6 +38,7 @@ const Label = component$<PropsOf<typeof HeadlessSelect.Label>>(
 type TriggerProps = PropsOf<typeof HeadlessSelect.Trigger> & {
   hideIcon?: boolean;
   look?: 'default' | 'ghost' | 'headless';
+  onClear$?: () => void;
 };
 
 const Disabled = component$(() => {
@@ -60,12 +62,25 @@ const Trigger = component$<TriggerProps>(({ look = 'default', ...props }) => {
     look === 'ghost' ? ghostClass : look === 'headless' ? '' : defaultClass;
 
   return (
-    <>
-      <HeadlessSelect.Trigger {...props} class={cn(lookClass, props.class)}>
+    <HeadlessSelect.Trigger {...props} class={cn(lookClass, props.class)}>
+      <div class="flex flex-row justify-between items-center w-full gap-2">
         <Slot />
+        {props.onClear$ && (
+          <span
+            onClick$={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+
+              props.onClear$!();
+            }}
+            class={buttonVariants({ look: 'ghost', size: 'sm' })}
+          >
+            <LuX class="h-4 w-4 opacity-50" />
+          </span>
+        )}
         {props.hideIcon ? null : <LuChevronDown class="h-4 w-4 opacity-50" />}
-      </HeadlessSelect.Trigger>
-    </>
+      </div>
+    </HeadlessSelect.Trigger>
   );
 });
 

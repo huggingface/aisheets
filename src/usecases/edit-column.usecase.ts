@@ -1,6 +1,6 @@
 import { type RequestEventBase, server$ } from '@builder.io/qwik-city';
 import {
-  getValidateColumnCells,
+  getValidatedColumnCells,
   updateColumn,
   updateProcess,
 } from '~/services';
@@ -23,7 +23,7 @@ export const useEditColumnUseCase = () =>
       column,
     };
 
-    const validatedCells = await getValidateColumnCells({
+    const validatedCells = await getValidatedColumnCells({
       column,
     });
 

@@ -158,7 +158,7 @@ export const getColumnCellByIdx = async ({
   return cell;
 };
 
-export const getValidateColumnCells = async ({
+export const getValidatedColumnCells = async ({
   column,
 }: {
   column: {

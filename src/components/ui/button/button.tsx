@@ -8,7 +8,7 @@ export const buttonVariants = cva(
     variants: {
       look: {
         primary:
-          'p-4 rounded-2xl h-10 bg-ring hover:bg-indigo-300 text-white w-fit select-none',
+          'p-4 rounded-2xl h-10 bg-indigo-300 hover:bg-indigo-400 text-white w-fit select-none disabled:bg-indigo-100',
         secondary:
           'p-4 rounded-2xl h-10 w-fit select-none border border-secondary bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 active:shadow-base active:press',
         alert:

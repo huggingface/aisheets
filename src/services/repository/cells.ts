@@ -295,7 +295,6 @@ export const createCell = async ({
 
 export const updateCell = async (cell: Partial<Cell>): Promise<Cell> => {
   let model = await ColumnCellModel.findByPk(cell.id!);
-
   if (!model) throw new Error('Cell not found');
 
   const column = await getColumnById(model.columnId);
@@ -307,7 +306,14 @@ export const updateCell = async (cell: Partial<Cell>): Promise<Cell> => {
     values: [[model.idx, cell.value]],
   });
 
-  model.set({ ...cell });
+  const updatedCell = Object.fromEntries(
+    Object.entries(cell).map(([key, value]) => {
+      if (value === undefined) return [key, null];
+      return [key, value];
+    }),
+  );
+
+  model.set({ ...updatedCell });
   model = await model.save();
 
   return {
@@ -322,4 +328,12 @@ export const updateCell = async (cell: Partial<Cell>): Promise<Cell> => {
     updatedAt: model.updatedAt,
     generating: model.generating,
   };
+};
+
+export const getCellsCount = async (
+  filter: Record<string, any>,
+): Promise<number> => {
+  return ColumnCellModel.count({
+    where: filter,
+  });
 };

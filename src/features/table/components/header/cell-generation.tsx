@@ -7,7 +7,7 @@ import { type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
 
 export const CellGeneration = component$<{ column: Column }>(({ column }) => {
   const { columns, isDirty } = useColumnsStore();
-  const onGenerateColumn = useGenerateColumn();
+  const { onRegenerateCells } = useGenerateColumn();
 
   const canRegenerate = useComputed$(() => {
     const savedColumn = columns.value.find((c) => c.id === column.id);
@@ -27,12 +27,12 @@ export const CellGeneration = component$<{ column: Column }>(({ column }) => {
         look="ghost"
         size="sm"
         disabled={!canRegenerate.value}
-        onClick$={() => onGenerateColumn(column)}
+        onClick$={() => onRegenerateCells(column)}
       >
         {canRegenerate.value ? (
-          <LuEgg class="text-primary-foreground" />
+          <LuEgg class="text-sm text-primary-foreground" />
         ) : (
-          <LuEggOff class="text-primary-foreground" />
+          <LuEggOff class="text-sm text-primary-foreground" />
         )}
       </Button>
     </Tooltip>

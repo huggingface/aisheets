@@ -200,7 +200,7 @@ export const TableCell = component$<{
                   onValidateCell(originalValue.value!, !cell.validated);
                 }}
               >
-                <LuThumbsUp />
+                <LuThumbsUp class="text-sm" />
               </Button>
               <div class="h-full mt-2 p-4">
                 <Markdown

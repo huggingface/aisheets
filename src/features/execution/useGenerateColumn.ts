@@ -8,12 +8,14 @@ import {
 } from '~/state';
 import { useAddColumnUseCase } from '~/usecases/add-column.usecase';
 import { useEditColumnUseCase } from '~/usecases/edit-column.usecase';
+import { useRegenerateCellsUseCase } from '~/usecases/regenerate-cells.usecase';
 
 export const useGenerateColumn = () => {
   const { open } = useExecution();
   const { addColumn, updateColumn, replaceCell } = useColumnsStore();
   const addNewColumn = useAddColumnUseCase();
   const editColumn = useEditColumnUseCase();
+  const regenerateCells = useRegenerateCellsUseCase();
 
   const onCreateColumn = $(async (newColumn: CreateColumn) => {
     const response = await addNewColumn(newColumn);
@@ -31,19 +33,14 @@ export const useGenerateColumn = () => {
   });
 
   const onRegenerateCells = $(async (column: Column) => {
-    const limit = column.process?.limit!;
+    const response = await regenerateCells(column);
 
-    const validatedCells = column.cells.filter((c) => c.validated).length;
-
-    for (const cell of column.cells
-      .filter((c) => !c.validated)
-      .slice(0, limit - validatedCells)) {
-      replaceCell({
-        ...cell,
-        generating: true,
-      });
+    for await (const cell of response) {
+      replaceCell(cell);
     }
+  });
 
+  const onEditColumn = $(async (column: Column) => {
     const response = await editColumn(column);
 
     for await (const { column, cell } of response) {
@@ -60,8 +57,8 @@ export const useGenerateColumn = () => {
     if ('id' in column && column.id === TEMPORAL_ID) {
       return onCreateColumn(column as CreateColumn);
     }
-    return onRegenerateCells(column as Column);
+    return onEditColumn(column as Column);
   });
 
-  return onGenerateColumn;
+  return { onGenerateColumn, onRegenerateCells };
 };

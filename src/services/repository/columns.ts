@@ -1,6 +1,7 @@
 import { ColumnModel } from '~/services/db/models/column';
 import { ProcessModel } from '~/services/db/models/process';
 import type { Column, ColumnKind, ColumnType, CreateColumn } from '~/state';
+import { getCellsCount } from './cells';
 import { createProcess, updateProcess } from './processes';
 import { createDatasetTableColumn } from './tables';
 
@@ -153,4 +154,8 @@ export const updateColumnPartially = async (
   // await updateDatasetTableColumn({ column, type: column.type });
 
   await model.save();
+};
+
+export const getColumnSize = async (column: Column): Promise<number> => {
+  return await getCellsCount({ columnId: column.id });
 };

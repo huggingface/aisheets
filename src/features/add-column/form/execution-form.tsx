@@ -292,7 +292,7 @@ export const ExecutionForm = component$<SidebarProps>(
               <div class="relative">
                 <div class="flex flex-col gap-4">
                   <Label class="text-left font-light">
-                    Prompt to generate the column content{' '}
+                    Prompt to generate the column content
                   </Label>
 
                   <TemplateTextArea

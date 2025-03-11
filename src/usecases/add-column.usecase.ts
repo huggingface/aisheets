@@ -45,5 +45,6 @@ export const useAddColumnUseCase = () =>
       session,
       limit: column.process!.limit!,
       offset: column.process!.offset,
+      parallel: column.process!.columnsReferences?.length > 0, // Only when we are not in the first col
     });
   });

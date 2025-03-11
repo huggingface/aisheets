@@ -31,6 +31,7 @@ export const useEditColumnUseCase = () =>
       limit: column.process!.limit!,
       offset: column.process!.offset,
       validatedCells,
+      parallel: column.process!.columnsReferences?.length > 0, // Only when we are not in the first col
     });
 
     const process = await updateProcess(column.process);

@@ -171,7 +171,7 @@ export default component$(() => {
                     class="bg-[#EBFFD6]"
                     onClick$={handleCreateBlankDatasetWithTransition}
                   >
-                    <LuPlus class="text-primary-foreground" />
+                    <LuPlus class="text-sm text-primary-foreground" />
                   </Button>
                 </th>
               </tr>

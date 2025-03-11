@@ -8,7 +8,7 @@ import {
 import { useColumnsStore } from '~/state';
 
 export const TableHeader = component$(() => {
-  const onGenerateColumn = useGenerateColumn();
+  const { onGenerateColumn } = useGenerateColumn();
   const { columns } = useColumnsStore();
   const { columnId } = useExecution();
 

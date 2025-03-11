@@ -20,7 +20,7 @@ export const TableCellHeader = component$<{ column: Column }>(({ column }) => {
     >
       <div class="flex items-center justify-between gap-2 w-full">
         <div class="flex items-center gap-2 text-wrap w-[80%]">
-          <LuZap class="text-primary-foreground" />
+          <LuZap class="text-sm text-primary-foreground" />
           <ColumnProperties column={column} />
         </div>
 

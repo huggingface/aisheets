@@ -174,7 +174,7 @@ export const ExecutionForm = component$<SidebarProps>(
       <th class="min-w-[660px] w-[660px] bg-primary font-normal border-t border-secondary text-left">
         <div class="flex justify-between items-center px-1">
           <Button size="sm" look="ghost">
-            <LuBookmark class="text-primary-foreground" />
+            <LuBookmark class="text-lg text-primary-foreground" />
           </Button>
 
           <Button
@@ -292,7 +292,7 @@ export const ExecutionForm = component$<SidebarProps>(
               <div class="relative">
                 <div class="flex flex-col gap-4">
                   <Label class="text-left font-light">
-                    Prompt to generate the column content{' '}
+                    Prompt to generate the column content
                   </Label>
 
                   <TemplateTextArea

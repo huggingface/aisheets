@@ -30,9 +30,9 @@ export const CellGeneration = component$<{ column: Column }>(({ column }) => {
         onClick$={() => onGenerateColumn(column)}
       >
         {canRegenerate.value ? (
-          <LuEgg class="text-primary-foreground" />
+          <LuEgg class="text-sm text-primary-foreground" />
         ) : (
-          <LuEggOff class="text-primary-foreground" />
+          <LuEggOff class="text-sm text-primary-foreground" />
         )}
       </Button>
     </Tooltip>

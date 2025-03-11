@@ -32,7 +32,7 @@ export const TableAddCellHeaderPlaceHolder = component$(() => {
         disabled={lastColumnId.value === TEMPORAL_ID}
         onClick$={handleNewColumn}
       >
-        <LuPlus class="text-primary-foreground" />
+        <LuPlus class="text-sm text-primary-foreground" />
       </Button>
     </th>
   );

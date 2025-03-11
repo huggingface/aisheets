@@ -46,7 +46,7 @@ describe('listDatasetRows', () => {
               name: dataset.name,
               createdBy: dataset.createdBy,
             },
-            process: null,
+            process: undefined,
           },
         ],
       },
@@ -123,7 +123,7 @@ describe('listDatasetRows', () => {
             name: dataset.name,
             createdBy: dataset.createdBy,
           },
-          process: null,
+          process: undefined,
         })),
       },
     })) {

@@ -1,6 +1,7 @@
 import { ColumnModel } from '~/services/db/models/column';
 import { ProcessModel } from '~/services/db/models/process';
 import type { Column, ColumnKind, ColumnType, CreateColumn } from '~/state';
+import { getCellsCount } from './cells';
 import { createProcess, updateProcess } from './processes';
 
 export const modelToColumn = (model: ColumnModel): Column => {
@@ -135,7 +136,12 @@ export const createColumn = async (column: CreateColumn): Promise<Column> => {
     datasetId: column.dataset!.id,
   });
 
-  const process = await createProcess(column, model.id);
+  const process = column.process
+    ? await createProcess({
+        process: column.process,
+        column: { id: model.id },
+      })
+    : undefined;
 
   const newbie: Column = {
     id: model.id,
@@ -196,4 +202,8 @@ export const updateColumnPartially = async (
   });
 
   await model.save();
+};
+
+export const getColumnSize = async (column: Column): Promise<number> => {
+  return await getCellsCount({ columnId: column.id });
 };

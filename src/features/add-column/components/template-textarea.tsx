@@ -195,7 +195,7 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
 
       <Textarea
         ref={textarea}
-        class="p-4 w-full h-full min-h-72 resize-none overflow-hidden border border-secondary-foreground bg-primary text-base rounded-sm pb-16"
+        class="p-4 w-full h-full min-h-72 resize-none overflow-hidden border border-secondary-foreground bg-white text-base rounded-sm pb-16"
         onInput$={(event) =>
           handleTextInput(event.target as HTMLTextAreaElement)
         }

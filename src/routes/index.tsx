@@ -154,7 +154,7 @@ export default component$(() => {
         >
           <table class="border-separate border-spacing-0 text-sm">
             <thead>
-              <tr class="min-h-12 h-12">
+              <tr class="min-h-8 h-8">
                 <th class="min-w-80 w-80 max-w-80 px-2 text-left border-[0.5px] border-r-0 border-b-0 rounded-tl-sm bg-primary">
                   <div class="flex items-center justify-between gap-2 w-full">
                     <div class="flex items-center gap-2 text-wrap w-[80%] font-normal">
@@ -171,7 +171,7 @@ export default component$(() => {
                     class="bg-[#EBFFD6]"
                     onClick$={handleCreateBlankDatasetWithTransition}
                   >
-                    <LuPlus class="text-primary-foreground" />
+                    <LuPlus class="text-sm text-primary-foreground" />
                   </Button>
                 </th>
               </tr>

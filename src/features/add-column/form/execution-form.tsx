@@ -171,8 +171,12 @@ export const ExecutionForm = component$<SidebarProps>(
     });
 
     return (
-      <th class="min-w-[700px] w-[700px] bg-white font-normal border-t border-secondary text-left">
-        <div class="flex justify-end px-4">
+      <th class="min-w-[660px] w-[660px] bg-primary font-normal border-t border-secondary text-left">
+        <div class="flex justify-between items-center px-1">
+          <Button size="sm" look="ghost">
+            <LuBookmark class="text-lg text-primary-foreground" />
+          </Button>
+
           <Button
             size="sm"
             look="ghost"
@@ -183,8 +187,8 @@ export const ExecutionForm = component$<SidebarProps>(
           </Button>
         </div>
         <div class="relative h-full w-full">
-          <div class="absolute h-full w-full flex flex-col px-4 gap-4">
-            <div class="flex flex-col gap-4">
+          <div class="absolute h-full w-full flex flex-col gap-4">
+            <div class="flex flex-col gap-4 px-8 bg-primary">
               <Resource
                 value={loadModels}
                 onPending={() => (
@@ -200,12 +204,14 @@ export const ExecutionForm = component$<SidebarProps>(
                     <div class="flex flex-col gap-4">
                       <div class="flex gap-4">
                         <div class="flex-[2]">
-                          <Label class="flex gap-1 mb-2">Model</Label>
+                          <Label class="flex gap-1 mb-2 font-light">
+                            Model
+                          </Label>
                           <Select.Root value={selectedModel.value?.id}>
-                            <Select.Trigger class="px-4 bg-primary rounded-base border-secondary-foreground">
+                            <Select.Trigger class="px-4 bg-white rounded-base border-secondary-foreground">
                               <Select.DisplayValue />
                             </Select.Trigger>
-                            <Select.Popover class="bg-primary border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto">
+                            <Select.Popover class="border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto">
                               {models.map((model, idx) => (
                                 <Select.Item
                                   key={idx}
@@ -233,7 +239,7 @@ export const ExecutionForm = component$<SidebarProps>(
                           </Select.Root>
                         </div>
                         <div class="flex-1" key={selectedModel.value.id}>
-                          <Label class="flex gap-1 mb-2">
+                          <Label class="flex gap-1 mb-2 font-light">
                             Inference Provider
                           </Label>
                           <Select.Root
@@ -245,10 +251,10 @@ export const ExecutionForm = component$<SidebarProps>(
                               selectedProvider.value = provider;
                             })}
                           >
-                            <Select.Trigger class="px-4 bg-primary rounded-base border-secondary-foreground">
+                            <Select.Trigger class="px-4 bg-white rounded-base border-secondary-foreground">
                               <Select.DisplayValue />
                             </Select.Trigger>
-                            <Select.Popover class="bg-primary border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto">
+                            <Select.Popover class="border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto">
                               {selectedModel.value?.providers?.map(
                                 (provider, idx) => (
                                   <Select.Item
@@ -276,34 +282,18 @@ export const ExecutionForm = component$<SidebarProps>(
                   return (
                     <Input
                       bind:value={inputModelId}
-                      class="px-4 h-10 border-secondary-foreground bg-primary"
+                      class="bg-white px-4 h-10 border-secondary-foreground"
                       placeholder="Cannot load model suggestions. Please enter the model ID manually."
                     />
                   );
                 }}
               />
 
-              <Input
-                id="column-rows"
-                type="number"
-                class="px-4 h-10 border-secondary-foreground bg-primary"
-                max={maxRows.value}
-                min="1"
-                onInput$={(_, el) => {
-                  if (Number(el.value) > maxRows.value) {
-                    nextTick(() => {
-                      rowsToGenerate.value = String(maxRows.value);
-                    });
-                  }
-
-                  rowsToGenerate.value = el.value;
-                }}
-                value={rowsToGenerate.value}
-              />
-
               <div class="relative">
                 <div class="flex flex-col gap-4">
-                  <Label class="text-left">Prompt</Label>
+                  <Label class="text-left font-light">
+                    Prompt to generate the column content
+                  </Label>
 
                   <TemplateTextArea
                     bind:value={prompt}
@@ -312,44 +302,45 @@ export const ExecutionForm = component$<SidebarProps>(
                   />
                 </div>
 
-                <div class="absolute bottom-14 flex flex-col px-4 gap-1 w-full">
-                  <div class="flex justify-between items-center gap-4 w-full">
-                    <Button
-                      key={isSubmitting.value.toString()}
-                      look="primary"
-                      onClick$={onGenerate}
-                      disabled={
-                        !canRegenerate.value ||
-                        !isTouched.value ||
-                        isSubmitting.value ||
-                        isAnyColumnGenerating.value
-                      }
-                    >
-                      <div class="flex items-center gap-4">
-                        <LuEgg class="text-xl" />
+                <div class="absolute bottom-14 flex flex-row items-center justify-end px-4 gap-8 w-full">
+                  <div class="flex gap-1 items-center">
+                    <Label class="font-light">Rows:</Label>
+                    <Input
+                      type="number"
+                      class="h-8 border-secondary-foreground w-fit bg-primary"
+                      max={maxRows.value}
+                      min="1"
+                      onInput$={(_, el) => {
+                        if (Number(el.value) > maxRows.value) {
+                          nextTick(() => {
+                            rowsToGenerate.value = String(maxRows.value);
+                          });
+                        }
 
-                        {isAnyColumnGenerating.value
-                          ? 'Generating...'
-                          : 'Generate'}
-                      </div>
-                    </Button>
-
-                    <Button size="icon" look="ghost">
-                      <LuBookmark class="text-primary-foreground" />
-                    </Button>
+                        rowsToGenerate.value = el.value;
+                      }}
+                      value={rowsToGenerate.value}
+                    />
                   </div>
-                  <span class="font-light text-sm">
-                    {isAnyColumnGenerating.value &&
-                      'Please wait for the current generation to finish.'}
-                  </span>
-                  <span class="font-light text-sm">
-                    {!canRegenerate.value &&
-                      'Some references columns are dirty, please, regenerate them first.'}
-                  </span>
-                  <span class="font-light text-sm">
-                    {!isTouched.value &&
-                      'Change some field to enable the generate button.'}
-                  </span>
+                  <Button
+                    key={isSubmitting.value.toString()}
+                    look="primary"
+                    onClick$={onGenerate}
+                    disabled={
+                      !canRegenerate.value ||
+                      !isTouched.value ||
+                      isSubmitting.value ||
+                      isAnyColumnGenerating.value
+                    }
+                  >
+                    <div class="flex items-center gap-4">
+                      <LuEgg class="text-xl" />
+
+                      {isAnyColumnGenerating.value
+                        ? 'Generating...'
+                        : 'Generate'}
+                    </div>
+                  </Button>
                 </div>
               </div>
             </div>

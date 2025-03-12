@@ -177,14 +177,16 @@ export const ExecutionForm = component$<SidebarProps>(
             <LuBookmark class="text-lg text-primary-foreground" />
           </Button>
 
-          <Button
-            size="sm"
-            look="ghost"
-            onClick$={handleCloseForm}
-            disabled={columns.value[0]?.id === TEMPORAL_ID}
-          >
-            <LuXCircle class="text-lg text-primary-foreground" />
-          </Button>
+          {columns.value.filter((c) => c.id !== TEMPORAL_ID).length >= 1 && (
+            <Button
+              size="sm"
+              look="ghost"
+              onClick$={handleCloseForm}
+              disabled={columns.value[0]?.id === TEMPORAL_ID}
+            >
+              <LuXCircle class="text-lg text-primary-foreground" />
+            </Button>
+          )}
         </div>
         <div class="relative h-full w-full">
           <div class="absolute h-full w-full flex flex-col gap-4">

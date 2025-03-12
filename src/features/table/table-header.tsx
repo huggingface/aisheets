@@ -5,7 +5,7 @@ import {
   TableAddCellHeaderPlaceHolder,
   TableCellHeader,
 } from '~/features/table/components/header';
-import { useColumnsStore } from '~/state';
+import { TEMPORAL_ID, useColumnsStore } from '~/state';
 
 export const TableHeader = component$(() => {
   const { onGenerateColumn } = useGenerateColumn();
@@ -30,7 +30,9 @@ export const TableHeader = component$(() => {
             </Fragment>
           ))}
 
-        <TableAddCellHeaderPlaceHolder />
+        {columns.value.filter((c) => c.id !== TEMPORAL_ID).length >= 1 && (
+          <TableAddCellHeaderPlaceHolder />
+        )}
       </tr>
     </thead>
   );

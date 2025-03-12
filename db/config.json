@@ -1,0 +1,25 @@
+{
+  "development": {
+    "username": null,
+    "password": null,
+    "database": "dataground",
+    "dialect": "sqlite",
+    "storage": "data/development.db"
+  },
+  
+  "test": {
+    "username": null,
+    "password": null,
+    "database": "dataground",
+    "dialect": "sqlite",
+    "storage": "data/test.db"
+  },
+
+  "production": {
+    "username": null,
+    "password": null,
+    "database": "dataground",
+    "dialect": "sqlite",
+    "storage": "data/production.db"
+  }
+}

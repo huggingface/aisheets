@@ -345,10 +345,12 @@ export const ExecutionForm = component$<SidebarProps>(
                   </Button>
                 </div>
               </div>
-              <div class="flex items-center justify-center text-indigo-500">
-                The column has been generated, to generate again edit the
-                configuration
-              </div>
+              {!isTouched.value && (
+                <div class="flex items-center justify-center text-indigo-500">
+                  The column has been generated, to generate again edit the
+                  configuration
+                </div>
+              )}
             </div>
           </div>
         </div>

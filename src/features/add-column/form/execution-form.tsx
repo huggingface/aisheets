@@ -345,6 +345,10 @@ export const ExecutionForm = component$<SidebarProps>(
                     key={isSubmitting.value.toString()}
                     look="primary"
                     onClick$={onGenerate}
+                    disabled={
+                      !isSubmitting.value &&
+                      (!canRegenerate.value || !isTouched.value)
+                    }
                   >
                     <div class="flex items-center gap-4">
                       {isSubmitting.value ? (

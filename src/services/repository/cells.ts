@@ -1,7 +1,6 @@
 import { Op } from 'sequelize';
 import { ColumnCellModel } from '~/services/db/models/cell';
 import type { Cell } from '~/state';
-import { ColumnModel } from '../db/models/column';
 
 interface GetRowCellsParams {
   rowIdx: number;
@@ -157,17 +156,6 @@ export const updateCell = async (cell: Partial<Cell>): Promise<Cell> => {
 
   model.set({ ...updatedCell });
   model = await model.save();
-
-  await ColumnModel.update(
-    {
-      lastCellChangedAt: new Date(),
-    },
-    {
-      where: {
-        id: model.columnId,
-      },
-    },
-  );
 
   return {
     id: model.id,

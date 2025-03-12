@@ -1,20 +1,37 @@
-import { component$, useComputed$ } from '@builder.io/qwik';
+import {
+  component$,
+  useComputed$,
+  useSignal,
+  useTask$,
+} from '@builder.io/qwik';
+import { server$ } from '@builder.io/qwik-city';
 import { LuEgg, LuEggOff } from '@qwikest/icons/lucide';
 import { Button } from '~/components';
 import { Tooltip } from '~/components/ui/tooltip/tooltip';
 import { useGenerateColumn } from '~/features/execution';
+import { hasChangesAfterLastExecution } from '~/services';
 import { type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
+
+const hasChangesAfterLastExecution$ = server$(hasChangesAfterLastExecution);
 
 export const CellGeneration = component$<{ column: Column }>(({ column }) => {
   const { columns, isDirty } = useColumnsStore();
   const { onRegenerateCells } = useGenerateColumn();
 
-  const canRegenerate = useComputed$(() => {
-    const savedColumn = columns.value.find((c) => c.id === column.id);
+  const currentColumn = useComputed$(() =>
+    columns.value.find((c) => c.id === column.id),
+  );
 
-    if (!savedColumn) return false;
+  const canRegenerate = useSignal(false);
 
-    return isDirty(savedColumn);
+  useTask$(async ({ track }) => {
+    track(currentColumn);
+
+    if (currentColumn.value && currentColumn.value.id !== TEMPORAL_ID) {
+      canRegenerate.value = await hasChangesAfterLastExecution$({
+        id: currentColumn.value.id!,
+      });
+    }
   });
 
   if (column.id === TEMPORAL_ID || column.kind !== 'dynamic') {

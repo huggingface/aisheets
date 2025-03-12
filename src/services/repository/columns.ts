@@ -242,20 +242,12 @@ export const hasChangesAfterLastExecution = async (column: {
           },
         },
         {
-          [Op.and]: [
-            {
-              columnId: {
-                [Op.in]: model.process?.referredColumns.map(
-                  (column) => column.id,
-                ),
-              },
-            },
-            {
-              updatedAt: {
-                [Op.gt]: model.process?.lastExecutedAt,
-              },
-            },
-          ],
+          columnId: {
+            [Op.in]: model.process?.referredColumns.map((column) => column.id),
+          },
+          updatedAt: {
+            [Op.gt]: model.process?.lastExecutedAt,
+          },
         },
       ],
     },

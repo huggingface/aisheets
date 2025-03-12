@@ -8,8 +8,8 @@ import { $, useComputed$, useSignal } from '@builder.io/qwik';
  * - `open`: A function to set the toggle state to true.
  * - `close`: A function to set the toggle state to false.
  */
-export const useToggle = () => {
-  const state = useSignal(false);
+export const useToggle = (initialState = false) => {
+  const state = useSignal(initialState);
   const isOpen = useComputed$(() => state.value === true);
 
   const open = $(() => {

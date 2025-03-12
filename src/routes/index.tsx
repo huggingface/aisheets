@@ -6,8 +6,7 @@ import {
   useNavigate,
 } from '@builder.io/qwik-city';
 import * as hub from '@huggingface/hub';
-import { LuDownload, LuFile, LuPlus, LuZap } from '@qwikest/icons/lucide';
-import { Button } from '~/components';
+import { LuDownload, LuFile, LuPencilLine, LuZap } from '@qwikest/icons/lucide';
 
 import { CLIENT_ID, HF_TOKEN, OAUTH_SCOPES } from '~/config';
 import { createDatasetIdByUser } from '~/services';
@@ -118,39 +117,78 @@ export default component$(() => {
   return (
     <ActiveDatasetProvider>
       <div class="flex flex-col h-full w-fit overflow-hidden">
-        <div class="mt-36 w-[600px]">
-          <Button
-            look="ghost"
-            hover={false}
-            class="w-full text-[#676767] py-4 border-b border-t rounded-none"
-            onClick$={handleCreateBlankDataset}
-          >
-            <div class="w-full px-4 flex flex-row justify-start gap-1">
-              <LuFile class="w-5 h-5" />
-              Start with a blank dataset.
-              <span class="text-[#AAB0C0]">
-                Build your synthetic data from scratch
-              </span>
-            </div>
-          </Button>
+        <div
+          class={`mt-12 w-[800px] transition-opacity duration-200 ${isTransitioning.value ? 'opacity-0' : 'opacity-100'}`}
+        >
+          <h1 class="text-3xl font-bold w-full mb-8">Choose how to start</h1>
 
-          <Link href="/dataset/create/from-hub">
-            <Button
-              look="ghost"
-              hover={false}
-              class="w-full text-[#676767] py-4 border-b rounded-none"
-            >
-              <div class="w-full px-4 flex flex-row justify-start gap-1">
-                <LuDownload class="w-5 h-5" />
-                Import a dataset from Hugging Face.
-                <span class="text-[#AAB0C0]">Ideal for model benchmarking</span>
+          <div class="flex flex-col gap-0">
+            <div class="w-full text-[#676767] border-t border-b group transition-colors cursor-pointer">
+              <div class="w-full px-6 py-5 flex flex-row items-center gap-3 font-light group-hover:bg-gray-50/50">
+                <span class="text-sm text-foreground">
+                  Generate content on various topics.
+                </span>
+                <span class="text-[#AAB0C0] text-sm font-light">
+                  Create tweets, blog posts, or emails
+                </span>
               </div>
-            </Button>
-          </Link>
+            </div>
+
+            <div class="w-full text-[#676767] border-b group transition-colors cursor-pointer">
+              <div class="w-full px-6 py-5 flex flex-row items-center gap-3 font-light group-hover:bg-gray-50/50">
+                <span class="text-sm text-foreground">
+                  Generate questions and responses.
+                </span>
+                <span class="text-[#AAB0C0] text-sm font-light">
+                  Produce reasoning, scientific, or creative writing questions.
+                </span>
+              </div>
+            </div>
+
+            <div class="w-full text-[#676767] border-b group transition-colors cursor-pointer">
+              <div class="w-full px-6 py-5 flex flex-row items-center gap-3 font-light group-hover:bg-gray-50/50">
+                <span class="text-sm text-foreground">
+                  Generate code problems and solutions.
+                </span>
+                <span class="text-[#AAB0C0] text-sm font-light">
+                  Design coding challenges with solutions.
+                </span>
+              </div>
+            </div>
+
+            <div
+              class="w-full text-[#676767] border-b group transition-colors cursor-pointer"
+              onClick$={handleCreateBlankDataset}
+            >
+              <div class="w-full px-6 py-5 flex flex-row items-center gap-3 font-light group-hover:bg-gray-50/50">
+                <LuFile class="w-4 h-4 text-foreground" />
+                <span class="text-sm text-foreground">
+                  Create a blank dataset.
+                </span>
+                <span class="text-[#AAB0C0] text-sm font-light">
+                  Build your synthetic data from scratch
+                </span>
+              </div>
+            </div>
+
+            <Link href="/dataset/create/from-hub" class="w-full">
+              <div class="w-full text-[#676767] border-b group transition-colors cursor-pointer">
+                <div class="w-full px-6 py-5 flex flex-row items-center gap-3 font-light group-hover:bg-gray-50/50">
+                  <LuDownload class="w-4 h-4 text-foreground" />
+                  <span class="text-sm text-foreground">
+                    Import a dataset from Hugging Face.
+                  </span>
+                  <span class="text-[#AAB0C0] text-sm font-light">
+                    Ideal for model benchmarking
+                  </span>
+                </div>
+              </div>
+            </Link>
+          </div>
         </div>
 
         <div
-          class={`mt-32 text-primary-foreground font-light bg-white w-fit transition-all duration-1000 ${isTransitioning.value ? '-translate-y-72' : ''}`}
+          class={`mt-16 text-primary-foreground font-light bg-white w-fit transition-all duration-1000 ${isTransitioning.value ? '-translate-y-[400px]' : ''}`}
         >
           <table class="border-separate border-spacing-0 text-sm">
             <thead>
@@ -164,15 +202,18 @@ export default component$(() => {
                   </div>
                 </th>
 
-                <th class="min-w-80 w-80 max-w-80 px-2 text-left border-[0.5px] border-r-0 border-b-0 border-t-0 bg-primary">
-                  <Button
-                    look="ghost"
-                    size="sm"
-                    class="bg-[#EBFFD6]"
+                <th class="min-w-80 w-80 max-w-80 px-2 text-left border-[0.5px] border-r-0 border-b-0 border-t-0 bg-primary relative">
+                  <div
+                    class={`absolute -top-6 left-[15%] -translate-x-1/2 bg-white shadow-md !rounded-none flex min-w-[240px] border border-[#eee] transition-opacity duration-200 h-[44px] cursor-pointer group ${isTransitioning.value ? 'opacity-0' : 'opacity-100'}`}
                     onClick$={handleCreateBlankDatasetWithTransition}
                   >
-                    <LuPlus class="text-sm text-primary-foreground" />
-                  </Button>
+                    <div class="flex items-center gap-2 px-4 w-full group-hover:bg-gray-50/50 transition-colors">
+                      <LuPencilLine class="w-4 h-4 text-[#676767]" />
+                      <span class="text-[#999] text-sm font-light">
+                        Start with a prompt
+                      </span>
+                    </div>
+                  </div>
                 </th>
               </tr>
             </thead>

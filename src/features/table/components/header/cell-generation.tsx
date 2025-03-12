@@ -24,6 +24,7 @@ export const CellGeneration = component$<{ column: Column }>(({ column }) => {
   return (
     <Tooltip text="Regenerate">
       <Button
+        class="rounded-full"
         look="ghost"
         size="sm"
         disabled={!canRegenerate.value}

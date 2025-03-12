@@ -41,10 +41,15 @@ WORKDIR /usr/src/app
 COPY --from=build /usr/src/app/node_modules ./node_modules
 COPY --from=build /usr/src/app/server ./server
 COPY --from=build /usr/src/app/dist ./dist
+COPY --from=build /usr/src/app/db ./db
+COPY --from=build /usr/src/app/.sequelizerc ./
+
 # COPY --from=build /usr/src/app/.env ./
 
 # Expose the application port
 EXPOSE 3000
 
+VOLUME /usr/src/app/data
+
 # Start the application
-CMD [ "node", "server/entry.express" ]
+CMD "/bin/bash -c 'node node_modules/sequelize-cli/lib/sequelize db:migrate --env production && node server/entry.express.js'"

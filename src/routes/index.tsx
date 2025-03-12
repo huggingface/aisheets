@@ -118,7 +118,7 @@ export default component$(() => {
   return (
     <ActiveDatasetProvider>
       <div class="flex flex-col h-full w-fit overflow-hidden">
-        <div class="mt-36 w-[600px]">
+        <div class="mt-36 w-[800px]">
           <Button
             look="ghost"
             hover={false}
@@ -129,7 +129,7 @@ export default component$(() => {
               <LuFile class="w-5 h-5" />
               Start with a blank dataset.
               <span class="text-[#AAB0C0]">
-                Build your synthetic data from scratch
+                Build your synthetic dataset from scratch
               </span>
             </div>
           </Button>
@@ -143,7 +143,9 @@ export default component$(() => {
               <div class="w-full px-4 flex flex-row justify-start gap-1">
                 <LuDownload class="w-5 h-5" />
                 Import a dataset from Hugging Face.
-                <span class="text-[#AAB0C0]">Ideal for model benchmarking</span>
+                <span class="text-[#AAB0C0]">
+                  Ideal for model evaluation and data augmentation
+                </span>
               </div>
             </Button>
           </Link>

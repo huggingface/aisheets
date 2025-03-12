@@ -18,7 +18,7 @@ export default component$(() => {
     <ModalsProvider>
       <div class="flex-row flex max-h-screen">
         <MainSidebar />
-        <div class="min-w-screen h-screen px-4 pt-4 w-full overflow-auto scrollable">
+        <div class="min-w-screen h-screen px-6  pt-4 w-full overflow-auto scrollable">
           <Slot />
         </div>
       </div>

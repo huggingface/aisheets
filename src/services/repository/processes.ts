@@ -87,3 +87,25 @@ export const updateProcess = async (process: Process): Promise<Process> => {
     updatedAt: model.updatedAt,
   };
 };
+
+export const updateLastProcessExecution = async (process: {
+  id: string;
+}): Promise<Process> => {
+  const model = await ProcessModel.findByPk(process.id);
+
+  if (!model) throw new Error('Process not found');
+
+  model.set({ lastExecutedAt: new Date() });
+  await model.save();
+
+  return {
+    id: model.id,
+    limit: model.limit,
+    modelName: model.modelName,
+    modelProvider: model.modelProvider,
+    offset: model.offset,
+    prompt: model.prompt,
+    columnsReferences: [],
+    updatedAt: model.updatedAt,
+  };
+};

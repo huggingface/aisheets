@@ -26,7 +26,7 @@ export class ColumnCellModel extends Model<
   declare column?: NonAttribute<ColumnModel>;
 
   declare createdAt: NonAttribute<Date>;
-  declare updatedAt: NonAttribute<Date>;
+  declare updatedAt: CreationOptional<Date>; // Must be include to be used when querying
 
   declare static associations: {
     column: Association<ColumnCellModel, ColumnModel>;
@@ -63,6 +63,9 @@ ColumnCellModel.init(
     generating: {
       type: DataTypes.BOOLEAN,
       defaultValue: false,
+    },
+    updatedAt: {
+      type: DataTypes.DATE,
     },
   },
   {

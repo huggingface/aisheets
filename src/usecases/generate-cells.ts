@@ -1,4 +1,4 @@
-import { getColumnSize } from '~/services';
+import { getColumnSize, updateLastProcessExecution } from '~/services';
 import {
   createCell,
   getColumnCellByIdx,
@@ -60,61 +60,68 @@ export const generateCells = async function* ({
   if (!limit) limit = await getColumnSize(column);
   if (!offset) offset = 0;
 
-  for (let i = offset; i < limit + offset; i++) {
-    if (validatedIdxs?.includes(i)) continue;
+  try {
+    for (let i = offset; i < limit + offset; i++) {
+      if (validatedIdxs?.includes(i)) continue;
 
-    const args = {
-      accessToken: session.token,
-      modelName,
-      modelProvider,
-      examples,
-      instruction: prompt,
-      timeout,
-      data: {},
-    };
+      const args = {
+        accessToken: session.token,
+        modelName,
+        modelProvider,
+        examples,
+        instruction: prompt,
+        timeout,
+        data: {},
+      };
 
-    if (columnsReferences?.length) {
-      const rowCells = await getRowCells({
-        rowIdx: i,
-        columns: columnsReferences,
-      });
-      args.data = Object.fromEntries(
-        rowCells.map((cell) => [cell.column!.name, cell.value]),
-      );
-    }
+      if (columnsReferences?.length) {
+        const rowCells = await getRowCells({
+          rowIdx: i,
+          columns: columnsReferences,
+        });
+        args.data = Object.fromEntries(
+          rowCells.map((cell) => [cell.column!.name, cell.value]),
+        );
+      }
 
-    const cell =
-      (await getColumnCellByIdx({ idx: i, columnId: column.id })) ??
-      (await createCell({
-        cell: { idx: i },
-        columnId: column.id,
-      }));
+      const cell =
+        (await getColumnCellByIdx({ idx: i, columnId: column.id })) ??
+        (await createCell({
+          cell: { idx: i },
+          columnId: column.id,
+        }));
 
-    cell.generating = true;
+      cell.generating = true;
 
-    yield { cell };
+      yield { cell };
 
-    if (stream) {
-      for await (const response of runPromptExecutionStream(args)) {
+      if (stream) {
+        for await (const response of runPromptExecutionStream(args)) {
+          cell.value = response.value;
+          cell.error = response.error;
+
+          if (!response.done) yield { cell };
+        }
+      } else {
+        const response = await runPromptExecution(args);
         cell.value = response.value;
         cell.error = response.error;
-
-        if (!response.done) yield { cell };
       }
-    } else {
-      const response = await runPromptExecution(args);
-      cell.value = response.value;
-      cell.error = response.error;
+
+      cell.generating = false;
+
+      await updateCell(cell);
+      yield { cell };
+
+      // Add newly generated values as examples when there are no validated cells or referred columns
+      if (
+        cell.value &&
+        !(validatedCells?.length || columnsReferences?.length)
+      ) {
+        examples.push({ output: cell.value, inputs: {} });
+      }
     }
-
-    cell.generating = false;
-
-    await updateCell(cell);
-    yield { cell };
-
-    // Add newly generated values as examples when there are no validated cells or referred columns
-    if (cell.value && !(validatedCells?.length || columnsReferences?.length)) {
-      examples.push({ output: cell.value, inputs: {} });
-    }
+  } finally {
+    await updateLastProcessExecution({ id: process.id! });
   }
 };

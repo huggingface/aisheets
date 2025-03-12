@@ -1,3 +1,4 @@
+import { Op } from 'sequelize';
 import { ColumnModel } from '~/services/db/models/column';
 import { ProcessModel } from '~/services/db/models/process';
 import type { Column, ColumnKind, ColumnType, CreateColumn } from '~/state';
@@ -206,4 +207,59 @@ export const updateColumnPartially = async (
 
 export const getColumnSize = async (column: Column): Promise<number> => {
   return await getCellsCount({ columnId: column.id });
+};
+
+export const hasChangesAfterLastExecution = async (column: {
+  id: string;
+}): Promise<boolean> => {
+  const model = await ColumnModel.findByPk(column.id, {
+    include: [
+      {
+        association: ColumnModel.associations.process,
+        include: [ProcessModel.associations.referredColumns],
+      },
+    ],
+  });
+
+  if (!model) throw new Error('Column not found');
+
+  const pendingCount = await getCellsCount({
+    where: {
+      columnId: column.id,
+      validated: false,
+    },
+  });
+
+  if (pendingCount == 0) return false;
+
+  const matchedCells = await getCellsCount({
+    where: {
+      [Op.or]: [
+        {
+          columnId: column.id,
+          updatedAt: {
+            [Op.gt]: model.process?.lastExecutedAt,
+          },
+        },
+        {
+          [Op.and]: [
+            {
+              columnId: {
+                [Op.in]: model.process?.referredColumns.map(
+                  (column) => column.id,
+                ),
+              },
+            },
+            {
+              updatedAt: {
+                [Op.gt]: model.process?.lastExecutedAt,
+              },
+            },
+          ],
+        },
+      ],
+    },
+  });
+
+  return matchedCells > 0;
 };

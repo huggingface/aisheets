@@ -29,6 +29,8 @@ export class ProcessModel extends Model<
   declare createdAt: NonAttribute<Date>;
   declare updatedAt: NonAttribute<Date>;
 
+  declare lastExecutedAt: CreationOptional<Date>;
+
   declare static associations: {
     referredColumns: Association<ProcessModel, ColumnModel>;
   };
@@ -64,6 +66,10 @@ ProcessModel.init(
     columnId: {
       type: DataTypes.UUID,
       allowNull: false,
+    },
+    lastExecutedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
     },
   },
   {

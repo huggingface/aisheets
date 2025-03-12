@@ -17,7 +17,7 @@ export const ExportToHub = component$(() => {
   const exportDataset = useExportDataset();
   const session = useSession();
 
-  const { openExportToHub, closeExportToHub } = useModals('exportToHub');
+  const { openExportToHub } = useModals('exportToHub');
 
   const { activeDataset } = useDatasetsStore();
   const defaultExportName = useComputed$(() =>

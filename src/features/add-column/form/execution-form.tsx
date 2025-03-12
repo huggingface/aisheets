@@ -171,7 +171,7 @@ export const ExecutionForm = component$<SidebarProps>(
     });
 
     return (
-      <th class="min-w-[660px] w-[660px] bg-primary font-normal border-t border-secondary text-left">
+      <th class="min-w-[660px] w-[660px] bg-primary font-normal border-t border-secondary border-r text-left">
         <div class="flex justify-between items-center px-1">
           <Button size="sm" look="ghost">
             <LuBookmark class="text-lg text-primary-foreground" />
@@ -189,7 +189,7 @@ export const ExecutionForm = component$<SidebarProps>(
           )}
         </div>
         <div class="relative h-full w-full">
-          <div class="absolute h-full w-full flex flex-col gap-4">
+          <div class="absolute h-full w-full flex flex-col">
             <div class="flex flex-col gap-4 px-8 bg-primary">
               <Resource
                 value={loadModels}
@@ -290,21 +290,21 @@ export const ExecutionForm = component$<SidebarProps>(
                   );
                 }}
               />
-
               <div class="relative">
                 <div class="flex flex-col gap-4">
                   <Label class="text-left font-light">
                     Prompt to generate the column content
                   </Label>
 
-                  <TemplateTextArea
-                    bind:value={prompt}
-                    variables={variables}
-                    onSelectedVariables={onSelectedVariables}
-                  />
+                  <div class="h-96 min-h-96 max-h-96 bg-white border border-secondary-foreground rounded-sm">
+                    <TemplateTextArea
+                      bind:value={prompt}
+                      variables={variables}
+                      onSelectedVariables={onSelectedVariables}
+                    />
+                  </div>
                 </div>
-
-                <div class="absolute bottom-14 flex flex-row items-center justify-end px-4 gap-8 w-full">
+                <div class="absolute bottom-4 flex flex-row items-center justify-end px-6 gap-8 w-full">
                   <div class="flex gap-1 items-center">
                     <Label class="font-light">Rows:</Label>
                     <Input
@@ -344,6 +344,10 @@ export const ExecutionForm = component$<SidebarProps>(
                     </div>
                   </Button>
                 </div>
+              </div>
+              <div class="flex items-center justify-center text-indigo-500">
+                The column has been generated, to generate again edit the
+                configuration
               </div>
             </div>
           </div>

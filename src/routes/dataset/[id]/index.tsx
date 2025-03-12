@@ -10,17 +10,13 @@ export default component$(() => {
   return (
     <ActiveDatasetProvider>
       <div class="flex flex-col h-full min-w-full w-fit space-y-2">
-        <Username />
-        <div class="flex flex-col flex-none gap-2">
-          <div class="flex justify-between items-center w-full">
-            <DatasetName />
-            <ExportToHub />
-          </div>
+        <div class="flex justify-end items-center w-full gap-4">
+          <ExportToHub />
+          <Username />
         </div>
 
-        <div class="flex-1">
-          <Table />
-        </div>
+        <DatasetName />
+        <Table />
       </div>
     </ActiveDatasetProvider>
   );

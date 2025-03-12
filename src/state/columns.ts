@@ -170,6 +170,39 @@ export const useColumnsStore = () => {
             id: TEMPORAL_ID,
           },
         },
+        {
+          id: TEMPORAL_ID,
+          idx: 5,
+          validated: false,
+          updatedAt: new Date(),
+          generating: false,
+          value: '',
+          column: {
+            id: TEMPORAL_ID,
+          },
+        },
+        {
+          id: TEMPORAL_ID,
+          idx: 6,
+          validated: false,
+          updatedAt: new Date(),
+          generating: false,
+          value: '',
+          column: {
+            id: TEMPORAL_ID,
+          },
+        },
+        {
+          id: TEMPORAL_ID,
+          idx: 7,
+          validated: false,
+          updatedAt: new Date(),
+          generating: false,
+          value: '',
+          column: {
+            id: TEMPORAL_ID,
+          },
+        },
       ],
       process: {
         modelName: '',

@@ -149,8 +149,9 @@ export const TableBody = component$(() => {
                     </>
                   )}
 
+                  {/* td for execution form */}
                   {columnId.value === cell.column?.id && (
-                    <td class="min-w-[660px] w-[660px] bg-primary" />
+                    <td class="min-w-[660px] w-[660px] bg-primary border-r" />
                   )}
                 </Fragment>
               );

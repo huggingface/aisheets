@@ -118,7 +118,9 @@ export default component$(() => {
   return (
     <ActiveDatasetProvider>
       <div class="flex flex-col h-full w-fit overflow-hidden">
-        <div class="mt-36 w-[800px]">
+        <div class="mt-11 w-[800px]">
+          <h1 class="text-3xl font-bold w-full mb-8">Choose how to start</h1>
+
           <Button
             look="ghost"
             hover={false}

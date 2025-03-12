@@ -9,7 +9,7 @@ import {
 } from 'sequelize';
 
 import { db } from '~/services/db';
-import { ColumnModel } from '~/services/db/models/column';
+import type { ColumnModel } from '~/services/db/models/column';
 //Review the path
 
 export class DatasetModel extends Model<
@@ -48,18 +48,6 @@ DatasetModel.init(
   },
   {
     sequelize: db,
-    modelName: 'Dataset',
+    tableName: 'datasets',
   },
 );
-
-DatasetModel.hasMany(ColumnModel, {
-  sourceKey: 'id',
-  foreignKey: 'datasetId',
-  as: 'columns',
-});
-
-ColumnModel.belongsTo(DatasetModel, {
-  targetKey: 'id',
-  foreignKey: 'datasetId',
-  as: 'dataset',
-});

@@ -10,7 +10,7 @@ import {
 } from 'sequelize';
 
 import { db } from '~/services/db';
-import type { ColumnModel } from '~/services/db/models/column';
+import { ColumnModel } from '~/services/db/models/column';
 
 export class ProcessModel extends Model<
   InferAttributes<ProcessModel>,
@@ -31,6 +31,7 @@ export class ProcessModel extends Model<
 
   declare static associations: {
     referredColumns: Association<ProcessModel, ColumnModel>;
+    column: Association<ProcessModel, ColumnModel>;
   };
 }
 
@@ -68,6 +69,33 @@ ProcessModel.init(
   },
   {
     sequelize: db,
-    modelName: 'Process',
+    tableName: 'processes',
+  },
+);
+
+export const ProcessReferredColumnsModel = db.define(
+  'ProcessReferredColumnsModel',
+  {
+    processId: {
+      type: DataTypes.UUID,
+      allowNull: false,
+      references: {
+        model: ProcessModel,
+        key: 'id',
+      },
+    },
+    columnId: {
+      type: DataTypes.UUID,
+      allowNull: false,
+      references: {
+        model: ColumnModel,
+        key: 'id',
+      },
+    },
+  },
+  {
+    tableName: 'process_referred_columns',
+    createdAt: false,
+    updatedAt: false,
   },
 );

@@ -10,7 +10,7 @@ export const buttonVariants = cva(
         primary:
           'p-4 rounded-2xl h-10 bg-indigo-300 hover:bg-indigo-400 text-white w-fit select-none disabled:bg-indigo-100',
         secondary:
-          'p-4 rounded-2xl h-10 w-fit select-none border border-secondary bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 active:shadow-base active:press',
+          'p-4 rounded-md h-10 w-fit select-none border border-neutral-400 bg-neutral-100 text-primary-foreground shadow-sm hover:bg-neutral-200 hover:border-neutral-500 active:shadow-base active:press',
         alert:
           'border-base bg-alert text-alert-foreground shadow-sm hover:bg-alert/90 active:shadow-base active:press',
         outline:

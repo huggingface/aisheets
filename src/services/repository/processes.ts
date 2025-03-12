@@ -1,4 +1,7 @@
-import { ProcessColumnModel, ProcessModel } from '~/services/db/models';
+import {
+  ProcessModel,
+  ProcessReferredColumnsModel,
+} from '~/services/db/models';
 import type { Process } from '~/state';
 
 export interface CreateProcess {
@@ -30,7 +33,11 @@ export const createProcess = async ({
 
   // TODO: Try to create junction model when creating a process
   if ((process.columnsReferences ?? []).length > 0) {
-    await ProcessColumnModel.bulkCreate(
+    await ProcessReferredColumnsModel.destroy({
+      where: { processId: model.id },
+    });
+
+    await ProcessReferredColumnsModel.bulkCreate(
       process.columnsReferences!.map((columnId) => {
         return { processId: model.id, columnId };
       }),
@@ -68,8 +75,10 @@ export const updateProcess = async (process: Process): Promise<Process> => {
   await model.save();
 
   if ((process.columnsReferences ?? []).length > 0) {
-    await ProcessColumnModel.destroy({ where: { processId: process.id } });
-    await ProcessColumnModel.bulkCreate(
+    await ProcessReferredColumnsModel.destroy({
+      where: { processId: process.id },
+    });
+    await ProcessReferredColumnsModel.bulkCreate(
       process.columnsReferences!.map((columnId) => {
         return { processId: process.id, columnId };
       }),

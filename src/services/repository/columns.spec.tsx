@@ -1,6 +1,9 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { ColumnModel, ProcessColumnModel } from '../db/models/column';
-import { ProcessModel } from '../db/models/process';
+import { ColumnModel } from '../db/models/column';
+import {
+  ProcessModel,
+  ProcessReferredColumnsModel,
+} from '../db/models/process';
 
 import { DatasetModel } from '../db/models';
 import { createColumn } from './columns';
@@ -83,7 +86,7 @@ describe('addColumn', () => {
 
     expect(await ColumnModel.count()).toBe(3);
     expect(await ProcessModel.count()).toBe(1);
-    expect(await ProcessColumnModel.count()).toBe(2);
+    expect(await ProcessReferredColumnsModel.count()).toBe(2);
 
     const process = await ProcessModel.findOne({
       where: { id: newColumn.process!.id },

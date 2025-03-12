@@ -3,11 +3,7 @@ import { Link } from '@builder.io/qwik-city';
 import { useToggle } from '~/components/hooks';
 import { Logo } from '~/components/ui/logo/logo';
 
-import {
-  LuLibrary,
-  LuPanelLeftClose,
-  LuPanelLeftOpen,
-} from '@qwikest/icons/lucide';
+import { LuLibrary, LuPanelLeft } from '@qwikest/icons/lucide';
 import { useAllDatasetsLoader } from '~/loaders';
 
 export const MainSidebar = component$(() => {
@@ -39,9 +35,9 @@ export const MainSidebar = component$(() => {
             class="absolute right-2 transition-all duration-300 rounded hover:bg-gray-100 text-gray-400"
           >
             {isOpen.value ? (
-              <LuPanelLeftClose class="w-4 h-4" />
+              <LuPanelLeft class="w-4 h-4" />
             ) : (
-              <LuPanelLeftOpen class="w-4 h-4" />
+              <LuPanelLeft class="w-4 h-4" />
             )}
           </button>
         </div>

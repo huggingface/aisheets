@@ -118,78 +118,72 @@ export default component$(() => {
   return (
     <ActiveDatasetProvider>
       <div class="flex flex-col h-full w-fit overflow-hidden">
-        <div class="mt-12 w-[800px]">
+        <div
+          class={`mt-12 w-[800px] transition-opacity duration-200 ${isTransitioning.value ? 'opacity-0' : 'opacity-100'}`}
+        >
           <h1 class="text-3xl font-bold w-full mb-8">Choose how to start</h1>
 
           <div class="flex flex-col gap-0">
-            <Button
-              look="ghost"
-              hover={false}
-              class="w-full text-[#676767] border-t border-b rounded-none"
-            >
-              <div class="w-full px-6 py-5 flex flex-row items-center gap-3">
-                Generate content on various topics.
-                <span class="text-[#AAB0C0]">
+            <div class="w-full text-[#676767] border-t border-b group transition-colors cursor-pointer">
+              <div class="w-full px-6 py-5 flex flex-row items-center gap-3 font-light group-hover:bg-gray-50/50">
+                <span class="text-sm text-foreground">
+                  Generate content on various topics.
+                </span>
+                <span class="text-[#AAB0C0] text-xs font-light">
                   Create tweets, blog posts, or research papers
                 </span>
               </div>
-            </Button>
+            </div>
 
-            <Button
-              look="ghost"
-              hover={false}
-              class="w-full text-[#676767] border-b rounded-none"
-            >
-              <div class="w-full px-6 py-5 flex flex-row items-center gap-3">
-                Generate questions and responses.
-                <span class="text-[#AAB0C0]">
+            <div class="w-full text-[#676767] border-b group transition-colors cursor-pointer">
+              <div class="w-full px-6 py-5 flex flex-row items-center gap-3 font-light group-hover:bg-gray-50/50">
+                <span class="text-sm text-[#444]">
+                  Generate questions and responses.
+                </span>
+                <span class="text-[#AAB0C0] text-xs font-light">
                   Produce reasoning, scientific, or creative writing questions.
                 </span>
               </div>
-            </Button>
+            </div>
 
-            <Button
-              look="ghost"
-              hover={false}
-              class="w-full text-[#676767] border-b rounded-none"
-            >
-              <div class="w-full px-6 py-5 flex flex-row items-center gap-3">
-                Generate code problems and solutions.
-                <span class="text-[#AAB0C0]">
+            <div class="w-full text-[#676767] border-b group transition-colors cursor-pointer">
+              <div class="w-full px-6 py-5 flex flex-row items-center gap-3 font-light group-hover:bg-gray-50/50">
+                <span class="text-sm text-[#444]">
+                  Generate code problems and solutions.
+                </span>
+                <span class="text-[#AAB0C0] text-xs font-light">
                   Design coding challenges with solutions.
                 </span>
               </div>
-            </Button>
+            </div>
 
-            <Button
-              look="ghost"
-              hover={false}
-              class="w-full text-[#676767] border-b rounded-none"
+            <div
+              class="w-full text-[#676767] border-b group transition-colors cursor-pointer"
               onClick$={handleCreateBlankDataset}
             >
-              <div class="w-full px-6 py-5 flex flex-row items-center gap-3">
-                <LuFile class="w-5 h-5" />
-                Create a blank dataset.
-                <span class="text-[#AAB0C0]">
+              <div class="w-full px-6 py-5 flex flex-row items-center gap-3 font-light group-hover:bg-gray-50/50">
+                <LuFile class="w-4 h-4 text-foreground" />
+                <span class="text-sm text-foreground">
+                  Create a blank dataset.
+                </span>
+                <span class="text-[#AAB0C0] text-xs font-light">
                   Build your synthetic data from scratch
                 </span>
               </div>
-            </Button>
+            </div>
 
-            <Link href="/dataset/create/from-hub">
-              <Button
-                look="ghost"
-                hover={false}
-                class="w-full text-[#676767] border-b rounded-none"
-              >
-                <div class="w-full px-6 py-5 flex flex-row items-center gap-3">
-                  <LuDownload class="w-5 h-5" />
-                  Import a dataset from Hugging Face.
-                  <span class="text-[#AAB0C0]">
+            <Link href="/dataset/create/from-hub" class="w-full">
+              <div class="w-full text-[#676767] border-b group transition-colors cursor-pointer">
+                <div class="w-full px-6 py-5 flex flex-row items-center gap-3 font-light group-hover:bg-gray-50/50">
+                  <LuDownload class="w-4 h-4 text-[#444]" />
+                  <span class="text-sm text-[#444]">
+                    Import a dataset from Hugging Face.
+                  </span>
+                  <span class="text-[#AAB0C0] text-xs font-light">
                     Ideal for model benchmarking
                   </span>
                 </div>
-              </Button>
+              </div>
             </Link>
           </div>
         </div>
@@ -213,13 +207,15 @@ export default component$(() => {
                   <Button
                     look="ghost"
                     size="sm"
-                    class="absolute -top-2 left-1/2 -translate-x-1/2 bg-white shadow-md rounded-md px-6 py-2 flex items-center gap-2 min-w-[200px]"
+                    class={`absolute -top-6 left-[15%] -translate-x-1/2 bg-white shadow-md !rounded-none px-6 flex items-center gap-2 min-w-[240px] border border-[#eee] !justify-start transition-opacity duration-200 h-[44px] ${isTransitioning.value ? 'opacity-0' : 'opacity-100'}`}
                     onClick$={handleCreateBlankDatasetWithTransition}
                   >
-                    <LuPencil class="w-4 h-4 text-[#676767]" />
-                    <span class="text-[#676767] text-sm">
-                      Start with a prompt
-                    </span>
+                    <div class="flex items-center gap-2 w-full justify-start">
+                      <LuPencil class="w-4 h-4 text-[#676767]" />
+                      <span class="text-[#999] text-sm font-light">
+                        Start with a prompt
+                      </span>
+                    </div>
                   </Button>
                 </th>
               </tr>

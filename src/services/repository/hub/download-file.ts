@@ -9,19 +9,12 @@ export const downloadDatasetFile = async ({
   file: string;
   accessToken: string;
 }): Promise<string> => {
-  try {
-    return await downloadFileToCacheDir({
-      repo: {
-        name: repoId,
-        type: 'dataset' as RepoType,
-      },
-      path: file,
-      accessToken,
-    });
-  } catch (error: any) {
-    if (error.code === 'EEXIST') {
-      return error.dest;
-    }
-    throw error;
-  }
+  return await downloadFileToCacheDir({
+    repo: {
+      name: repoId,
+      type: 'dataset' as RepoType,
+    },
+    path: file,
+    accessToken,
+  });
 };

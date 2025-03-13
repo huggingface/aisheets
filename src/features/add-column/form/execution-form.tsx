@@ -9,7 +9,13 @@ import {
   useTask$,
   useVisibleTask$,
 } from '@builder.io/qwik';
-import { LuBookmark, LuCheck, LuEgg, LuXCircle } from '@qwikest/icons/lucide';
+import {
+  LuBookmark,
+  LuCheck,
+  LuEgg,
+  LuStopCircle,
+  LuXCircle,
+} from '@qwikest/icons/lucide';
 
 import { Button, Input, Label, Select } from '~/components';
 import { nextTick } from '~/components/hooks/tick';
@@ -28,7 +34,9 @@ import { type Model, useListModels } from '~/usecases/list-models';
 
 interface SidebarProps {
   column: Column;
-  onGenerateColumn: QRL<(column: CreateColumn) => Promise<void>>;
+  onGenerateColumn: QRL<
+    (controller: AbortController, column: CreateColumn) => Promise<void>
+  >;
 }
 
 export const ExecutionForm = component$<SidebarProps>(
@@ -136,6 +144,16 @@ export const ExecutionForm = component$<SidebarProps>(
     });
 
     const onGenerate = $(async () => {
+      if ((window as any).controller) {
+        isSubmitting.value = false;
+        (window as any).controller.abort();
+
+        (window as any).controller = undefined;
+
+        return;
+      }
+
+      (window as any).controller = new AbortController();
       isSubmitting.value = true;
 
       try {
@@ -156,7 +174,8 @@ export const ExecutionForm = component$<SidebarProps>(
           },
         };
 
-        await onGenerateColumn(columnToSave);
+        await onGenerateColumn((window as any).controller, columnToSave);
+      } catch {
       } finally {
         isSubmitting.value = false;
       }
@@ -172,11 +191,7 @@ export const ExecutionForm = component$<SidebarProps>(
 
     return (
       <th class="min-w-[660px] w-[660px] bg-neutral-100 font-normal border-t border-neutral-300 border-r text-left">
-        <div class="flex justify-between items-center px-1">
-          <Button size="sm" look="ghost">
-            <LuBookmark class="text-lg text-neutral" />
-          </Button>
-
+        <div class="flex justify-end items-center px-1">
           {columns.value.filter((c) => c.id !== TEMPORAL_ID).length >= 1 && (
             <Button
               size="sm"
@@ -304,8 +319,12 @@ export const ExecutionForm = component$<SidebarProps>(
                     />
                   </div>
                 </div>
-                <div class="absolute bottom-4 flex flex-row items-center justify-end px-6 gap-8 w-full">
-                  <div class="flex gap-1 items-center">
+                <div class="absolute bottom-4 flex flex-row items-center justify-between px-6 gap-8 w-full">
+                  <Button size="sm" look="ghost">
+                    <LuBookmark class="text-lg text-primary-foreground" />
+                  </Button>
+
+                  <div class="flex flex-1 gap-1 items-center justify-end">
                     <Label class="font-light">Rows:</Label>
                     <Input
                       type="number"
@@ -329,18 +348,22 @@ export const ExecutionForm = component$<SidebarProps>(
                     look="primary"
                     onClick$={onGenerate}
                     disabled={
-                      !canRegenerate.value ||
-                      !isTouched.value ||
-                      isSubmitting.value ||
-                      isAnyColumnGenerating.value
+                      !isSubmitting.value &&
+                      (!canRegenerate.value || !isTouched.value)
                     }
                   >
                     <div class="flex items-center gap-4">
-                      <LuEgg class="text-xl" />
-
-                      {isAnyColumnGenerating.value
-                        ? 'Generating...'
-                        : 'Generate'}
+                      {isSubmitting.value ? (
+                        <>
+                          <LuStopCircle class="text-2xl" />
+                          Stop generating
+                        </>
+                      ) : (
+                        <>
+                          <LuEgg class="text-2xl" />
+                          Generate
+                        </>
+                      )}
                     </div>
                   </Button>
                 </div>

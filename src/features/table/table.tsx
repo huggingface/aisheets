@@ -66,10 +66,12 @@ export const Table = component$(() => {
             value: newValue,
             validated: true,
             updatedAt: new Date(),
-            error: null,
+            error: undefined,
             column: {
               id: column?.id ?? '',
             },
+            idx: 0,
+            generating: false,
           });
 
           activeDataset.value = { ...activeDataset.value };

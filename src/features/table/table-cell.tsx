@@ -141,8 +141,8 @@ export const TableCell = component$<{
       default: {
         let value = JSON.stringify(originalValue.value, null, 2);
 
-        if (value.length > 1024) {
-          value = value.slice(0, 1024) + '...';
+        if (value.length > 4096) {
+          value = value.slice(0, 4096) + '...';
         }
         return value;
       }

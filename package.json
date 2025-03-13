@@ -68,7 +68,7 @@
   "dependencies": {
     "@duckdb/node-api": "1.2.0-alpha.13",
     "@huggingface/hub": "^1.0.2",
-    "@huggingface/inference": "^3.3.5",
+    "@huggingface/inference": "^3.5.2",
     "consola": "^3.4.0",
     "express": "4.20.0",
     "marked": "^15.0.7",

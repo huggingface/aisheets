@@ -1,8 +1,10 @@
 import {
   $,
+  type NoSerialize,
   type QRL,
   Resource,
   component$,
+  noSerialize,
   useComputed$,
   useResource$,
   useSignal,
@@ -50,6 +52,7 @@ export const ExecutionForm = component$<SidebarProps>(
       updateColumn,
     } = useColumnsStore();
 
+    const controller = useSignal<NoSerialize<AbortController>>();
     const isSubmitting = useSignal(false);
     const canRegenerate = useSignal(true);
 
@@ -144,16 +147,15 @@ export const ExecutionForm = component$<SidebarProps>(
     });
 
     const onGenerate = $(async () => {
-      if ((window as any).controller) {
+      if (controller.value) {
         isSubmitting.value = false;
-        (window as any).controller.abort();
-
-        (window as any).controller = undefined;
-
+        controller.value.abort();
+        controller.value = undefined;
         return;
       }
 
-      (window as any).controller = new AbortController();
+      controller.value = noSerialize(new AbortController());
+
       isSubmitting.value = true;
 
       try {
@@ -174,7 +176,10 @@ export const ExecutionForm = component$<SidebarProps>(
           },
         };
 
-        await onGenerateColumn((window as any).controller, columnToSave);
+        await onGenerateColumn(
+          controller.value as AbortController,
+          columnToSave,
+        );
       } catch {
       } finally {
         isSubmitting.value = false;

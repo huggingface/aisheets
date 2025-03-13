@@ -4,6 +4,7 @@ import {
   useContext,
   useSignal,
   useTask$,
+  useVisibleTask$,
 } from '@builder.io/qwik';
 import { useModals } from '~/components/hooks';
 import { modalsContext } from '~/components/hooks/modals/context';
@@ -16,37 +17,38 @@ import { TableView } from '~/features/table/table-view';
 import { useColumnsStore, useDatasetsStore } from '~/state';
 import { useValidateCellUseCase } from '~/usecases/validate-cell.usecase';
 
-interface CellEditorArgs {
-  id: string;
-  value: string;
-}
-
 export const Table = component$(() => {
   const {
-    generic: { open: openModal, close: closeModal },
+    generic: { close: closeModal },
   } = useModals('cell-editor');
   const modalContext = useContext(modalsContext);
   const { replaceCell } = useColumnsStore();
   const { activeDataset } = useDatasetsStore();
   const validateCell = useValidateCellUseCase();
   const editingValue = useSignal('');
+  const textareaRef = useSignal<HTMLTextAreaElement>();
 
   useTask$(({ track }) => {
     const modalArgs = track(
       () => modalContext.value.modals['cell-editor'].args,
-    ) as CellEditorArgs;
+    );
     if (modalArgs) {
-      editingValue.value = modalArgs.value ?? '';
+      editingValue.value = (modalArgs as any)?.value ?? '';
     }
   });
 
-  const onKeyDown$ = $(async (e: KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      if (e.shiftKey) return;
+  useVisibleTask$(({ track }) => {
+    track(() => modalContext.value.active);
+    textareaRef.value?.focus();
+  });
 
+  const onKeyDown$ = $(async (e: KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      const modalData = modalContext.value.modals['cell-editor']
-        .args as CellEditorArgs;
+      const modalData = modalContext.value.modals['cell-editor'].args as {
+        id: string;
+        value: string;
+      };
       const newValue = editingValue.value;
 
       if (modalData?.id && newValue) {
@@ -79,10 +81,6 @@ export const Table = component$(() => {
       }
       closeModal();
     }
-    if (e.key === 'Escape') {
-      e.preventDefault();
-      closeModal();
-    }
   });
 
   return (
@@ -103,31 +101,17 @@ export const Table = component$(() => {
           </table>
         </div>
 
-        <Modal
-          name="cell-editor"
-          title=""
-          class="w-[80vw] max-w-4xl fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-        >
-          <div class="mt-4">
-            <Textarea
-              value={editingValue.value}
-              onInput$={(e) =>
-                (editingValue.value = (e.target as HTMLTextAreaElement).value)
-              }
-              onKeyDown$={$((e: KeyboardEvent) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  onKeyDown$(e);
-                } else if (e.key === 'Escape') {
-                  e.preventDefault();
-                  onKeyDown$(e);
-                }
-              })}
-              class="w-full h-[60vh] p-4 text-sm resize-none"
-              placeholder="Enter content... (Shift+Enter for new line)"
-              autoFocus={true}
-            />
-          </div>
+        <Modal name="cell-editor" title="" variant="clean">
+          <Textarea
+            ref={textareaRef}
+            value={editingValue.value}
+            onInput$={(e) =>
+              (editingValue.value = (e.target as HTMLTextAreaElement).value)
+            }
+            onKeyDown$={onKeyDown$}
+            class="w-[80vw] max-w-4xl h-[60vh] p-4 text-sm resize-none bg-white border border-neutral-300 shadow-lg rounded-sm"
+            placeholder="Enter content... (Shift+Enter for new line)"
+          />
         </Modal>
       </div>
     </ExecutionProvider>

@@ -14,6 +14,7 @@ import { LuCheck, LuChevronRightSquare, LuLoader } from '@qwikest/icons/lucide';
 
 import { Button, Select, useToggle } from '~/components';
 import { useDebounce } from '~/components/hooks/debounce/debounce';
+import { nextTick } from '~/components/hooks/tick';
 import { useSession } from '~/loaders';
 import { listDatasets } from '~/services/repository/hub/list-datasets';
 import { listHubDatasetDataFiles } from '~/services/repository/hub/list-hub-dataset-files';
@@ -117,7 +118,7 @@ const DatasetSearch = component$(
   }: {
     onSelectedDataset$: QRL<(dataset: string) => void>;
   }) => {
-    const { isOpen, open, close } = useToggle();
+    const { isOpen } = useToggle();
     const session = useSession();
     const searchQuery = useSignal('');
     const searchQueryDebounced = useSignal('');
@@ -141,11 +142,14 @@ const DatasetSearch = component$(
         limit: 5,
       });
 
-      if (datasets.length) {
-        open();
-      } else {
-        close();
-      }
+      nextTick(() => {
+        if (datasets.length > 1) {
+          isOpen.value = true;
+        } else {
+          selectedDataset.value = undefined;
+          isOpen.value = false;
+        }
+      });
 
       return datasets.map((dataset) => dataset.name);
     });
@@ -169,7 +173,7 @@ const DatasetSearch = component$(
     return (
       <Resource
         value={searchResults}
-        onRejected={(error) => {
+        onRejected={() => {
           return (
             <div class="flex items-center justify-center h-32 background-primary rounded-base">
               <span class="text-foreground warning">

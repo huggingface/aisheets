@@ -1,9 +1,5 @@
 import { type RequestEventBase, server$ } from '@builder.io/qwik-city';
-import {
-  getValidatedColumnCells,
-  updateColumn,
-  updateProcess,
-} from '~/services';
+import { getValidatedColumnCells, updateCell, updateColumn } from '~/services';
 import { type Cell, type Column, useServerSession } from '~/state';
 import { generateCells } from './generate-cells';
 

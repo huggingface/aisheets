@@ -37,7 +37,7 @@ export type Cell = {
   updatedAt: Date;
   generating: boolean;
   validated: boolean;
-  value?: string;
+  value?: any;
   error?: string;
   column?: {
     id: string;

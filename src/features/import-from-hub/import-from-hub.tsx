@@ -12,7 +12,7 @@ import {
 import { useNavigate } from '@builder.io/qwik-city';
 import { LuCheck, LuChevronRightSquare, LuLoader } from '@qwikest/icons/lucide';
 
-import { Button, Select, useToggle } from '~/components';
+import { Button, Select } from '~/components';
 import { useDebounce } from '~/components/hooks/debounce/debounce';
 import { nextTick } from '~/components/hooks/tick';
 import { useSession } from '~/loaders';
@@ -118,11 +118,34 @@ const DatasetSearch = component$(
   }: {
     onSelectedDataset$: QRL<(dataset: string) => void>;
   }) => {
-    const { isOpen } = useToggle();
+    const isOpen = useSignal(false);
     const session = useSession();
     const searchQuery = useSignal('');
     const searchQueryDebounced = useSignal('');
     const selectedDataset = useSignal<string | undefined>(undefined);
+    const inputRef = useSignal<Element>();
+
+    const focusInput = $(() => {
+      const input = inputRef.value as HTMLInputElement;
+      if (input && typeof input.focus === 'function') {
+        input.focus();
+      }
+    });
+
+    // Track input ref and query changes to maintain focus
+    useTask$(({ track }) => {
+      track(() => inputRef.value);
+      if (inputRef.value) {
+        focusInput();
+      }
+    });
+
+    useTask$(({ track }) => {
+      track(() => searchQuery.value);
+      if (inputRef.value) {
+        focusInput();
+      }
+    });
 
     useDebounce(
       searchQuery,
@@ -134,16 +157,23 @@ const DatasetSearch = component$(
 
     const searchResults = useResource$(async ({ track }) => {
       track(searchQueryDebounced);
-      if (searchQueryDebounced.value.trim() === '') return [];
+      const query = searchQueryDebounced.value.trim();
+
+      if (query === '' || query.length < 3) {
+        nextTick(() => {
+          isOpen.value = false;
+        });
+        return [];
+      }
 
       const datasets = await listDatasets({
-        query: searchQueryDebounced.value,
+        query,
         accessToken: session.value!.token,
         limit: 5,
       });
 
       nextTick(() => {
-        if (datasets.length > 1) {
+        if (datasets.length > 0) {
           isOpen.value = true;
         } else {
           selectedDataset.value = undefined;
@@ -188,15 +218,29 @@ const DatasetSearch = component$(
               <Select.Label>Dataset id</Select.Label>
               <Select.Trigger>
                 <input
+                  ref={inputRef}
                   class="w-full h-8 outline-none"
-                  placeholder="Type to search datasets"
-                  bind:value={searchQuery}
+                  placeholder="Type at least 3 characters to search datasets"
+                  value={searchQuery.value}
+                  onInput$={(e) => {
+                    searchQuery.value = (e.target as HTMLInputElement).value;
+                  }}
+                  onBlur$={(e) => {
+                    const target = e.relatedTarget as HTMLElement;
+                    if (!target?.closest('.select-item')) {
+                      nextTick(() => focusInput());
+                    }
+                  }}
                 />
               </Select.Trigger>
               {!!datasets.length && (
                 <Select.Popover gutter={8}>
                   {datasets.map((dataset) => (
-                    <Select.Item value={dataset} key={dataset}>
+                    <Select.Item
+                      value={dataset}
+                      key={dataset}
+                      class="select-item"
+                    >
                       <Select.ItemLabel>{dataset}</Select.ItemLabel>
                       <Select.ItemIndicator>
                         <LuCheck class="h-4 w-4" />
@@ -229,15 +273,17 @@ const FileSelection = component$(
         accessToken: props.accessToken,
       });
 
-      if (files.length === 0) selectedFile.value = '';
-      else selectedFile.value = files[0];
+      // Always select the first file when files change
+      nextTick(() => {
+        selectedFile.value = files.length > 0 ? files[0] : '';
+      });
 
       return files;
     });
 
     useTask$(({ track }) => {
       const newValue = track(selectedFile);
-      props.onSelectedFile$(newValue!);
+      props.onSelectedFile$(newValue);
     });
 
     return (
@@ -272,9 +318,6 @@ const FileSelection = component$(
                         key={idx}
                         class="text-foreground hover:bg-accent"
                         value={file}
-                        onClick$={() => {
-                          selectedFile.value = file;
-                        }}
                       >
                         <Select.ItemLabel>{file}</Select.ItemLabel>
                         <Select.ItemIndicator>

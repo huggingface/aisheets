@@ -190,20 +190,24 @@ export const ExecutionForm = component$<SidebarProps>(
     });
 
     return (
-      <th class="min-w-[660px] w-[660px] bg-primary font-normal border-t border-secondary text-left">
-        <div class="flex justify-end px-1">
+      <th class="min-w-[660px] w-[660px] bg-neutral-100 font-normal border-t border-neutral-300 text-left">
+        <div class="flex justify-between items-center px-1">
+          <Button size="sm" look="ghost">
+            <LuBookmark class="text-lg text-neutral" />
+          </Button>
+
           <Button
             size="sm"
             look="ghost"
             onClick$={handleCloseForm}
             disabled={columns.value[0]?.id === TEMPORAL_ID}
           >
-            <LuXCircle class="text-lg text-primary-foreground" />
+            <LuXCircle class="text-lg text-neutral" />
           </Button>
         </div>
         <div class="relative h-full w-full">
           <div class="absolute h-full w-full flex flex-col gap-4">
-            <div class="flex flex-col gap-4 px-8 bg-primary">
+            <div class="flex flex-col gap-4 px-8 bg-neutral-100">
               <Resource
                 value={loadModels}
                 onPending={() => (
@@ -223,7 +227,7 @@ export const ExecutionForm = component$<SidebarProps>(
                             Model
                           </Label>
                           <Select.Root value={selectedModel.value?.id}>
-                            <Select.Trigger class="px-4 bg-white rounded-base border-secondary-foreground">
+                            <Select.Trigger class="px-4 bg-white rounded-base border-neutral-300-foreground">
                               <Select.DisplayValue />
                             </Select.Trigger>
                             <Select.Popover class="border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto">
@@ -266,7 +270,7 @@ export const ExecutionForm = component$<SidebarProps>(
                               selectedProvider.value = provider;
                             })}
                           >
-                            <Select.Trigger class="px-4 bg-white rounded-base border-secondary-foreground">
+                            <Select.Trigger class="px-4 bg-white rounded-base border-neutral-300-foreground">
                               <Select.DisplayValue />
                             </Select.Trigger>
                             <Select.Popover class="border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto">
@@ -297,7 +301,7 @@ export const ExecutionForm = component$<SidebarProps>(
                   return (
                     <Input
                       bind:value={inputModelId}
-                      class="bg-white px-4 h-10 border-secondary-foreground"
+                      class="bg-white px-4 h-10 border-neutral-300-foreground"
                       placeholder="Cannot load model suggestions. Please enter the model ID manually."
                     />
                   );
@@ -326,7 +330,7 @@ export const ExecutionForm = component$<SidebarProps>(
                     <Label class="font-light">Rows:</Label>
                     <Input
                       type="number"
-                      class="h-8 border-secondary-foreground w-fit bg-primary"
+                      class="h-8 border-neutral-300-foreground w-fit bg-neutral-100"
                       max={maxRows.value}
                       min="1"
                       onInput$={(_, el) => {

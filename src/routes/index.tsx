@@ -193,7 +193,7 @@ export default component$(() => {
           <table class="border-separate border-spacing-0 text-sm">
             <thead>
               <tr class="min-h-8 h-8">
-                <th class="min-w-80 w-80 max-w-80 px-2 text-left border-[0.5px] border-r-0 border-b-0 rounded-tl-sm bg-primary">
+                <th class="min-w-80 w-80 max-w-80 px-2 text-left border-[0.5px] border-r-0 border-b-0 rounded-tl-sm bg-neutral-100">
                   <div class="flex items-center justify-between gap-2 w-full">
                     <div class="flex items-center gap-2 text-wrap w-[80%] font-normal">
                       <LuZap class="text-primary-foreground" />
@@ -202,7 +202,7 @@ export default component$(() => {
                   </div>
                 </th>
 
-                <th class="min-w-80 w-80 max-w-80 px-2 text-left border-[0.5px] border-r-0 border-b-0 border-t-0 bg-primary relative">
+                <th class="min-w-80 w-80 max-w-80 px-2 text-left border-[0.5px] border-r-0 border-b-0 border-t-0 bg-neutral-100 relative">
                   <div
                     class={`absolute -top-6 left-[15%] -translate-x-1/2 bg-white shadow-md !rounded-none flex min-w-[240px] border border-[#eee] transition-opacity duration-200 h-[44px] cursor-pointer group ${isTransitioning.value ? 'opacity-0' : 'opacity-100'}`}
                     onClick$={handleCreateBlankDatasetWithTransition}
@@ -220,8 +220,8 @@ export default component$(() => {
             <tbody>
               {Array.from({ length: 6 }).map((_, i) => (
                 <tr key={i} class="hover:bg-gray-50/50 transition-colors">
-                  <td class="min-w-80 w-80 max-w-80 p-4 min-h-[100px] h-[100px] border-[0.5px] border-b-0 border-r-0 border-secondary" />
-                  <td class="min-w-80 w-80 max-w-80 p-4 min-h-[100px] h-[100px] border-[0.5px] border-b-0 border-r-0 border-secondary" />
+                  <td class="min-w-80 w-80 max-w-80 p-4 min-h-[100px] h-[100px] border-[0.5px] border-b-0 border-r-0 border-neutral-300" />
+                  <td class="min-w-80 w-80 max-w-80 p-4 min-h-[100px] h-[100px] border-[0.5px] border-b-0 border-r-0 border-neutral-300" />
                 </tr>
               ))}
             </tbody>

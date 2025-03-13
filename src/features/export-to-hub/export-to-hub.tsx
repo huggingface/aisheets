@@ -85,10 +85,10 @@ export const ExportToHub = component$(() => {
       <Modal
         name="exportToHub"
         title="Push your dataset to the Hub"
-        class="fixed !right-4 !top-[6.5rem] h-[320px] shadow-md"
+        class="fixed !right-4 !top-[4rem] w-[480px] shadow-md z-50"
       >
-        <div class="flex flex-col gap-2">
-          <div class="flex flex-col gap-4">
+        <div class="flex flex-col gap-10">
+          <div class="flex flex-col gap-6">
             <div class="flex flex-col gap-2">
               <div class="flex items-center gap-2">
                 <div class="flex flex-col flex-1">
@@ -121,36 +121,38 @@ export const ExportToHub = component$(() => {
             </div>
           </div>
 
-          <div class="h-6 text-sm text-left max-w-full">
-            {error.value ? (
-              <div class="text-sm text-red-500 text-left max-w-full overflow-x-auto">
-                {error.value}
-              </div>
-            ) : (
-              exportedRepoId.value && (
-                <div class="text-sm text-left">
-                  🥳 Published at{' '}
-                  <a
-                    href={exportedUrl.value}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="text-blue-500 hover:underline"
-                  >
-                    {exportedRepoId.value}
-                  </a>
+          <div class="flex items-center justify-between gap-4">
+            <div class="flex-1 h-fit min-h-[1.5rem] text-sm text-center break-words">
+              {error.value ? (
+                <div class="text-sm text-red-500 text-center break-words">
+                  {error.value}
                 </div>
-              )
-            )}
+              ) : (
+                exportedRepoId.value && (
+                  <div class="text-sm text-center">
+                    🥳 Published at{' '}
+                    <a
+                      href={exportedUrl.value}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="text-blue-500 hover:underline"
+                    >
+                      {exportedRepoId.value}
+                    </a>
+                  </div>
+                )
+              )}
+            </div>
+
+            <Button
+              look="primary"
+              onClick$={onButtonClick}
+              disabled={isSubmitting.value}
+            >
+              {isSubmitting.value ? 'Pushing...' : 'Push to Hub'}
+            </Button>
           </div>
         </div>
-
-        <Button
-          look="primary"
-          onClick$={onButtonClick}
-          disabled={isSubmitting.value}
-        >
-          {isSubmitting.value ? 'Pushing...' : 'Push to Hub'}
-        </Button>
       </Modal>
     </>
   );

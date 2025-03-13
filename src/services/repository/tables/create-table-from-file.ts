@@ -43,7 +43,7 @@ export const createDatasetTableFromFile = async (
     );
 
     const selectColumnNames = dbColumns
-      .map((column) => `${column.name} as ${getColumnName(column)}`)
+      .map((column) => `"${column.name}" as ${getColumnName(column)}`)
       .join(', ');
 
     let selectStatement = `SELECT ${selectColumnNames}, nextval('${sequenceName}') as rowIdx FROM '${file}'`;

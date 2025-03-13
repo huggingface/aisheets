@@ -21,7 +21,7 @@ export const ExportToHub = component$(() => {
 
   const { activeDataset } = useDatasetsStore();
   const defaultExportName = useComputed$(() =>
-    activeDataset.value.name.replace(/\s/g, '_'),
+    activeDataset.value.name.replace(/[\W_]+/g, '_'),
   );
 
   const isSubmitting = useSignal(false);

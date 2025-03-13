@@ -1,6 +1,7 @@
 import { Op } from 'sequelize';
 import { ColumnCellModel } from '~/services/db/models/cell';
 import type { Cell } from '~/state';
+import { ColumnModel, ProcessModel } from '../db/models';
 
 interface GetRowCellsParams {
   rowIdx: number;
@@ -177,4 +178,78 @@ export const getCellsCount = async (
   return ColumnCellModel.count({
     where: filter,
   });
+};
+
+export const getCellRegenerationDecision = async (cell: {
+  id: string;
+}): Promise<{
+  shouldGenerate: boolean;
+  reason: string;
+}> => {
+  const model = await ColumnCellModel.findByPk(cell.id, {
+    include: [
+      {
+        association: ColumnCellModel.associations.column,
+        include: [
+          {
+            association: ColumnModel.associations.process,
+            include: [
+              {
+                association: ProcessModel.associations.referredColumns,
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  });
+
+  if (!model) throw new Error('Cell not found');
+  if (!model.column) throw new Error('Column not found');
+
+  if (!model.column.process) {
+    return {
+      shouldGenerate: false,
+      reason: 'Column has no process',
+    };
+  }
+
+  if (model.validated) {
+    return {
+      shouldGenerate: false,
+      reason: 'Cell is validated',
+    };
+  }
+
+  if (model.generating) {
+    return {
+      shouldGenerate: false,
+      reason: 'Cell is being generated',
+    };
+  }
+
+  const process = model.column.process;
+
+  const referredCells = await getRowCells({
+    rowIdx: model.idx,
+    columns: process.referredColumns.map((c) => c.id),
+  });
+
+  for (const referredCell of referredCells) {
+    const { shouldGenerate, reason } = await getCellRegenerationDecision({
+      id: referredCell.id,
+    });
+
+    if (shouldGenerate) {
+      return {
+        shouldGenerate: false,
+        reason: `Referenced cell in row ${referredCell.idx} for column ${referredCell.column!.name} is oudated: ${reason}`,
+      };
+    }
+  }
+
+  return {
+    shouldGenerate: true,
+    reason: 'Cell is outdated',
+  };
 };

@@ -1,6 +1,7 @@
-import { getColumnSize } from '~/services';
+import { getColumnSize, updateProcess } from '~/services';
 import {
   createCell,
+  getCellRegenerationDecision,
   getColumnCellByIdx,
   getRowCells,
   updateCell,
@@ -60,62 +61,92 @@ export const generateCells = async function* ({
   if (!limit) limit = await getColumnSize(column);
   if (!offset) offset = 0;
 
-  for (let i = offset; i < limit + offset; i++) {
-    if (validatedIdxs?.includes(i)) continue;
+  try {
+    for (let i = offset; i < limit + offset; i++) {
+      if (validatedIdxs?.includes(i)) continue;
 
-    const args = {
-      accessToken: session.token,
-      modelName,
-      modelProvider,
-      examples,
-      instruction: prompt,
-      timeout,
-      data: {},
-    };
+      const args = {
+        accessToken: session.token,
+        modelName,
+        modelProvider,
+        examples,
+        instruction: prompt,
+        timeout,
+        data: {},
+      };
 
-    if (columnsReferences?.length) {
-      const rowCells = await getRowCells({
-        rowIdx: i,
-        columns: columnsReferences,
-      });
-      args.data = Object.fromEntries(
-        rowCells.map((cell) => [cell.column!.name, cell.value]),
-      );
-    }
+      const rowCells = columnsReferences?.length
+        ? await getRowCells({
+            rowIdx: i,
+            columns: columnsReferences,
+          })
+        : [];
 
-    const cell =
-      (await getColumnCellByIdx({ idx: i, columnId: column.id })) ??
-      (await createCell({
-        cell: { idx: i },
-        columnId: column.id,
-      }));
+      if (rowCells) {
+        args.data = Object.fromEntries(
+          rowCells.map((cell) => [cell.column!.name, cell.value]),
+        );
+      }
 
-    cell.generating = true;
+      let cell = await getColumnCellByIdx({ idx: i, columnId: column.id });
 
-    yield { cell };
+      if (cell) {
+        const { shouldGenerate, reason } =
+          await getCellRegenerationDecision(cell);
 
-    if (stream) {
-      for await (const response of runPromptExecutionStream(args)) {
+        if (!shouldGenerate) {
+          console.log(
+            `Cell ${cell.idx} for column ${column.name} is not being generated: ${reason}`,
+          );
+          // yield { cell };
+          continue;
+        }
+      } else {
+        cell = await createCell({
+          cell: { idx: i },
+          columnId: column.id,
+        });
+      }
+
+      cell.generating = true;
+
+      yield { cell };
+
+      if (stream) {
+        for await (const response of runPromptExecutionStream({
+          ...args,
+          data: Object.fromEntries(
+            rowCells.map((cell) => [cell.column!.name, cell.value]),
+          ),
+        })) {
+          cell.value = response.value;
+          cell.error = response.error;
+
+          if (!response.done) yield { cell };
+        }
+      } else {
+        const response = await runPromptExecution(args);
         cell.value = response.value;
         cell.error = response.error;
-
-        if (!response.done) yield { cell };
       }
-    } else {
-      const response = await runPromptExecution(args);
-      cell.value = response.value;
-      cell.error = response.error;
+
+      cell.generating = false;
+
+      await updateCell(cell);
+
+      yield { cell };
+
+      // Add newly generated values as examples when there are no validated cells or referred columns
+      if (
+        cell.value &&
+        !(validatedCells?.length || columnsReferences?.length)
+      ) {
+        examples.push({ output: cell.value, inputs: {} });
+      }
     }
-
-    cell.generating = false;
-
-    await updateCell(cell);
-
-    yield { cell };
-
-    // Add newly generated values as examples when there are no validated cells or referred columns
-    if (cell.value && !(validatedCells?.length || columnsReferences?.length)) {
-      examples.push({ output: cell.value, inputs: {} });
-    }
+  } finally {
+    // update the process to reflect the latest execution (we should use a more explict attribute for this)
+    process.updatedAt = new Date();
+    await updateProcess(process);
   }
 };

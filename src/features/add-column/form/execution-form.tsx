@@ -195,7 +195,7 @@ export const ExecutionForm = component$<SidebarProps>(
     });
 
     return (
-      <th class="min-w-[660px] w-[660px] bg-neutral-100 font-normal border-t border-neutral-300 border-r text-left">
+      <th class="z-30 min-w-[660px] w-[660px] bg-neutral-100 font-normal border-[0.5px] border-r-0 border-neutral-300 text-left">
         <div class="flex justify-end items-center px-1">
           {columns.value.filter((c) => c.id !== TEMPORAL_ID).length >= 1 && (
             <Button

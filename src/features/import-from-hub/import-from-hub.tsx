@@ -273,15 +273,17 @@ const FileSelection = component$(
         accessToken: props.accessToken,
       });
 
-      if (files.length === 0) selectedFile.value = '';
-      else selectedFile.value = files[0];
+      // Always select the first file when files change
+      nextTick(() => {
+        selectedFile.value = files.length > 0 ? files[0] : '';
+      });
 
       return files;
     });
 
     useTask$(({ track }) => {
       const newValue = track(selectedFile);
-      props.onSelectedFile$(newValue!);
+      props.onSelectedFile$(newValue);
     });
 
     return (
@@ -316,9 +318,6 @@ const FileSelection = component$(
                         key={idx}
                         class="text-foreground hover:bg-accent"
                         value={file}
-                        onClick$={() => {
-                          selectedFile.value = file;
-                        }}
                       >
                         <Select.ItemLabel>{file}</Select.ItemLabel>
                         <Select.ItemIndicator>

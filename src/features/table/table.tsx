@@ -8,7 +8,9 @@ export const Table = component$(() => {
   return (
     <ExecutionProvider>
       <div class="flex flex-col h-full">
-        <TableView />
+        <div class="flex justify-end w-full">
+          <TableView />
+        </div>
         <div class="sticky -top-4 z-30 bg-white">
           <table class="border-separate border-spacing-0 text-sm">
             <TableHeader />

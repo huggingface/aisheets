@@ -1,8 +1,10 @@
 import {
   $,
+  type NoSerialize,
   type QRL,
   Resource,
   component$,
+  noSerialize,
   useComputed$,
   useResource$,
   useSignal,
@@ -50,6 +52,7 @@ export const ExecutionForm = component$<SidebarProps>(
       updateColumn,
     } = useColumnsStore();
 
+    const controller = useSignal<NoSerialize<AbortController>>();
     const isSubmitting = useSignal(false);
     const canRegenerate = useSignal(true);
 
@@ -144,16 +147,15 @@ export const ExecutionForm = component$<SidebarProps>(
     });
 
     const onGenerate = $(async () => {
-      if ((window as any).controller) {
+      if (controller.value) {
         isSubmitting.value = false;
-        (window as any).controller.abort();
-
-        (window as any).controller = undefined;
-
+        controller.value.abort();
+        controller.value = undefined;
         return;
       }
 
-      (window as any).controller = new AbortController();
+      controller.value = noSerialize(new AbortController());
+
       isSubmitting.value = true;
 
       try {
@@ -174,7 +176,10 @@ export const ExecutionForm = component$<SidebarProps>(
           },
         };
 
-        await onGenerateColumn((window as any).controller, columnToSave);
+        await onGenerateColumn(
+          controller.value as AbortController,
+          columnToSave,
+        );
       } catch {
       } finally {
         isSubmitting.value = false;
@@ -190,23 +195,21 @@ export const ExecutionForm = component$<SidebarProps>(
     });
 
     return (
-      <th class="min-w-[660px] w-[660px] bg-neutral-100 font-normal border-t border-neutral-300 text-left">
-        <div class="flex justify-between items-center px-1">
-          <Button size="sm" look="ghost">
-            <LuBookmark class="text-lg text-neutral" />
-          </Button>
-
-          <Button
-            size="sm"
-            look="ghost"
-            onClick$={handleCloseForm}
-            disabled={columns.value[0]?.id === TEMPORAL_ID}
-          >
-            <LuXCircle class="text-lg text-neutral" />
-          </Button>
+      <th class="z-30 min-w-[660px] w-[660px] bg-neutral-100 font-normal border-[0.5px] border-r-0 border-neutral-300 text-left">
+        <div class="flex justify-end items-center px-1">
+          {columns.value.filter((c) => c.id !== TEMPORAL_ID).length >= 1 && (
+            <Button
+              size="sm"
+              look="ghost"
+              onClick$={handleCloseForm}
+              disabled={columns.value[0]?.id === TEMPORAL_ID}
+            >
+              <LuXCircle class="text-lg text-neutral" />
+            </Button>
+          )}
         </div>
         <div class="relative h-full w-full">
-          <div class="absolute h-full w-full flex flex-col gap-4">
+          <div class="absolute h-full w-full flex flex-col">
             <div class="flex flex-col gap-4 px-8 bg-neutral-100">
               <Resource
                 value={loadModels}
@@ -307,21 +310,21 @@ export const ExecutionForm = component$<SidebarProps>(
                   );
                 }}
               />
-
               <div class="relative">
                 <div class="flex flex-col gap-4">
                   <Label class="text-left font-light">
                     Prompt to generate the column content
                   </Label>
 
-                  <TemplateTextArea
-                    bind:value={prompt}
-                    variables={variables}
-                    onSelectedVariables={onSelectedVariables}
-                  />
+                  <div class="h-96 min-h-96 max-h-96 bg-white border border-secondary-foreground rounded-sm">
+                    <TemplateTextArea
+                      bind:value={prompt}
+                      variables={variables}
+                      onSelectedVariables={onSelectedVariables}
+                    />
+                  </div>
                 </div>
-
-                <div class="absolute bottom-14 flex flex-row items-center justify-between px-4 gap-8 w-full">
+                <div class="absolute bottom-4 flex flex-row items-center justify-between px-6 gap-8 w-full">
                   <Button size="sm" look="ghost">
                     <LuBookmark class="text-lg text-primary-foreground" />
                   </Button>
@@ -370,6 +373,19 @@ export const ExecutionForm = component$<SidebarProps>(
                   </Button>
                 </div>
               </div>
+              {!isTouched.value && (
+                <div class="flex items-center justify-center text-indigo-500">
+                  The column has been generated, to generate again edit the
+                  configuration
+                </div>
+              )}
+
+              {!canRegenerate.value && (
+                <div class="flex items-center justify-center text-indigo-500">
+                  Some references columns are dirty, please, regenerate them
+                  first.
+                </div>
+              )}
             </div>
           </div>
         </div>

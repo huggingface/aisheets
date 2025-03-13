@@ -18,7 +18,7 @@ export const getColumnName = (column: {
 
 export const escapeValue = (value: any) => {
   if (value === undefined) return null;
-  if (typeof value === 'string') return `$$${value}$$`;
+  if (typeof value === 'string') return `$tag$${value}$tag$`;
 
   return value;
 };

@@ -255,4 +255,40 @@ describe('insert-column-values', () => {
       ]);
     });
   });
+
+  it('should escape dollar characters', async () => {
+    const column = {
+      id: 'test-column',
+      name: 'Test Column',
+      type: 'VARCHAR',
+    };
+
+    await createDatasetTable({
+      dataset,
+      columns: [column],
+    });
+
+    await upsertColumnValues({
+      dataset,
+      column,
+      values: [[1, '$\\boxed{mgh}$']],
+    });
+
+    await connectAndClose(async (db) => {
+      const tableName = getDatasetTableName(dataset);
+      const columnName = getColumnName(column).replace(/"/g, '');
+
+      const result = await db.run(`SELECT * FROM ${tableName}`);
+      const rows = await result.getRowObjects();
+
+      expect(rows.length).toEqual(1);
+
+      expect(rows).toEqual([
+        {
+          [columnName]: '$\\boxed{mgh}$',
+          rowIdx: 1n,
+        },
+      ]);
+    });
+  });
 });

@@ -239,7 +239,7 @@ const FileSelection = component$(
     return (
       <Resource
         value={listDatasetFiles}
-        onRejected={(error) => {
+        onRejected={() => {
           return (
             <div class="flex items-center justify-center h-32 background-primary rounded-base">
               <span class="text-foreground warning">

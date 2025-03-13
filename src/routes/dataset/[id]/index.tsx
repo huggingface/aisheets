@@ -9,9 +9,9 @@ import { ActiveDatasetProvider } from '~/state';
 export default component$(() => {
   return (
     <ActiveDatasetProvider>
-      <div class="flex flex-col h-full w-full">
+      <div class="flex flex-col h-full w-full gap-2">
         <div class="sticky">
-          <div class="flex flex-col">
+          <div class="flex flex-col gap-2">
             <div class="flex justify-end items-center w-full gap-4">
               <ExportToHub />
               <Username />

@@ -7,7 +7,8 @@ import { TEMPORAL_ID, useColumnsStore } from '~/state';
 export const TableView = component$(() => {
   const { columns } = useColumnsStore();
 
-  if (columns.value.filter((c) => c.id !== TEMPORAL_ID).length < 1) return null;
+  if (columns.value.filter((c) => c.id !== TEMPORAL_ID).length <= 1)
+    return null;
 
   return (
     <Popover.Root flip={false} gutter={8} floating="bottom-end">

@@ -19,7 +19,7 @@ export const Modal = component$<ModalProps>(({ name, title, ...rest }) => {
 
   return (
     <div
-      class={`absolute h-fit overflow-auto transform bg-white text-black transition-transform z-20 ${rest.class}`}
+      class={`absolute h-fit overflow-auto transform bg-white text-black transition-transform z-20 border border-neutral-300 rounded-sm ${rest.class}`}
     >
       <div class="flex h-full flex-col justify-between p-4">
         <div class="flex w-full items-center h-12 relative">
@@ -27,10 +27,10 @@ export const Modal = component$<ModalProps>(({ name, title, ...rest }) => {
           <Button
             size="sm"
             look="ghost"
-            class="absolute top-0 right-0"
+            class="absolute -top-1 -right-1"
             onClick$={close}
           >
-            <LuXCircle class="text-lg text-primary-foreground" />
+            <LuXCircle class="text-lg text-neutral" />
           </Button>
         </div>
         <Slot />

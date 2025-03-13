@@ -395,6 +395,8 @@ export const getCellRegenerationDecision = async (cell: {
   });
 
   for (const referredCell of referredCells) {
+    if (!referredCell.id) continue;
+
     const { shouldGenerate, reason } = await getCellRegenerationDecision({
       id: referredCell.id!,
     });

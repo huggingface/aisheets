@@ -206,7 +206,13 @@ export const getCellRegenerationDecision = async (cell: {
 
   if (!model) throw new Error('Cell not found');
   if (!model.column) throw new Error('Column not found');
-  if (!model.column.process) throw new Error('Process not found');
+
+  if (!model.column.process) {
+    return {
+      shouldGenerate: false,
+      reason: 'Column has no process',
+    };
+  }
 
   if (model.validated) {
     return {

@@ -110,6 +110,7 @@ export const generateCells = async function* ({
     cell.generating = false;
 
     await updateCell(cell);
+
     yield { cell };
 
     // Add newly generated values as examples when there are no validated cells or referred columns

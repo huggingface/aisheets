@@ -4,6 +4,9 @@ import { useServerSession } from '~/state';
 
 import { INFERENCE_PROVIDERS } from '@huggingface/inference';
 
+// This list helps to exclude providers that are not supported by the endpoint
+const UNSUPPORTED_PROVIDERS = ['openai'];
+
 const MODEL_EXPANDABLE_KEYS = [
   'author',
   //'cardData',
@@ -55,7 +58,9 @@ export const useListModels = server$(async function (
       sort: 'trendingScore',
       direction: '-1',
     }),
-    ...INFERENCE_PROVIDERS.map((provider) => ['inference_provider', provider]),
+    ...INFERENCE_PROVIDERS.filter(
+      (m) => !UNSUPPORTED_PROVIDERS.includes(m),
+    ).map((provider) => ['inference_provider', provider]),
     ...MODEL_EXPANDABLE_KEYS.map((key) => ['expand', key]),
   ]).toString();
 

@@ -11,8 +11,8 @@ import { LuCheck, LuChevronDown } from '@qwikest/icons/lucide';
 
 const Root = (props: PropsOf<typeof HeadlessSelect.Root>) => (
   <HeadlessSelect.Root
-    {...props}
     class="h-10 w-full"
+    {...props}
     selectItemComponent={Item}
     selectItemLabelComponent={ItemLabel}
     selectErrorMessageComponent={ErrorMessage}

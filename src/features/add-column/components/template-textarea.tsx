@@ -195,7 +195,8 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
 
       <Textarea
         ref={textarea}
-        class="p-4 w-full h-full min-h-72 resize-none overflow-hidden border border-neutral-300-foreground bg-white text-base rounded-sm pb-16"
+        look="ghost"
+        class="p-4 w-full h-80 min-h-80 max-h-80 resize-none overflow-auto text-base rounded-sm pb-16"
         onInput$={(event) =>
           handleTextInput(event.target as HTMLTextAreaElement)
         }
@@ -210,7 +211,12 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
         value={props['bind:value'].value}
       />
 
-      <Select.Root bind:open={popOverVisible} loop={true} autoFocus={true}>
+      <Select.Root
+        bind:open={popOverVisible}
+        loop={true}
+        autoFocus={true}
+        class="h-0"
+      >
         <Select.Trigger
           ref={firstOption}
           look="headless"

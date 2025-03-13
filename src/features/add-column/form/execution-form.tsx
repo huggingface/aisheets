@@ -9,7 +9,13 @@ import {
   useTask$,
   useVisibleTask$,
 } from '@builder.io/qwik';
-import { LuBookmark, LuCheck, LuEgg, LuXCircle } from '@qwikest/icons/lucide';
+import {
+  LuBookmark,
+  LuCheck,
+  LuEgg,
+  LuStopCircle,
+  LuXCircle,
+} from '@qwikest/icons/lucide';
 
 import { Button, Input, Label, Select } from '~/components';
 import { nextTick } from '~/components/hooks/tick';
@@ -28,7 +34,9 @@ import { type Model, useListModels } from '~/usecases/list-models';
 
 interface SidebarProps {
   column: Column;
-  onGenerateColumn: QRL<(column: CreateColumn) => Promise<void>>;
+  onGenerateColumn: QRL<
+    (controller: AbortController, column: CreateColumn) => Promise<void>
+  >;
 }
 
 export const ExecutionForm = component$<SidebarProps>(
@@ -136,6 +144,16 @@ export const ExecutionForm = component$<SidebarProps>(
     });
 
     const onGenerate = $(async () => {
+      if ((window as any).controller) {
+        isSubmitting.value = false;
+        (window as any).controller.abort();
+
+        (window as any).controller = undefined;
+
+        return;
+      }
+
+      (window as any).controller = new AbortController();
       isSubmitting.value = true;
 
       try {
@@ -156,7 +174,8 @@ export const ExecutionForm = component$<SidebarProps>(
           },
         };
 
-        await onGenerateColumn(columnToSave);
+        await onGenerateColumn((window as any).controller, columnToSave);
+      } catch {
       } finally {
         isSubmitting.value = false;
       }
@@ -171,10 +190,10 @@ export const ExecutionForm = component$<SidebarProps>(
     });
 
     return (
-      <th class="min-w-[660px] w-[660px] bg-primary font-normal border-t border-secondary text-left">
+      <th class="min-w-[660px] w-[660px] bg-neutral-100 font-normal border-t border-neutral-300 text-left">
         <div class="flex justify-between items-center px-1">
           <Button size="sm" look="ghost">
-            <LuBookmark class="text-lg text-primary-foreground" />
+            <LuBookmark class="text-lg text-neutral" />
           </Button>
 
           <Button
@@ -183,12 +202,12 @@ export const ExecutionForm = component$<SidebarProps>(
             onClick$={handleCloseForm}
             disabled={columns.value[0]?.id === TEMPORAL_ID}
           >
-            <LuXCircle class="text-lg text-primary-foreground" />
+            <LuXCircle class="text-lg text-neutral" />
           </Button>
         </div>
         <div class="relative h-full w-full">
           <div class="absolute h-full w-full flex flex-col gap-4">
-            <div class="flex flex-col gap-4 px-8 bg-primary">
+            <div class="flex flex-col gap-4 px-8 bg-neutral-100">
               <Resource
                 value={loadModels}
                 onPending={() => (
@@ -208,7 +227,7 @@ export const ExecutionForm = component$<SidebarProps>(
                             Model
                           </Label>
                           <Select.Root value={selectedModel.value?.id}>
-                            <Select.Trigger class="px-4 bg-white rounded-base border-secondary-foreground">
+                            <Select.Trigger class="px-4 bg-white rounded-base border-neutral-300-foreground">
                               <Select.DisplayValue />
                             </Select.Trigger>
                             <Select.Popover class="border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto">
@@ -251,7 +270,7 @@ export const ExecutionForm = component$<SidebarProps>(
                               selectedProvider.value = provider;
                             })}
                           >
-                            <Select.Trigger class="px-4 bg-white rounded-base border-secondary-foreground">
+                            <Select.Trigger class="px-4 bg-white rounded-base border-neutral-300-foreground">
                               <Select.DisplayValue />
                             </Select.Trigger>
                             <Select.Popover class="border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto">
@@ -282,7 +301,7 @@ export const ExecutionForm = component$<SidebarProps>(
                   return (
                     <Input
                       bind:value={inputModelId}
-                      class="bg-white px-4 h-10 border-secondary-foreground"
+                      class="bg-white px-4 h-10 border-neutral-300-foreground"
                       placeholder="Cannot load model suggestions. Please enter the model ID manually."
                     />
                   );
@@ -302,12 +321,16 @@ export const ExecutionForm = component$<SidebarProps>(
                   />
                 </div>
 
-                <div class="absolute bottom-14 flex flex-row items-center justify-end px-4 gap-8 w-full">
-                  <div class="flex gap-1 items-center">
+                <div class="absolute bottom-14 flex flex-row items-center justify-between px-4 gap-8 w-full">
+                  <Button size="sm" look="ghost">
+                    <LuBookmark class="text-lg text-primary-foreground" />
+                  </Button>
+
+                  <div class="flex flex-1 gap-1 items-center justify-end">
                     <Label class="font-light">Rows:</Label>
                     <Input
                       type="number"
-                      class="h-8 border-secondary-foreground w-fit bg-primary"
+                      class="h-8 border-neutral-300-foreground w-fit bg-neutral-100"
                       max={maxRows.value}
                       min="1"
                       onInput$={(_, el) => {
@@ -327,18 +350,22 @@ export const ExecutionForm = component$<SidebarProps>(
                     look="primary"
                     onClick$={onGenerate}
                     disabled={
-                      !canRegenerate.value ||
-                      !isTouched.value ||
-                      isSubmitting.value ||
-                      isAnyColumnGenerating.value
+                      !isSubmitting.value &&
+                      (!canRegenerate.value || !isTouched.value)
                     }
                   >
                     <div class="flex items-center gap-4">
-                      <LuEgg class="text-xl" />
-
-                      {isAnyColumnGenerating.value
-                        ? 'Generating...'
-                        : 'Generate'}
+                      {isSubmitting.value ? (
+                        <>
+                          <LuStopCircle class="text-2xl" />
+                          Stop generating
+                        </>
+                      ) : (
+                        <>
+                          <LuEgg class="text-2xl" />
+                          Generate
+                        </>
+                      )}
                     </div>
                   </Button>
                 </div>

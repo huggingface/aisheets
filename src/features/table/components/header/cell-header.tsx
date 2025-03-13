@@ -11,12 +11,12 @@ export const TableCellHeader = component$<{ column: Column }>(({ column }) => {
   const { columnId } = useExecution();
 
   const classes = useComputed$(() =>
-    cn({ 'bg-primary': columnId.value === column.id }),
+    cn({ 'bg-neutral-100': columnId.value === column.id }),
   );
   return (
     <th
       id={column.id}
-      class={`min-w-80 w-80 max-w-80 min-h-8 h-8 p-2 text-left border-[0.5px] first:rounded-tl-sm border-l-secondary border-r-secondary ${classes.value}`}
+      class={`min-w-80 w-80 max-w-80 min-h-8 h-8 p-2 text-left border-[0.5px] first:rounded-tl-sm border-l-neutral-300 border-r-neutral-300 ${classes.value}`}
     >
       <div class="flex items-center justify-between gap-2 w-full">
         <div class="flex items-center gap-2 text-wrap w-[80%]">

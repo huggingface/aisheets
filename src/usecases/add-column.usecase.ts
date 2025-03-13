@@ -1,5 +1,5 @@
 import { type RequestEventBase, server$ } from '@builder.io/qwik-city';
-import { createColumn } from '~/services/repository';
+import { createColumn, updateCell } from '~/services';
 import {
   type Cell,
   type Column,
@@ -13,6 +13,9 @@ export const useAddColumnUseCase = () =>
     this: RequestEventBase<QwikCityPlatform>,
     newColum: CreateColumn,
   ): AsyncGenerator<{ column?: Column; cell?: Cell }> {
+    if (!newColum.process)
+      throw new Error('Process is required to create a column');
+
     const session = useServerSession(this);
     const column = await createColumn({
       name: newColum.name,
@@ -35,15 +38,19 @@ export const useAddColumnUseCase = () =>
       },
     };
 
-    if (!column.process) {
-      return;
-    }
-
-    yield* generateCells({
+    for await (const { cell } of generateCells({
       column,
       process: column.process!,
       session,
       limit: column.process!.limit!,
       offset: column.process!.offset,
-    });
+    })) {
+      this.signal.onabort = () => {
+        cell.generating = false;
+
+        updateCell(cell);
+      };
+
+      yield { cell };
+    }
   });

@@ -92,7 +92,7 @@ export const generateCells = async function* ({
 
       if (cell?.id) {
         const { shouldGenerate, reason } = await getCellRegenerationDecision({
-          id: cell.id!,
+          id: cell.id,
         });
 
         if (!shouldGenerate) {

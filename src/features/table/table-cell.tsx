@@ -1,6 +1,7 @@
 import {
   $,
   component$,
+  useComputed$,
   useSignal,
   useTask$,
   useVisibleTask$,
@@ -130,6 +131,17 @@ export const TableCell = component$<{
     isEditing.value = false;
   });
 
+  const markdownContent = useComputed$(() => {
+    switch (typeof originalValue.value) {
+      case 'undefined':
+        return '';
+      case 'string':
+        return originalValue.value;
+      default:
+        return JSON.stringify(originalValue.value, null, 2);
+    }
+  });
+
   const ref = useClickOutside(
     $(() => {
       if (!isEditing.value) return;
@@ -205,7 +217,7 @@ export const TableCell = component$<{
               <div class="h-full mt-2 p-4">
                 <Markdown
                   class="text-gray-900"
-                  content={originalValue.value ?? ''}
+                  content={markdownContent.value}
                 />
               </div>
             </>

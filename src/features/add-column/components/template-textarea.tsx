@@ -221,13 +221,13 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
           ref={firstOption}
           look="headless"
           hideIcon
-          class={`px-6 absolute border border-secondary bg-primary p-2 rounded shadow-lg ${popover.options.length === 0 ? 'invisible' : ''}`}
+          class={`px-6 absolute border border-neutral-300 bg-neutral-100 p-2 rounded shadow-lg ${popover.options.length === 0 ? 'invisible' : ''}`}
           style={{
             left: `${popover.position.x}px`,
             top: `${popover.position.y}px`,
           }}
         >
-          <LuBraces class="text-primary-foreground" />
+          <LuBraces class="text-neutral" />
         </Select.Trigger>
         <Select.Popover floating="bottom-start" class="!w-48">
           {popover.options.map((variable) => (

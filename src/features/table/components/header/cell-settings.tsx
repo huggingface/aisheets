@@ -24,12 +24,12 @@ export const CellSettings = component$<{ column: Column }>(({ column }) => {
 
   return (
     <Button
-      class="flex flex-row gap-1 justify-start font-light"
+      class="flex flex-row gap-1 justify-start font-light rounded-full"
       look="ghost"
       size="sm"
       onClick$={editCell}
     >
-      <LuSettings2 class="text-sm text-primary-foreground" />
+      <LuSettings2 class="text-sm text-neutral" />
       <Slot />
     </Button>
   );

@@ -136,7 +136,12 @@ export const createColumn = async (column: CreateColumn): Promise<Column> => {
     datasetId: column.dataset!.id,
   });
 
-  const process = await createProcess(column, model.id);
+  const process = column.process
+    ? await createProcess({
+        process: column.process,
+        column: { id: model.id },
+      })
+    : undefined;
 
   const newbie: Column = {
     id: model.id,

@@ -11,12 +11,35 @@ export default {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "var(--primary)",
-          foreground: "var(--primary-foreground)",
+          50: 'hsl(228 100% 96%)',   // #EBEEFF
+          100: 'hsl(228 100% 90%)',  // #CCD5FF
+          200: 'hsl(228 75% 76%)',   // #93A4F0
+          300: 'hsl(228 70% 67%)',   // #6E84E9
+          400: 'hsl(228 65% 50%)',   // #4057BF
+          500: 'hsl(228 40% 40%)',   // #3D4C8F
+          600: 'hsl(228 25% 25%)',   // #303650
+          DEFAULT: 'hsl(228 100% 71%)'  // #6B86FF
         },
         secondary: {
-          DEFAULT: "var(--secondary)",
-          foreground: "var(--secondary-foreground)",
+          50: 'hsl(84 100% 97%)',    // #F8FEF2
+          100: 'hsl(84 100% 93%)',   // #EBFFD6
+          200: 'hsl(84 100% 84%)',   // #D6FFAD
+          300: 'hsl(84 100% 74%)',   // #BDFF7A
+          400: 'hsl(84 60% 62%)',    // #9EE25A
+          500: 'hsl(84 50% 38%)',    // #6BA136
+          600: 'hsl(84 40% 32%)',    // #527231
+          DEFAULT: 'hsl(84 100% 54%)'  // #89FF14
+        },
+        neutral: {
+          50: 'hsl(228 20% 99%)',    // #FCFCFD
+          100: 'hsl(228 15% 98%)',   // #F9F9FB
+          200: 'hsl(228 15% 94%)',   // #EEEFF3
+          300: 'hsl(228 25% 90%)',   // #DEE2ED
+          400: 'hsl(228 15% 81%)',   // #C7CBD6
+          500: 'hsl(228 15% 61%)',   // #8D95AA
+          600: 'hsl(228 15% 41%)',   // #596178
+          700: 'hsl(228 3% 31%)',    // #4B4D53
+          DEFAULT: 'hsl(228 12% 71%)'  // #AAB0C0
         },
         alert: {
           DEFAULT: "hsl(var(--alert))",
@@ -25,10 +48,6 @@ export default {
         muted: {
           DEFAULT: "hsl(var(--muted))",
           foreground: "hsl(var(--muted-foreground))",
-        },
-        accent: {
-          DEFAULT: "hsl(var(--accent))",
-          foreground: "hsl(var(--accent-foreground))",
         },
         card: {
           DEFAULT: "hsl(var(--card))",
@@ -55,6 +74,9 @@ export default {
           400: "#6E84E9",
           500: "#3D4C8F",
           600: "#303650",
+        },
+        textColor: {
+          DEFAULT: 'hsl(228 25% 25%)',  // Same as primary-600
         }
       },
       borderRadius: {

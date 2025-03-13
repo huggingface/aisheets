@@ -259,7 +259,7 @@ const FileSelection = component$(
               ) : (
                 <Select.Root bind:value={selectedFile}>
                   <Select.Label>File</Select.Label>
-                  <Select.Trigger class="px-4 rounded-base border-secondary-foreground">
+                  <Select.Trigger class="px-4 rounded-base border-neutral-300-foreground">
                     <Select.DisplayValue />
                   </Select.Trigger>
                   <Select.Popover>

@@ -24,15 +24,16 @@ export const CellGeneration = component$<{ column: Column }>(({ column }) => {
   return (
     <Tooltip text="Regenerate">
       <Button
+        class="rounded-full"
         look="ghost"
         size="sm"
         disabled={!canRegenerate.value}
         onClick$={() => onRegenerateCells(column)}
       >
         {canRegenerate.value ? (
-          <LuEgg class="text-sm text-primary-foreground" />
+          <LuEgg class="text-sm text-neutral" />
         ) : (
-          <LuEggOff class="text-sm text-primary-foreground" />
+          <LuEggOff class="text-sm text-neutral" />
         )}
       </Button>
     </Tooltip>

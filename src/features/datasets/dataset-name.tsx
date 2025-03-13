@@ -43,6 +43,13 @@ export const DatasetName = component$(() => {
   });
 
   useVisibleTask$(({ track }) => {
+    track(activeDataset);
+
+    state.name = activeDataset.value.name;
+    state.displayName = activeDataset.value.name;
+  });
+
+  useVisibleTask$(({ track, cleanup }) => {
     track(() => state.isEditing);
     if (state.isEditing && inputRef.value) {
       inputRef.value.focus();
@@ -83,9 +90,7 @@ export const DatasetName = component$(() => {
         />
       ) : (
         <h1
-          class={`text-3xl font-bold w-full min-w-[200px] truncate leading-none px-2 ${
-            state.displayName === 'New dataset' ? 'text-secondary' : ''
-          }`}
+          class="text-3xl font-bold w-full min-w-[200px] truncate leading-none px-2"
           onClick$={handleEditClick}
         >
           {state.displayName}

@@ -50,7 +50,7 @@ export const ColumnNameEdition = component$<{ column: Column }>(
       >
         <Input
           type="text"
-          class="h-8 bg-primary"
+          class="h-8"
           bind:value={newName}
           onKeyDown$={handleKeyDown}
         />

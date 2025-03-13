@@ -90,9 +90,7 @@ export const DatasetName = component$(() => {
         />
       ) : (
         <h1
-          class={`text-3xl font-bold w-full min-w-[200px] truncate leading-none px-2 ${
-            state.displayName === 'New dataset' ? 'text-secondary' : ''
-          }`}
+          class="text-3xl font-bold w-full min-w-[200px] truncate leading-none px-2"
           onClick$={handleEditClick}
         >
           {state.displayName}

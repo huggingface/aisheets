@@ -7,7 +7,7 @@ import { TableView } from '~/features/table/table-view';
 export const Table = component$(() => {
   return (
     <ExecutionProvider>
-      <div class="flex flex-col flex-grow overflow-auto scrollable -mr-6">
+      <div class="flex flex-col flex-grow overflow-auto scrollable -mr-6 rounded-tl-sm">
         <TableView />
         <div class="flex">
           <table class="text-sm border-separate border-spacing-0">

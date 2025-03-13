@@ -10,6 +10,7 @@ import { cn } from '@qwik-ui/utils';
 type TextareaProps = PropsOf<'textarea'> & {
   error?: string;
   preventEnterNewline?: boolean;
+  look?: 'default' | 'ghost';
 };
 
 export const Textarea = component$<TextareaProps>(
@@ -21,6 +22,7 @@ export const Textarea = component$<TextareaProps>(
     value,
     onInput$,
     preventEnterNewline,
+    look = 'default',
     ...props
   }) => {
     const textareaId = id || name;
@@ -65,7 +67,11 @@ export const Textarea = component$<TextareaProps>(
           onKeyDown$={handleKeyDown}
           onInput$={handleOnInput}
           class={cn(
-            '[&::-webkit-scrollbar-track]:bg-blue flex min-h-[60px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50',
+            {
+              '[&::-webkit-scrollbar-track]:bg-blue flex min-h-[60px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50':
+                look === 'default',
+              'border-none outline-none': look === 'ghost',
+            },
             props.class,
           )}
           id={textareaId}

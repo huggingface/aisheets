@@ -10,9 +10,11 @@ import {
   useVisibleTask$,
 } from '@builder.io/qwik';
 import { useNavigate } from '@builder.io/qwik-city';
-import { LuCheck, LuLoader, LuTerminalSquare } from '@qwikest/icons/lucide';
+import { LuCheck, LuChevronRightSquare, LuLoader } from '@qwikest/icons/lucide';
 
-import { Button, Input, Label, Select } from '~/components';
+import { Button, Select } from '~/components';
+import { useDebounce } from '~/components/hooks/debounce/debounce';
+import { nextTick } from '~/components/hooks/tick';
 import { useSession } from '~/loaders';
 import { listDatasets } from '~/services/repository/hub/list-datasets';
 import { listHubDatasetDataFiles } from '~/services/repository/hub/list-hub-dataset-files';
@@ -55,23 +57,21 @@ export const ImportFromHub = component$(() => {
   });
 
   return (
-    <div class="flex flex-col w-fit mt-8 gap-4">
+    <div class="flex flex-col w-fit mt-8 gap-12">
       <div class="flex flex-col justify-between gap-4">
         <h1 class="text-3xl font-bold w-full">
           Import your dataset from the hub
         </h1>
 
-        <div class="flex flex-row gap-4">
-          <div class="flex-1 max-w-xl">
-            <DatasetSearch
-              onSelectedDataset$={(dataset) => {
-                repoId.value = dataset;
-              }}
-            />
-          </div>
+        <div class="flex flex-col gap-12 w-full">
+          <DatasetSearch
+            onSelectedDataset$={(dataset) => {
+              repoId.value = dataset;
+            }}
+          />
 
-          {repoId.value ? (
-            <div class="flex-1 max-w-md">
+          {repoId.value && (
+            <div class="w-full">
               <FileSelection
                 repoId={repoId.value!}
                 accessToken={session.value!.token}
@@ -80,13 +80,16 @@ export const ImportFromHub = component$(() => {
                 }}
               />
             </div>
-          ) : (
-            <></>
           )}
         </div>
       </div>
 
-      <div class="flex flex-col w-full gap-4 items-end">
+      <div class="flex flex-col w-full gap-4 mt-8">
+        {repoId.value && filePath.value && (
+          <div class="text-foreground text-sm">
+            <span>Only the first 1000 rows will be imported.</span>
+          </div>
+        )}
         <Button
           look="primary"
           disabled={!enableImportButton.value}
@@ -99,91 +102,157 @@ export const ImportFromHub = component$(() => {
             </div>
           ) : (
             <div class="flex items-center gap-4">
-              <LuTerminalSquare class="text-xl" />
+              <LuChevronRightSquare class="text-xl" />
               <span>Import dataset</span>
             </div>
           )}
         </Button>
-        {repoId.value && filePath.value && (
-          <div class="text-foreground text-sm">
-            <span>Only the first 1000 rows will be imported</span>
-          </div>
-        )}
       </div>
     </div>
   );
 });
 
 const DatasetSearch = component$(
-  (props: {
+  ({
+    onSelectedDataset$,
+  }: {
     onSelectedDataset$: QRL<(dataset: string) => void>;
   }) => {
+    const isOpen = useSignal(false);
     const session = useSession();
     const searchQuery = useSignal('');
+    const searchQueryDebounced = useSignal('');
     const selectedDataset = useSignal<string | undefined>(undefined);
+    const inputRef = useSignal<Element>();
+
+    const focusInput = $(() => {
+      const input = inputRef.value as HTMLInputElement;
+      if (input && typeof input.focus === 'function') {
+        input.focus();
+      }
+    });
+
+    // Track input ref and query changes to maintain focus
+    useTask$(({ track }) => {
+      track(() => inputRef.value);
+      if (inputRef.value) {
+        focusInput();
+      }
+    });
+
+    useTask$(({ track }) => {
+      track(() => searchQuery.value);
+      if (inputRef.value) {
+        focusInput();
+      }
+    });
+
+    useDebounce(
+      searchQuery,
+      $(() => {
+        searchQueryDebounced.value = searchQuery.value;
+      }),
+      300,
+    );
 
     const searchResults = useResource$(async ({ track }) => {
-      track(searchQuery);
-      if (searchQuery.value.trim() === '') return [];
-      return (
-        await listDatasets({
-          query: searchQuery.value,
-          accessToken: session.value!.token,
-          limit: 5,
-        })
-      ).map((dataset) => dataset.name);
+      track(searchQueryDebounced);
+      const query = searchQueryDebounced.value.trim();
+
+      if (query === '' || query.length < 3) {
+        nextTick(() => {
+          isOpen.value = false;
+        });
+        return [];
+      }
+
+      const datasets = await listDatasets({
+        query,
+        accessToken: session.value!.token,
+        limit: 5,
+      });
+
+      nextTick(() => {
+        if (datasets.length > 0) {
+          isOpen.value = true;
+        } else {
+          selectedDataset.value = undefined;
+          isOpen.value = false;
+        }
+      });
+
+      return datasets.map((dataset) => dataset.name);
+    });
+
+    const handleChangeDataset$ = $((value: string | string[]) => {
+      selectedDataset.value = value as string;
     });
 
     useTask$(({ track }) => {
       track(selectedDataset);
       if (selectedDataset.value) {
         searchQuery.value = selectedDataset.value;
-        props.onSelectedDataset$(selectedDataset.value);
+
+        onSelectedDataset$(selectedDataset.value);
+      } else {
+        searchQuery.value = '';
+        onSelectedDataset$('');
       }
     });
 
     return (
-      <div class="flex flex-col gap-4">
-        <Label for="dataset-search">Dataset id</Label>
-        <Input
-          id="dataset-search"
-          class="h-10"
-          placeholder="Type to search datasets"
-          bind:value={searchQuery}
-        />
-        <Resource
-          value={searchResults}
-          onRejected={(error) => {
-            console.error(error);
-            return (
-              <div class="flex items-center justify-center h-32 background-primary rounded-base">
-                <span class="text-foreground warning">
-                  Failed to fetch datasets. Please, try again.
-                </span>
-              </div>
-            );
-          }}
-          onResolved={(datasets) => (
-            <div class="flex flex-col gap-2">
-              {searchQuery.value.trim() !== '' && datasets.length === 0 ? (
-                <></>
-              ) : (
-                datasets.map((dataset, idx) => (
-                  <Button
-                    key={idx}
-                    class="text-left"
-                    onClick$={() => {
-                      selectedDataset.value = dataset;
-                    }}
-                  >
-                    {dataset}
-                  </Button>
-                ))
-              )}
+      <Resource
+        value={searchResults}
+        onRejected={() => {
+          return (
+            <div class="flex items-center justify-center h-32 background-primary rounded-base">
+              <span class="text-foreground warning">
+                Failed to fetch datasets. Please, try again.
+              </span>
             </div>
-          )}
-        />
-      </div>
+          );
+        }}
+        onResolved={(datasets) => (
+          <div class="flex flex-col gap-2">
+            <Select.Root onChange$={handleChangeDataset$} bind:open={isOpen}>
+              <Select.Label>Dataset id</Select.Label>
+              <Select.Trigger>
+                <input
+                  ref={inputRef}
+                  class="w-full h-8 outline-none"
+                  placeholder="Type at least 3 characters to search datasets"
+                  value={searchQuery.value}
+                  onInput$={(e) => {
+                    searchQuery.value = (e.target as HTMLInputElement).value;
+                  }}
+                  onBlur$={(e) => {
+                    const target = e.relatedTarget as HTMLElement;
+                    if (!target?.closest('.select-item')) {
+                      nextTick(() => focusInput());
+                    }
+                  }}
+                />
+              </Select.Trigger>
+              {!!datasets.length && (
+                <Select.Popover gutter={8}>
+                  {datasets.map((dataset) => (
+                    <Select.Item
+                      value={dataset}
+                      key={dataset}
+                      class="select-item"
+                    >
+                      <Select.ItemLabel>{dataset}</Select.ItemLabel>
+                      <Select.ItemIndicator>
+                        <LuCheck class="h-4 w-4" />
+                      </Select.ItemIndicator>
+                    </Select.Item>
+                  ))}
+                </Select.Popover>
+              )}
+            </Select.Root>
+          </div>
+        )}
+      />
     );
   },
 );
@@ -204,23 +273,23 @@ const FileSelection = component$(
         accessToken: props.accessToken,
       });
 
-      if (files.length === 0) selectedFile.value = '';
-      else selectedFile.value = files[0];
+      // Always select the first file when files change
+      nextTick(() => {
+        selectedFile.value = files.length > 0 ? files[0] : '';
+      });
 
       return files;
     });
 
     useTask$(({ track }) => {
       const newValue = track(selectedFile);
-      props.onSelectedFile$(newValue!);
+      props.onSelectedFile$(newValue);
     });
 
     return (
       <Resource
         value={listDatasetFiles}
-        onRejected={(error) => {
-          console.error(error);
-
+        onRejected={() => {
           return (
             <div class="flex items-center justify-center h-32 background-primary rounded-base">
               <span class="text-foreground warning">
@@ -232,27 +301,23 @@ const FileSelection = component$(
         onResolved={(files) => {
           return (
             <div class="flex flex-col gap-4">
-              <Label for="dataset-file">File</Label>
-
               {files.length === 0 ? (
                 <span class="text-foreground warning">
                   No compatible files found in this dataset. Only jsonl, csv,
                   and parquet files are supported.
                 </span>
               ) : (
-                <Select.Root bind:value={selectedFile} class="relative">
-                  <Select.Trigger class="px-4 bg-primary rounded-base border-secondary-foreground">
+                <Select.Root bind:value={selectedFile}>
+                  <Select.Label>File</Select.Label>
+                  <Select.Trigger class="px-4 rounded-base border-neutral-300-foreground">
                     <Select.DisplayValue />
                   </Select.Trigger>
-                  <Select.Popover class="bg-primary border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto">
+                  <Select.Popover>
                     {files.map((file, idx) => (
                       <Select.Item
                         key={idx}
                         class="text-foreground hover:bg-accent"
                         value={file}
-                        onClick$={() => {
-                          selectedFile.value = file;
-                        }}
                       >
                         <Select.ItemLabel>{file}</Select.ItemLabel>
                         <Select.ItemIndicator>

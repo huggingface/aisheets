@@ -103,10 +103,7 @@ export const TableBody = component$(() => {
       {/* Top spacer row to maintain scroll position */}
       {topSpacerHeight.value > 0 && (
         <tr style={{ height: `${topSpacerHeight.value}px` }}>
-          <td
-            colSpan={columns.value.length + 1}
-            style={{ padding: 0, border: 'none' }}
-          />
+          <td class="p-0 border-none" colSpan={columns.value.length + 1} />
         </tr>
       )}
 
@@ -149,15 +146,18 @@ export const TableBody = component$(() => {
                     </>
                   )}
 
+                  {/* td for execution form */}
                   {columnId.value === cell.column?.id && (
-                    <td class="min-w-[660px] w-[660px] bg-primary" />
+                    <td class="min-w-[660px] w-[660px] bg-neutral-100 border-[0.5px] border-b-0 border-t-0 border-r-0" />
                   )}
                 </Fragment>
               );
             })}
 
             {/* td for (add + ) column */}
-            <td class="min-w-80 w-80 max-w-80 min-h-[100px] h-[100px] border-[0.5px] border-t-0 border-r-0" />
+            {columns.value.filter((c) => c.id !== TEMPORAL_ID).length >= 1 && (
+              <td class="min-w-80 w-80 max-w-80 min-h-[100px] h-[100px] border-[0.5px] border-t-0 border-r-0" />
+            )}
           </tr>
         );
       })}
@@ -165,10 +165,7 @@ export const TableBody = component$(() => {
       {/* Bottom spacer row */}
       {bottomSpacerHeight.value > 0 && (
         <tr style={{ height: `${bottomSpacerHeight.value}px` }}>
-          <td
-            colSpan={columns.value.length + 1}
-            style={{ padding: 0, border: 'none' }}
-          />
+          <td class="p-0 border-none" colSpan={columns.value.length + 1} />
         </tr>
       )}
     </tbody>

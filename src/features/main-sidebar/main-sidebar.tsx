@@ -3,90 +3,87 @@ import { Link } from '@builder.io/qwik-city';
 import { useToggle } from '~/components/hooks';
 import { Logo } from '~/components/ui/logo/logo';
 
-import {
-  LuLibrary,
-  LuPanelLeftClose,
-  LuPanelLeftOpen,
-} from '@qwikest/icons/lucide';
+import { LuLibrary, LuPanelLeft } from '@qwikest/icons/lucide';
 import { useAllDatasetsLoader } from '~/loaders';
 
 export const MainSidebar = component$(() => {
-  const { isOpen, toggle } = useToggle();
+  const { isOpen, toggle } = useToggle(true);
   const datasets = useAllDatasetsLoader();
 
   return (
     <div
-      class={`transition-color shrink-0 ${
+      class={`transition-all duration-300 shrink-0 overflow-hidden ${
         isOpen.value
-          ? 'bg-gradient-to-r from-white to-gray-50 h-screen'
-          : 'bg-white'
+          ? 'bg-gradient-to-r from-white to-gray-50 h-screen w-[240px]'
+          : 'bg-white w-10'
       }`}
     >
-      <div
-        class={`transition-all duration-300 flex items-center justify-between p-2 ${
-          isOpen.value ? 'min-w-[200px]' : 'min-w-0'
-        }`}
-      >
-        <button
-          type="button"
-          onClick$={toggle}
-          class="transition-opacity duration-300 ease-in-out rounded p-2 hover:bg-gray-100 text-muted-foreground"
+      <div class="h-14 relative">
+        <div
+          class={`absolute inset-0 transition-all duration-300 flex items-center ${
+            isOpen.value ? 'w-[240px]' : 'w-10'
+          }`}
         >
-          {isOpen.value ? (
-            <LuPanelLeftClose class="w-5 h-5" />
-          ) : (
-            <LuPanelLeftOpen class="w-5 h-5" />
+          {isOpen.value && (
+            <span class="text-base font-semibold px-4 font-inter">
+              DataGround
+            </span>
           )}
-        </button>
+          <button
+            type="button"
+            onClick$={toggle}
+            class="absolute right-2 transition-all duration-300 rounded hover:bg-gray-100 text-gray-400"
+          >
+            {isOpen.value ? (
+              <LuPanelLeft class="w-4 h-4" />
+            ) : (
+              <LuPanelLeft class="w-4 h-4" />
+            )}
+          </button>
+        </div>
       </div>
 
-      <div
-        class="transition-all duration-300 shrink-0"
-        style={{
-          width: isOpen.value ? '200px' : '0',
-          opacity: isOpen.value ? '1' : '0',
-        }}
-      >
-        <div class="transition-all duration-300 ease-in-out overflow-y-auto overflow-x-hidden max-h-full">
-          <>
-            <div class="block space-y-2 p-4 mb-4">
+      {isOpen.value && (
+        <div class="transition-all duration-300">
+          <div class="overflow-y-auto overflow-x-hidden">
+            <div class="block space-y-4 px-4 mt-8 mb-8">
               <Link
                 href="/"
-                class="flex items-center gap-2 px-2 py-1 hover:bg-gray-100 rounded text-sm font-light truncate max-w-full"
+                class="flex items-center gap-3 py-2 hover:bg-gray-100 rounded text-sm font-light truncate max-w-full"
               >
                 <Logo
-                  class="w-5 h-5 rotate-15"
+                  class="w-6 h-6 rotate-15"
                   fillColor="#89FF14"
                   strokeColor="#849AFF"
                 />
-                Create Dataset
+                Create a dataset
               </Link>
-              <Link class="flex items-center select-none gap-2 px-2 py-1 hover:bg-gray-100 rounded text-sm font-light truncate max-w-full">
-                <LuLibrary class="w-5 h-5 text-muted-foreground" />
-                Prompt gallery
+              <Link class="flex items-center select-none gap-3 py-2 hover:bg-gray-100 rounded text-sm font-light truncate max-w-full">
+                <LuLibrary class="w-6 h-6 text-muted-foreground" />
+                Prompt library
               </Link>
             </div>
 
             <div>
-              <p class="text-muted-foreground px-6 text-sm font-semibold">
+              <p class="text-muted-foreground px-4 text-sm font-semibold mb-4">
                 Today
               </p>
-              <div class="block space-y-2 p-4 mb-4">
+              <div class="block space-y-3 px-4">
                 {datasets.value.map((item) => (
                   <Link
                     type="button"
                     key={item.id}
                     href={`/dataset/${item.id}`}
-                    class="block px-2 py-1 hover:bg-gray-100 rounded text-sm font-light truncate max-w-full"
+                    class="block py-2 hover:bg-gray-100 rounded text-sm font-light truncate max-w-full"
                   >
                     {item.name}
                   </Link>
                 ))}
               </div>
             </div>
-          </>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 });

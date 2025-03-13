@@ -351,6 +351,13 @@ export const ExecutionForm = component$<SidebarProps>(
                   configuration
                 </div>
               )}
+
+              {!canRegenerate.value && (
+                <div class="flex items-center justify-center text-indigo-500">
+                  Some references columns are dirty, please, regenerate them
+                  first.
+                </div>
+              )}
             </div>
           </div>
         </div>

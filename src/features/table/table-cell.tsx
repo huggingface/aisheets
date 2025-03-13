@@ -132,13 +132,20 @@ export const TableCell = component$<{
   });
 
   const markdownContent = useComputed$(() => {
+    if (!originalValue.value) return '';
     switch (typeof originalValue.value) {
       case 'undefined':
         return '';
       case 'string':
         return originalValue.value;
-      default:
-        return JSON.stringify(originalValue.value, null, 2);
+      default: {
+        let value = JSON.stringify(originalValue.value, null, 2);
+
+        if (value.length > 1024) {
+          value = value.slice(0, 1024) + '...';
+        }
+        return value;
+      }
     }
   });
 

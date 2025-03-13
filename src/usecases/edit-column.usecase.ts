@@ -10,38 +10,38 @@ import { generateCells } from './generate-cells';
 export const useEditColumnUseCase = () =>
   server$(async function* (
     this: RequestEventBase<QwikCityPlatform>,
-    toUpdate: Column,
+    column: Column,
   ): AsyncGenerator<{ column?: Column; cell?: Cell }> {
+    if (!column.process)
+      throw new Error('Process is required to create a column');
+
     const session = useServerSession(this);
-    const column = await updateColumn(toUpdate);
-
-    if (!column.process) {
-      return;
-    }
-
-    yield {
-      column,
-    };
 
     const validatedCells = await getValidatedColumnCells({
       column,
     });
 
-    yield* generateCells({
-      column: column,
+    for await (const { cell } of generateCells({
+      column,
       process: column.process!,
       session,
       limit: column.process!.limit!,
       offset: column.process!.offset,
       validatedCells,
-    });
+    })) {
+      this.signal.onabort = async () => {
+        cell.generating = false;
 
-    const process = await updateProcess(column.process);
+        await updateCell(cell);
+        await updateColumn(column);
+      };
+
+      yield { cell };
+    }
+
+    const updated = await updateColumn(column);
 
     yield {
-      column: {
-        ...column,
-        process,
-      },
+      column: updated,
     };
   });

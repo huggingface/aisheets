@@ -11,8 +11,8 @@ import { LuCheck, LuChevronDown } from '@qwikest/icons/lucide';
 
 const Root = (props: PropsOf<typeof HeadlessSelect.Root>) => (
   <HeadlessSelect.Root
-    {...props}
     class="h-10 w-full"
+    {...props}
     selectItemComponent={Item}
     selectItemLabelComponent={ItemLabel}
     selectErrorMessageComponent={ErrorMessage}
@@ -25,7 +25,7 @@ const Label = component$<PropsOf<typeof HeadlessSelect.Label>>(
       <>
         <HeadlessSelect.Label
           {...props}
-          class={cn('px-2 py-1.5 text-sm font-semibold', props.class)}
+          class={cn('px-2 py-1.5 text-sm', props.class)}
         >
           <Slot />
         </HeadlessSelect.Label>
@@ -60,12 +60,12 @@ const Trigger = component$<TriggerProps>(({ look = 'default', ...props }) => {
     look === 'ghost' ? ghostClass : look === 'headless' ? '' : defaultClass;
 
   return (
-    <>
-      <HeadlessSelect.Trigger {...props} class={cn(lookClass, props.class)}>
+    <HeadlessSelect.Trigger {...props} class={cn(lookClass, props.class)}>
+      <div class="flex flex-row justify-between items-center w-full gap-2">
         <Slot />
         {props.hideIcon ? null : <LuChevronDown class="h-4 w-4 opacity-50" />}
-      </HeadlessSelect.Trigger>
-    </>
+      </div>
+    </HeadlessSelect.Trigger>
   );
 });
 

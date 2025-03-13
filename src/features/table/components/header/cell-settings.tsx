@@ -29,7 +29,7 @@ export const CellSettings = component$<{ column: Column }>(({ column }) => {
       size="sm"
       onClick$={editCell}
     >
-      <LuSettings2 class="text-sm text-primary-foreground" />
+      <LuSettings2 class="text-sm text-neutral" />
       <Slot />
     </Button>
   );

@@ -173,7 +173,7 @@ const DatasetSearch = component$(
       });
 
       nextTick(() => {
-        if (datasets.length > 1) {
+        if (datasets.length > 0) {
           isOpen.value = true;
         } else {
           selectedDataset.value = undefined;

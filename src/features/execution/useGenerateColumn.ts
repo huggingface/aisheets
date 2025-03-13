@@ -59,6 +59,9 @@ export const useGenerateColumn = () => {
     for await (const cell of response) {
       replaceCell(cell);
     }
+
+    const updated = await getColumnById$(column.id);
+    updateColumn(updated!);
   });
 
   const onEditColumn = $(

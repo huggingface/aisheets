@@ -161,6 +161,11 @@ export const TableCell = component$<{
         e.stopPropagation();
         isEditing.value = true;
       }}
+      onClick$={() => {
+        if (isEditing.value) {
+          onUpdateCell();
+        }
+      }}
       ref={ref}
     >
       <div class="relative h-full">

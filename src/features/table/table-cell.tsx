@@ -206,26 +206,28 @@ export const TableCell = component$<{
 
           {isEditing.value && (
             <div
-              class="fixed z-20 bg-white border border-green-300 focus:border-green-200 focus:outline-none shadow-lg cursor-text"
+              class="fixed z-20 bg-white border border-secondary-200 focus:border-secondary-300 focus:outline-none shadow-lg cursor-text"
               style={{
-                left:
-                  Math.min(
-                    ref.value?.getBoundingClientRect().left ?? 0,
-                    window.innerWidth - 720, // 45rem = 720px
-                  ) + 'px',
-                top: ref.value?.getBoundingClientRect().top + 'px',
-                width: '45rem',
-                height: '300px',
+                left: '50%',
+                top: '50%',
+                transform: 'translate(-50%, -50%)',
+                width: '55rem',
+                height: '700px',
+                maxWidth: '90vw',
+                maxHeight: '85vh',
+                borderWidth: '1px',
               }}
               onClick$={() => {
-                editCellValueInput.value!.focus();
+                if (editCellValueInput.value) {
+                  editCellValueInput.value.focus();
+                }
               }}
             >
               <Textarea
                 ref={editCellValueInput}
                 bind:value={newCellValue}
                 preventEnterNewline
-                class="absolute inset-0 w-full h-full p-4 rounded-none text-sm resize-none focus-visible:outline-none focus-visible:ring-0 border-none shadow-none overflow-auto whitespace-pre-wrap break-words"
+                class="absolute inset-0 w-full h-full p-4 rounded-none text-sm resize-none focus-visible:outline-none focus-visible:ring-0 border-none shadow-none overflow-auto whitespace-pre-wrap break-words scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent"
                 onKeyDown$={(e) => {
                   if (e.key === 'Enter') {
                     if (e.shiftKey) return;

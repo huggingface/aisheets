@@ -8,6 +8,7 @@ import {
   useContext,
   useContextProvider,
   useSignal,
+  useTask$,
 } from '@builder.io/qwik';
 import { TEMPORAL_ID, useColumnsStore } from '~/state';
 
@@ -21,14 +22,19 @@ const executionContext =
 
 export const ExecutionProvider = component$(() => {
   const { columns } = useColumnsStore();
-  const lastColumnId = columns.value[columns.value.length - 1].id;
 
-  const internalState = useSignal<Execution>({
-    columnId: lastColumnId === TEMPORAL_ID ? lastColumnId : undefined,
-    mode: lastColumnId === TEMPORAL_ID ? 'add' : undefined,
-  });
-
+  const internalState = useSignal<Execution>({});
   useContextProvider(executionContext, internalState);
+
+  useTask$(({ track }) => {
+    track(columns);
+    const lastColumnId = columns.value[columns.value.length - 1].id;
+
+    internalState.value = {
+      columnId: lastColumnId === TEMPORAL_ID ? lastColumnId : undefined,
+      mode: lastColumnId === TEMPORAL_ID ? 'add' : undefined,
+    };
+  });
 
   return <Slot />;
 });

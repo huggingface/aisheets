@@ -16,7 +16,7 @@ export const TableView = component$(() => {
           <Popover.Trigger
             class={`${buttonVariants({ look: 'ghost' })} flex gap-1 text-primary-foreground my-1 p-2`}
           >
-            <LuColumns class="text-xl text-neutral" />
+            <LuColumns class="text-sm text-neutral" />
             <span class="text-neutral-600">View columns</span>
           </Popover.Trigger>
           <Popover.Panel class="rounded-md border bg-popover p-1 text-popover-foreground shadow-md">

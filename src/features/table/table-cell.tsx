@@ -82,6 +82,12 @@ export const TableCell = component$<{
     track(newCellValue);
 
     editCellValueInput.value.focus();
+    // Position cursor at the beginning of the text
+    if (editCellValueInput.value instanceof HTMLTextAreaElement) {
+      editCellValueInput.value.setSelectionRange(0, 0);
+      // Scroll to the top of the textarea
+      editCellValueInput.value.scrollTop = 0;
+    }
   });
 
   // Check truncation after DOM is ready and content is rendered
@@ -206,7 +212,7 @@ export const TableCell = component$<{
 
           {isEditing.value && (
             <div
-              class="fixed z-20 bg-white border border-secondary-200 focus:border-secondary-300 focus:outline-none shadow-lg cursor-text"
+              class="fixed z-20 bg-white border border-neutral-500 focus:border-secondary-300 focus:outline-none shadow-lg cursor-text"
               style={{
                 left: '50%',
                 top: '50%',

@@ -26,7 +26,8 @@ export const buttonVariants = cva(
       },
       state: {
         default: '',
-        generating: 'bg-primary-200',
+        generating:
+          'bg-primary-200 text-white hover:bg-primary-200 active:bg-primary-200 disabled:opacity-100 disabled:bg-primary-200',
         stopGenerating: '',
       },
     },

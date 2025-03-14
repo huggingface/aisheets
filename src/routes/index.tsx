@@ -128,7 +128,7 @@ export default component$(() => {
               <div class="w-full text-[#676767] border-t border-b group transition-colors cursor-pointer">
                 <div class="w-full px-6 py-5 flex flex-row items-center gap-3 font-light group-hover:bg-gray-50/50">
                   <span class="text-sm text-foreground">
-                    Generate content on various topics.
+                    Generate content on specific topics.
                   </span>
                   <span class="text-[#AAB0C0] text-sm font-light">
                     Create tweets, blog posts, or emails
@@ -144,8 +144,8 @@ export default component$(() => {
                     Generate questions and responses.
                   </span>
                   <span class="text-[#AAB0C0] text-sm font-light">
-                    Produce reasoning, scientific, or creative writing
-                    questions.
+                    Produce reasoning, scientific, or creative writing questions
+                    and responses.
                   </span>
                 </div>
               </div>
@@ -158,7 +158,7 @@ export default component$(() => {
                     Generate code problems and solutions.
                   </span>
                   <span class="text-[#AAB0C0] text-sm font-light">
-                    Design coding challenges with solutions.
+                    Generate coding challenges and solutions.
                   </span>
                 </div>
               </div>
@@ -174,7 +174,8 @@ export default component$(() => {
                   Create a blank dataset.
                 </span>
                 <span class="text-[#AAB0C0] text-sm font-light">
-                  Build your synthetic data from scratch
+                  Build synthetic datasets from scratch. Ideal to experiment
+                  with new models.
                 </span>
               </div>
             </div>
@@ -187,7 +188,8 @@ export default component$(() => {
                     Import a dataset from Hugging Face.
                   </span>
                   <span class="text-[#AAB0C0] text-sm font-light">
-                    Ideal for model benchmarking
+                    Ideal for model evaluation, dataset transformation and
+                    augmentation.
                   </span>
                 </div>
               </div>

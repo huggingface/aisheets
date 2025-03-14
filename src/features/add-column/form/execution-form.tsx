@@ -349,29 +349,36 @@ export const ExecutionForm = component$<SidebarProps>(
                       value={rowsToGenerate.value}
                     />
                   </div>
-                  <Button
-                    key={isSubmitting.value.toString()}
-                    look="primary"
-                    onClick$={onGenerate}
-                    disabled={
-                      !isSubmitting.value &&
-                      (!canRegenerate.value || !isTouched.value)
-                    }
-                  >
-                    <div class="flex items-center gap-4">
-                      {isSubmitting.value ? (
-                        <>
-                          <LuStopCircle class="text-2xl" />
-                          Stop generating
-                        </>
-                      ) : (
-                        <>
-                          <LuEgg class="text-2xl" />
-                          Generate
-                        </>
-                      )}
-                    </div>
-                  </Button>
+                  <div class="flex items-center">
+                    <Button
+                      key={isSubmitting.value.toString()}
+                      look="primary"
+                      onClick$={onGenerate}
+                      disabled={
+                        !isSubmitting.value &&
+                        (!canRegenerate.value || !isTouched.value)
+                      }
+                    >
+                      <div class="flex items-center gap-4">
+                        {isSubmitting.value ? (
+                          <>
+                            <LuStopCircle class="text-2xl" />
+                            Stop generating
+                          </>
+                        ) : (
+                          <>
+                            <LuEgg class="text-2xl" />
+                            Generate
+                          </>
+                        )}
+                      </div>
+                    </Button>
+                    {isSubmitting.value && (
+                      <div class="ml-3">
+                        <div class="h-6 w-6 animate-spin rounded-full border-2 border-primary-100 border-t-transparent" />
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
               {!isTouched.value && (

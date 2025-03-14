@@ -3,14 +3,14 @@ import { cn } from '@qwik-ui/utils';
 import { type VariantProps, cva } from 'class-variance-authority';
 
 export const buttonVariants = cva(
-  'inline-flex items-center justify-center rounded text-sm font-medium transition-all duration-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50',
+  'inline-flex items-center justify-center rounded text-sm font-medium transition-all duration-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring',
   {
     variants: {
       look: {
         primary:
-          'p-4 rounded-2xl h-10 bg-indigo-300 hover:bg-indigo-400 text-white w-fit select-none disabled:bg-indigo-100',
+          'p-4 rounded-2xl h-10 bg-primary text-white w-fit select-none hover:bg-primary-300 active:bg-primary-200 disabled:bg-primary-100 disabled:opacity-100 disabled:pointer-events-none',
         secondary:
-          'p-4 rounded-md h-10 w-fit select-none border border-neutral-400 bg-neutral-100 text-primary-foreground shadow-sm hover:bg-neutral-200 hover:border-neutral-500 active:shadow-base active:press',
+          'p-4 rounded-md h-10 w-fit select-none border border-neutral-400 bg-neutral-100 text-primary-foreground shadow-sm hover:bg-neutral-200 hover:border-neutral-500 active:shadow-base active:press disabled:opacity-100 disabled:pointer-events-none',
         alert:
           'border-base bg-alert text-alert-foreground shadow-sm hover:bg-alert/90 active:shadow-base active:press',
         outline:
@@ -24,9 +24,15 @@ export const buttonVariants = cva(
         lg: ' h-16 px-8 py-4 text-lg',
         icon: 'h-10 w-10',
       },
+      state: {
+        default: '',
+        generating: 'bg-primary-200',
+        stopGenerating: '',
+      },
     },
     defaultVariants: {
       look: 'secondary',
+      state: 'default',
     },
   },
 );
@@ -34,10 +40,20 @@ export const buttonVariants = cva(
 type ButtonProps = PropsOf<'button'> &
   VariantProps<typeof buttonVariants> & {
     hover?: boolean;
+    isGenerating?: boolean;
+    onStopGenerating?: () => void;
   };
 
 export const Button = component$<ButtonProps>(
-  ({ size, look, hover = true, ...props }) => {
+  ({
+    size,
+    look,
+    state,
+    hover = true,
+    isGenerating = false,
+    onStopGenerating,
+    ...props
+  }) => {
     const buttonHover = cn({
       'hover:bg-transparent': !hover,
     });
@@ -45,7 +61,24 @@ export const Button = component$<ButtonProps>(
     return (
       <button
         {...props}
-        class={cn(buttonVariants({ size, look }), props.class, buttonHover)}
+        class={cn(
+          buttonVariants({
+            size,
+            look,
+            state: isGenerating ? 'generating' : state,
+          }),
+          props.class,
+          buttonHover,
+        )}
+        style={{
+          WebkitTapHighlightColor: 'transparent',
+          WebkitTouchCallout: 'none',
+          WebkitUserSelect: 'none',
+          userSelect: 'none',
+          transform: 'translateY(0)',
+          appearance: 'none',
+          '-webkit-appearance': 'none',
+        }}
       >
         <Slot />
       </button>

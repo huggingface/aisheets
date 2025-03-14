@@ -13,7 +13,7 @@ export const TableHeader = component$(() => {
   const { columnId } = useExecution();
 
   return (
-    <thead>
+    <thead class="sticky top-0 bg-white z-20">
       <tr>
         {columns.value
           .filter((c) => c.visible)

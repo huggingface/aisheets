@@ -78,7 +78,7 @@ export const DatasetName = component$(() => {
   });
 
   return (
-    <div class="h-[40px] flex items-center">
+    <div class="h-[40px] flex items-center w-fit">
       {state.isEditing ? (
         <Input
           ref={inputRef}

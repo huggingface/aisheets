@@ -23,32 +23,32 @@ interface TemplateTextAreaProps {
 }
 
 interface Popover {
-  position: { x: number; y: number };
-  options: string[];
-  lineHeight: number;
+  cursor: { position: number };
+  variables: string[];
 }
 
 export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
   const textarea = useSignal<HTMLTextAreaElement | undefined>();
-  const firstOption = useSignal<HTMLDivElement | undefined>();
+  const bracketTrigger = useSignal<HTMLDivElement | undefined>();
   const popOverVisible = useSignal(false);
 
-  const popover = useStore<Popover>({
-    position: { x: 0, y: 0 },
-    options: [],
-    lineHeight: 0,
+  const referenceVariables = useStore<Popover>({
+    cursor: { position: 0 },
+    variables: [],
   });
 
   useVisibleTask$(({ track }) => {
     track(props.variables);
 
-    popover.options = props.variables.value.map((variable) => variable.name);
+    referenceVariables.variables = props.variables.value.map(
+      (variable) => variable.name,
+    );
   });
 
   useVisibleTask$(({ track }) => {
     track(props['bind:value']);
 
-    if (popover.options.length === 0) return;
+    if (referenceVariables.variables.length === 0) return;
 
     const matchedVariables = props.variables.value.filter((variable) =>
       props['bind:value'].value.includes(`{{${variable.name}}}`),
@@ -81,41 +81,37 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
   });
 
   const updateBracketsSelectorPosition = $((textarea: HTMLTextAreaElement) => {
-    const verticalPadding = 10;
+    const getCursorYPosition = (textarea: HTMLTextAreaElement) => {
+      const PADDING = 40;
 
-    const { selectionStart } = textarea;
-    const style = getComputedStyle(textarea);
+      const selectionStart = textarea.selectionStart;
 
-    const textBeforeCursor = textarea.value.slice(0, selectionStart || 0);
-    const lines = textBeforeCursor.split('\n');
-    const canvas = document.createElement('canvas');
-    const context = canvas.getContext('2d');
+      const span = document.createElement('span');
+      const style = window.getComputedStyle(textarea);
 
-    if (context) {
-      context.font = `${style.fontSize} ${style.fontFamily}`;
-    }
+      span.style.whiteSpace = 'pre-wrap';
+      span.style.wordWrap = 'break-word';
+      span.style.visibility = 'hidden';
+      span.style.position = 'absolute';
+      span.style.zIndex = '-1';
+      span.style.width = `${textarea.clientWidth}px`;
+      span.style.font = style.font;
+      span.style.padding = style.padding;
+      span.style.lineHeight = style.lineHeight;
 
-    const measureTextWidth = (text: string) => {
-      const characterWidthAprox = 7;
+      span.textContent = textarea.value.substring(0, selectionStart);
 
-      return context
-        ? context.measureText(text).width
-        : text.length * characterWidthAprox;
+      document.body.appendChild(span);
+      const positionY = span.scrollHeight;
+      document.body.removeChild(span);
+
+      return positionY - PADDING - textarea.scrollTop;
     };
 
-    const charOffset = measureTextWidth(lines[lines.length - 1]);
-    const verticalAlignPerLines = lines.length - 1 || 0.5;
-    popover.lineHeight = Number.parseInt(style.lineHeight) + verticalPadding;
+    const newPosition = getCursorYPosition(textarea);
 
-    const position = {
-      x: charOffset + 20,
-      y:
-        Math.round(verticalAlignPerLines * 0.72 * popover.lineHeight * 10) / 10,
-    };
-
-    popover.position = {
-      x: position.x,
-      y: position.y,
+    referenceVariables.cursor = {
+      position: newPosition,
     };
   });
 
@@ -140,12 +136,9 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
       return;
     }
 
-    if (isRequestingVariable) {
-      firstOption.value?.focus();
-      firstOption.value?.click();
-    } else {
-      popOverVisible.value = false;
-    }
+    nextTick(() => {
+      popOverVisible.value = isRequestingVariable;
+    });
   });
 
   const handleOptionClick = $(async (options: string) => {
@@ -163,10 +156,6 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
         : textBeforeCursor + `{{${options}}}`) + textAfterCursor;
 
     props['bind:value'].value = updatedValue;
-
-    nextTick(() => {
-      handleTextInput(textarea.value!);
-    });
   });
 
   useVisibleTask$(async ({ track }) => {
@@ -176,19 +165,21 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
       await updateBracketsSelectorPosition(textarea.value!);
     }
 
-    popover.options = props.variables.value.map((variable) => variable.name);
+    referenceVariables.variables = props.variables.value.map(
+      (variable) => variable.name,
+    );
   });
 
   return (
     <div class="relative">
-      {popover.options.length > 0 && (
+      {referenceVariables.variables.length > 0 && (
         <div
           class="p-4 absolute top-0 left-0 w-full h-full whitespace-pre-wrap break-words text-transparent pointer-events-none overflow-hidden text-base"
           aria-hidden="true"
         >
           <Highlights
             text={props['bind:value'].value}
-            variables={popover.options}
+            variables={referenceVariables.variables}
           />
         </div>
       )}
@@ -200,37 +191,27 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
         onInput$={(event) =>
           handleTextInput(event.target as HTMLTextAreaElement)
         }
-        onKeyDown$={(event: KeyboardEvent) => {
-          if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
-            updateBracketsSelectorPosition(event.target as HTMLTextAreaElement);
-          }
-        }}
         onClick$={(event) =>
           updateBracketsSelectorPosition(event.target as HTMLTextAreaElement)
         }
         value={props['bind:value'].value}
       />
 
-      <Select.Root
-        bind:open={popOverVisible}
-        loop={true}
-        autoFocus={true}
-        class="h-0"
-      >
+      <Select.Root bind:open={popOverVisible} loop={true} class="h-0">
         <Select.Trigger
-          ref={firstOption}
+          ref={bracketTrigger}
           look="headless"
           hideIcon
-          class={`px-6 absolute border border-neutral-300 bg-neutral-100 p-2 rounded shadow-lg ${popover.options.length === 0 ? 'invisible' : ''}`}
+          class={`px-6 absolute border border-neutral-300 bg-neutral-100 p-2 rounded shadow-lg ${referenceVariables.variables.length === 0 ? 'invisible' : ''}`}
           style={{
-            left: `${popover.position.x}px`,
-            top: `${popover.position.y}px`,
+            left: '8px',
+            top: `${referenceVariables.cursor.position}px`,
           }}
         >
           <LuBraces class="text-neutral" />
         </Select.Trigger>
         <Select.Popover floating="bottom-start" class="!w-48">
-          {popover.options.map((variable) => (
+          {referenceVariables.variables.map((variable) => (
             <Select.Item
               key={variable}
               onClick$={() => handleOptionClick(variable)}

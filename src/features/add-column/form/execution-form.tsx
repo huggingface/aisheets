@@ -197,16 +197,15 @@ export const ExecutionForm = component$<SidebarProps>(
     return (
       <th class="z-30 min-w-[660px] w-[660px] bg-neutral-100 font-normal border-[0.5px] border-r-0 border-neutral-300 text-left">
         <div class="flex justify-end items-center px-1">
-          {columns.value.filter((c) => c.id !== TEMPORAL_ID).length >= 1 && (
-            <Button
-              size="sm"
-              look="ghost"
-              onClick$={handleCloseForm}
-              disabled={columns.value[0]?.id === TEMPORAL_ID}
-            >
-              <LuXCircle class="text-lg text-neutral" />
-            </Button>
-          )}
+          <Button
+            class={`${columns.value.filter((c) => c.id !== TEMPORAL_ID).length >= 1 ? 'visible' : 'invisible'}`}
+            size="sm"
+            look="ghost"
+            onClick$={handleCloseForm}
+            disabled={columns.value[0]?.id === TEMPORAL_ID}
+          >
+            <LuXCircle class="text-lg text-neutral" />
+          </Button>
         </div>
         <div class="relative h-full w-full">
           <div class="absolute h-full w-full flex flex-col">

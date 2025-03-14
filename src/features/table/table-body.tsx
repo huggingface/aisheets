@@ -5,10 +5,12 @@ import {
   useComputed$,
   useOnWindow,
   useSignal,
+  useStore,
   useTask$,
   useVisibleTask$,
 } from '@builder.io/qwik';
 import { server$ } from '@builder.io/qwik-city';
+import { nextTick } from '~/components/hooks/tick';
 import { useExecution } from '~/features/add-column';
 import { TableCell } from '~/features/table/table-cell';
 import { getColumnCells } from '~/services';
@@ -16,7 +18,6 @@ import { type Cell, type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
 
 export const TableBody = component$(() => {
   const { columns, firstColum } = useColumnsStore();
-  const { columnId } = useExecution();
   const expandedRows = useSignal<Set<number>>(new Set());
 
   const tableBody = useSignal<HTMLElement>();
@@ -146,10 +147,7 @@ export const TableBody = component$(() => {
                     </>
                   )}
 
-                  {/* td for execution form */}
-                  {columnId.value === cell.column?.id && (
-                    <td class="min-w-[660px] w-[660px] bg-neutral-100 border-[0.5px] border-b-0 border-t-0 border-r-0" />
-                  )}
+                  <ExecutionFormDebounced column={cell.column} />
                 </Fragment>
               );
             })}
@@ -216,3 +214,30 @@ const Loader = component$<{ actualRowIndex: number }>(({ actualRowIndex }) => {
 
   return <Fragment />;
 });
+
+const ExecutionFormDebounced = component$<{ column?: { id: Column['id'] } }>(
+  ({ column }) => {
+    // td for execution form
+    const { columnId } = useExecution();
+
+    const state = useStore({
+      isVisible: columnId.value === column?.id,
+    });
+
+    useTask$(({ track }) => {
+      track(() => columnId.value);
+
+      const isVisible = columnId.value === column?.id;
+
+      nextTick(() => {
+        state.isVisible = isVisible;
+      }, 100);
+    });
+
+    if (!state.isVisible) return null;
+
+    return (
+      <td class="min-w-[660px] w-[660px] bg-neutral-100 border-[0.5px] border-b-0 border-t-0 border-r-0" />
+    );
+  },
+);

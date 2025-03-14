@@ -16,7 +16,7 @@ export const MainSidebar = component$(() => {
 
   useTask$(({ track }) => {
     track(activeDataset);
-    if (!activeDataset.value) return;
+    if (!activeDataset.value?.id) return;
 
     const found = datasets.value.find((d) => d.id === activeDataset.value.id);
 

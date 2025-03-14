@@ -30,10 +30,12 @@ export const ExecutionProvider = component$(() => {
     track(columns);
     const lastColumnId = columns.value[columns.value.length - 1].id;
 
-    internalState.value = {
-      columnId: lastColumnId === TEMPORAL_ID ? lastColumnId : undefined,
-      mode: lastColumnId === TEMPORAL_ID ? 'add' : undefined,
-    };
+    if (lastColumnId === TEMPORAL_ID) {
+      internalState.value = {
+        columnId: lastColumnId,
+        mode: 'add',
+      };
+    }
   });
 
   return <Slot />;

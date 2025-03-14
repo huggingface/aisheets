@@ -10,7 +10,7 @@ import {
   useVisibleTask$,
 } from '@builder.io/qwik';
 import { useNavigate } from '@builder.io/qwik-city';
-import { LuCheck, LuChevronRightSquare, LuLoader } from '@qwikest/icons/lucide';
+import { LuCheck, LuChevronRightSquare } from '@qwikest/icons/lucide';
 
 import { Button, Select } from '~/components';
 import { useDebounce } from '~/components/hooks/debounce/debounce';
@@ -92,13 +92,32 @@ export const ImportFromHub = component$(() => {
         )}
         <Button
           look="primary"
-          disabled={!enableImportButton.value}
+          isGenerating={isImportingData.value}
+          disabled={!enableImportButton.value || isImportingData.value}
           onClick$={handleOnClickImportFromHub}
+          class="min-w-[180px]"
         >
           {isImportingData.value ? (
-            <div class="flex items-center gap-4">
-              <LuLoader class="text-xl animate-spin" />
-              <span>Importing dataset...</span>
+            <div class="flex items-center justify-between w-full px-2">
+              <span>Importing</span>
+              <div class="animate-spin">
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  aria-labelledby="loadingSpinnerTitle"
+                >
+                  <title id="loadingSpinnerTitle">Loading spinner</title>
+                  <path
+                    d="M12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22C17.5228 22 22 17.5228 22 12"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                  />
+                </svg>
+              </div>
             </div>
           ) : (
             <div class="flex items-center gap-4">

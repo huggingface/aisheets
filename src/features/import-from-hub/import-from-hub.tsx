@@ -57,7 +57,7 @@ export const ImportFromHub = component$(() => {
   });
 
   return (
-    <div class="flex flex-col w-fit mt-8 gap-12">
+    <div class="flex flex-col w-full max-w-2xl mt-8 gap-12">
       <div class="flex flex-col justify-between gap-4">
         <h1 class="text-3xl font-bold w-full">
           Import your dataset from the hub
@@ -213,10 +213,14 @@ const DatasetSearch = component$(
           );
         }}
         onResolved={(datasets) => (
-          <div class="flex flex-col gap-2">
-            <Select.Root onChange$={handleChangeDataset$} bind:open={isOpen}>
+          <div class="flex flex-col gap-2 w-full">
+            <Select.Root
+              onChange$={handleChangeDataset$}
+              bind:open={isOpen}
+              class="w-full"
+            >
               <Select.Label>Dataset id</Select.Label>
-              <Select.Trigger>
+              <Select.Trigger class="w-full">
                 <input
                   ref={inputRef}
                   class="w-full h-8 outline-none"
@@ -234,16 +238,18 @@ const DatasetSearch = component$(
                 />
               </Select.Trigger>
               {!!datasets.length && (
-                <Select.Popover gutter={8}>
+                <Select.Popover gutter={8} class="w-full">
                   {datasets.map((dataset) => (
                     <Select.Item
                       value={dataset}
                       key={dataset}
-                      class="select-item"
+                      class="select-item w-full"
                     >
-                      <Select.ItemLabel>{dataset}</Select.ItemLabel>
+                      <Select.ItemLabel class="truncate max-w-xl">
+                        {dataset}
+                      </Select.ItemLabel>
                       <Select.ItemIndicator>
-                        <LuCheck class="h-4 w-4" />
+                        <LuCheck class="h-4 w-4 flex-shrink-0" />
                       </Select.ItemIndicator>
                     </Select.Item>
                   ))}
@@ -300,28 +306,30 @@ const FileSelection = component$(
         }}
         onResolved={(files) => {
           return (
-            <div class="flex flex-col gap-4">
+            <div class="flex flex-col gap-4 w-full">
               {files.length === 0 ? (
                 <span class="text-foreground warning">
                   No compatible files found in this dataset. Only jsonl, csv,
                   and parquet files are supported.
                 </span>
               ) : (
-                <Select.Root bind:value={selectedFile}>
+                <Select.Root bind:value={selectedFile} class="w-full">
                   <Select.Label>File</Select.Label>
-                  <Select.Trigger class="px-4 rounded-base border-neutral-300-foreground">
-                    <Select.DisplayValue />
+                  <Select.Trigger class="px-4 rounded-base border-neutral-300-foreground w-full">
+                    <Select.DisplayValue class="truncate" />
                   </Select.Trigger>
-                  <Select.Popover>
+                  <Select.Popover class="w-full">
                     {files.map((file, idx) => (
                       <Select.Item
                         key={idx}
-                        class="text-foreground hover:bg-accent"
+                        class="text-foreground hover:bg-accent w-full"
                         value={file}
                       >
-                        <Select.ItemLabel>{file}</Select.ItemLabel>
+                        <Select.ItemLabel class="truncate max-w-xl">
+                          {file}
+                        </Select.ItemLabel>
                         <Select.ItemIndicator>
-                          <LuCheck class="h-4 w-4" />
+                          <LuCheck class="h-4 w-4 flex-shrink-0" />
                         </Select.ItemIndicator>
                       </Select.Item>
                     ))}

@@ -32,13 +32,9 @@ export const MainSidebar = component$(() => {
           <button
             type="button"
             onClick$={toggle}
-            class="absolute right-2 transition-all duration-300 rounded hover:bg-gray-100 text-gray-400"
+            class="absolute right-2 transition-all duration-300 p-1.5 rounded-full hover:bg-neutral-200 text-gray-400"
           >
-            {isOpen.value ? (
-              <LuPanelLeft class="w-4 h-4" />
-            ) : (
-              <LuPanelLeft class="w-4 h-4" />
-            )}
+            <LuPanelLeft class="w-4 h-4" />
           </button>
         </div>
       </div>
@@ -74,7 +70,7 @@ export const MainSidebar = component$(() => {
                     type="button"
                     key={item.id}
                     href={`/dataset/${item.id}`}
-                    class="block py-2 hover:bg-gray-100 rounded text-sm font-light truncate max-w-full"
+                    class="block py-2 pl-3 hover:bg-gray-100 rounded text-sm font-light truncate max-w-full"
                   >
                     {item.name}
                   </Link>

@@ -77,6 +77,8 @@ export const DatasetName = component$(() => {
     }
   });
 
+  const isDefaultName = state.displayName === 'New dataset';
+
   return (
     <div class="h-[40px] flex items-center w-fit">
       {state.isEditing ? (
@@ -90,7 +92,7 @@ export const DatasetName = component$(() => {
         />
       ) : (
         <h1
-          class="text-3xl font-bold w-full min-w-[200px] truncate leading-none px-2"
+          class={`text-3xl font-bold w-full min-w-[200px] truncate leading-none px-2 ${isDefaultName ? 'text-neutral-400' : ''}`}
           onClick$={handleEditClick}
         >
           {state.displayName}

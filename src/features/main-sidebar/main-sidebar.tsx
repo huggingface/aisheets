@@ -2,6 +2,7 @@ import { component$, useSignal, useTask$ } from '@builder.io/qwik';
 import { Link } from '@builder.io/qwik-city';
 import { useToggle } from '~/components/hooks';
 import { Logo } from '~/components/ui/logo/logo';
+import { Tooltip } from '~/components/ui/tooltip/tooltip';
 
 import { LuLibrary, LuPanelLeft } from '@qwikest/icons/lucide';
 import { useAllDatasetsLoader } from '~/loaders';
@@ -74,10 +75,12 @@ export const MainSidebar = component$(() => {
                 />
                 Create a dataset
               </Link>
-              <Link class="flex items-center select-none gap-3 py-2 hover:bg-gray-100 rounded text-sm font-light truncate max-w-full pl-3">
-                <LuLibrary class="w-6 h-6 text-muted-foreground" />
-                Prompt library
-              </Link>
+              <Tooltip text="Coming soon!">
+                <Link class="flex items-center select-none gap-3 py-2 hover:bg-gray-100 rounded text-sm font-light truncate max-w-full pl-3">
+                  <LuLibrary class="w-6 h-6 text-muted-foreground" />
+                  Prompt library
+                </Link>
+              </Tooltip>
             </div>
 
             <div>

@@ -1,6 +1,5 @@
 import { component$, useComputed$ } from '@builder.io/qwik';
 import { LuEgg, LuEggOff } from '@qwikest/icons/lucide';
-import { Button } from '~/components';
 import { Tooltip } from '~/components/ui/tooltip/tooltip';
 import { useGenerateColumn } from '~/features/execution';
 import { type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
@@ -23,19 +22,23 @@ export const CellGeneration = component$<{ column: Column }>(({ column }) => {
 
   return (
     <Tooltip text="Regenerate">
-      <Button
-        class="rounded-full"
-        look="ghost"
-        size="sm"
-        disabled={!canRegenerate.value}
+      <div
+        class="p-1.5 rounded-full hover:bg-neutral-100 cursor-pointer transition-colors"
         onClick$={() => onRegenerateCells(column)}
+        role="button"
+        tabIndex={0}
+        aria-label="Regenerate"
+        style={{
+          opacity: !canRegenerate.value ? '0.5' : '1',
+          pointerEvents: !canRegenerate.value ? 'none' : 'auto',
+        }}
       >
         {canRegenerate.value ? (
           <LuEgg class="text-sm text-neutral" />
         ) : (
           <LuEggOff class="text-sm text-neutral" />
         )}
-      </Button>
+      </div>
     </Tooltip>
   );
 });

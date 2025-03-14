@@ -42,9 +42,9 @@ export const HideColumn = component$<{
       disabled={isDisabled.value}
     >
       {column.visible ? (
-        <LuEyeOff class="text-sm text-primary-foreground" />
-      ) : (
         <LuEye class="text-sm text-primary-foreground" />
+      ) : (
+        <LuEyeOff class="text-sm text-primary-foreground" />
       )}
       {label ?? 'Hide column'}
     </Button>

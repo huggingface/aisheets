@@ -199,15 +199,20 @@ export const ExecutionForm = component$<SidebarProps>(
         class={`z-20 min-w-[660px] w-[660px] bg-neutral-100 font-normal border-[0.5px] border-neutral-300 text-left ${column.id !== TEMPORAL_ID ? 'border-r-0' : ''}`}
       >
         <div class="flex justify-end items-center px-1">
-          <Button
-            class={`${columns.value.filter((c) => c.id !== TEMPORAL_ID).length >= 1 ? 'visible' : 'invisible'}`}
-            size="sm"
-            look="ghost"
+          <div
+            class={`${columns.value.filter((c) => c.id !== TEMPORAL_ID).length >= 1 ? 'visible' : 'invisible'} p-1.5 rounded-full hover:bg-neutral-200 cursor-pointer transition-colors`}
             onClick$={handleCloseForm}
-            disabled={columns.value[0]?.id === TEMPORAL_ID}
+            role="button"
+            tabIndex={0}
+            aria-label="Close"
+            style={{
+              opacity: columns.value[0]?.id === TEMPORAL_ID ? '0.5' : '1',
+              pointerEvents:
+                columns.value[0]?.id === TEMPORAL_ID ? 'none' : 'auto',
+            }}
           >
             <LuXCircle class="text-lg text-neutral" />
-          </Button>
+          </div>
         </div>
         <div class="relative h-full w-full">
           <div class="absolute h-full w-full flex flex-col">
@@ -314,7 +319,7 @@ export const ExecutionForm = component$<SidebarProps>(
               <div class="relative">
                 <div class="flex flex-col gap-4">
                   <Label class="text-left font-light">
-                    Prompt to generate the column content
+                    Prompt to generate each cell of the column
                   </Label>
 
                   <div class="h-96 min-h-96 max-h-96 bg-white border border-secondary-foreground rounded-sm">
@@ -326,9 +331,9 @@ export const ExecutionForm = component$<SidebarProps>(
                   </div>
                 </div>
                 <div class="absolute bottom-4 flex flex-row items-center justify-between px-6 gap-8 w-full">
-                  <Button size="sm" look="ghost">
-                    <LuBookmark class="text-lg text-primary-foreground" />
-                  </Button>
+                  <div class="p-1.5 rounded-full hover:bg-neutral-100 cursor-pointer">
+                    <LuBookmark class="text-lg text-neutral" />
+                  </div>
 
                   <div class="flex flex-1 gap-1 items-center justify-end">
                     <Label class="font-light">Rows:</Label>
@@ -349,29 +354,36 @@ export const ExecutionForm = component$<SidebarProps>(
                       value={rowsToGenerate.value}
                     />
                   </div>
-                  <Button
-                    key={isSubmitting.value.toString()}
-                    look="primary"
-                    onClick$={onGenerate}
-                    disabled={
-                      !isSubmitting.value &&
-                      (!canRegenerate.value || !isTouched.value)
-                    }
-                  >
-                    <div class="flex items-center gap-4">
-                      {isSubmitting.value ? (
-                        <>
-                          <LuStopCircle class="text-2xl" />
-                          Stop generating
-                        </>
-                      ) : (
-                        <>
-                          <LuEgg class="text-2xl" />
-                          Generate
-                        </>
-                      )}
-                    </div>
-                  </Button>
+                  <div class="flex items-center">
+                    <Button
+                      key={isSubmitting.value.toString()}
+                      look="primary"
+                      onClick$={onGenerate}
+                      disabled={
+                        !isSubmitting.value &&
+                        (!canRegenerate.value || !isTouched.value)
+                      }
+                    >
+                      <div class="flex items-center gap-4">
+                        {isSubmitting.value ? (
+                          <>
+                            <LuStopCircle class="text-2xl" />
+                            Stop generating
+                          </>
+                        ) : (
+                          <>
+                            <LuEgg class="text-2xl" />
+                            Generate
+                          </>
+                        )}
+                      </div>
+                    </Button>
+                    {isSubmitting.value && (
+                      <div class="ml-3">
+                        <div class="h-6 w-6 animate-spin rounded-full border-2 border-primary-100 border-t-transparent" />
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
               {!isTouched.value && (

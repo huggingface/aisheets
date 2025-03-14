@@ -1,7 +1,7 @@
 import { $, Slot, component$ } from '@builder.io/qwik';
 import { LuSettings2 } from '@qwikest/icons/lucide';
-import { Button } from '~/components';
 import { nextTick } from '~/components/hooks/tick';
+import { Tooltip } from '~/components/ui/tooltip/tooltip';
 import { useExecution } from '~/features/add-column';
 import { type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
 
@@ -23,14 +23,17 @@ export const CellSettings = component$<{ column: Column }>(({ column }) => {
   }
 
   return (
-    <Button
-      class="flex flex-row gap-1 justify-start font-light rounded-full"
-      look="ghost"
-      size="sm"
-      onClick$={editCell}
-    >
-      <LuSettings2 class="text-sm text-neutral" />
-      <Slot />
-    </Button>
+    <Tooltip text="Edit column">
+      <div
+        class="p-1.5 rounded-full hover:bg-neutral-200 cursor-pointer transition-colors flex flex-row gap-1 items-center"
+        onClick$={editCell}
+        role="button"
+        tabIndex={0}
+        aria-label="Edit column"
+      >
+        <LuSettings2 class="text-sm text-neutral" />
+        <Slot />
+      </div>
+    </Tooltip>
   );
 });

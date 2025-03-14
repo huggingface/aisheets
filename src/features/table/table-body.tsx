@@ -237,7 +237,9 @@ const ExecutionFormDebounced = component$<{ column?: { id: Column['id'] } }>(
     if (!state.isVisible) return null;
 
     return (
-      <td class="min-w-[660px] w-[660px] bg-neutral-100 border-[0.5px] border-b-0 border-t-0 border-r-0" />
+      <td
+        class={`min-w-[660px] w-[660px] bg-neutral-100 border-[0.5px] border-b-0 border-t-0 ${columnId.value !== TEMPORAL_ID ? 'border-r-0' : ''}`}
+      />
     );
   },
 );

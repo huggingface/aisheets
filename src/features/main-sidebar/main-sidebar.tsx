@@ -1,14 +1,34 @@
-import { component$ } from '@builder.io/qwik';
+import { component$, useSignal, useTask$ } from '@builder.io/qwik';
 import { Link } from '@builder.io/qwik-city';
 import { useToggle } from '~/components/hooks';
 import { Logo } from '~/components/ui/logo/logo';
 
 import { LuLibrary, LuPanelLeft } from '@qwikest/icons/lucide';
 import { useAllDatasetsLoader } from '~/loaders';
+import { useDatasetsStore } from '~/state';
 
 export const MainSidebar = component$(() => {
   const { isOpen, toggle } = useToggle(true);
-  const datasets = useAllDatasetsLoader();
+  const { activeDataset } = useDatasetsStore();
+  const datasetsLoaded = useAllDatasetsLoader();
+  const datasets = useSignal(datasetsLoaded.value);
+
+  useTask$(({ track }) => {
+    track(activeDataset);
+    if (!activeDataset.value) return;
+
+    const found = datasets.value.find((d) => d.id === activeDataset.value.id);
+
+    if (found) {
+      found.name = activeDataset.value.name;
+
+      datasets.value = datasets.value.map((dataset) =>
+        dataset.id === activeDataset.value.id ? found : dataset,
+      );
+    } else {
+      datasets.value.push(activeDataset.value);
+    }
+  });
 
   return (
     <div

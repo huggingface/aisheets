@@ -148,31 +148,21 @@ export const TableCell = component$<{
         {
           'bg-green-50 border-green-300': cell.validated,
           'border-neutral-300': !cell.validated,
-          'min-h-[100px] h-[100px]': !isExpanded,
-          'min-h-[100px]': isExpanded,
+          'min-h-[100px] h-[100px]': true,
         },
       )}
-      onClick$={() => {
-        if (isEditing.value) return;
-        onToggleExpand$();
-      }}
       onDblClick$={(e) => {
         e.stopPropagation();
-
         isEditing.value = true;
       }}
       ref={ref}
     >
-      <div class={cn('relative', { 'h-full': !isExpanded })}>
+      <div class="relative h-full">
         <div
           ref={contentRef}
-          class={cn('relative flex flex-col', {
-            'h-full': !isExpanded,
-            'max-h-none': isExpanded,
-            'overflow-hidden': !isExpanded,
-          })}
+          class="relative flex flex-col h-full overflow-hidden"
           style={{
-            maxHeight: isExpanded ? 'none' : '8.5rem',
+            maxHeight: '8.5rem',
           }}
         >
           {cell.generating && (
@@ -247,10 +237,6 @@ export const TableCell = component$<{
             </div>
           )}
         </div>
-
-        {isTruncated.value && !isExpanded && (
-          <div class="absolute bottom-0 left-0 h-6 w-full bg-gradient-to-t from-white/75 to-transparent pointer-events-none" />
-        )}
       </div>
     </td>
   );

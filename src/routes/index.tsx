@@ -124,7 +124,7 @@ export default component$(() => {
           <h1 class="text-3xl font-bold w-full mb-8">Choose how to start</h1>
 
           <div class="flex flex-col gap-0">
-            <Tooltip text="Coming soon!" position="right">
+            <Tooltip text="Coming soon!">
               <div class="w-full text-[#676767] border-t border-b group transition-colors cursor-pointer">
                 <div class="w-full px-6 py-5 flex flex-row items-center gap-3 font-light group-hover:bg-gray-50/50">
                   <span class="text-sm text-foreground">
@@ -137,7 +137,7 @@ export default component$(() => {
               </div>
             </Tooltip>
 
-            <Tooltip text="Coming soon!" position="right">
+            <Tooltip text="Coming soon!">
               <div class="w-full text-[#676767] border-b group transition-colors cursor-pointer">
                 <div class="w-full px-6 py-5 flex flex-row items-center gap-3 font-light group-hover:bg-gray-50/50">
                   <span class="text-sm text-foreground">
@@ -151,7 +151,7 @@ export default component$(() => {
               </div>
             </Tooltip>
 
-            <Tooltip text="Coming soon!" position="right">
+            <Tooltip text="Coming soon!">
               <div class="w-full text-[#676767] border-b group transition-colors cursor-pointer">
                 <div class="w-full px-6 py-5 flex flex-row items-center gap-3 font-light group-hover:bg-gray-50/50">
                   <span class="text-sm text-foreground">

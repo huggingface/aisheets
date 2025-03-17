@@ -13,7 +13,7 @@ import { useNavigate } from '@builder.io/qwik-city';
 import { cn } from '@qwik-ui/utils';
 import { LuCheck, LuChevronRightSquare, LuLoader } from '@qwikest/icons/lucide';
 
-import { Button, Select } from '~/components';
+import { Button, Select, triggerLooks } from '~/components';
 import { useClickOutside } from '~/components/hooks/click/outside';
 import { useDebounce } from '~/components/hooks/debounce/debounce';
 import { nextTick } from '~/components/hooks/tick';
@@ -198,13 +198,17 @@ const DatasetSearch = component$(
           class="w-full"
         >
           <Select.Label>Dataset id</Select.Label>
-          <Select.Trigger
-            class={cn('w-full', {
-              'ring-1 ring-ring': isFocusing.value,
-            })}
+          <div
+            class={cn(
+              'w-full flex flex-row justify-between items-center',
+              triggerLooks('default'),
+              {
+                'ring-1 ring-ring': isFocusing.value,
+              },
+            )}
           >
             <input
-              class="w-full h-8 outline-none"
+              class="h-8 w-full outline-none"
               placeholder="Type at least 3 characters to search datasets"
               bind:value={searchQuery}
               onClick$={(e) => {
@@ -212,10 +216,12 @@ const DatasetSearch = component$(
                 e.stopPropagation();
               }}
             />
-          </Select.Trigger>
+            <Select.Trigger look="headless" />
+          </div>
           <Select.Popover
+            floating="bottom-end"
             gutter={8}
-            class={cn('w-full', {
+            class={cn('w-full ml-3', {
               'opacity-0 hidden': !datasets.value.length,
             })}
           >

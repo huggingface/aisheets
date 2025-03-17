@@ -7,6 +7,7 @@ import {
 } from '@builder.io/qwik-city';
 import * as hub from '@huggingface/hub';
 import { LuDownload, LuFile, LuPencilLine, LuZap } from '@qwikest/icons/lucide';
+import { Tooltip } from '~/components/ui/tooltip/tooltip';
 
 import { CLIENT_ID, HF_TOKEN, OAUTH_SCOPES } from '~/config';
 import { createDatasetIdByUser } from '~/services';
@@ -123,38 +124,45 @@ export default component$(() => {
           <h1 class="text-3xl font-bold w-full mb-8">Choose how to start</h1>
 
           <div class="flex flex-col gap-0">
-            <div class="w-full text-[#676767] border-t border-b group transition-colors cursor-pointer">
-              <div class="w-full px-6 py-5 flex flex-row items-center gap-3 font-light group-hover:bg-gray-50/50">
-                <span class="text-sm text-foreground">
-                  Generate content on various topics.
-                </span>
-                <span class="text-[#AAB0C0] text-sm font-light">
-                  Create tweets, blog posts, or emails
-                </span>
+            <Tooltip text="Coming soon!">
+              <div class="w-full text-[#676767] border-t border-b group transition-colors cursor-pointer">
+                <div class="w-full px-6 py-5 flex flex-row items-center gap-3 font-light group-hover:bg-gray-50/50">
+                  <span class="text-sm text-foreground">
+                    Generate content on specific topics.
+                  </span>
+                  <span class="text-[#AAB0C0] text-sm font-light">
+                    Create tweets, blog posts, or emails
+                  </span>
+                </div>
               </div>
-            </div>
+            </Tooltip>
 
-            <div class="w-full text-[#676767] border-b group transition-colors cursor-pointer">
-              <div class="w-full px-6 py-5 flex flex-row items-center gap-3 font-light group-hover:bg-gray-50/50">
-                <span class="text-sm text-foreground">
-                  Generate questions and responses.
-                </span>
-                <span class="text-[#AAB0C0] text-sm font-light">
-                  Produce reasoning, scientific, or creative writing questions.
-                </span>
+            <Tooltip text="Coming soon!">
+              <div class="w-full text-[#676767] border-b group transition-colors cursor-pointer">
+                <div class="w-full px-6 py-5 flex flex-row items-center gap-3 font-light group-hover:bg-gray-50/50">
+                  <span class="text-sm text-foreground">
+                    Generate questions and responses.
+                  </span>
+                  <span class="text-[#AAB0C0] text-sm font-light">
+                    Produce reasoning, scientific, or creative writing questions
+                    and responses.
+                  </span>
+                </div>
               </div>
-            </div>
+            </Tooltip>
 
-            <div class="w-full text-[#676767] border-b group transition-colors cursor-pointer">
-              <div class="w-full px-6 py-5 flex flex-row items-center gap-3 font-light group-hover:bg-gray-50/50">
-                <span class="text-sm text-foreground">
-                  Generate code problems and solutions.
-                </span>
-                <span class="text-[#AAB0C0] text-sm font-light">
-                  Design coding challenges with solutions.
-                </span>
+            <Tooltip text="Coming soon!">
+              <div class="w-full text-[#676767] border-b group transition-colors cursor-pointer">
+                <div class="w-full px-6 py-5 flex flex-row items-center gap-3 font-light group-hover:bg-gray-50/50">
+                  <span class="text-sm text-foreground">
+                    Generate code problems and solutions.
+                  </span>
+                  <span class="text-[#AAB0C0] text-sm font-light">
+                    Generate coding challenges and solutions.
+                  </span>
+                </div>
               </div>
-            </div>
+            </Tooltip>
 
             <div
               class="w-full text-[#676767] border-b group transition-colors cursor-pointer"
@@ -166,7 +174,8 @@ export default component$(() => {
                   Create a blank dataset.
                 </span>
                 <span class="text-[#AAB0C0] text-sm font-light">
-                  Build your synthetic data from scratch
+                  Build synthetic datasets from scratch. Ideal to experiment
+                  with new models.
                 </span>
               </div>
             </div>
@@ -179,7 +188,8 @@ export default component$(() => {
                     Import a dataset from Hugging Face.
                   </span>
                   <span class="text-[#AAB0C0] text-sm font-light">
-                    Ideal for model benchmarking
+                    Ideal for model evaluation, dataset transformation and
+                    augmentation.
                   </span>
                 </div>
               </div>
@@ -218,7 +228,7 @@ export default component$(() => {
               </tr>
             </thead>
             <tbody>
-              {Array.from({ length: 6 }).map((_, i) => (
+              {Array.from({ length: 8 }).map((_, i) => (
                 <tr key={i} class="hover:bg-gray-50/50 transition-colors">
                   <td class="min-w-80 w-80 max-w-80 p-4 min-h-[100px] h-[100px] border-[0.5px] border-b-0 border-r-0 border-neutral-300" />
                   <td class="min-w-80 w-80 max-w-80 p-4 min-h-[100px] h-[100px] border-[0.5px] border-b-0 border-r-0 border-neutral-300" />

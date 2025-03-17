@@ -79,9 +79,17 @@ export const TableCell = component$<{
   useVisibleTask$(({ track }) => {
     track(editCellValueInput);
     if (!editCellValueInput.value) return;
-    track(newCellValue);
+    track(isEditing);
 
-    editCellValueInput.value.focus();
+    if (isEditing.value) {
+      editCellValueInput.value.focus();
+      // Position cursor at the beginning of the text
+      if (editCellValueInput.value instanceof HTMLTextAreaElement) {
+        editCellValueInput.value.setSelectionRange(0, 0);
+        // Scroll to the top of the textarea
+        editCellValueInput.value.scrollTop = 0;
+      }
+    }
   });
 
   // Check truncation after DOM is ready and content is rendered
@@ -148,31 +156,26 @@ export const TableCell = component$<{
         {
           'bg-green-50 border-green-300': cell.validated,
           'border-neutral-300': !cell.validated,
-          'min-h-[100px] h-[100px]': !isExpanded,
-          'min-h-[100px]': isExpanded,
+          'min-h-[100px] h-[100px]': true,
         },
       )}
-      onClick$={() => {
-        if (isEditing.value) return;
-        onToggleExpand$();
-      }}
       onDblClick$={(e) => {
         e.stopPropagation();
-
         isEditing.value = true;
+      }}
+      onClick$={() => {
+        if (isEditing.value) {
+          onUpdateCell();
+        }
       }}
       ref={ref}
     >
-      <div class={cn('relative', { 'h-full': !isExpanded })}>
+      <div class="relative h-full">
         <div
           ref={contentRef}
-          class={cn('relative flex flex-col', {
-            'h-full': !isExpanded,
-            'max-h-none': isExpanded,
-            'overflow-hidden': !isExpanded,
-          })}
+          class="relative flex flex-col h-full overflow-hidden"
           style={{
-            maxHeight: isExpanded ? 'none' : '8.5rem',
+            maxHeight: '8.5rem',
           }}
         >
           {cell.generating && (
@@ -216,26 +219,29 @@ export const TableCell = component$<{
 
           {isEditing.value && (
             <div
-              class="fixed z-20 bg-white border border-green-300 focus:border-green-200 focus:outline-none shadow-lg cursor-text"
+              class="fixed z-20 bg-white border border-neutral-500 focus:border-secondary-300 focus:outline-none shadow-lg cursor-text"
               style={{
-                left:
-                  Math.min(
-                    ref.value?.getBoundingClientRect().left ?? 0,
-                    window.innerWidth - 720, // 45rem = 720px
-                  ) + 'px',
-                top: ref.value?.getBoundingClientRect().top + 'px',
-                width: '45rem',
-                height: '300px',
+                left: '50%',
+                top: '50%',
+                transform: 'translate(-50%, -50%)',
+                width: '55rem',
+                height: '700px',
+                maxWidth: '90vw',
+                maxHeight: '85vh',
+                borderWidth: '1px',
               }}
-              onClick$={() => {
-                editCellValueInput.value!.focus();
+              onClick$={(e) => {
+                e.stopPropagation();
+                if (editCellValueInput.value) {
+                  editCellValueInput.value.focus();
+                }
               }}
             >
               <Textarea
                 ref={editCellValueInput}
                 bind:value={newCellValue}
                 preventEnterNewline
-                class="absolute inset-0 w-full h-full p-4 rounded-none text-sm resize-none focus-visible:outline-none focus-visible:ring-0 border-none shadow-none overflow-auto whitespace-pre-wrap break-words"
+                class="absolute inset-0 w-full h-full p-4 rounded-none text-sm resize-none focus-visible:outline-none focus-visible:ring-0 border-none shadow-none overflow-auto whitespace-pre-wrap break-words scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent"
                 onKeyDown$={(e) => {
                   if (e.key === 'Enter') {
                     if (e.shiftKey) return;
@@ -247,10 +253,6 @@ export const TableCell = component$<{
             </div>
           )}
         </div>
-
-        {isTruncated.value && !isExpanded && (
-          <div class="absolute bottom-0 left-0 h-6 w-full bg-gradient-to-t from-white/75 to-transparent pointer-events-none" />
-        )}
       </div>
     </td>
   );

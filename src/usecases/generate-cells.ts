@@ -1,7 +1,6 @@
 import { getColumnSize, updateProcess } from '~/services';
 import {
   createCell,
-  getCellRegenerationDecision,
   getColumnCellByIdx,
   getRowCells,
   updateCell,
@@ -90,18 +89,7 @@ export const generateCells = async function* ({
 
       let cell = await getColumnCellByIdx({ idx: i, columnId: column.id });
 
-      if (cell) {
-        const { shouldGenerate, reason } =
-          await getCellRegenerationDecision(cell);
-
-        if (!shouldGenerate) {
-          console.log(
-            `Cell ${cell.idx} for column ${column.name} is not being generated: ${reason}`,
-          );
-          // yield { cell };
-          continue;
-        }
-      } else {
+      if (!cell) {
         cell = await createCell({
           cell: { idx: i },
           columnId: column.id,

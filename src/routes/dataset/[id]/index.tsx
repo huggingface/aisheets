@@ -4,25 +4,22 @@ import { DatasetName } from '~/features/datasets';
 import { ExportToHub } from '~/features/export-to-hub';
 import { Table } from '~/features/table';
 import { Username } from '~/features/user/username';
-import { ActiveDatasetProvider } from '~/state';
 
 export default component$(() => {
   return (
-    <ActiveDatasetProvider>
-      <div class="flex flex-col h-full w-full gap-2">
-        <div class="sticky">
-          <div class="flex flex-col gap-2">
-            <div class="flex justify-end items-center w-full gap-4">
-              <ExportToHub />
-              <Username />
-            </div>
-
-            <DatasetName />
+    <div class="flex flex-col h-full w-full gap-2">
+      <div class="sticky">
+        <div class="flex flex-col gap-2">
+          <div class="flex justify-end items-center w-full gap-4">
+            <ExportToHub />
+            <Username />
           </div>
+
+          <DatasetName />
         </div>
-        <Table />
       </div>
-    </ActiveDatasetProvider>
+      <Table />
+    </div>
   );
 });
 

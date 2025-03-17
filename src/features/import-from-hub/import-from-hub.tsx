@@ -131,6 +131,7 @@ const DatasetSearch = component$(
     const session = useSession();
     const searchQuery = useSignal('');
     const searchQueryDebounced = useSignal('');
+    const selectedDataset = useSignal('');
     const datasets = useSignal<string[]>([]);
 
     useDebounce(
@@ -155,17 +156,20 @@ const DatasetSearch = component$(
 
     const handleChangeDataset$ = $((value: string | string[]) => {
       const selected = value as string;
+      selectedDataset.value = selected ?? '';
 
-      searchQuery.value = selected ?? '';
+      searchQuery.value = selectedDataset.value;
 
-      onSelectedDataset$(searchQuery.value);
+      onSelectedDataset$(selectedDataset.value);
     });
 
     useTask$(async ({ track }) => {
       track(searchQueryDebounced);
       if (searchQueryDebounced.value.length < 3) return;
 
-      const result = await onSearch(searchQueryDebounced.value);
+      if (searchQueryDebounced.value === selectedDataset.value) return;
+
+      const result = await onSearch(searchQuery.value);
       datasets.value = result;
 
       nextTick(() => {
@@ -176,7 +180,10 @@ const DatasetSearch = component$(
     useTask$(({ track }) => {
       track(searchQuery);
 
-      if (searchQuery.value && datasets.value.length) {
+      if (
+        searchQuery.value !== selectedDataset.value &&
+        datasets.value.length
+      ) {
         datasets.value = [];
         isOpen.value = false;
         onSelectedDataset$('');

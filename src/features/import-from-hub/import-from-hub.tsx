@@ -143,6 +143,7 @@ const DatasetSearch = component$(
     const searchQueryDebounced = useSignal('');
     const selectedDataset = useSignal<string | undefined>(undefined);
     const inputRef = useSignal<Element>();
+    const isSearching = useSignal(false);
 
     const focusInput = $(() => {
       const input = inputRef.value as HTMLInputElement;
@@ -166,10 +167,19 @@ const DatasetSearch = component$(
       }
     });
 
+    // Add a task to maintain focus when dropdown opens/closes
+    useTask$(({ track }) => {
+      track(() => isOpen.value);
+      nextTick(() => focusInput());
+    });
+
     useDebounce(
       searchQuery,
       $(() => {
         searchQueryDebounced.value = searchQuery.value;
+        if (searchQuery.value.trim().length >= 3) {
+          isSearching.value = true;
+        }
       }),
       300,
     );
@@ -181,30 +191,61 @@ const DatasetSearch = component$(
       if (query === '' || query.length < 3) {
         nextTick(() => {
           isOpen.value = false;
+          isSearching.value = false;
+          focusInput();
         });
         return [];
       }
 
-      const datasets = await listDatasets({
-        query,
-        accessToken: session.value!.token,
-        limit: 5,
-      });
+      try {
+        const datasets = await listDatasets({
+          query,
+          accessToken: session.value!.token,
+          limit: 10,
+        });
 
-      nextTick(() => {
-        if (datasets.length > 0) {
-          isOpen.value = true;
-        } else {
-          selectedDataset.value = undefined;
-          isOpen.value = false;
-        }
-      });
+        // Force the dropdown to open when we have results
+        nextTick(() => {
+          isSearching.value = false;
 
-      return datasets.map((dataset) => dataset.name);
+          // Always force open the dropdown if we have results
+          if (datasets.length > 0) {
+            // First close it to reset any potential stale state
+            isOpen.value = false;
+
+            // Then reopen it after a small delay to ensure the UI updates properly
+            setTimeout(() => {
+              isOpen.value = true;
+              focusInput();
+            }, 10);
+          } else {
+            selectedDataset.value = undefined;
+            isOpen.value = false;
+            focusInput();
+          }
+        });
+
+        return datasets.map((dataset) => dataset.name);
+      } catch (error) {
+        isSearching.value = false;
+        nextTick(() => focusInput());
+        throw error;
+      }
+    });
+
+    // Add an explicit handler to ensure the dropdown opens when typing
+    useTask$(({ track }) => {
+      const query = track(() => searchQuery.value);
+
+      if (query.trim().length >= 3 && searchResults.value?.length > 0) {
+        // Force the dropdown open when we have a valid query and results
+        isOpen.value = true;
+      }
     });
 
     const handleChangeDataset$ = $((value: string | string[]) => {
       selectedDataset.value = value as string;
+      nextTick(() => focusInput());
     });
 
     useTask$(({ track }) => {
@@ -239,22 +280,62 @@ const DatasetSearch = component$(
               class="w-full"
             >
               <Select.Label>Dataset id</Select.Label>
-              <Select.Trigger class="w-full">
+              <Select.Trigger class="w-full relative">
                 <input
                   ref={inputRef}
-                  class="w-full h-8 outline-none"
+                  class="w-full h-8 outline-none pr-8"
                   placeholder="Type at least 3 characters to search datasets"
                   value={searchQuery.value}
                   onInput$={(e) => {
                     searchQuery.value = (e.target as HTMLInputElement).value;
                   }}
+                  onFocus$={() => {
+                    // When focusing the input, open the dropdown if we have results
+                    if (
+                      searchResults.value?.length > 0 &&
+                      searchQuery.value.trim().length >= 3
+                    ) {
+                      isOpen.value = true;
+                    }
+                  }}
+                  onClick$={() => {
+                    // Also handle clicks to ensure the dropdown opens
+                    if (
+                      searchResults.value?.length > 0 &&
+                      searchQuery.value.trim().length >= 3
+                    ) {
+                      isOpen.value = true;
+                    }
+                  }}
                   onBlur$={(e) => {
                     const target = e.relatedTarget as HTMLElement;
                     if (!target?.closest('.select-item')) {
-                      nextTick(() => focusInput());
+                      // Short delay to allow click events to process first
+                      setTimeout(() => focusInput(), 10);
                     }
                   }}
                 />
+                {isSearching.value && (
+                  <div class="absolute right-8 top-1/2 -translate-y-1/2">
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                      aria-labelledby="searchSpinnerTitle"
+                      class="animate-spin"
+                    >
+                      <title id="searchSpinnerTitle">Searching</title>
+                      <path
+                        d="M12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22C17.5228 22 22 17.5228 22 12"
+                        stroke="var(--primary-300, #6366f1)"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                      />
+                    </svg>
+                  </div>
+                )}
               </Select.Trigger>
               {!!datasets.length && (
                 <Select.Popover gutter={8} class="w-full">

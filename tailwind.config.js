@@ -66,15 +66,6 @@ export default {
           500: 'hsl(84 50% 38%)',    // #6BA136
           600: 'hsl(84 40% 32%)',    // #527231
         },
-        indigo: {
-          50: "#EBEEFF",
-          100: "#CCD5FF",
-          200: "#93A4F0",
-          300: "#6E84E9",
-          400: "#6E84E9",
-          500: "#3D4C8F",
-          600: "#303650",
-        },
         textColor: {
           DEFAULT: 'hsl(228 25% 25%)',  // Same as primary-600
         }

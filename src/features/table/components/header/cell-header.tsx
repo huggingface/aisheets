@@ -1,6 +1,6 @@
 import { component$, useComputed$ } from '@builder.io/qwik';
 import { cn } from '@qwik-ui/utils';
-import { LuZap } from '@qwikest/icons/lucide';
+import { LuText, LuZap } from '@qwikest/icons/lucide';
 import { useExecution } from '~/features/add-column';
 import { CellGeneration } from '~/features/table/components/header/cell-generation';
 import { CellSettings } from '~/features/table/components/header/cell-settings';
@@ -13,6 +13,9 @@ export const TableCellHeader = component$<{ column: Column }>(({ column }) => {
   const classes = useComputed$(() =>
     cn({ 'bg-neutral-100': columnId.value === column.id }),
   );
+
+  const isStatic = column.kind === 'static';
+
   return (
     <th
       id={column.id}
@@ -20,7 +23,11 @@ export const TableCellHeader = component$<{ column: Column }>(({ column }) => {
     >
       <div class="flex items-center justify-between gap-2 w-full">
         <div class="flex items-center gap-2 text-wrap w-[80%]">
-          <LuZap class="text-sm text-primary-foreground" />
+          {isStatic ? (
+            <LuText class="text-sm text-primary-foreground" />
+          ) : (
+            <LuZap class="text-sm text-primary-foreground" />
+          )}
           <ColumnProperties column={column} />
         </div>
 

@@ -1,16 +1,15 @@
-import { Fragment, component$ } from '@builder.io/qwik';
+import { Fragment, component$, useStore, useTask$ } from '@builder.io/qwik';
+import { nextTick } from '~/components/hooks/tick';
 import { ExecutionForm, useExecution } from '~/features/add-column';
 import { useGenerateColumn } from '~/features/execution';
 import {
   TableAddCellHeaderPlaceHolder,
   TableCellHeader,
 } from '~/features/table/components/header';
-import { TEMPORAL_ID, useColumnsStore } from '~/state';
+import { type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
 
 export const TableHeader = component$(() => {
-  const { onGenerateColumn } = useGenerateColumn();
   const { columns } = useColumnsStore();
-  const { columnId } = useExecution();
 
   return (
     <thead class="sticky top-0 bg-white z-20">
@@ -21,12 +20,7 @@ export const TableHeader = component$(() => {
             <Fragment key={column.id}>
               <TableCellHeader column={column} />
 
-              {column.id === columnId.value && (
-                <ExecutionForm
-                  column={column}
-                  onGenerateColumn={onGenerateColumn}
-                />
-              )}
+              <ExecutionFormDebounced column={column} />
             </Fragment>
           ))}
 
@@ -36,4 +30,26 @@ export const TableHeader = component$(() => {
       </tr>
     </thead>
   );
+});
+
+const ExecutionFormDebounced = component$<{ column: Column }>(({ column }) => {
+  const { onGenerateColumn } = useGenerateColumn();
+  const { columnId } = useExecution();
+
+  const state = useStore({
+    isVisible: columnId.value === column.id,
+  });
+
+  useTask$(({ track }) => {
+    track(() => columnId.value);
+    const isVisible = columnId.value === column.id;
+
+    nextTick(() => {
+      state.isVisible = isVisible;
+    }, 100);
+  });
+
+  if (!state.isVisible) return null;
+
+  return <ExecutionForm column={column} onGenerateColumn={onGenerateColumn} />;
 });

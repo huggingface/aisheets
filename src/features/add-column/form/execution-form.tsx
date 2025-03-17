@@ -387,16 +387,16 @@ export const ExecutionForm = component$<SidebarProps>(
                 </div>
               </div>
               {!isTouched.value && (
-                <div class="flex items-center justify-center text-indigo-500">
-                  The column has been generated, to generate again edit the
-                  configuration
+                <div class="flex items-center justify-center text-primary-500">
+                  Data has been generated, adjust the prompt/model or increase
+                  the number of rows to generate more data.
                 </div>
               )}
 
               {!canRegenerate.value && (
-                <div class="flex items-center justify-center text-indigo-500">
-                  Some references columns are dirty, please, regenerate them
-                  first.
+                <div class="flex items-center justify-center text-primary-500">
+                  Some columns used in the prompt need to be regenerated, please
+                  regenerate before running this prompt.
                 </div>
               )}
             </div>

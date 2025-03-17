@@ -139,7 +139,7 @@ export const TableCell = component$<{
     isEditing.value = false;
   });
 
-  const markdownContent = useComputed$(() => {
+  const markdownContent = useComputed$(async () => {
     if (!originalValue.value) return '';
     switch (typeof originalValue.value) {
       case 'undefined':
@@ -147,6 +147,21 @@ export const TableCell = component$<{
       case 'string':
         return originalValue.value;
       default: {
+        if ('bytes' in originalValue.value) {
+          const bytes = originalValue.value.bytes;
+          const path = originalValue.value.path || '';
+
+          const blob = new Blob([bytes]);
+          const reader = new FileReader();
+
+          const dataURI = await new Promise((resolve) => {
+            reader.onloadend = () => resolve(reader.result);
+            reader.readAsDataURL(blob);
+          });
+
+          return `![${path}](${dataURI})`;
+        }
+
         let value = JSON.stringify(originalValue.value, null, 2);
 
         if (value.length > 4096) {

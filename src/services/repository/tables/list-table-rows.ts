@@ -4,6 +4,7 @@ import { getColumnName, getDatasetTableName } from './utils';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import { DuckDBBlobValue, DuckDBStructValue } from '@duckdb/node-api';
 
 export const listDatasetTableRows = async ({
   dataset,
@@ -38,9 +39,28 @@ export const listDatasetTableRows = async ({
 
     const results = await db.run(statement);
 
-    const rows = await results.getRowObjectsJson();
+    const rows = await results.getRowObjects();
 
-    return rows;
+    const cleanValues = (row: any) => {
+      for (const key in row) {
+        let value = row[key];
+
+        if (value instanceof DuckDBStructValue) {
+          value = value.entries;
+          cleanValues(value);
+          row[key] = value;
+        }
+
+        if (value instanceof DuckDBBlobValue) {
+          row[key] = row[key].bytes;
+        }
+      }
+    };
+
+    return rows.map((row) => {
+      cleanValues(row);
+      return row;
+    });
   });
 };
 

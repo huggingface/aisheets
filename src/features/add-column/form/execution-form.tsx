@@ -16,7 +16,7 @@ import {
   LuCheck,
   LuEgg,
   LuStopCircle,
-  LuXCircle,
+  LuX,
 } from '@qwikest/icons/lucide';
 
 import { Button, Input, Label, Select } from '~/components';
@@ -211,7 +211,7 @@ export const ExecutionForm = component$<SidebarProps>(
                 columns.value[0]?.id === TEMPORAL_ID ? 'none' : 'auto',
             }}
           >
-            <LuXCircle class="text-lg text-neutral" />
+            <LuX class="text-lg text-neutral" />
           </div>
         </div>
         <div class="relative h-full w-full">

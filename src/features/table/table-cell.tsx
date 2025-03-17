@@ -146,6 +146,9 @@ export const TableCell = component$<{
         return '';
       case 'string':
         return originalValue.value;
+      case 'number':
+      case 'boolean':
+        return originalValue.value.toString();
       default: {
         if ('bytes' in originalValue.value) {
           const bytes = originalValue.value.bytes;

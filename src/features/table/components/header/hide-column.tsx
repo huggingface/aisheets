@@ -35,16 +35,16 @@ export const HideColumn = component$<{
 
   return (
     <Button
-      class="flex flex-row gap-1 justify-start font-light"
+      class="flex flex-row gap-1 justify-start font-light py-1 h-auto"
       look="ghost"
       size="sm"
       onClick$={hideColumn}
       disabled={isDisabled.value}
     >
       {column.visible ? (
-        <LuEye class="text-sm text-primary-foreground" />
+        <LuEye class="text-sm text-neutral" />
       ) : (
-        <LuEyeOff class="text-sm text-primary-foreground" />
+        <LuEyeOff class="text-sm text-neutral" />
       )}
       {label ?? 'Hide column'}
     </Button>

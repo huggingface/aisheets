@@ -14,10 +14,16 @@ export const ColumnProperties = component$<{ column: Column }>(({ column }) => {
         {column.name}
       </Popover.Trigger>
       <Popover.Panel>
-        <div class="flex flex-col gap-2">
+        <div class="flex flex-col gap-0.5">
           <ColumnNameEdition column={column} />
-          <CellSettings column={column}>Edit configuration</CellSettings>
-          <HideColumn column={column} />
+          <div class="rounded-sm hover:bg-neutral-100 transition-colors mt-2">
+            <CellSettings column={column}>
+              <span class="font-normal">Edit configuration</span>
+            </CellSettings>
+          </div>
+          <div class="rounded-sm hover:bg-neutral-100 transition-colors">
+            <HideColumn column={column} />
+          </div>
         </div>
       </Popover.Panel>
     </Popover.Root>

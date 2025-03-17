@@ -20,7 +20,7 @@ export interface PromptExecutionResponse {
 }
 
 const DEFAULT_TIMEOUT = 60000;
-const DEFAULT_CONCURRENCY = 3;
+const DEFAULT_CONCURRENCY = 5;
 const MAX_CONCURRENCY =
   Number.parseInt(process.env.MAX_PROMPT_CONCURRENCY ?? '', 10) ||
   DEFAULT_CONCURRENCY;

@@ -34,6 +34,9 @@ import {
 } from '~/state';
 import { type Model, useListModels } from '~/usecases/list-models';
 
+// Define the default model constant
+const DEFAULT_MODEL_ID = 'meta-llama/Llama-3.3-70B-Instruct';
+
 interface SidebarProps {
   column: Column;
   onGenerateColumn: QRL<
@@ -112,11 +115,25 @@ export const ExecutionForm = component$<SidebarProps>(
       if (!process) return;
 
       prompt.value = process.prompt;
-      selectedModel.value = models?.find((m) => m.id === process.modelName) || {
-        id: process.modelName,
-        providers: [process.modelProvider!],
-      };
-      selectedProvider.value = process.modelProvider!;
+
+      // If there's a previously selected model, use that
+      if (process.modelName) {
+        selectedModel.value = models?.find(
+          (m) => m.id === process.modelName,
+        ) || {
+          id: process.modelName,
+          providers: [process.modelProvider!],
+        };
+        selectedProvider.value = process.modelProvider!;
+      }
+      // Otherwise pre-select the default model
+      else if (models) {
+        const defaultModel = models.find((m) => m.id === DEFAULT_MODEL_ID);
+        if (defaultModel) {
+          selectedModel.value = defaultModel;
+          selectedProvider.value = defaultModel.providers[0];
+        }
+      }
 
       inputModelId.value = process.modelName;
 

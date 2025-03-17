@@ -22,14 +22,12 @@ const Root = (props: PropsOf<typeof HeadlessSelect.Root>) => (
 const Label = component$<PropsOf<typeof HeadlessSelect.Label>>(
   ({ ...props }) => {
     return (
-      <>
-        <HeadlessSelect.Label
-          {...props}
-          class={cn('px-2 py-1.5 text-sm', props.class)}
-        >
-          <Slot />
-        </HeadlessSelect.Label>
-      </>
+      <HeadlessSelect.Label
+        {...props}
+        class={cn('px-2 py-1.5 text-sm', props.class)}
+      >
+        <Slot />
+      </HeadlessSelect.Label>
     );
   },
 );

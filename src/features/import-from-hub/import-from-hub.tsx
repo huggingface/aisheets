@@ -10,9 +10,11 @@ import {
   useVisibleTask$,
 } from '@builder.io/qwik';
 import { useNavigate } from '@builder.io/qwik-city';
+import { cn } from '@qwik-ui/utils';
 import { LuCheck, LuChevronRightSquare } from '@qwikest/icons/lucide';
 
-import { Button, Select } from '~/components';
+import { Button, Select, triggerLooks } from '~/components';
+import { useClickOutside } from '~/components/hooks/click/outside';
 import { useDebounce } from '~/components/hooks/debounce/debounce';
 import { nextTick } from '~/components/hooks/tick';
 import { useSession } from '~/loaders';
@@ -57,13 +59,13 @@ export const ImportFromHub = component$(() => {
   });
 
   return (
-    <div class="flex flex-col w-full max-w-2xl mt-8 gap-12">
+    <div class="flex flex-col w-full max-w-2xl mt-8 gap-4">
       <div class="flex flex-col justify-between gap-4">
         <h1 class="text-3xl font-bold w-full">
           Import your dataset from the hub
         </h1>
 
-        <div class="flex flex-col gap-12 w-full">
+        <div class="flex flex-col gap-2 w-full">
           <DatasetSearch
             onSelectedDataset$={(dataset) => {
               repoId.value = dataset;
@@ -73,8 +75,8 @@ export const ImportFromHub = component$(() => {
           {repoId.value && (
             <div class="w-full">
               <FileSelection
-                repoId={repoId.value!}
-                accessToken={session.value!.token}
+                repoId={repoId.value}
+                accessToken={session.value.token}
                 onSelectedFile$={(file) => {
                   filePath.value = file;
                 }}
@@ -84,7 +86,7 @@ export const ImportFromHub = component$(() => {
         </div>
       </div>
 
-      <div class="flex flex-col w-full gap-4 mt-8">
+      <div class="flex flex-col w-full gap-4 mt-4">
         {repoId.value && filePath.value && (
           <div class="text-foreground text-sm">
             <span>Only the first 1000 rows will be imported.</span>
@@ -138,33 +140,18 @@ const DatasetSearch = component$(
     onSelectedDataset$: QRL<(dataset: string) => void>;
   }) => {
     const isOpen = useSignal(false);
+    const isFocusing = useSignal(false);
+    const containerRef = useClickOutside(
+      $(() => {
+        isFocusing.value = false;
+        isOpen.value = false;
+      }),
+    );
     const session = useSession();
     const searchQuery = useSignal('');
     const searchQueryDebounced = useSignal('');
-    const selectedDataset = useSignal<string | undefined>(undefined);
-    const inputRef = useSignal<Element>();
-
-    const focusInput = $(() => {
-      const input = inputRef.value as HTMLInputElement;
-      if (input && typeof input.focus === 'function') {
-        input.focus();
-      }
-    });
-
-    // Track input ref and query changes to maintain focus
-    useTask$(({ track }) => {
-      track(() => inputRef.value);
-      if (inputRef.value) {
-        focusInput();
-      }
-    });
-
-    useTask$(({ track }) => {
-      track(() => searchQuery.value);
-      if (inputRef.value) {
-        focusInput();
-      }
-    });
+    const selectedDataset = useSignal('');
+    const datasets = useSignal<string[]>([]);
 
     useDebounce(
       searchQuery,
@@ -174,110 +161,106 @@ const DatasetSearch = component$(
       300,
     );
 
-    const searchResults = useResource$(async ({ track }) => {
-      track(searchQueryDebounced);
-      const query = searchQueryDebounced.value.trim();
-
-      if (query === '' || query.length < 3) {
-        nextTick(() => {
-          isOpen.value = false;
-        });
-        return [];
-      }
+    const onSearch = $(async (searchQuery: string) => {
+      const query = searchQuery.trim();
 
       const datasets = await listDatasets({
         query,
-        accessToken: session.value!.token,
-        limit: 5,
-      });
-
-      nextTick(() => {
-        if (datasets.length > 0) {
-          isOpen.value = true;
-        } else {
-          selectedDataset.value = undefined;
-          isOpen.value = false;
-        }
+        accessToken: session.value.token,
+        limit: 10,
       });
 
       return datasets.map((dataset) => dataset.name);
     });
 
     const handleChangeDataset$ = $((value: string | string[]) => {
-      selectedDataset.value = value as string;
+      const selected = value as string;
+      selectedDataset.value = selected ?? '';
+
+      searchQuery.value = selectedDataset.value;
+
+      onSelectedDataset$(selectedDataset.value);
+    });
+
+    useTask$(async ({ track }) => {
+      track(searchQueryDebounced);
+      if (searchQueryDebounced.value.length < 3) return;
+
+      if (searchQueryDebounced.value === selectedDataset.value) return;
+
+      const result = await onSearch(searchQuery.value);
+      datasets.value = result;
+
+      nextTick(() => {
+        isOpen.value = datasets.value.length > 0;
+      }, 200);
     });
 
     useTask$(({ track }) => {
-      track(selectedDataset);
-      if (selectedDataset.value) {
-        searchQuery.value = selectedDataset.value;
+      track(searchQuery);
 
-        onSelectedDataset$(selectedDataset.value);
-      } else {
-        searchQuery.value = '';
+      if (
+        searchQuery.value !== selectedDataset.value &&
+        datasets.value.length
+      ) {
+        datasets.value = [];
+        isOpen.value = false;
         onSelectedDataset$('');
       }
     });
 
     return (
-      <Resource
-        value={searchResults}
-        onRejected={() => {
-          return (
-            <div class="flex items-center justify-center h-32 background-primary rounded-base">
-              <span class="text-foreground warning">
-                Failed to fetch datasets. Please, try again.
-              </span>
-            </div>
-          );
-        }}
-        onResolved={(datasets) => (
-          <div class="flex flex-col gap-2 w-full">
-            <Select.Root
-              onChange$={handleChangeDataset$}
-              bind:open={isOpen}
-              class="w-full"
-            >
-              <Select.Label>Dataset id</Select.Label>
-              <Select.Trigger class="w-full">
-                <input
-                  ref={inputRef}
-                  class="w-full h-8 outline-none"
-                  placeholder="Type at least 3 characters to search datasets"
-                  value={searchQuery.value}
-                  onInput$={(e) => {
-                    searchQuery.value = (e.target as HTMLInputElement).value;
-                  }}
-                  onBlur$={(e) => {
-                    const target = e.relatedTarget as HTMLElement;
-                    if (!target?.closest('.select-item')) {
-                      nextTick(() => focusInput());
-                    }
-                  }}
-                />
-              </Select.Trigger>
-              {!!datasets.length && (
-                <Select.Popover gutter={8} class="w-full">
-                  {datasets.map((dataset) => (
-                    <Select.Item
-                      value={dataset}
-                      key={dataset}
-                      class="select-item w-full"
-                    >
-                      <Select.ItemLabel class="truncate max-w-xl">
-                        {dataset}
-                      </Select.ItemLabel>
-                      <Select.ItemIndicator>
-                        <LuCheck class="h-4 w-4 flex-shrink-0" />
-                      </Select.ItemIndicator>
-                    </Select.Item>
-                  ))}
-                </Select.Popover>
-              )}
-            </Select.Root>
+      <div class="flex flex-col w-full" ref={containerRef}>
+        <Select.Root
+          onChange$={handleChangeDataset$}
+          bind:open={isOpen}
+          class="w-full"
+        >
+          <Select.Label>Dataset id</Select.Label>
+          <div
+            class={cn(
+              'w-full flex flex-row justify-between items-center',
+              triggerLooks('default'),
+              {
+                'ring-1 ring-ring': isFocusing.value,
+              },
+            )}
+          >
+            <input
+              class="h-8 w-full outline-none"
+              placeholder="Type at least 3 characters to search datasets"
+              bind:value={searchQuery}
+              onClick$={(e) => {
+                isFocusing.value = true;
+                e.stopPropagation();
+              }}
+            />
+            <Select.Trigger look="headless" />
           </div>
-        )}
-      />
+          <Select.Popover
+            floating="bottom-end"
+            gutter={8}
+            class={cn('w-full ml-3', {
+              'opacity-0 hidden': !datasets.value.length,
+            })}
+          >
+            {datasets.value.map((dataset) => (
+              <Select.Item
+                key={dataset}
+                value={dataset}
+                class="select-item w-full"
+              >
+                <Select.ItemLabel class="truncate max-w-xl">
+                  {dataset}
+                </Select.ItemLabel>
+                <Select.ItemIndicator>
+                  <LuCheck class="h-4 w-4 flex-shrink-0" />
+                </Select.ItemIndicator>
+              </Select.Item>
+            ))}
+          </Select.Popover>
+        </Select.Root>
+      </div>
     );
   },
 );
@@ -338,9 +321,9 @@ const FileSelection = component$(
                     <Select.DisplayValue class="truncate" />
                   </Select.Trigger>
                   <Select.Popover class="w-full">
-                    {files.map((file, idx) => (
+                    {files.map((file) => (
                       <Select.Item
-                        key={idx}
+                        key={file}
                         class="text-foreground hover:bg-accent w-full"
                         value={file}
                       >

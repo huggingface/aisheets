@@ -78,6 +78,6 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           platforms: ${{ env.PLATFORMS }}
-          tags: ${{ env.SERVER_DOCKER_IMAGE }}:latest
+          tags: ${{ env.DOCKER_IMAGE }}:latest
           labels: ${{ steps.meta.outputs.labels }}
           push: true

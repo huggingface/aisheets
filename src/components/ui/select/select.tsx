@@ -22,22 +22,15 @@ const Root = (props: PropsOf<typeof HeadlessSelect.Root>) => (
 const Label = component$<PropsOf<typeof HeadlessSelect.Label>>(
   ({ ...props }) => {
     return (
-      <>
-        <HeadlessSelect.Label
-          {...props}
-          class={cn('px-2 py-1.5 text-sm', props.class)}
-        >
-          <Slot />
-        </HeadlessSelect.Label>
-      </>
+      <HeadlessSelect.Label
+        {...props}
+        class={cn('px-2 py-1.5 text-sm', props.class)}
+      >
+        <Slot />
+      </HeadlessSelect.Label>
     );
   },
 );
-
-type TriggerProps = PropsOf<typeof HeadlessSelect.Trigger> & {
-  hideIcon?: boolean;
-  look?: 'default' | 'ghost' | 'headless';
-};
 
 const Disabled = component$(() => {
   const defaultClass =
@@ -50,14 +43,30 @@ const Disabled = component$(() => {
   );
 });
 
-const Trigger = component$<TriggerProps>(({ look = 'default', ...props }) => {
+export const triggerLooks = (look: TriggerProps['look'] = 'default') => {
   const defaultClass =
     'flex h-10 w-full items-center justify-between whitespace-nowrap rounded-sm border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1';
   const ghostClass =
     'flex h-10 w-full justify-between items-center whitespace-nowrap rounded-sm bg-transparent px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50';
 
-  const lookClass =
-    look === 'ghost' ? ghostClass : look === 'headless' ? '' : defaultClass;
+  const looks = {
+    default: defaultClass,
+    ghost: ghostClass,
+    headless: '',
+  };
+
+  const lookClass = looks[look];
+
+  return lookClass;
+};
+
+type TriggerProps = PropsOf<typeof HeadlessSelect.Trigger> & {
+  hideIcon?: boolean;
+  look?: 'default' | 'ghost' | 'headless';
+};
+
+const Trigger = component$<TriggerProps>(({ look, ...props }) => {
+  const lookClass = triggerLooks(look);
 
   return (
     <HeadlessSelect.Trigger {...props} class={cn(lookClass, props.class)}>
@@ -84,21 +93,19 @@ const Popover = component$<PropsOf<typeof HeadlessSelect.Popover>>(
     });
 
     return (
-      <>
-        <HeadlessSelect.Popover
-          {...props}
-          ref={popover}
-          style={{
-            width: `${popoverWidth.value}px`,
-          }}
-          class={cn(
-            'rounded-md border bg-popover p-1 text-popover-foreground shadow-md data-[open]:animate-in data-[closing]:animate-out data-[closing]:fade-out-0 data-[open]:fade-in-0 data-[closing]:zoom-out-95 data-[open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2',
-            props.class,
-          )}
-        >
-          <Slot />
-        </HeadlessSelect.Popover>
-      </>
+      <HeadlessSelect.Popover
+        {...props}
+        ref={popover}
+        style={{
+          width: `${popoverWidth.value}px`,
+        }}
+        class={cn(
+          'rounded-md border bg-popover p-1 text-popover-foreground shadow-md data-[open]:animate-in data-[closing]:animate-out data-[closing]:fade-out-0 data-[open]:fade-in-0 data-[closing]:zoom-out-95 data-[open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2',
+          props.class,
+        )}
+      >
+        <Slot />
+      </HeadlessSelect.Popover>
     );
   },
 );

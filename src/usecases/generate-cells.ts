@@ -10,7 +10,9 @@ import { collectExamples } from './collect-examples';
 import {
   runPromptExecution,
   runPromptExecutionStream,
+  runPromptExecutionStreamBatch,
 } from './run-prompt-execution';
+import type { PromptExecutionParams } from './run-prompt-execution';
 
 export interface GenerateCellsParams {
   column: Column;
@@ -21,6 +23,7 @@ export interface GenerateCellsParams {
   validatedCells?: Cell[];
   stream?: boolean;
   timeout?: number;
+  parallel?: boolean;
 }
 
 /**
@@ -46,6 +49,7 @@ export const generateCells = async function* ({
   validatedCells,
   stream = true,
   timeout,
+  parallel,
 }: GenerateCellsParams) {
   const { columnsReferences, modelName, modelProvider, prompt } = process;
 
@@ -61,6 +65,76 @@ export const generateCells = async function* ({
   if (!offset) offset = 0;
 
   try {
+    // Only use parallel execution when we have referenced columns
+    if (parallel && columnsReferences?.length > 0) {
+      const streamRequests: PromptExecutionParams[] = [];
+      const cells = new Map<number, Cell>();
+
+      for (let i = offset; i < limit + offset; i++) {
+        if (validatedIdxs?.includes(i)) continue;
+
+        const args: PromptExecutionParams = {
+          accessToken: session.token,
+          modelName,
+          modelProvider,
+          examples,
+          instruction: prompt,
+          timeout,
+          data: {},
+          idx: i, // Make sure idx is always defined
+        };
+
+        // We know we have referenced columns here
+        const rowCells = await getRowCells({
+          rowIdx: i,
+          columns: columnsReferences,
+        });
+        args.data = Object.fromEntries(
+          rowCells.map((cell) => [cell.column!.name, cell.value]),
+        );
+
+        const cell =
+          (await getColumnCellByIdx({ idx: i, columnId: column.id })) ??
+          (await createCell({
+            cell: { idx: i },
+            columnId: column.id,
+          }));
+
+        cell.generating = true;
+        cells.set(i, cell);
+        streamRequests.push(args);
+      }
+
+      // Make sure idx is defined in each request
+      for await (const { idx, response } of runPromptExecutionStreamBatch(
+        streamRequests,
+      )) {
+        if (idx === undefined) {
+          console.error('Received undefined idx in response');
+          continue;
+        }
+
+        const cell = cells.get(idx);
+        if (!cell) {
+          console.error(`No cell found for idx ${idx}`);
+          continue;
+        }
+
+        cell.value = response.value;
+        cell.error = response.error;
+
+        if (!response.done) {
+          yield { cell };
+        } else {
+          cell.generating = false;
+          await updateCell(cell);
+          yield { cell };
+        }
+      }
+
+      return;
+    }
+
     for (let i = offset; i < limit + offset; i++) {
       if (validatedIdxs?.includes(i)) continue;
 

@@ -1,4 +1,9 @@
-import { chatCompletion, chatCompletionStream } from '@huggingface/inference';
+import {
+  type InferenceProvider,
+  chatCompletion,
+  chatCompletionStream,
+} from '@huggingface/inference';
+import { INFERENCE_TIMEOUT } from '~/config';
 import { type Example, materializePrompt } from './materialize-prompt';
 
 export interface PromptExecutionParams {
@@ -18,15 +23,6 @@ export interface PromptExecutionResponse {
   done?: boolean;
 }
 
-const DEFAULT_TIMEOUT = 60000;
-
-type Provider =
-  | 'fal-ai'
-  | 'replicate'
-  | 'sambanova'
-  | 'together'
-  | 'hf-inference';
-
 const createApiParams = (
   modelName: string,
   messages: any[],
@@ -36,7 +32,7 @@ const createApiParams = (
   return {
     model: modelName,
     messages,
-    provider: modelProvider as Provider,
+    provider: modelProvider as InferenceProvider,
     accessToken,
   };
 };
@@ -65,7 +61,7 @@ export const runPromptExecution = async ({
         accessToken,
       ),
       {
-        signal: AbortSignal.timeout(timeout ?? DEFAULT_TIMEOUT),
+        signal: AbortSignal.timeout(timeout ?? INFERENCE_TIMEOUT),
       },
     );
     return { value: response.choices[0].message.content };
@@ -106,7 +102,7 @@ export const runPromptExecutionStream = async function* ({
         accessToken,
       ),
       {
-        signal: AbortSignal.timeout(timeout ?? DEFAULT_TIMEOUT),
+        signal: AbortSignal.timeout(timeout ?? INFERENCE_TIMEOUT),
       },
     );
 

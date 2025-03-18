@@ -167,7 +167,7 @@ const DatasetSearch = component$(
       const datasets = await listDatasets({
         query,
         accessToken: session.value.token,
-        limit: 5,
+        limit: 10,
       });
 
       return datasets.map((dataset) => dataset.name);

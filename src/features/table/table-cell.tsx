@@ -1,6 +1,7 @@
 import {
   $,
   component$,
+  useComputed$,
   useSignal,
   useTask$,
   useVisibleTask$,
@@ -28,11 +29,15 @@ const loadCell = server$(async (cellId: string) => {
 
 export const TableCell = component$<{
   cell: Cell;
-  isExpanded: boolean;
-  onToggleExpand$: () => void;
-}>(({ cell, isExpanded, onToggleExpand$ }) => {
-  const { replaceCell } = useColumnsStore();
+}>(({ cell }) => {
+  const { replaceCell, columns } = useColumnsStore();
   const validateCell = useValidateCellUseCase();
+
+  // Determine if the column is static
+  const isStatic = useComputed$(() => {
+    const column = columns.value.find((col) => col.id === cell.column?.id);
+    return column?.kind === 'static';
+  });
 
   const isEditing = useSignal(false);
   const originalValue = useSignal(cell.value);
@@ -79,14 +84,16 @@ export const TableCell = component$<{
   useVisibleTask$(({ track }) => {
     track(editCellValueInput);
     if (!editCellValueInput.value) return;
-    track(newCellValue);
+    track(isEditing);
 
-    editCellValueInput.value.focus();
-    // Position cursor at the beginning of the text
-    if (editCellValueInput.value instanceof HTMLTextAreaElement) {
-      editCellValueInput.value.setSelectionRange(0, 0);
-      // Scroll to the top of the textarea
-      editCellValueInput.value.scrollTop = 0;
+    if (isEditing.value) {
+      editCellValueInput.value.focus();
+      // Position cursor at the beginning of the text
+      if (editCellValueInput.value instanceof HTMLTextAreaElement) {
+        editCellValueInput.value.setSelectionRange(0, 0);
+        // Scroll to the top of the textarea
+        editCellValueInput.value.scrollTop = 0;
+      }
     }
   });
 
@@ -189,23 +196,26 @@ export const TableCell = component$<{
             </span>
           ) : (
             <>
-              <Button
-                look="ghost"
-                hover={false}
-                size="sm"
-                class={cn(
-                  'absolute z-10 text-base top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity',
-                  cell.validated
-                    ? 'bg-green-50/50 text-green-400 hover:bg-green-100'
-                    : 'hover:bg-gray-100 text-gray-400',
-                )}
-                onClick$={(e) => {
-                  e.stopPropagation();
-                  onValidateCell(originalValue.value!, !cell.validated);
-                }}
-              >
-                <LuThumbsUp class="text-sm" />
-              </Button>
+              {/* Only show validation button for non-static columns */}
+              {!isStatic.value && (
+                <Button
+                  look="ghost"
+                  hover={false}
+                  size="sm"
+                  class={cn(
+                    'absolute z-10 text-base top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity',
+                    cell.validated
+                      ? 'bg-green-50/50 text-green-400 hover:bg-green-100'
+                      : 'hover:bg-gray-100 text-gray-400',
+                  )}
+                  onClick$={(e) => {
+                    e.stopPropagation();
+                    onValidateCell(originalValue.value!, !cell.validated);
+                  }}
+                >
+                  <LuThumbsUp class="text-sm" />
+                </Button>
+              )}
               <div class="h-full mt-2 p-4">
                 <Markdown
                   class="text-gray-900"
@@ -228,7 +238,8 @@ export const TableCell = component$<{
                 maxHeight: '85vh',
                 borderWidth: '1px',
               }}
-              onClick$={() => {
+              onClick$={(e) => {
+                e.stopPropagation();
                 if (editCellValueInput.value) {
                   editCellValueInput.value.focus();
                 }

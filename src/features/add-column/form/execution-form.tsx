@@ -16,7 +16,7 @@ import {
   LuCheck,
   LuEgg,
   LuStopCircle,
-  LuXCircle,
+  LuX,
 } from '@qwikest/icons/lucide';
 
 import { Button, Input, Label, Select } from '~/components';
@@ -33,6 +33,9 @@ import {
   useColumnsStore,
 } from '~/state';
 import { type Model, useListModels } from '~/usecases/list-models';
+
+// Define the default model constant
+const DEFAULT_MODEL_ID = 'meta-llama/Llama-3.3-70B-Instruct';
 
 interface SidebarProps {
   column: Column;
@@ -112,11 +115,25 @@ export const ExecutionForm = component$<SidebarProps>(
       if (!process) return;
 
       prompt.value = process.prompt;
-      selectedModel.value = models?.find((m) => m.id === process.modelName) || {
-        id: process.modelName,
-        providers: [process.modelProvider!],
-      };
-      selectedProvider.value = process.modelProvider!;
+
+      // If there's a previously selected model, use that
+      if (process.modelName) {
+        selectedModel.value = models?.find(
+          (m) => m.id === process.modelName,
+        ) || {
+          id: process.modelName,
+          providers: [process.modelProvider!],
+        };
+        selectedProvider.value = process.modelProvider!;
+      }
+      // Otherwise pre-select the default model
+      else if (models) {
+        const defaultModel = models.find((m) => m.id === DEFAULT_MODEL_ID);
+        if (defaultModel) {
+          selectedModel.value = defaultModel;
+          selectedProvider.value = defaultModel.providers[0];
+        }
+      }
 
       inputModelId.value = process.modelName;
 
@@ -211,7 +228,7 @@ export const ExecutionForm = component$<SidebarProps>(
                 columns.value[0]?.id === TEMPORAL_ID ? 'none' : 'auto',
             }}
           >
-            <LuXCircle class="text-lg text-neutral" />
+            <LuX class="text-lg text-neutral" />
           </div>
         </div>
         <div class="relative h-full w-full">
@@ -387,16 +404,15 @@ export const ExecutionForm = component$<SidebarProps>(
                 </div>
               </div>
               {!isTouched.value && (
-                <div class="flex items-center justify-center text-indigo-500">
-                  The column has been generated, to generate again edit the
-                  configuration
+                <div class="flex items-center justify-center text-primary-500">
+                  Adjust the prompt/model settings or increase the number of
+                  rows to generate more data.
                 </div>
               )}
 
               {!canRegenerate.value && (
-                <div class="flex items-center justify-center text-indigo-500">
-                  Some references columns are dirty, please, regenerate them
-                  first.
+                <div class="flex items-center justify-center text-primary-500">
+                  Some columns referenced in the prompt need to be regenerated.
                 </div>
               )}
             </div>

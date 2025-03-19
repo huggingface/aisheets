@@ -7,6 +7,7 @@ export function useClickOutside(callback: QRL<() => void>) {
     track(() => ref.value);
 
     const handleClickOutside = (event: MouseEvent) => {
+      if (document.getSelection()?.toString()) return;
       if (ref.value && !ref.value.contains(event.target as Node)) {
         callback();
       }

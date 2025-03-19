@@ -23,8 +23,20 @@ export const OAUTH_SCOPES: string | undefined = process.env.OAUTH_SCOPES;
 export const DATA_DIR: string = process.env.DATA_DIR || './data';
 
 /**
- * The provider used for inference.
- * This value is retrieved from the environment variable `INFERENCE_PROVIDER`, or defaults to 'hf-inference' if not set.
+ * The timeout duration for inference operations in milliseconds.
+ *
+ * This constant defines the maximum time allowed for inference operations to complete.
+ * If an inference operation exceeds this duration, it will be terminated.
+ *
+ * Default value: 90000 (90 seconds)
  */
-export const INFERENCE_PROVIDER: string =
-  process.env.INFERENCE_PROVIDER || 'hf-inference';
+export const INFERENCE_TIMEOUT = 90000;
+
+/**
+ * The number of parallel requests to the Inference Endpoint to generate cells
+ *
+ * This constant defines the number of concurrent requests to be sent to the endpoint while generating cells
+ *
+ * Default value: 5, max. number of concurrent requests 10
+ */
+export const NUM_CONCURRENT_REQUESTS = 5;

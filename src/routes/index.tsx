@@ -198,7 +198,7 @@ export default component$(() => {
         </div>
 
         <div
-          class={`mt-16 text-primary-foreground font-light bg-white w-fit transition-all duration-1000 ${isTransitioning.value ? '-translate-y-[400px]' : ''}`}
+          class={`mt-16 text-primary-foreground font-light bg-white w-fit transition-all duration-1000 ${isTransitioning.value ? '-translate-y-[350px]' : ''}`}
         >
           <table class="border-separate border-spacing-0 text-sm">
             <thead>

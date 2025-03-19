@@ -40,7 +40,7 @@ export const TableAddCellHeaderPlaceHolder = component$(() => {
         aria-label="Add column"
         aria-disabled={lastColumnId.value === TEMPORAL_ID}
       >
-        <LuPlus class="text-sm text-neutral" />
+        <LuPlus class="text-primary text-lg" />
       </div>
     </th>
   );

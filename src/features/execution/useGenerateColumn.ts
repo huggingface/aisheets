@@ -38,10 +38,13 @@ export const useGenerateColumn = () => {
 
   const onCreateColumn = $(
     async (controller: AbortController, newColumn: CreateColumn) => {
+      //TODO All these method should be refactored. We can separate in separate steps to be more reusable
       const response = await addNewColumn(controller.signal, newColumn);
 
+      let createdColumn = null;
       for await (const { column, cell } of response) {
         if (column) {
+          createdColumn = column;
           addColumn(column);
 
           open(column.id, 'edit');
@@ -49,6 +52,11 @@ export const useGenerateColumn = () => {
         if (cell) {
           replaceCell(cell);
         }
+      }
+
+      if (createdColumn) {
+        const updated = await getColumnById$(createdColumn.id);
+        updateColumn(updated!);
       }
     },
   );
@@ -76,6 +84,9 @@ export const useGenerateColumn = () => {
           replaceCell(cell);
         }
       }
+
+      const updated = await getColumnById$(column.id);
+      updateColumn(updated!);
     },
   );
 

@@ -66,27 +66,23 @@ export const getDatasetById = async (
     cellsByColumn?: number;
   },
 ): Promise<Dataset | null> => {
-  const columnsInclude: any[] = [
-    {
-      association: ColumnModel.associations.process,
-      include: [ProcessModel.associations.referredColumns],
-    },
-  ];
-
   const model = await DatasetModel.findByPk(id, {
     include: [
       {
         association: DatasetModel.associations.columns,
         separate: true,
         order: [['createdAt', 'ASC']],
-        include: columnsInclude,
+        include: [
+          {
+            association: ColumnModel.associations.process,
+            include: [ProcessModel.associations.referredColumns],
+          },
+        ],
       },
     ],
   });
 
-  if (!model) {
-    return null;
-  }
+  if (!model) return null;
 
   const dataset = {
     id: model.id,

@@ -22,7 +22,7 @@ export const TableCellHeader = component$<{ column: Column }>(({ column }) => {
       class={`min-w-80 w-80 max-w-80 min-h-8 h-8 p-2 text-left border-[0.5px] first:rounded-tl-sm border-r-0 border-l-neutral-300 border-r-neutral-300 ${classes.value}`}
     >
       <div class="flex items-center justify-between gap-2 w-full">
-        <div class="flex items-center gap-2 text-wrap w-[80%]">
+        <div class="flex items-center gap-2 text-wrap w-[82%]">
           {isStatic ? (
             <LuText class="text-sm text-primary-foreground" />
           ) : (
@@ -31,7 +31,7 @@ export const TableCellHeader = component$<{ column: Column }>(({ column }) => {
           <ColumnProperties column={column} />
         </div>
 
-        <div class="flex items-center w-[20%] h-0">
+        <div class="flex items-center gap-1 w-[18%] h-0 pr-0">
           <CellGeneration column={column} />
           <CellSettings column={column} />
         </div>

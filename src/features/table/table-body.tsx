@@ -122,19 +122,7 @@ export const TableBody = component$(() => {
                     <td class="min-w-80 w-80 max-w-80 px-2 min-h-[100px] h-[100px] border-[0.5px] border-t-0 border-r-0" />
                   ) : (
                     <>
-                      <TableCell
-                        cell={cell}
-                        isExpanded={expandedRows.value.has(actualRowIndex)}
-                        onToggleExpand$={() => {
-                          const newSet = new Set(expandedRows.value);
-                          if (newSet.has(actualRowIndex)) {
-                            newSet.delete(actualRowIndex);
-                          } else {
-                            newSet.add(actualRowIndex);
-                          }
-                          expandedRows.value = newSet;
-                        }}
-                      />
+                      <TableCell cell={cell} />
 
                       {/* When the user scrolls until this cell we should load
                         If the user has 20 rows, on rowCount - buffer, should be fetch

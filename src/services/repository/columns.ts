@@ -18,6 +18,8 @@ export const modelToColumn = (model: ColumnModel): Column => {
       createdBy: model.dataset.createdBy,
     },
 
+    numberOfCells: model.numberOfCells,
+
     process: {
       id: model.process?.id,
       columnsReferences: (model.process?.referredColumns ?? []).map(
@@ -30,6 +32,7 @@ export const modelToColumn = (model: ColumnModel): Column => {
       prompt: model.process?.prompt ?? '',
       updatedAt: model.process?.updatedAt,
     },
+
     cells:
       model.cells?.map((cell) => ({
         id: cell.id,
@@ -42,45 +45,6 @@ export const modelToColumn = (model: ColumnModel): Column => {
         idx: cell.idx,
       })) ?? [],
   };
-};
-
-export const getDatasetColumns = async (
-  datasetId: string,
-): Promise<Column[]> => {
-  const models = await ColumnModel.findAll({
-    where: {
-      datasetId,
-    },
-    include: [
-      {
-        association: ColumnModel.associations.process,
-        include: [ProcessModel.associations.referredColumns],
-      },
-      {
-        association: ColumnModel.associations.dataset,
-      },
-    ],
-    order: [['createdAt', 'ASC']],
-  });
-
-  return models.map((model) => {
-    const column = modelToColumn(model);
-
-    // Partially cell loading
-    return {
-      ...column,
-      cells: model.cells.map((cell) => ({
-        id: cell.id,
-        idx: cell.idx,
-        column: {
-          id: column.id,
-        },
-        updatedAt: cell.updatedAt,
-        generating: cell.generating,
-        validated: cell.validated,
-      })),
-    };
-  });
 };
 
 export const getColumnById = async (id: string): Promise<Column | null> => {
@@ -98,34 +62,7 @@ export const getColumnById = async (id: string): Promise<Column | null> => {
 
   if (!model) return null;
 
-  return {
-    id: model.id,
-    name: model.name,
-    type: model.type as ColumnType,
-    kind: model.kind as ColumnKind,
-    visible: model.visible,
-
-    dataset: {
-      id: model.dataset.id,
-      name: model.dataset.name,
-      createdBy: model.dataset.createdBy,
-    },
-
-    process: {
-      id: model.process?.id,
-      columnsReferences: (model.process?.referredColumns ?? []).map(
-        (column) => column.id,
-      ),
-      limit: model.process?.limit ?? 0,
-      modelName: model.process?.modelName ?? '',
-      modelProvider: model.process?.modelProvider ?? '',
-      offset: model.process?.offset ?? 0,
-      prompt: model.process?.prompt ?? '',
-      updatedAt: model.process?.updatedAt,
-    },
-
-    cells: [],
-  };
+  return modelToColumn(model);
 };
 
 export const createColumn = async (column: CreateColumn): Promise<Column> => {
@@ -152,6 +89,7 @@ export const createColumn = async (column: CreateColumn): Promise<Column> => {
     visible: model.visible,
     process,
     cells: [],
+    numberOfCells: 0,
   };
 
   return newbie;
@@ -185,6 +123,7 @@ export const updateColumn = async (column: Column): Promise<Column> => {
     dataset: column.dataset,
     process: column.process,
     cells: column.cells,
+    numberOfCells: model.numberOfCells,
   };
 };
 

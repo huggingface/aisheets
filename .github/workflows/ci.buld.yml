@@ -51,7 +51,7 @@ jobs:
         run: |
           echo "PLATFORMS=linux/amd64,linux/arm64" >> $GITHUB_ENV
           echo "IMAGE_TAG=${GITHUB_REF##*/}" >> $GITHUB_ENV
-          echo "DOCKER_IMAGE=argilladev/dataground" >> $GITHUB_ENV
+          echo "DOCKER_IMAGE=huggingfacedg/dataground" >> $GITHUB_ENV
           echo "DOCKER_USERNAME=$DOCKER_USERNAME" >> $GITHUB_ENV
           echo "DOCKER_PASSWORD=$DOCKER_PASSWORD" >> $GITHUB_ENV
         env:
@@ -73,11 +73,11 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           push: true
 
-      - name: Push latest image
-        if: github.ref == 'refs/heads/main'
-        uses: docker/build-push-action@v5
-        with:
-          platforms: ${{ env.PLATFORMS }}
-          tags: ${{ env.DOCKER_IMAGE }}:latest
-          labels: ${{ steps.meta.outputs.labels }}
-          push: true
+      # - name: Push latest image
+      #   if: github.ref == 'refs/heads/main'
+      #   uses: docker/build-push-action@v5
+      #   with:
+      #     platforms: ${{ env.PLATFORMS }}
+      #     tags: ${{ env.DOCKER_IMAGE }}:latest
+      #     labels: ${{ steps.meta.outputs.labels }}
+      #     push: true

@@ -186,7 +186,8 @@ async function createDatasetContent(
   // Collect and write data rows
   const jsonl = [];
   for await (const row of listDatasetRows({ dataset, visibleOnly: true })) {
-    jsonl.push(JSON.stringify(row));
+    const { idx, ...rest } = row;
+    jsonl.push(JSON.stringify(rest));
   }
   await fs.writeFile(jsonlPath, jsonl.join('\n'));
 

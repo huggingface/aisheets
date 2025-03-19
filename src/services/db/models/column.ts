@@ -1,9 +1,4 @@
-import type {
-  Association,
-  ForeignKey,
-  HasManyCreateAssociationMixin,
-  NonAttribute,
-} from 'sequelize';
+import type { Association, ForeignKey, NonAttribute } from 'sequelize';
 import {
   type CreationOptional,
   DataTypes,
@@ -11,6 +6,7 @@ import {
   type InferCreationAttributes,
   Model,
 } from 'sequelize';
+import sequelize from 'sequelize/lib/sequelize';
 
 import { db } from '~/services/db';
 import { ColumnCellModel } from '~/services/db/models/cell';
@@ -36,10 +32,9 @@ export class ColumnModel extends Model<
   declare createdAt: NonAttribute<Date>;
   declare updatedAt: NonAttribute<Date>;
 
-  declare createCell: HasManyCreateAssociationMixin<
-    ColumnCellModel,
-    'columnId'
-  >;
+  get numberOfCells(): NonAttribute<number> {
+    return (this.dataValues as any).numberOfCells ?? 0;
+  }
 
   declare static associations: {
     cells: Association<ColumnModel, ColumnCellModel>;
@@ -80,6 +75,20 @@ ColumnModel.init(
   {
     sequelize: db,
     modelName: 'Column',
+    defaultScope: {
+      attributes: {
+        include: [
+          [
+            sequelize.literal(`(
+                                  SELECT COUNT(*)
+                                  FROM ${ColumnCellModel.tableName} AS cells
+                                  WHERE cells.columnId = column.id
+                              )`),
+            'numberOfCells',
+          ],
+        ],
+      },
+    },
   },
 );
 

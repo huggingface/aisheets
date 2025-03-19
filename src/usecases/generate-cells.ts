@@ -69,6 +69,10 @@ export const generateCells = async function* ({
     if (parallel && columnsReferences?.length > 0) {
       const streamRequests: PromptExecutionParams[] = [];
       const cells = new Map<number, Cell>();
+      const pendingResults = new Map<
+        number,
+        { value?: string; error?: string }
+      >();
 
       for (let i = offset; i < limit + offset; i++) {
         if (validatedIdxs?.includes(i)) continue;
@@ -105,7 +109,9 @@ export const generateCells = async function* ({
         streamRequests.push(args);
       }
 
-      // Make sure idx is defined in each request
+      // Create an ordered array to track which cells we need to update
+      const orderedCells = Array.from(cells.keys()).sort((a, b) => a - b);
+
       for await (const { idx, response } of runPromptExecutionStreamBatch(
         streamRequests,
       )) {
@@ -120,16 +126,24 @@ export const generateCells = async function* ({
           continue;
         }
 
+        // Update the cell with the latest response
         cell.value = response.value;
         cell.error = response.error;
 
-        if (!response.done) {
-          yield { cell };
-        } else {
+        // Store the latest result
+        pendingResults.set(idx, {
+          value: response.value,
+          error: response.error,
+        });
+
+        // If the response is done, mark the cell as complete
+        if (response.done) {
           cell.generating = false;
           await updateCell(cell);
-          yield { cell };
         }
+
+        // Yield the cell immediately - this allows for streaming updates
+        yield { cell };
       }
 
       return;

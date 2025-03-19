@@ -13,8 +13,11 @@ export const HF_TOKEN: string | undefined = process.env.HF_TOKEN;
 /**
  * The OAuth scopes used for authentication.
  * This value is retrieved from the environment variable `OAUTH_SCOPES`.
+ *
+ * Default value: 'openid profile inference-api manage-repos'
  */
-export const OAUTH_SCOPES: string | undefined = process.env.OAUTH_SCOPES;
+export const OAUTH_SCOPES: string | undefined =
+  process.env.OAUTH_SCOPES || 'openid profile inference-api manage-repos';
 
 /**
  * The directory where data is stored.

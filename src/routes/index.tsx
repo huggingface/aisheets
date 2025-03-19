@@ -26,6 +26,28 @@ export const onGet = async ({
     return next();
   }
 
+  if (HF_TOKEN) {
+    try {
+      const userInfo = (await hub.whoAmI({ accessToken: HF_TOKEN })) as any;
+
+      const session = {
+        token: HF_TOKEN,
+        user: {
+          name: userInfo.fullname,
+          username: userInfo.name,
+          picture: userInfo.avatarUrl,
+        },
+      };
+
+      saveSession(cookie, session);
+      sharedMap.set('session', session);
+    } catch (e: any) {
+      throw Error(`Invalid HF_TOKEN: ${e.message}`);
+    }
+
+    throw redirect(303, '/');
+  }
+
   if (CLIENT_ID) {
     const sessionCode = crypto.randomUUID();
 
@@ -36,7 +58,7 @@ export const onGet = async ({
     const authData = {
       state: sessionCode,
       clientId: CLIENT_ID,
-      scopes: OAUTH_SCOPES || 'openid profile inference-api',
+      scopes: OAUTH_SCOPES,
       redirectUrl: `${redirectOrigin}/auth/callback/`,
       localStorage: {
         codeVerifier: undefined,
@@ -59,28 +81,6 @@ export const onGet = async ({
       },
     );
     throw redirect(303, loginUrl);
-  }
-
-  if (HF_TOKEN) {
-    try {
-      const userInfo = (await hub.whoAmI({ accessToken: HF_TOKEN })) as any;
-
-      const session = {
-        token: HF_TOKEN,
-        user: {
-          name: userInfo.fullname,
-          username: userInfo.name,
-          picture: userInfo.avatarUrl,
-        },
-      };
-
-      saveSession(cookie, session);
-      sharedMap.set('session', session);
-    } catch (e: any) {
-      throw Error(`Invalid HF_TOKEN: ${e.message}`);
-    }
-
-    throw redirect(303, '/');
   }
 
   throw Error('Missing HF_TOKEN or OAUTH_CLIENT_ID');

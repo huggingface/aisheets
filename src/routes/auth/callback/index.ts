@@ -18,7 +18,7 @@ export const onGet = async ({ cookie, redirect, query, url }: RequestEvent) => {
   }
 
   const data = cookie.get(sessionCode)!;
-  const { codeVerifier, nonce } = data.json() as any;
+  const { codeVerifier, nonce } = data.json<any>();
 
   if (nonce !== nonceFromCallback) {
     throw redirect(303, '/');

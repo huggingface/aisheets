@@ -243,12 +243,9 @@ export const useColumnsStore = () => {
     maxNumberOfRows: $((column: Column, columnsReferences: string[]) => {
       const dataset = activeDataset.value;
 
-      if (
-        dataset.columns.length === 0 ||
-        (dataset.columns.length == 1 && dataset.columns[0].id === column.id) ||
-        column.id === firstColumn.value.id
-      )
+      if (dataset.columns.length === 0 || column.id === firstColumn.value.id) {
         return 1000;
+      }
 
       if (columnsReferences && columnsReferences.length > 0) {
         const cellsCount = dataset.columns

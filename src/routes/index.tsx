@@ -36,7 +36,7 @@ export const onGet = async ({
     const authData = {
       state: sessionCode,
       clientId: CLIENT_ID,
-      scopes: OAUTH_SCOPES ?? 'openid profile inference-api',
+      scopes: OAUTH_SCOPES,
       redirectUrl: `${redirectOrigin}/auth/callback/`,
       localStorage: {
         codeVerifier: undefined,

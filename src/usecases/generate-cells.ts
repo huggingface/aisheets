@@ -65,17 +65,21 @@ export const generateCells = async function* ({
   if (!offset) offset = 0;
 
   try {
-    // Only use parallel execution when we have referenced columns
+    // Parallel execution (when we have column references)
     if (parallel && columnsReferences?.length > 0) {
       const streamRequests: PromptExecutionParams[] = [];
       const cells = new Map<number, Cell>();
-      const pendingResults = new Map<
-        number,
-        { value?: string; error?: string }
-      >();
 
+      // Create all cells and requests in order
       for (let i = offset; i < limit + offset; i++) {
         if (validatedIdxs?.includes(i)) continue;
+
+        const cell =
+          (await getColumnCellByIdx({ idx: i, columnId: column.id })) ??
+          (await createCell({ cell: { idx: i }, columnId: column.id }));
+
+        cell.generating = true;
+        cells.set(i, cell);
 
         const args: PromptExecutionParams = {
           accessToken: session.token,
@@ -85,72 +89,63 @@ export const generateCells = async function* ({
           instruction: prompt,
           timeout,
           data: {},
-          idx: i, // Make sure idx is always defined
+          idx: i,
         };
 
-        // We know we have referenced columns here
-        const rowCells = await getRowCells({
-          rowIdx: i,
-          columns: columnsReferences,
-        });
-        args.data = Object.fromEntries(
-          rowCells.map((cell) => [cell.column!.name, cell.value]),
-        );
+        if (columnsReferences?.length) {
+          const rowCells = await getRowCells({
+            rowIdx: i,
+            columns: columnsReferences,
+          });
+          args.data = Object.fromEntries(
+            rowCells.map((cell) => [cell.column!.name, cell.value]),
+          );
+        }
 
-        const cell =
-          (await getColumnCellByIdx({ idx: i, columnId: column.id })) ??
-          (await createCell({
-            cell: { idx: i },
-            columnId: column.id,
-          }));
-
-        cell.generating = true;
-        cells.set(i, cell);
         streamRequests.push(args);
       }
 
-      // Create an ordered array to track which cells we need to update
-      const orderedCells = Array.from(cells.keys()).sort((a, b) => a - b);
+      // Initial yield of empty cells in order
+      const orderedIndices = Array.from(cells.keys()).sort((a, b) => a - b);
+      for (const idx of orderedIndices) {
+        const cell = cells.get(idx);
+        if (cell) yield { cell };
+      }
 
+      // Process responses in order
       for await (const { idx, response } of runPromptExecutionStreamBatch(
         streamRequests,
       )) {
-        if (idx === undefined) {
-          console.error('Received undefined idx in response');
-          continue;
-        }
+        if (idx === undefined) continue;
 
         const cell = cells.get(idx);
-        if (!cell) {
-          console.error(`No cell found for idx ${idx}`);
-          continue;
-        }
+        if (!cell) continue;
 
-        // Update the cell with the latest response
-        cell.value = response.value;
+        // Update cell with response
+        cell.value = response.value || '';
         cell.error = response.error;
 
-        // Store the latest result
-        pendingResults.set(idx, {
-          value: response.value,
-          error: response.error,
-        });
-
-        // If the response is done, mark the cell as complete
-        if (response.done) {
+        if (response.done || !cell.value) {
           cell.generating = false;
           await updateCell(cell);
+          yield { cell };
         }
-
-        // Yield the cell immediately - this allows for streaming updates
-        yield { cell };
       }
 
       return;
     }
 
+    // Non-parallel execution
     for (let i = offset; i < limit + offset; i++) {
       if (validatedIdxs?.includes(i)) continue;
+
+      let cell = await getColumnCellByIdx({ idx: i, columnId: column.id });
+      if (!cell) {
+        cell = await createCell({ cell: { idx: i }, columnId: column.id });
+      }
+
+      cell.generating = true;
+      yield { cell };
 
       const args = {
         accessToken: session.token,
@@ -162,43 +157,21 @@ export const generateCells = async function* ({
         data: {},
       };
 
-      const rowCells = columnsReferences?.length
-        ? await getRowCells({
-            rowIdx: i,
-            columns: columnsReferences,
-          })
-        : [];
-
-      if (rowCells) {
+      if (columnsReferences?.length) {
+        const rowCells = await getRowCells({
+          rowIdx: i,
+          columns: columnsReferences,
+        });
         args.data = Object.fromEntries(
           rowCells.map((cell) => [cell.column!.name, cell.value]),
         );
       }
 
-      let cell = await getColumnCellByIdx({ idx: i, columnId: column.id });
-
-      if (!cell) {
-        cell = await createCell({
-          cell: { idx: i },
-          columnId: column.id,
-        });
-      }
-
-      cell.generating = true;
-
-      yield { cell };
-
       if (stream) {
-        for await (const response of runPromptExecutionStream({
-          ...args,
-          data: Object.fromEntries(
-            rowCells.map((cell) => [cell.column!.name, cell.value]),
-          ),
-        })) {
+        for await (const response of runPromptExecutionStream(args)) {
           cell.value = response.value;
           cell.error = response.error;
-
-          if (!response.done) yield { cell };
+          yield { cell };
         }
       } else {
         const response = await runPromptExecution(args);
@@ -207,21 +180,10 @@ export const generateCells = async function* ({
       }
 
       cell.generating = false;
-
       await updateCell(cell);
-
       yield { cell };
-
-      // Add newly generated values as examples when there are no validated cells or referred columns
-      if (
-        cell.value &&
-        !(validatedCells?.length || columnsReferences?.length)
-      ) {
-        examples.push({ output: cell.value, inputs: {} });
-      }
     }
   } finally {
-    // update the process to reflect the latest execution (we should use a more explict attribute for this)
     process.updatedAt = new Date();
     await updateProcess(process);
   }

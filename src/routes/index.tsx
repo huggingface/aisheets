@@ -75,6 +75,7 @@ export const onGet = async ({
         nonce: authData.localStorage.nonce!,
       },
       {
+        sameSite: 'none',
         secure: true,
         httpOnly: !isDev,
         path: '/auth/callback',

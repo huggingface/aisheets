@@ -235,17 +235,18 @@ export const useColumnsStore = () => {
     };
   });
 
-  const firstColum = useComputed$(() => columns.value[0]);
+  const firstColumn = useComputed$(() => columns.value[0]);
 
   return {
     columns,
-    firstColum,
+    firstColumn,
     maxNumberOfRows: $((column: Column, columnsReferences: string[]) => {
       const dataset = activeDataset.value;
 
       if (
         dataset.columns.length === 0 ||
-        (dataset.columns.length == 1 && dataset.columns[0].id === column.id)
+        (dataset.columns.length == 1 && dataset.columns[0].id === column.id) ||
+        column.id === firstColumn.value.id
       )
         return 1000;
 
@@ -257,7 +258,7 @@ export const useColumnsStore = () => {
         if (cellsCount.length > 0) return Math.min(...cellsCount);
       }
 
-      return firstColum.value.numberOfCells ?? 0;
+      return firstColumn.value.numberOfCells ?? 0;
     }),
     canGenerate: $((column: Column) => canGenerate(column.id, columns.value)),
     isDirty: $((column: Column) => isDirty(column)),

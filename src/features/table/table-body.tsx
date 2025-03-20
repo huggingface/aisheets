@@ -17,7 +17,7 @@ import { getColumnCells } from '~/services';
 import { type Cell, type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
 
 export const TableBody = component$(() => {
-  const { columns, firstColum } = useColumnsStore();
+  const { columns, firstColumn } = useColumnsStore();
   const expandedRows = useSignal<Set<number>>(new Set());
 
   const tableBody = useSignal<HTMLElement>();
@@ -61,7 +61,7 @@ export const TableBody = component$(() => {
   useTask$(({ track }) => {
     track(columns);
 
-    rowCount.value = Math.max(firstColum.value.cells.length, 8);
+    rowCount.value = Math.max(firstColumn.value.cells.length, 8);
 
     const getCell = (column: Column, rowIndex: number): Cell => {
       const cell = column.cells[rowIndex];

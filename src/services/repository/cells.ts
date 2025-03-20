@@ -331,7 +331,7 @@ export const updateCell = async (cell: Partial<Cell>): Promise<Cell> => {
   };
 };
 
-export const getCellsCount = async (
+export const getGeneratedCellsCount = async (
   filter: Record<string, any>,
 ): Promise<number> => {
   return ColumnCellModel.count({

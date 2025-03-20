@@ -59,16 +59,6 @@ export const ExecutionForm = component$<SidebarProps>(
     const isSubmitting = useSignal(false);
     const canRegenerate = useSignal(true);
 
-    const isAnyColumnGenerating = useComputed$(() => {
-      //TODO: Replace to "persisted" column on column.
-      const isAnyGenerating = columns.value
-        .filter((c) => c.id !== TEMPORAL_ID)
-        .flatMap((c) => c.cells)
-        .some((c) => c.generating);
-
-      return isAnyGenerating;
-    });
-
     const prompt = useSignal<string>('');
     const columnsReferences = useSignal<string[]>([]);
     const variables = useSignal<Variable[]>([]);
@@ -141,10 +131,18 @@ export const ExecutionForm = component$<SidebarProps>(
         mode.value === 'add' ? '1' : process!.limit.toString();
     });
 
-    const maxRows = useSignal(0);
+    const maxRows = useSignal<number>(0);
 
-    useVisibleTask$(async (async) => {
-      maxRows.value = await maxNumberOfRows(column);
+    useVisibleTask$(async ({ track }) => {
+      const newValue = track(columnsReferences);
+
+      maxRows.value = await maxNumberOfRows(column, newValue);
+
+      if (Number(rowsToGenerate.value) > maxRows.value) {
+        nextTick(() => {
+          rowsToGenerate.value = String(maxRows.value);
+        });
+      }
     });
 
     useVisibleTask$(({ track }) => {

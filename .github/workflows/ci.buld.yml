@@ -49,14 +49,21 @@ jobs:
 
       - name: Setup environment variables
         run: |
-          echo "PLATFORMS=linux/amd64,linux/arm64" >> $GITHUB_ENV
+          
           echo "IMAGE_TAG=${GITHUB_REF##*/}" >> $GITHUB_ENV
-          echo "DOCKER_IMAGE=argilladev/dataground" >> $GITHUB_ENV
           echo "DOCKER_USERNAME=$DOCKER_USERNAME" >> $GITHUB_ENV
           echo "DOCKER_PASSWORD=$DOCKER_PASSWORD" >> $GITHUB_ENV
+          if [[ $IS_RELEASE == 'true' ]]; then
+            echo "DOCKER_IMAGE=huggingfacedg/dataground" >> $GITHUB_ENV
+            echo "PLATFORMS=linux/amd64,linux/arm64" >> $GITHUB_ENV
+          else
+            echo "DOCKER_IMAGE=huggingfacedg/dataground-dev" >> $GITHUB_ENV
+            echo "PLATFORMS=linux/amd64" >> $GITHUB_ENV
+          fi
         env:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+          IS_RELEASE: ${{ github.ref == 'refs/heads/stable' }}
           
 
       - name: Login to Docker Hub
@@ -74,7 +81,7 @@ jobs:
           push: true
 
       - name: Push latest image
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/stable'
         uses: docker/build-push-action@v5
         with:
           platforms: ${{ env.PLATFORMS }}

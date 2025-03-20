@@ -1,7 +1,7 @@
-import { ColumnModel, DatasetModel, ProcessModel } from '~/services/db/models';
+import { DatasetModel } from '~/services/db/models';
 import type { Dataset } from '~/state';
 import { getColumnCells } from './cells';
-import { modelToColumn } from './columns';
+import { getDatasetColumns } from './columns';
 import { createDatasetTable, createDatasetTableFromFile } from './tables';
 
 interface CreateDatasetParams {
@@ -104,34 +104,17 @@ export const getDatasetById = async (
     cellsByColumn?: number;
   },
 ): Promise<Dataset | null> => {
-  const columnsInclude: any[] = [
-    {
-      association: ColumnModel.associations.process,
-      include: [ProcessModel.associations.referredColumns],
-    },
-  ];
-
-  const model = await DatasetModel.findByPk(id, {
-    include: [
-      {
-        association: DatasetModel.associations.columns,
-        separate: true,
-        order: [['createdAt', 'ASC']],
-        include: columnsInclude,
-      },
-    ],
-  });
+  const model = await DatasetModel.findByPk(id);
 
   if (!model) return null;
+
+  const columns = await getDatasetColumns(model);
 
   const dataset = {
     id: model.id,
     name: model.name,
     createdBy: model.createdBy,
-    columns: model.columns.map((column) => {
-      column.dataset = model;
-      return modelToColumn(column);
-    }),
+    columns,
   };
 
   if (options?.cellsByColumn) {

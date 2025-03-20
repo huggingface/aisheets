@@ -6,6 +6,24 @@ import os from 'node:os';
 import path from 'node:path';
 import { DuckDBBlobValue, DuckDBStructValue } from '@duckdb/node-api';
 
+export const countDatasetTableRows = async ({
+  dataset,
+}: {
+  dataset: {
+    id: string;
+    name: string;
+  };
+}): Promise<number> => {
+  const tableName = getDatasetTableName(dataset);
+
+  return await connectAndClose(async (db) => {
+    const results = await db.run(
+      `SELECT CAST(COUNT(*) AS INTEGER) FROM ${tableName}`,
+    );
+    return (await results.getRows())[0][0] as number;
+  });
+};
+
 export const listDatasetTableRows = async ({
   dataset,
   columns,

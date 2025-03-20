@@ -53,6 +53,7 @@ export interface Column {
   process?: Process | undefined;
   cells: Cell[];
   dataset: Omit<Dataset, 'columns'>;
+  numberOfCells?: number;
 }
 
 export const isDirty = (column: Column) => {
@@ -234,24 +235,27 @@ export const useColumnsStore = () => {
     };
   });
 
-  const firstColum = useComputed$(() => columns.value[0]);
-  const firstDynamicColumn = useComputed$(() =>
-    columns.value.find((c) => c.kind === 'dynamic'),
-  );
+  const firstColumn = useComputed$(() => columns.value[0]);
 
   return {
     columns,
-    firstColum,
-    maxNumberOfRows: $((column: Column) => {
-      if (
-        firstDynamicColumn.value &&
-        column.kind === 'dynamic' &&
-        column.id !== firstDynamicColumn.value?.id
-      ) {
-        return firstDynamicColumn.value.process!.limit;
+    firstColumn,
+    maxNumberOfRows: $((column: Column, columnsReferences: string[]) => {
+      const dataset = activeDataset.value;
+
+      if (dataset.columns.length === 0 || column.id === firstColumn.value.id) {
+        return 1000;
       }
 
-      return 1000;
+      if (columnsReferences && columnsReferences.length > 0) {
+        const cellsCount = dataset.columns
+          .filter((c) => columnsReferences.includes(c.id))
+          .map((c) => c.numberOfCells ?? 0);
+
+        if (cellsCount.length > 0) return Math.min(...cellsCount);
+      }
+
+      return firstColumn.value.numberOfCells ?? 0;
     }),
     canGenerate: $((column: Column) => canGenerate(column.id, columns.value)),
     isDirty: $((column: Column) => isDirty(column)),

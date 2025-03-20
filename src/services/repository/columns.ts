@@ -1,9 +1,10 @@
 import { ColumnModel } from '~/services/db/models/column';
 import { ProcessModel } from '~/services/db/models/process';
 import type { Column, ColumnKind, ColumnType, CreateColumn } from '~/state';
-import { getCellsCount } from './cells';
+
+import { getGeneratedCellsCount } from './cells';
 import { createProcess, updateProcess } from './processes';
-import { createDatasetTableColumn } from './tables';
+import { countDatasetTableRows, createDatasetTableColumn } from './tables';
 
 export const modelToColumn = (model: ColumnModel): Column => {
   return {
@@ -19,6 +20,8 @@ export const modelToColumn = (model: ColumnModel): Column => {
       createdBy: model.dataset.createdBy,
     },
 
+    numberOfCells: model.numberOfCells,
+
     process: {
       id: model.process?.id,
       columnsReferences: (model.process?.referredColumns ?? []).map(
@@ -31,18 +34,40 @@ export const modelToColumn = (model: ColumnModel): Column => {
       prompt: model.process?.prompt ?? '',
       updatedAt: model.process?.updatedAt,
     },
-    cells: // TODO: Cells should be loaded separately and this attribute should be removed
-      model.cells?.map((cell) => ({
-        id: cell.id,
-        validated: cell.validated,
-        column: {
-          id: cell.columnId,
-        },
-        updatedAt: cell.updatedAt,
-        generating: cell.generating,
-        idx: cell.idx,
-      })) ?? [],
+    cells: [], // TODO: Cells should be loaded separately and this attribute should be removed
   };
+};
+
+export const getDatasetColumns = async (dataset: {
+  id: string;
+  name: string;
+}): Promise<Column[]> => {
+  const models = await ColumnModel.findAll({
+    where: {
+      datasetId: dataset.id,
+    },
+    include: [
+      ColumnModel.associations.dataset,
+      {
+        association: ColumnModel.associations.process,
+        include: [ProcessModel.associations.referredColumns],
+      },
+    ],
+  });
+
+  const updatedModels = await Promise.all(
+    models.map(async (model) => {
+      if (model.process) return model;
+
+      model.numberOfCells = await countDatasetTableRows({
+        dataset: model.dataset,
+      });
+
+      return model;
+    }),
+  );
+
+  return updatedModels.map(modelToColumn);
 };
 
 export const listColumnsByIds = async (ids: string[]): Promise<Column[]> => {
@@ -59,7 +84,19 @@ export const listColumnsByIds = async (ids: string[]): Promise<Column[]> => {
     ],
   });
 
-  return models.map(modelToColumn);
+  const updatedModels = await Promise.all(
+    models.map(async (model) => {
+      if (model.process) return model;
+
+      model.numberOfCells = await countDatasetTableRows({
+        dataset: model.dataset,
+      });
+
+      return model;
+    }),
+  );
+
+  return updatedModels.map(modelToColumn);
 };
 
 export const getColumnById = async (id: string): Promise<Column | null> => {
@@ -100,6 +137,7 @@ export const createRawColumn = async (column: {
     kind: model.kind as ColumnKind,
     dataset: column.dataset,
     visible: model.visible,
+    numberOfCells: 0,
     cells: [],
   };
 };
@@ -133,6 +171,7 @@ export const createColumn = async (column: CreateColumn): Promise<Column> => {
     visible: model.visible,
     process,
     cells: [],
+    numberOfCells: 0,
   };
 
   return newbie;
@@ -160,6 +199,8 @@ export const updateColumnPartially = async (
   await model.save();
 };
 
-export const getColumnSize = async (column: Column): Promise<number> => {
-  return await getCellsCount({ columnId: column.id });
+export const getGeneratedColumnSize = async (
+  column: Column,
+): Promise<number> => {
+  return await getGeneratedCellsCount({ columnId: column.id });
 };

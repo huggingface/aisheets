@@ -11,7 +11,6 @@ import { cn } from '@qwik-ui/utils';
 import { LuThumbsUp } from '@qwikest/icons/lucide';
 import { Button, Skeleton, Textarea } from '~/components';
 import { useClickOutside } from '~/components/hooks/click/outside';
-import { Markdown } from '~/components/ui/markdown/markdown';
 import { getColumnCellById } from '~/services';
 import { type Cell, useColumnsStore } from '~/state';
 import { useValidateCellUseCase } from '~/usecases/validate-cell.usecase';
@@ -216,12 +215,7 @@ export const TableCell = component$<{
                   <LuThumbsUp class="text-sm" />
                 </Button>
               )}
-              <div class="h-full mt-2 p-4">
-                <Markdown
-                  class="text-gray-900"
-                  content={originalValue.value ?? ''}
-                />
-              </div>
+              <div class="h-full mt-2 p-4">{originalValue.value}</div>
             </>
           )}
 

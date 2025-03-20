@@ -345,61 +345,63 @@ export const ExecutionForm = component$<SidebarProps>(
                     />
                   </div>
                 </div>
-                <div class="absolute bottom-4 flex flex-row items-center justify-between px-6 gap-8 w-full">
-                  <div class="p-1.5 rounded-full hover:bg-neutral-100 cursor-pointer">
-                    <LuBookmark class="text-lg text-neutral" />
-                  </div>
+                {(prompt.value.trim() || isSubmitting.value) && (
+                  <div class="absolute bottom-4 flex flex-row items-center justify-between px-6 gap-8 w-full">
+                    <div class="p-1.5 rounded-full hover:bg-neutral-100 cursor-pointer">
+                      <LuBookmark class="text-lg text-neutral" />
+                    </div>
 
-                  <div class="flex flex-1 gap-1 items-center justify-end">
-                    <Label class="font-light">Rows:</Label>
-                    <Input
-                      type="number"
-                      class="h-8 border-neutral-300-foreground w-fit bg-neutral-100"
-                      max={maxRows.value}
-                      min="1"
-                      onInput$={(_, el) => {
-                        if (Number(el.value) > maxRows.value) {
-                          nextTick(() => {
-                            rowsToGenerate.value = String(maxRows.value);
-                          });
+                    <div class="flex flex-1 gap-1 items-center justify-end">
+                      <Label class="font-light">Rows:</Label>
+                      <Input
+                        type="number"
+                        class="h-8 border-neutral-300-foreground w-fit bg-neutral-100"
+                        max={maxRows.value}
+                        min="1"
+                        onInput$={(_, el) => {
+                          if (Number(el.value) > maxRows.value) {
+                            nextTick(() => {
+                              rowsToGenerate.value = String(maxRows.value);
+                            });
+                          }
+
+                          rowsToGenerate.value = el.value;
+                        }}
+                        value={rowsToGenerate.value}
+                      />
+                    </div>
+                    <div class="flex items-center">
+                      <Button
+                        key={isSubmitting.value.toString()}
+                        look="primary"
+                        onClick$={onGenerate}
+                        disabled={
+                          !isSubmitting.value &&
+                          (!canRegenerate.value || !isTouched.value)
                         }
-
-                        rowsToGenerate.value = el.value;
-                      }}
-                      value={rowsToGenerate.value}
-                    />
+                      >
+                        <div class="flex items-center gap-4">
+                          {isSubmitting.value ? (
+                            <>
+                              <LuStopCircle class="text-2xl" />
+                              Stop generating
+                            </>
+                          ) : (
+                            <>
+                              <LuEgg class="text-2xl" />
+                              Generate
+                            </>
+                          )}
+                        </div>
+                      </Button>
+                      {isSubmitting.value && (
+                        <div class="ml-3">
+                          <div class="h-6 w-6 animate-spin rounded-full border-2 border-primary-100 border-t-transparent" />
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div class="flex items-center">
-                    <Button
-                      key={isSubmitting.value.toString()}
-                      look="primary"
-                      onClick$={onGenerate}
-                      disabled={
-                        !isSubmitting.value &&
-                        (!canRegenerate.value || !isTouched.value)
-                      }
-                    >
-                      <div class="flex items-center gap-4">
-                        {isSubmitting.value ? (
-                          <>
-                            <LuStopCircle class="text-2xl" />
-                            Stop generating
-                          </>
-                        ) : (
-                          <>
-                            <LuEgg class="text-2xl" />
-                            Generate
-                          </>
-                        )}
-                      </div>
-                    </Button>
-                    {isSubmitting.value && (
-                      <div class="ml-3">
-                        <div class="h-6 w-6 animate-spin rounded-full border-2 border-primary-100 border-t-transparent" />
-                      </div>
-                    )}
-                  </div>
-                </div>
+                )}
               </div>
               {!isTouched.value && (
                 <div class="flex items-center justify-center text-primary-500">

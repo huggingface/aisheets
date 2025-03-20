@@ -4,7 +4,11 @@ import { getColumnName, getDatasetTableName } from './utils';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { DuckDBBlobValue, DuckDBStructValue } from '@duckdb/node-api';
+import {
+  DuckDBBlobValue,
+  DuckDBListValue,
+  DuckDBStructValue,
+} from '@duckdb/node-api';
 
 export const countDatasetTableRows = async ({
   dataset,
@@ -72,13 +76,23 @@ export const listDatasetTableRows = async ({
         if (value instanceof DuckDBBlobValue) {
           row[key] = row[key].bytes;
         }
+
+        if (value instanceof DuckDBListValue) {
+          row[key] = row[key].values ?? [];
+          for (let i = 0; i < row[key].length; i++) {
+            cleanValues(row[key][i]);
+          }
+        }
+
+        if (typeof value === 'bigint') {
+          row[key] = Number(value);
+        }
       }
+
+      return row;
     };
 
-    return rows.map((row) => {
-      cleanValues(row);
-      return row;
-    });
+    return rows.map(cleanValues);
   });
 };
 

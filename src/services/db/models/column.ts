@@ -9,7 +9,7 @@ import {
 import sequelize from 'sequelize/lib/sequelize';
 
 import { db } from '~/services/db';
-import type { ColumnCellModel } from '~/services/db/models/cell';
+import { ColumnCellModel } from '~/services/db/models/cell';
 import type { DatasetModel } from '~/services/db/models/dataset';
 import type { ProcessModel } from '~/services/db/models/process';
 

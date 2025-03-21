@@ -69,9 +69,16 @@ export const useActiveModal = () => {
   return {
     isOpen,
     close: $(() => {
+      if (!activeModal.value) return;
+
       modalContext.value = {
-        ...modalContext.value,
         active: null,
+        modals: {
+          ...modalContext.value.modals,
+          [activeModal.value]: {
+            status: 'closed',
+          },
+        },
       };
     }),
   };

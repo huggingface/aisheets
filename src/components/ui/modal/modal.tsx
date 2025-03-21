@@ -47,7 +47,6 @@ export const Modal = component$<ModalProps>(({ name, title, ...rest }) => {
 
   return (
     <div
-      id="exportToHub"
       class={`!pointer-events-auto absolute h-fit overflow-auto transform bg-white text-black transition-transform z-20 border border-neutral-300 rounded-sm ${rest.class}`}
     >
       <div class="flex h-full flex-col justify-between p-4">

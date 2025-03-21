@@ -1,5 +1,6 @@
 import {
   $,
+  type Signal,
   component$,
   useComputed$,
   useSignal,
@@ -11,8 +12,9 @@ import { cn } from '@qwik-ui/utils';
 import { LuThumbsUp } from '@qwikest/icons/lucide';
 import { Button, Skeleton, Textarea } from '~/components';
 import { useClickOutside } from '~/components/hooks/click/outside';
+import { Markdown } from '~/components/ui/markdown/markdown';
 import { getColumnCellById } from '~/services';
-import { type Cell, useColumnsStore } from '~/state';
+import { type Cell, type Column, useColumnsStore } from '~/state';
 import { useValidateCellUseCase } from '~/usecases/validate-cell.usecase';
 
 const loadCell = server$(async (cellId: string) => {
@@ -32,11 +34,12 @@ export const TableCell = component$<{
   const { replaceCell, columns } = useColumnsStore();
   const validateCell = useValidateCellUseCase();
 
+  const cellColumn: Signal<Column | undefined> = useComputed$(() =>
+    columns.value.find((col) => col.id === cell.column?.id),
+  );
+
   // Determine if the column is static
-  const isStatic = useComputed$(() => {
-    const column = columns.value.find((col) => col.id === cell.column?.id);
-    return column?.kind === 'static';
-  });
+  const isStatic = useComputed$(() => cellColumn.value?.kind === 'static');
 
   const isEditing = useSignal(false);
   const originalValue = useSignal(cell.value);
@@ -142,40 +145,25 @@ export const TableCell = component$<{
     isEditing.value = false;
   });
 
-  const markdownContent = useComputed$(async () => {
-    if (!originalValue.value) return '';
-    switch (typeof originalValue.value) {
-      case 'undefined':
-        return '';
-      case 'string':
-        return originalValue.value;
-      case 'number':
-      case 'boolean':
-        return originalValue.value.toString();
-      default: {
-        if ('bytes' in originalValue.value) {
-          const bytes = originalValue.value.bytes;
-          const path = originalValue.value.path || '';
+  const content = useComputed$(async () => {
+    if (!originalValue.value || !cellColumn.value) return undefined;
 
-          const blob = new Blob([bytes]);
-          const reader = new FileReader();
+    const rawContent = originalValue.value;
+    const column = cellColumn.value;
 
-          const dataURI = await new Promise((resolve) => {
-            reader.onloadend = () => resolve(reader.result);
-            reader.readAsDataURL(blob);
-          });
-
-          return `![${path}](${dataURI})`;
-        }
-
-        let value = JSON.stringify(originalValue.value, null, 2);
-
-        if (value.length > 4096) {
-          value = value.slice(0, 4096) + '...';
-        }
-        return value;
-      }
+    if (isBinaryType(column)) {
+      return await valueAsDataURI(rawContent);
     }
+
+    if (isObjectType(column)) {
+      return JSON.stringify(rawContent, null, 2);
+    }
+
+    if (isArrayType(column)) {
+      return JSON.stringify(rawContent, null, 2);
+    }
+
+    return rawContent.toString();
   });
 
   const ref = useClickOutside(
@@ -198,6 +186,7 @@ export const TableCell = component$<{
       )}
       onDblClick$={(e) => {
         e.stopPropagation();
+
         isEditing.value = true;
       }}
       onClick$={() => {
@@ -248,7 +237,9 @@ export const TableCell = component$<{
                   <LuThumbsUp class="text-sm" />
                 </Button>
               )}
-              <div class="h-full mt-2 p-4">{originalValue.value}</div>
+              <div class="h-full mt-2 p-4">
+                <CellContentRenderer content={content.value} />
+              </div>
             </>
           )}
 
@@ -272,23 +263,80 @@ export const TableCell = component$<{
                 }
               }}
             >
-              <Textarea
-                ref={editCellValueInput}
-                bind:value={newCellValue}
-                preventEnterNewline
-                class="absolute inset-0 w-full h-full p-4 rounded-none text-sm resize-none focus-visible:outline-none focus-visible:ring-0 border-none shadow-none overflow-auto whitespace-pre-wrap break-words scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent"
-                onKeyDown$={(e) => {
-                  if (e.key === 'Enter') {
-                    if (e.shiftKey) return;
-                    e.preventDefault();
-                    onUpdateCell();
-                  }
-                }}
-              />
+              {!isEditableValue(cellColumn.value!) ? (
+                <div class="absolute inset-0 w-full h-full p-4 rounded-none text-sm resize-none focus-visible:outline-none focus-visible:ring-0 border-none shadow-none overflow-auto whitespace-pre-wrap break-words scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
+                  <CellContentRenderer content={content.value} />
+                </div>
+              ) : (
+                <Textarea
+                  ref={editCellValueInput}
+                  bind:value={newCellValue}
+                  preventEnterNewline
+                  class="absolute inset-0 w-full h-full p-4 rounded-none text-sm resize-none focus-visible:outline-none focus-visible:ring-0 border-none shadow-none overflow-auto whitespace-pre-wrap break-words scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent"
+                  onKeyDown$={(e) => {
+                    if (e.key === 'Enter') {
+                      if (e.shiftKey) return;
+                      e.preventDefault();
+                      onUpdateCell();
+                    }
+                  }}
+                />
+              )}
             </div>
           )}
         </div>
       </div>
     </td>
   );
+});
+
+export const isBinaryType = (column: Column): boolean => {
+  return column.type.includes('BLOB');
+};
+
+export const isArrayType = (column: Column): boolean => {
+  return column.type.includes('[]') && !isBinaryType(column);
+};
+
+export const isObjectType = (column: Column): boolean => {
+  return column.type.includes('STRUCT') && !isBinaryType(column);
+};
+
+export const isEditableValue = (column: Column): boolean => {
+  return !isBinaryType(column) && !isArrayType(column) && !isObjectType(column);
+};
+
+export const valueAsDataURI = async (
+  value: any,
+): Promise<string | undefined> => {
+  if (Array.isArray(value)) return value.map(valueAsDataURI).join('\n');
+
+  for (const key in value) {
+    if (value[key] instanceof Uint8Array) {
+      const bytes = value[key];
+      const path = value.path ?? '';
+
+      const blob = new Blob([bytes]);
+      const reader = new FileReader();
+
+      const dataURI = await new Promise((resolve) => {
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.readAsDataURL(blob);
+      });
+
+      return `![${path}](${dataURI})`;
+    }
+  }
+
+  throw new Error('No binary data found in object');
+};
+
+export const CellContentRenderer = component$<{
+  content: any;
+}>(({ content }) => {
+  if (!content) {
+    return null;
+  }
+
+  return <Markdown content={content} />;
 });

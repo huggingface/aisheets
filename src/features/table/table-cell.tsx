@@ -151,7 +151,7 @@ export const TableCell = component$<{
     const rawContent = originalValue.value;
     const column = cellColumn.value;
 
-    if (isBinaryType(column)) {
+    if (hasBlobContent(column)) {
       return await valueAsDataURI(rawContent);
     }
 
@@ -238,7 +238,10 @@ export const TableCell = component$<{
                 </Button>
               )}
               <div class="h-full mt-2 p-4">
-                <CellContentRenderer content={content.value} />
+                <CellContentRenderer
+                  content={content.value}
+                  column={cellColumn.value!}
+                />
               </div>
             </>
           )}
@@ -265,7 +268,10 @@ export const TableCell = component$<{
             >
               {!isEditableValue(cellColumn.value!) ? (
                 <div class="absolute inset-0 w-full h-full p-4 rounded-none text-sm resize-none focus-visible:outline-none focus-visible:ring-0 border-none shadow-none overflow-auto whitespace-pre-wrap break-words scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
-                  <CellContentRenderer content={content.value} />
+                  <CellContentRenderer
+                    content={content.value}
+                    column={cellColumn.value!}
+                  />
                 </div>
               ) : (
                 <Textarea
@@ -290,26 +296,31 @@ export const TableCell = component$<{
   );
 });
 
-export const isBinaryType = (column: Column): boolean => {
+export const hasBlobContent = (column: Column): boolean => {
   return column.type.includes('BLOB');
 };
 
 export const isArrayType = (column: Column): boolean => {
-  return column.type.includes('[]') && !isBinaryType(column);
+  return column.type.includes('[]');
 };
 
 export const isObjectType = (column: Column): boolean => {
-  return column.type.includes('STRUCT') && !isBinaryType(column);
+  return column.type.includes('STRUCT');
 };
 
 export const isEditableValue = (column: Column): boolean => {
-  return !isBinaryType(column) && !isArrayType(column) && !isObjectType(column);
+  return (
+    !hasBlobContent(column) && !isArrayType(column) && !isObjectType(column)
+  );
 };
 
 export const valueAsDataURI = async (
   value: any,
 ): Promise<string | undefined> => {
-  if (Array.isArray(value)) return value.map(valueAsDataURI).join('\n');
+  if (Array.isArray(value)) {
+    const allValue = await Promise.all(value.map(valueAsDataURI));
+    return allValue.join('\n');
+  }
 
   for (const key in value) {
     if (value[key] instanceof Uint8Array) {
@@ -333,10 +344,23 @@ export const valueAsDataURI = async (
 
 export const CellContentRenderer = component$<{
   content: any;
-}>(({ content }) => {
-  if (!content) {
+  column: Column;
+}>(({ content, column }) => {
+  if (!content && !column) {
     return null;
   }
 
-  return <Markdown content={content} />;
+  if (hasBlobContent(column)) {
+    return <Markdown content={content} />;
+  }
+
+  if (isObjectType(column)) {
+    return <pre>{content}</pre>;
+  }
+
+  if (isArrayType(column)) {
+    return <pre>{content}</pre>;
+  }
+
+  return <p>{content}</p>;
 });

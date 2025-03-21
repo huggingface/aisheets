@@ -67,6 +67,14 @@ export const listDatasetTableRows = async ({
       for (const key in row) {
         let value = row[key];
 
+        if (value instanceof DuckDBListValue) {
+          row[key] = row[key].items;
+
+          for (let i = 0; i < row[key].length; i++) {
+            row[key][i] = cleanValues(row[key][i]);
+          }
+        }
+
         if (value instanceof DuckDBStructValue) {
           value = value.entries;
           cleanValues(value);
@@ -77,15 +85,10 @@ export const listDatasetTableRows = async ({
           row[key] = row[key].bytes;
         }
 
-        if (value instanceof DuckDBListValue) {
-          row[key] = row[key].values ?? [];
-          for (let i = 0; i < row[key].length; i++) {
-            cleanValues(row[key][i]);
-          }
-        }
-
-        if (typeof value === 'bigint') {
-          row[key] = Number(value);
+        try {
+          JSON.stringify(row[key]);
+        } catch (e) {
+          row[key] = row[key].toString();
         }
       }
 

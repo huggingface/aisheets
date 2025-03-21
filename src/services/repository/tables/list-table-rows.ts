@@ -64,6 +64,21 @@ export const listDatasetTableRows = async ({
     const rows = await results.getRowObjects();
 
     const cleanValues = (row: any) => {
+      if (row instanceof DuckDBListValue) {
+        row = row.items;
+
+        for (let i = 0; i < row.length; i++) {
+          row[i] = cleanValues(row[i]);
+        }
+
+        return row;
+      }
+
+      if (row instanceof DuckDBStructValue) {
+        row = row.entries;
+        return cleanValues(row);
+      }
+
       for (const key in row) {
         let value = row[key];
 
@@ -95,7 +110,9 @@ export const listDatasetTableRows = async ({
       return row;
     };
 
-    return rows.map(cleanValues);
+    const cleanedRows = rows.map(cleanValues);
+
+    return cleanedRows;
   });
 };
 

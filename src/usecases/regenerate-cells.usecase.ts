@@ -9,7 +9,6 @@ export const useRegenerateCellsUseCase = () =>
     column: Column,
   ): AsyncGenerator<Cell> {
     const session = useServerSession(this);
-
     if (!column.process) return;
 
     const validatedCells = await getColumnCells({
@@ -19,9 +18,10 @@ export const useRegenerateCellsUseCase = () =>
 
     for await (const { cell } of generateCells({
       column,
-      process: column.process!,
+      process: column.process,
       session,
       validatedCells,
+      parallel: Boolean(column.process.columnsReferences?.length),
     })) {
       yield cell;
     }

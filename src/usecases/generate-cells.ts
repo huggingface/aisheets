@@ -46,14 +46,18 @@ export const generateCells = async function* ({
   session,
   limit,
   offset,
-  validatedCells,
+  validatedCells = [],
   stream = true,
   timeout,
-  parallel,
+  parallel = false,
 }: GenerateCellsParams) {
   const { columnsReferences, modelName, modelProvider, prompt } = process;
 
-  const examples = await collectExamples({
+  // Track all our generated cells to use as examples
+  const generatedCells: Cell[] = [];
+
+  // Get initial examples from validated cells
+  let currentExamples = await collectExamples({
     column,
     validatedCells,
     columnsReferences,
@@ -85,7 +89,7 @@ export const generateCells = async function* ({
           accessToken: session.token,
           modelName,
           modelProvider,
-          examples,
+          examples: currentExamples,
           instruction: prompt,
           timeout,
           data: {},
@@ -135,7 +139,7 @@ export const generateCells = async function* ({
       return;
     }
 
-    // Non-parallel execution
+    // Sequential execution for fromScratch to accumulate examples
     for (let i = offset; i < limit + offset; i++) {
       if (validatedIdxs?.includes(i)) continue;
 
@@ -151,21 +155,11 @@ export const generateCells = async function* ({
         accessToken: session.token,
         modelName,
         modelProvider,
-        examples,
+        examples: currentExamples,
         instruction: prompt,
         timeout,
         data: {},
       };
-
-      if (columnsReferences?.length) {
-        const rowCells = await getRowCells({
-          rowIdx: i,
-          columns: columnsReferences,
-        });
-        args.data = Object.fromEntries(
-          rowCells.map((cell) => [cell.column!.name, cell.value]),
-        );
-      }
 
       if (stream) {
         for await (const response of runPromptExecutionStream(args)) {
@@ -182,6 +176,17 @@ export const generateCells = async function* ({
       cell.generating = false;
       await updateCell(cell);
       yield { cell };
+
+      // Add this newly generated cell to our collection if it's valid
+      if (cell.value && !cell.error) {
+        generatedCells.push(cell);
+        // Recollect examples using ALL validated and generated cells
+        currentExamples = await collectExamples({
+          column,
+          validatedCells: [...validatedCells, ...generatedCells],
+          columnsReferences,
+        });
+      }
     }
   } finally {
     process.updatedAt = new Date();

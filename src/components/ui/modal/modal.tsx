@@ -5,7 +5,7 @@ import {
   useVisibleTask$,
 } from '@builder.io/qwik';
 import { Label } from '@qwik-ui/headless';
-import { LuXCircle } from '@qwikest/icons/lucide';
+import { LuX } from '@qwikest/icons/lucide';
 import { useModals } from '~/components/hooks';
 import type { ID } from '~/components/hooks/modals/config';
 
@@ -60,7 +60,7 @@ export const Modal = component$<ModalProps>(({ name, title, ...rest }) => {
             tabIndex={0}
             aria-label="Close modal"
           >
-            <LuXCircle class="text-lg text-neutral" />
+            <LuX class="text-lg text-neutral" />
           </div>
         </div>
         <Slot />

@@ -31,13 +31,16 @@ const createApiParams = (
   messages: any[],
   modelProvider: string,
   accessToken?: string,
-) => {
-  return {
-    model: modelName,
-    messages,
-    provider: modelProvider as InferenceProvider,
-    accessToken,
-  };
+) => ({
+  model: modelName,
+  messages,
+  provider: modelProvider as InferenceProvider,
+  accessToken,
+});
+
+const handleError = (e: unknown): string => {
+  if (e instanceof Error) return e.message;
+  return JSON.stringify(e);
 };
 
 export const runPromptExecution = async ({
@@ -55,6 +58,17 @@ export const runPromptExecution = async ({
     examples,
   });
 
+  console.log('\n🔷 Prompt Execution 🔷');
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('Model:', modelName);
+  console.log('Provider:', modelProvider);
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('Prompt:');
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log(inputPrompt);
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('🔷 End Prompt 🔷\n');
+
   try {
     const response = await chatCompletion(
       createApiParams(
@@ -69,13 +83,7 @@ export const runPromptExecution = async ({
     );
     return { value: response.choices[0].message.content };
   } catch (e) {
-    let error: string;
-    if (e instanceof Error) {
-      error = e.message;
-    } else {
-      error = JSON.stringify(e);
-    }
-    return { error };
+    return { error: handleError(e) };
   }
 };
 
@@ -94,9 +102,19 @@ export const runPromptExecutionStream = async function* ({
     examples,
   });
 
+  console.log('\n🔷 Prompt Stream 🔷');
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('Model:', modelName);
+  console.log('Provider:', modelProvider);
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('Prompt:');
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log(inputPrompt);
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('🔷 End Prompt 🔷\n');
+
   try {
     let accumulated = '';
-
     const stream = chatCompletionStream(
       createApiParams(
         modelName,
@@ -110,24 +128,15 @@ export const runPromptExecutionStream = async function* ({
     );
 
     for await (const chunk of stream) {
-      if (chunk.choices && chunk.choices.length > 0) {
-        const content = chunk.choices[0].delta.content;
-        if (content) {
-          accumulated += content;
-          yield { value: accumulated, done: false };
-        }
+      if (chunk.choices?.[0]?.delta?.content) {
+        accumulated += chunk.choices[0].delta.content;
+        yield { value: accumulated, done: false };
       }
     }
 
     yield { value: accumulated, done: true };
   } catch (e) {
-    let error: string;
-    if (e instanceof Error) {
-      error = e.message;
-    } else {
-      error = JSON.stringify(e);
-    }
-    yield { error, done: true };
+    yield { error: handleError(e), done: true };
   }
 };
 
@@ -135,14 +144,14 @@ export const runPromptExecutionStreamBatch = async function* (
   params: PromptExecutionParams[],
 ): AsyncGenerator<{ idx: number; response: PromptExecutionResponse }> {
   const queue = [...params];
-  const activeStreams: Map<
+  const activeStreams = new Map<
     number,
     AsyncGenerator<PromptExecutionResponse>
-  > = new Map();
-  const activePromises: Map<
+  >();
+  const activePromises = new Map<
     number,
     Promise<IteratorResult<PromptExecutionResponse>>
-  > = new Map();
+  >();
   let streamIdCounter = 0;
 
   const startNewStream = () => {
@@ -155,10 +164,7 @@ export const runPromptExecutionStreamBatch = async function* (
     activeStreams.set(streamId, stream);
     activePromises.set(streamId, stream.next());
 
-    return {
-      streamId,
-      idx: param.idx!,
-    };
+    return { streamId, idx: param.idx! };
   };
 
   const initialStreamCount = Math.min(MAX_CONCURRENCY, queue.length);
@@ -195,7 +201,6 @@ export const runPromptExecutionStreamBatch = async function* (
       }
     } else {
       yield { idx, response: result.value };
-
       activePromises.set(streamId, activeStreams.get(streamId)!.next());
     }
   }

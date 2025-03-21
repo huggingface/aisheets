@@ -3,6 +3,7 @@ import { server$ } from '@builder.io/qwik-city';
 import { useExecution } from '~/features/add-column';
 import { getColumnById, getColumnCellById } from '~/services';
 import {
+  type Cell,
   type Column,
   type CreateColumn,
   TEMPORAL_ID,
@@ -38,19 +39,26 @@ export const useGenerateColumn = () => {
 
   const onCreateColumn = $(
     async (controller: AbortController, newColumn: CreateColumn) => {
-      //TODO All these method should be refactored. We can separate in separate steps to be more reusable
       const response = await addNewColumn(controller.signal, newColumn);
 
-      let createdColumn = null;
+      let createdColumn: Column | null = null;
+      const pendingCells = new Map<number, Cell>();
+
       for await (const { column, cell } of response) {
         if (column) {
           createdColumn = column;
           addColumn(column);
-
           open(column.id, 'edit');
         }
         if (cell) {
-          replaceCell(cell);
+          pendingCells.set(cell.idx, cell);
+          const orderedCells = Array.from(pendingCells.entries())
+            .sort(([idxA], [idxB]) => idxA - idxB)
+            .map(([_, cell]) => cell);
+
+          for (const orderedCell of orderedCells) {
+            replaceCell(orderedCell);
+          }
         }
       }
 
@@ -63,9 +71,18 @@ export const useGenerateColumn = () => {
 
   const onRegenerateCells = $(async (column: Column) => {
     const response = await regenerateCells(column);
+    const pendingCells = new Map<number, Cell>();
 
     for await (const cell of response) {
-      replaceCell(cell);
+      pendingCells.set(cell.idx, cell);
+
+      const orderedCells = Array.from(pendingCells.entries())
+        .sort(([idxA], [idxB]) => idxA - idxB)
+        .map(([_, cell]) => cell);
+
+      for (const orderedCell of orderedCells) {
+        replaceCell(orderedCell);
+      }
     }
 
     const updated = await getColumnById$(column.id);
@@ -75,13 +92,22 @@ export const useGenerateColumn = () => {
   const onEditColumn = $(
     async (controller: AbortController, column: Column) => {
       const response = await editColumn(controller.signal, column);
+      const pendingCells = new Map<number, Cell>();
 
       for await (const { column, cell } of response) {
         if (column) {
           updateColumn(column);
         }
         if (cell) {
-          replaceCell(cell);
+          pendingCells.set(cell.idx, cell);
+
+          const orderedCells = Array.from(pendingCells.entries())
+            .sort(([idxA], [idxB]) => idxA - idxB)
+            .map(([_, cell]) => cell);
+
+          for (const orderedCell of orderedCells) {
+            replaceCell(orderedCell);
+          }
         }
       }
 

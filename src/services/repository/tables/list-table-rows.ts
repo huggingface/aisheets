@@ -63,7 +63,7 @@ export const listDatasetTableRows = async ({
 
     const rows = await results.getRowObjects();
 
-    const cleanValues = (row: any) => {
+    const cleanValues = (row: any): any => {
       if (row instanceof DuckDBListValue) {
         row = row.items;
 

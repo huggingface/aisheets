@@ -1,6 +1,6 @@
 import { ColumnModel } from '~/services/db/models/column';
 import { ProcessModel } from '~/services/db/models/process';
-import type { Column, ColumnKind, ColumnType, CreateColumn } from '~/state';
+import type { Column, ColumnKind, CreateColumn } from '~/state';
 
 import { getGeneratedCellsCount } from './cells';
 import { createProcess, updateProcess } from './processes';
@@ -10,7 +10,7 @@ export const modelToColumn = (model: ColumnModel): Column => {
   return {
     id: model.id,
     name: model.name,
-    type: model.type as ColumnType,
+    type: model.type,
     kind: model.kind as ColumnKind,
     visible: model.visible,
 
@@ -118,7 +118,7 @@ export const getColumnById = async (id: string): Promise<Column | null> => {
 export const createRawColumn = async (column: {
   id: string;
   name: string;
-  type: ColumnType;
+  type: string;
   kind: ColumnKind;
   dataset: { id: string; name: string; createdBy: string };
 }): Promise<Column> => {
@@ -133,7 +133,7 @@ export const createRawColumn = async (column: {
   return {
     id: model.id,
     name: model.name,
-    type: model.type as ColumnType,
+    type: model.type,
     kind: model.kind as ColumnKind,
     dataset: column.dataset,
     visible: model.visible,
@@ -165,7 +165,7 @@ export const createColumn = async (column: CreateColumn): Promise<Column> => {
   const newbie: Column = {
     id: model.id,
     name: model.name,
-    type: model.type as ColumnType,
+    type: model.type,
     kind: model.kind as ColumnKind,
     dataset: column.dataset,
     visible: model.visible,

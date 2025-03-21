@@ -1,6 +1,6 @@
 import { connectAndClose } from '~/services/db/duckdb';
 import { ColumnModel } from '~/services/db/models';
-import type { Column, ColumnKind, ColumnType } from '~/state';
+import type { Column, ColumnKind } from '~/state';
 import {
   getColumnName,
   getDatasetRowSequenceName,
@@ -64,7 +64,7 @@ export const createDatasetTableFromFile = async (
       return {
         id: column.id,
         name: column.name,
-        type: column.type as ColumnType,
+        type: column.type,
         kind: column.kind as ColumnKind,
         visible: column.visible,
         dataset,

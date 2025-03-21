@@ -2,7 +2,6 @@ import { $, useComputed$ } from '@builder.io/qwik';
 
 import { type Dataset, useDatasetsStore } from '~/state/datasets';
 
-export type ColumnType = 'text' | 'array' | 'number' | 'boolean' | 'object';
 export type ColumnKind = 'static' | 'dynamic';
 
 export interface Process {
@@ -18,7 +17,7 @@ export interface Process {
 
 export interface CreateColumn {
   name: string;
-  type: ColumnType;
+  type: string;
   kind: ColumnKind;
   dataset: Omit<Dataset, 'columns'>;
   process?: {
@@ -47,7 +46,7 @@ export type Cell = {
 export interface Column {
   id: string;
   name: string;
-  type: ColumnType;
+  type: string;
   kind: ColumnKind;
   visible: boolean;
   process?: Process | undefined;

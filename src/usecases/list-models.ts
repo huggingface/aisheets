@@ -1,5 +1,6 @@
 import { type RequestEventBase, server$ } from '@builder.io/qwik-city';
 import consola from 'consola';
+import { EXCLUDED_MODELS } from '~/config';
 import { useServerSession } from '~/state';
 
 import { INFERENCE_PROVIDERS } from '@huggingface/inference';
@@ -98,7 +99,10 @@ export const useListModels = server$(async function (
         .filter((provider: any) => provider.status === 'live')
         .map((provider: any) => provider.provider);
 
-      if (availableProviders.length > 0) {
+      if (
+        availableProviders.length > 0 &&
+        !EXCLUDED_MODELS.includes(model.id)
+      ) {
         let sizeInB = 0;
         if (model.safetensors) {
           const paramCounts = Object.entries(

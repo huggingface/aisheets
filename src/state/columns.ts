@@ -1,4 +1,4 @@
-import { $, useComputed$ } from '@builder.io/qwik';
+import { $, type NoSerialize, useComputed$ } from '@builder.io/qwik';
 
 import { type Dataset, useDatasetsStore } from '~/state/datasets';
 
@@ -14,6 +14,8 @@ export interface Process {
   offset: number;
   limit: number;
   updatedAt: Date;
+  isExecuting?: boolean;
+  cancellable?: NoSerialize<AbortController>;
 }
 
 export interface CreateColumn {
@@ -28,6 +30,8 @@ export interface CreateColumn {
     columnsReferences: string[];
     offset: number;
     limit: number;
+    isExecuting?: boolean;
+    cancellable?: NoSerialize<AbortController>;
   };
 }
 

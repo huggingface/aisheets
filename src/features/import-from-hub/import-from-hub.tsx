@@ -320,7 +320,7 @@ const FileSelection = component$(
                   <Select.Trigger class="px-4 rounded-base border-neutral-300-foreground w-full">
                     <Select.DisplayValue class="truncate" />
                   </Select.Trigger>
-                  <Select.Popover class="w-full">
+                  <Select.Popover class="w-full max-h-72 overflow-y-auto">
                     {files.map((file) => (
                       <Select.Item
                         key={file}

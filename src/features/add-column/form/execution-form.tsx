@@ -1,6 +1,5 @@
 import {
   $,
-  type NoSerialize,
   type QRL,
   Resource,
   component$,
@@ -39,9 +38,7 @@ const DEFAULT_MODEL_ID = 'meta-llama/Llama-3.3-70B-Instruct';
 
 interface SidebarProps {
   column: Column;
-  onGenerateColumn: QRL<
-    (controller: AbortController, column: CreateColumn) => Promise<void>
-  >;
+  onGenerateColumn: QRL<(column: CreateColumn) => Promise<void>>;
 }
 
 export const ExecutionForm = component$<SidebarProps>(
@@ -55,8 +52,6 @@ export const ExecutionForm = component$<SidebarProps>(
       updateColumn,
     } = useColumnsStore();
 
-    const controller = useSignal<NoSerialize<AbortController>>();
-    const isSubmitting = useSignal(false);
     const canRegenerate = useSignal(true);
 
     const prompt = useSignal<string>('');
@@ -67,6 +62,7 @@ export const ExecutionForm = component$<SidebarProps>(
     const selectedProvider = useSignal<string>();
     const inputModelId = useSignal<string | undefined>();
     const rowsToGenerate = useSignal('');
+    const maxRows = useSignal<number>(0);
 
     const loadModels = useResource$(async () => {
       return await useListModels();
@@ -131,8 +127,6 @@ export const ExecutionForm = component$<SidebarProps>(
         mode.value === 'add' ? '1' : process!.limit.toString();
     });
 
-    const maxRows = useSignal<number>(0);
-
     useVisibleTask$(async ({ track }) => {
       const newValue = track(columnsReferences);
 
@@ -162,16 +156,17 @@ export const ExecutionForm = component$<SidebarProps>(
     });
 
     const onGenerate = $(async () => {
-      if (controller.value) {
-        isSubmitting.value = false;
-        controller.value.abort();
-        controller.value = undefined;
+      if (column.process?.cancellable) {
+        column.process.cancellable.abort();
+        column.process.isExecuting = false;
+
         return;
       }
 
-      controller.value = noSerialize(new AbortController());
+      column.process!.cancellable = noSerialize(new AbortController());
+      column.process!.isExecuting = true;
 
-      isSubmitting.value = true;
+      updateColumn(column);
 
       try {
         // If we have a selectedModel, always use that. Only fall back to inputModelId if models failed to load
@@ -191,14 +186,8 @@ export const ExecutionForm = component$<SidebarProps>(
           },
         };
 
-        await onGenerateColumn(
-          controller.value as AbortController,
-          columnToSave,
-        );
-      } catch {
-      } finally {
-        isSubmitting.value = false;
-      }
+        await onGenerateColumn(columnToSave);
+      } catch {}
     });
 
     const handleCloseForm = $(async () => {
@@ -371,16 +360,16 @@ export const ExecutionForm = component$<SidebarProps>(
                   </div>
                   <div class="flex items-center">
                     <Button
-                      key={isSubmitting.value.toString()}
+                      key={column.process?.isExecuting?.toString()}
                       look="primary"
                       onClick$={onGenerate}
                       disabled={
-                        !isSubmitting.value &&
+                        !column.process?.isExecuting &&
                         (!canRegenerate.value || !isTouched.value)
                       }
                     >
                       <div class="flex items-center gap-4">
-                        {isSubmitting.value ? (
+                        {column.process?.isExecuting ? (
                           <>
                             <LuStopCircle class="text-2xl" />
                             Stop generating
@@ -393,7 +382,7 @@ export const ExecutionForm = component$<SidebarProps>(
                         )}
                       </div>
                     </Button>
-                    {isSubmitting.value && (
+                    {column.process?.isExecuting && (
                       <div class="ml-3">
                         <div class="h-6 w-6 animate-spin rounded-full border-2 border-primary-100 border-t-transparent" />
                       </div>

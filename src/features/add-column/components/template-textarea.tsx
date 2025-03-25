@@ -30,6 +30,8 @@ interface Popover {
 export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
   const textarea = useSignal<HTMLTextAreaElement | undefined>();
   const bracketTrigger = useSignal<HTMLDivElement | undefined>();
+  const scrollPosition = useStore({ top: 0, left: 0 });
+
   const popOverVisible = useSignal(false);
 
   const referenceVariables = useStore<Popover>({
@@ -162,7 +164,7 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
     track(props['bind:value']);
 
     if (textarea.value) {
-      await updateBracketsSelectorPosition(textarea.value!);
+      await updateBracketsSelectorPosition(textarea.value);
     }
 
     referenceVariables.variables = props.variables.value.map(
@@ -177,10 +179,18 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
           class="p-4 absolute top-0 left-0 w-full h-full whitespace-pre-wrap break-words text-transparent pointer-events-none overflow-hidden text-base"
           aria-hidden="true"
         >
-          <Highlights
-            text={props['bind:value'].value}
-            variables={referenceVariables.variables}
-          />
+          <div
+            style={{
+              transform: `translate(-${scrollPosition.left}px, -${scrollPosition.top}px)`,
+              position: 'absolute',
+              width: `calc(100% + ${scrollPosition.left}px)`,
+            }}
+          >
+            <Highlights
+              text={props['bind:value'].value}
+              variables={referenceVariables.variables}
+            />
+          </div>
         </div>
       )}
 
@@ -194,6 +204,10 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
         onClick$={(event) =>
           updateBracketsSelectorPosition(event.target as HTMLTextAreaElement)
         }
+        onScroll$={(event) => {
+          const target = event.target as HTMLTextAreaElement;
+          scrollPosition.top = target.scrollTop;
+        }}
         value={props['bind:value'].value}
       />
 
@@ -245,7 +259,7 @@ export const Highlights = component$<{
     regex.test(part) ? (
       <span
         key={part}
-        class="bg-gray-300 bg-opacity-60 pb-1 pr-[1px] rounded-[4px]"
+        class="bg-gray-300 bg-opacity-60 pb-1 pt-[1px] pr-[1px] rounded-[4px]"
       >
         {part}
       </span>

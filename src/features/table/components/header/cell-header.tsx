@@ -31,8 +31,6 @@ export const TableCellHeader = component$<{ column: Column }>(({ column }) => {
           <ColumnProperties column={column} />
         </div>
 
-        <p>{column.type}</p>
-
         <div class="flex items-center gap-1 w-[18%] h-0 pr-0">
           <CellGeneration column={column} />
           <CellSettings column={column} />

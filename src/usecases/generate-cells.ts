@@ -111,8 +111,6 @@ export const generateCells = async function* ({
           );
         }
 
-        cell.generating = true;
-        cells.set(i, cell);
         streamRequests.push(args);
       }
 

@@ -56,6 +56,7 @@ export const onGet = async ({
         sameSite: 'none',
         secure: true,
         httpOnly: !isDev,
+        domain: isDev ? undefined : process.env.COOKIE_DOMAIN,
         path: '/auth/callback',
       },
     );

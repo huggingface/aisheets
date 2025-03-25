@@ -20,7 +20,8 @@ export const saveSession = async (cookie: Cookie, session: Session) => {
     sameSite: 'none',
     secure: true,
     httpOnly: !isDev,
-    maxAge,
+    domain: isDev ? undefined : process.env.COOKIE_DOMAIN,
     path: '/',
+    maxAge,
   });
 };

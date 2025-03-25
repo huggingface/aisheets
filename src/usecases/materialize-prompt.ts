@@ -123,8 +123,9 @@ The following are correct, accurate example outputs with respect to the user ins
 }
 
 const escapeValues = (value: any): string => {
-  if (typeof value === 'object') {
+  if (typeof value === 'object' || Array.isArray(value)) {
     return JSON.stringify(value);
   }
+
   return value;
 };

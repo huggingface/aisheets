@@ -26,11 +26,9 @@ export const createDatasetIdByUser = async ({
   return model.id;
 };
 
-export const getUserDatasets = async (user: {
-  username: string;
-}): Promise<Dataset[]> => {
+export const getUserDatasets = async (username: string): Promise<Dataset[]> => {
   const model = await DatasetModel.findAll({
-    where: { createdBy: user.username },
+    where: { createdBy: username },
   });
 
   const datasets = model.map((dataset) => ({

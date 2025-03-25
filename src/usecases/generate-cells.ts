@@ -5,7 +5,7 @@ import {
   getRowCells,
   updateCell,
 } from '~/services/repository/cells';
-import type { Cell, Column, Process, Session } from '~/state';
+import type { Cell, Column, Process, ServerSession } from '~/state';
 import { collectExamples } from './collect-examples';
 import {
   runPromptExecution,
@@ -17,7 +17,7 @@ import type { PromptExecutionParams } from './run-prompt-execution';
 export interface GenerateCellsParams {
   column: Column;
   process: Process;
-  session: Session;
+  session: ServerSession;
   limit?: number;
   offset?: number;
   validatedCells?: Cell[];
@@ -33,7 +33,7 @@ export interface GenerateCellsParams {
  * @param {GenerateCellsParams} params - The parameters for generating cells.
  * @param {Column} params.column - The column for which cells are being generated.
  * @param {Process} params.process - The process containing model and prompt information.
- * @param {Session} params.session - The session containing the access token.
+ * @param {ServerSession} params.session - The session containing the access token.
  * @param {number} params.limit - The number of cells to generate.
  * @param {number} params.offset - The starting index for cell generation.
  * @param {Cell[]} [params.validatedCells] - The cells that have already been validated.

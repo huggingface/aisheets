@@ -1,6 +1,6 @@
-import { type RequestEventLoader, routeLoader$ } from '@builder.io/qwik-city';
-import { getDatasetById, getUserDatasets } from '~/services';
-import { type Dataset, useServerSession } from '~/state';
+import { routeLoader$ } from '@builder.io/qwik-city';
+import { getDatasetById } from '~/services';
+import type { Dataset } from '~/state';
 
 const EMPTY_DATASET = {
   id: '',
@@ -25,11 +25,3 @@ export const useActiveDatasetLoader = routeLoader$<Dataset>(
     return dataset;
   },
 );
-
-export const useAllDatasetsLoader = routeLoader$(async function (
-  this: RequestEventLoader,
-) {
-  const session = useServerSession(this);
-
-  return await getUserDatasets(session.user);
-});

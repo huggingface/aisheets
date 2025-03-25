@@ -1,8 +1,8 @@
 import { isDev } from '@builder.io/qwik';
 import type { Cookie } from '@builder.io/qwik-city';
-import type { Session } from '~/state';
+import type { ServerSession } from '~/state';
 
-export const saveSession = async (cookie: Cookie, session: Session) => {
+export const saveSession = async (cookie: Cookie, session: ServerSession) => {
   let maxAge = undefined;
 
   try {

@@ -9,13 +9,12 @@ import { LuArrowRightFromLine } from '@qwikest/icons/lucide';
 
 import { Button, Checkbox, Input, Label, Modal } from '~/components';
 import { useModals } from '~/components/hooks/modals/use-modals';
-import { useSession } from '~/loaders';
-import { TEMPORAL_ID, useDatasetsStore } from '~/state';
+import { TEMPORAL_ID, useClientSession, useDatasetsStore } from '~/state';
 import { useExportDataset } from '~/usecases/export-to-hub.usecase';
 
 export const ExportToHub = component$(() => {
   const exportDataset = useExportDataset();
-  const session = useSession();
+  const session = useClientSession();
 
   const { openExportToHub } = useModals('exportToHub');
 
@@ -29,7 +28,7 @@ export const ExportToHub = component$(() => {
 
   const error = useSignal<string | null>(null);
 
-  const owner = useSignal<string>(session.value.user.username);
+  const owner = useSignal<string>(session.value!.user.username);
   const name = useSignal<string>(defaultExportName.value);
   const exportedRepoId = useSignal<string | undefined>(undefined);
 

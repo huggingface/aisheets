@@ -1,12 +1,12 @@
 import { component$ } from '@builder.io/qwik';
-import { useSession } from '~/loaders';
+import { useClientSession } from '~/state';
 
 export const Username = component$(() => {
-  const session = useSession();
+  const session = useClientSession();
 
   return (
     <div class="bg-ring text-white rounded-full w-8 h-8 flex items-center justify-center">
-      {session.value.user.username.slice(0, 2).toUpperCase()}
+      {session.value?.user.username.slice(0, 2).toUpperCase()}
     </div>
   );
 });

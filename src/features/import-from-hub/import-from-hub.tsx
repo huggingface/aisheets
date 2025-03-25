@@ -17,13 +17,13 @@ import { Button, Select, triggerLooks } from '~/components';
 import { useClickOutside } from '~/components/hooks/click/outside';
 import { useDebounce } from '~/components/hooks/debounce/debounce';
 import { nextTick } from '~/components/hooks/tick';
-import { useSession } from '~/loaders';
 import { listDatasets } from '~/services/repository/hub/list-datasets';
 import { listHubDatasetDataFiles } from '~/services/repository/hub/list-hub-dataset-files';
+import { useClientSession } from '~/state';
 import { useImportFromHub } from '~/usecases/import-from-hub.usecase';
 
 export const ImportFromHub = component$(() => {
-  const session = useSession();
+  const session = useClientSession();
   const importFromHub = useImportFromHub();
   const nav = useNavigate();
 
@@ -76,7 +76,7 @@ export const ImportFromHub = component$(() => {
             <div class="w-full">
               <FileSelection
                 repoId={repoId.value}
-                accessToken={session.value.token}
+                accessToken={session.value!.token}
                 onSelectedFile$={(file) => {
                   filePath.value = file;
                 }}
@@ -139,6 +139,7 @@ const DatasetSearch = component$(
   }: {
     onSelectedDataset$: QRL<(dataset: string) => void>;
   }) => {
+    const session = useClientSession();
     const isOpen = useSignal(false);
     const isFocusing = useSignal(false);
     const containerRef = useClickOutside(
@@ -147,7 +148,6 @@ const DatasetSearch = component$(
         isOpen.value = false;
       }),
     );
-    const session = useSession();
     const searchQuery = useSignal('');
     const searchQueryDebounced = useSignal('');
     const selectedDataset = useSignal('');
@@ -166,7 +166,7 @@ const DatasetSearch = component$(
 
       const datasets = await listDatasets({
         query,
-        accessToken: session.value.token,
+        accessToken: session.value!.token,
         limit: 10,
       });
 

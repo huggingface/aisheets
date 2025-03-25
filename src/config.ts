@@ -17,7 +17,7 @@ export const HF_TOKEN: string | undefined = process.env.HF_TOKEN;
  * Default value: 'openid profile inference-api manage-repos'
  */
 export const OAUTH_SCOPES: string =
-  process.env.OAUTH_SCOPES ?? 'openid profile inference-api manage-repos';
+  process.env.OAUTH_SCOPES ?? 'openid profile inference-api';
 
 /**
  * The directory where data is stored.

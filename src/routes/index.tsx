@@ -1,101 +1,37 @@
-import { $, component$, isDev, useSignal } from '@builder.io/qwik';
 import {
-  Link,
-  type RequestEvent,
-  server$,
-  useNavigate,
-} from '@builder.io/qwik-city';
-import * as hub from '@huggingface/hub';
+  $,
+  component$,
+  isDev,
+  isServer,
+  useSignal,
+  useVisibleTask$,
+} from '@builder.io/qwik';
+import { Link, server$, useNavigate } from '@builder.io/qwik-city';
 import { LuDownload, LuFile, LuPencilLine, LuZap } from '@qwikest/icons/lucide';
 import { Tooltip } from '~/components/ui/tooltip/tooltip';
+import { ActiveDatasetProvider, useClientSession } from '~/state';
 
-import { CLIENT_ID, HF_TOKEN, OAUTH_SCOPES } from '~/config';
-import { createDatasetIdByUser } from '~/services';
-import { saveSession } from '~/services/auth/session';
-import { ActiveDatasetProvider, useServerSession } from '~/state';
+import { oauthLoginUrl } from '@huggingface/hub';
+import { useClientOAuth } from '~/loaders';
 
-export const onGet = async ({
-  cookie,
-  sharedMap,
-  redirect,
-  next,
-  url,
-}: RequestEvent) => {
-  const session = sharedMap.get('session');
-  if (session) {
-    return next();
-  }
+const createDataset = server$(
+  async () => {
+    // return await createDatasetIdByUser({
+    //   createdBy: session.username,
+    // });
 
-  if (CLIENT_ID) {
-    const sessionCode = crypto.randomUUID();
-
-    const redirectOrigin = !isDev
-      ? url.origin.replace('http://', 'https://')
-      : url.origin;
-
-    const authData = {
-      state: sessionCode,
-      clientId: CLIENT_ID,
-      scopes: OAUTH_SCOPES,
-      redirectUrl: `${redirectOrigin}/auth/callback/`,
-      localStorage: {
-        codeVerifier: undefined,
-        nonce: undefined,
-      },
-    };
-
-    const loginUrl = await hub.oauthLoginUrl(authData);
-
-    cookie.set(
-      sessionCode,
-      {
-        codeVerifier: authData.localStorage.codeVerifier!,
-        nonce: authData.localStorage.nonce!,
-      },
-      {
-        sameSite: 'none',
-        secure: true,
-        httpOnly: !isDev,
-        path: '/auth/callback',
-      },
-    );
-    throw redirect(303, loginUrl);
-  }
-
-  if (HF_TOKEN) {
-    try {
-      const userInfo = (await hub.whoAmI({ accessToken: HF_TOKEN })) as any;
-
-      const session = {
-        token: HF_TOKEN,
-        user: {
-          name: userInfo.fullname,
-          username: userInfo.name,
-          picture: userInfo.avatarUrl,
-        },
-      };
-
-      saveSession(cookie, session);
-      sharedMap.set('session', session);
-    } catch (e: any) {
-      throw Error(`Invalid HF_TOKEN: ${e.message}`);
-    }
-
-    throw redirect(303, '/');
-  }
-
-  throw Error('Missing HF_TOKEN or OAUTH_CLIENT_ID');
-};
-
-const createDataset = server$(async function (this) {
-  const session = useServerSession(this);
-
-  return await createDatasetIdByUser({
-    createdBy: session.user.username,
-  });
-});
+    return [];
+  },
+  {
+    headers: {
+      Authorization: JSON.parse(localStorage.getItem('oauth')!).token,
+    },
+  },
+);
 
 export default component$(() => {
+  const currentSession = useClientSession();
+  const oauth = useClientOAuth();
   const isTransitioning = useSignal(false);
   const nav = useNavigate();
 
@@ -116,8 +52,29 @@ export default component$(() => {
     nav(`/dataset/${datasetId}`);
   });
 
+  useVisibleTask$(async () => {
+    if (isServer) return;
+    if (currentSession.value) return;
+
+    const { clientId, scopes } = oauth.value;
+
+    const url = window.location.origin;
+    const redirectOrigin = !isDev ? url.replace('http://', 'https://') : url;
+    const redirectUrl = `${redirectOrigin}/auth/callback/`;
+
+    const oauthUrl = await oauthLoginUrl({
+      clientId,
+      scopes,
+      redirectUrl,
+    });
+
+    window.location.href = `${oauthUrl}&prompt=consent`;
+  });
+
   return (
     <ActiveDatasetProvider>
+      {currentSession?.value?.user?.username}
+      {currentSession?.value?.user?.name}
       <div class="flex flex-col h-full w-fit overflow-hidden">
         <div
           class={`mt-12 w-[800px] transition-opacity duration-200 ${isTransitioning.value ? 'opacity-0' : 'opacity-100'}`}

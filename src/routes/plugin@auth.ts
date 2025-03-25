@@ -1,9 +1,10 @@
 import type { RequestEvent } from '@builder.io/qwik-city';
 
-export const onRequest = ({ cookie, sharedMap }: RequestEvent) => {
-  const session = cookie.get('session');
+export const onRequest = ({ headers, sharedMap }: RequestEvent) => {
+  const authorization = headers.get('Authorization');
 
-  if (session) {
-    sharedMap.set('session', session.json());
+  console.log('Authorization:', authorization);
+  if (authorization) {
+    sharedMap.set('session', authorization);
   }
 };

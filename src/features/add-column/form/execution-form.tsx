@@ -29,6 +29,8 @@ import {
   type Column,
   type CreateColumn,
   TEMPORAL_ID,
+  getClientSession,
+  useClientSession,
   useColumnsStore,
 } from '~/state';
 import { type Model, useListModels } from '~/usecases/list-models';
@@ -64,9 +66,7 @@ export const ExecutionForm = component$<SidebarProps>(
     const rowsToGenerate = useSignal('');
     const maxRows = useSignal<number>(0);
 
-    const loadModels = useResource$(async () => {
-      return await useListModels();
-    });
+    const session = useClientSession();
 
     const onSelectedVariables = $((variables: { id: string }[]) => {
       columnsReferences.value = variables.map((v) => v.id);
@@ -81,13 +81,20 @@ export const ExecutionForm = component$<SidebarProps>(
       );
     });
 
+    const loadModels = useResource$(async () => {
+      return await useListModels(getClientSession()!.token);
+    });
+
     useVisibleTask$(async ({ track }) => {
       track(columns);
 
       canRegenerate.value = await canGenerate(column);
     });
 
-    useTask$(async () => {
+    useTask$(async ({ track }) => {
+      track(session);
+      if (!session.value) return;
+
       const models = await loadModels.value;
 
       variables.value = columns.value

@@ -330,6 +330,8 @@ export const valueAsDataURI = async (
       const blob = new Blob([bytes]);
       const reader = new FileReader();
 
+      // TODO: Handle rendering of other binary types (audio, video, etc.)
+
       const dataURI = await new Promise((resolve) => {
         reader.onloadend = () => resolve(reader.result as string);
         reader.readAsDataURL(blob);

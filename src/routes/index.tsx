@@ -1,80 +1,37 @@
-import {
-  $,
-  component$,
-  isDev,
-  isServer,
-  useSignal,
-  useVisibleTask$,
-} from '@builder.io/qwik';
-import { Link, server$, useNavigate } from '@builder.io/qwik-city';
+import { $, component$, useSignal } from '@builder.io/qwik';
+import { Link, useNavigate } from '@builder.io/qwik-city';
 import { LuDownload, LuFile, LuPencilLine, LuZap } from '@qwikest/icons/lucide';
 import { Tooltip } from '~/components/ui/tooltip/tooltip';
-import { ActiveDatasetProvider, useClientSession } from '~/state';
-
-import { oauthLoginUrl } from '@huggingface/hub';
 import { useClientOAuth } from '~/loaders';
-
-const createDataset = server$(
-  async () => {
-    // return await createDatasetIdByUser({
-    //   createdBy: session.username,
-    // });
-
-    return [];
-  },
-  {
-    headers: {
-      Authorization: JSON.parse(localStorage.getItem('oauth')!).token,
-    },
-  },
-);
+import { ActiveDatasetProvider, useClientSession } from '~/state';
+import { useCreateNewBlankDataset } from '~/usecases/create-new-dataset.usecase';
 
 export default component$(() => {
+  const createBlankDataset = useCreateNewBlankDataset();
   const currentSession = useClientSession();
   const oauth = useClientOAuth();
   const isTransitioning = useSignal(false);
   const nav = useNavigate();
 
   const handleCreateBlankDataset = $(async () => {
-    const datasetId = await createDataset();
+    const { id } = await createBlankDataset(currentSession.value!.token!);
 
-    nav(`/dataset/${datasetId}`);
+    nav(`/dataset/${id}`);
   });
 
   const handleCreateBlankDatasetWithTransition = $(async () => {
     isTransitioning.value = true;
 
-    const [datasetId] = await Promise.all([
-      createDataset(),
+    const [{ id }] = await Promise.all([
+      createBlankDataset(currentSession.value!.token!),
       new Promise((resolve) => setTimeout(resolve, 400)),
     ]);
 
-    nav(`/dataset/${datasetId}`);
-  });
-
-  useVisibleTask$(async () => {
-    if (isServer) return;
-    if (currentSession.value) return;
-
-    const { clientId, scopes } = oauth.value;
-
-    const url = window.location.origin;
-    const redirectOrigin = !isDev ? url.replace('http://', 'https://') : url;
-    const redirectUrl = `${redirectOrigin}/auth/callback/`;
-
-    const oauthUrl = await oauthLoginUrl({
-      clientId,
-      scopes,
-      redirectUrl,
-    });
-
-    window.location.href = `${oauthUrl}&prompt=consent`;
+    nav(`/dataset/${id}`);
   });
 
   return (
     <ActiveDatasetProvider>
-      {currentSession?.value?.user?.username}
-      {currentSession?.value?.user?.name}
       <div class="flex flex-col h-full w-fit overflow-hidden">
         <div
           class={`mt-12 w-[800px] transition-opacity duration-200 ${isTransitioning.value ? 'opacity-0' : 'opacity-100'}`}

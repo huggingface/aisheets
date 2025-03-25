@@ -1,10 +1,18 @@
 import type { RequestEvent } from '@builder.io/qwik-city';
 
-export const onRequest = ({ headers, sharedMap }: RequestEvent) => {
-  const authorization = headers.get('Authorization');
+export const onRequest = ({
+  cookie,
+  sharedMap,
+  pathname,
+  redirect,
+}: RequestEvent) => {
+  const session = cookie.get('session');
 
-  console.log('Authorization:', authorization);
-  if (authorization) {
-    sharedMap.set('session', authorization);
+  if (!session) {
+    if (pathname === '/' || pathname === '/auth/callback/') return;
+
+    throw redirect(302, '/');
   }
+
+  sharedMap.set('session', session.json());
 };

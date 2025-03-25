@@ -17,13 +17,13 @@ import { Button, Select, triggerLooks } from '~/components';
 import { useClickOutside } from '~/components/hooks/click/outside';
 import { useDebounce } from '~/components/hooks/debounce/debounce';
 import { nextTick } from '~/components/hooks/tick';
+import { useSession } from '~/loaders';
 import { listDatasets } from '~/services/repository/hub/list-datasets';
 import { listHubDatasetDataFiles } from '~/services/repository/hub/list-hub-dataset-files';
-import { useClientSession } from '~/state';
 import { useImportFromHub } from '~/usecases/import-from-hub.usecase';
 
 export const ImportFromHub = component$(() => {
-  const session = useClientSession();
+  const session = useSession();
   const importFromHub = useImportFromHub();
   const nav = useNavigate();
 

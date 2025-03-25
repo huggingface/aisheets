@@ -1,10 +1,5 @@
-import {
-  isBrowser,
-  isServer,
-  useSignal,
-  useVisibleTask$,
-} from '@builder.io/qwik';
-import type { RequestEvent, RequestEventBase } from '@builder.io/qwik-city';
+import { isBrowser, useSignal, useVisibleTask$ } from '@builder.io/qwik';
+import type { RequestEventBase } from '@builder.io/qwik-city';
 
 export interface ServerSession {
   token: string;
@@ -23,12 +18,9 @@ export interface ClientSession {
 
 export const useClientSession = () => {
   const currentSession = useSignal<ClientSession>();
-  if (isServer) {
-    console.log('useServerSession if you want to access from server side.');
-  }
 
   useVisibleTask$(() => {
-    const oauthResult = JSON.parse(localStorage.getItem('oauth') ?? '');
+    const oauthResult = JSON.parse(localStorage.getItem('oauth')!);
 
     if (oauthResult) {
       currentSession.value = oauthResult;
@@ -42,16 +34,7 @@ export const useServerSession = (request: RequestEventBase): ServerSession => {
   if (isBrowser)
     throw new Error('useClientSession if you want to access from server side.');
 
-  console.log('request', request);
+  const session = request.sharedMap.get('session');
 
-  const session = request.sharedMap.get('session')!;
-
-  if (!session) {
-    throw (request as RequestEvent).redirect(302, '/');
-  }
-
-  return {
-    token: session.token,
-    username: session.username,
-  };
+  return session;
 };

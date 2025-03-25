@@ -9,25 +9,23 @@ import {
 import { Link, server$, useNavigate } from '@builder.io/qwik-city';
 import { LuDownload, LuFile, LuPencilLine, LuZap } from '@qwikest/icons/lucide';
 import { Tooltip } from '~/components/ui/tooltip/tooltip';
-import { ActiveDatasetProvider, useClientSession } from '~/state';
+import {
+  ActiveDatasetProvider,
+  useClientSession,
+  useServerSession,
+} from '~/state';
 
 import { oauthLoginUrl } from '@huggingface/hub';
-import { useClientOAuth } from '~/loaders';
+import { useClientOAuth } from '~/loaders/session';
+import { createDatasetIdByUser } from '~/services';
 
-const createDataset = server$(
-  async () => {
-    // return await createDatasetIdByUser({
-    //   createdBy: session.username,
-    // });
+const createDataset = server$(async function (this) {
+  const session = useServerSession(this);
 
-    return [];
-  },
-  {
-    headers: {
-      Authorization: JSON.parse(localStorage.getItem('oauth')!).token,
-    },
-  },
-);
+  return await createDatasetIdByUser({
+    createdBy: session.username,
+  });
+});
 
 export default component$(() => {
   const currentSession = useClientSession();
@@ -54,7 +52,15 @@ export default component$(() => {
 
   useVisibleTask$(async () => {
     if (isServer) return;
-    if (currentSession.value) return;
+    if (currentSession.value) {
+      document.cookie = `session=${JSON.stringify({
+        token: currentSession.value.token,
+        username: currentSession.value.user.username,
+      })}; path=/`;
+      return;
+    }
+
+    document.cookie = 'session=; path=/';
 
     const { clientId, scopes } = oauth.value;
 

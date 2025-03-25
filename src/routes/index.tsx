@@ -50,19 +50,6 @@ export default component$(() => {
     nav(`/dataset/${datasetId}`);
   });
 
-  useVisibleTask$(({ track }) => {
-    track(currentSession);
-
-    if (currentSession.value?.token) {
-      document.cookie = `session=${JSON.stringify({
-        token: currentSession.value.token,
-        username: currentSession.value.user.username,
-      })}; path=/`;
-    } else {
-      document.cookie = 'session=; path=/';
-    }
-  });
-
   useVisibleTask$(async () => {
     if (isServer) return;
     if (localStorage.getItem('oauth')) {

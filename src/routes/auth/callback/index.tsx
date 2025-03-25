@@ -21,6 +21,10 @@ export default component$(() => {
 
       localStorage.setItem('oauth', JSON.stringify(clientSession));
 
+      document.cookie = `session=${JSON.stringify({
+        token: clientSession.token,
+        username: clientSession.user.username,
+      })}; path=/; SameSite=None; Secure"`;
       nav('/');
     }
   });

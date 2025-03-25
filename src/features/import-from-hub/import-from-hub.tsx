@@ -76,7 +76,7 @@ export const ImportFromHub = component$(() => {
             <div class="w-full">
               <FileSelection
                 repoId={repoId.value}
-                accessToken={session.value!.token}
+                accessToken={session.value.token}
                 onSelectedFile$={(file) => {
                   filePath.value = file;
                 }}
@@ -139,7 +139,7 @@ const DatasetSearch = component$(
   }: {
     onSelectedDataset$: QRL<(dataset: string) => void>;
   }) => {
-    const session = useClientSession();
+    const session = useSession();
     const isOpen = useSignal(false);
     const isFocusing = useSignal(false);
     const containerRef = useClickOutside(
@@ -166,7 +166,7 @@ const DatasetSearch = component$(
 
       const datasets = await listDatasets({
         query,
-        accessToken: session.value!.token,
+        accessToken: session.value.token,
         limit: 10,
       });
 

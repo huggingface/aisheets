@@ -44,7 +44,7 @@ export const useExportDataset = () =>
 
     const tempFolder = await exportDatasetToFolder(foundDataset);
 
-    const owner = requestedOwner || session.user.username;
+    const owner = requestedOwner || session.username;
     const repoId = `${owner}/${name}`;
 
     try {

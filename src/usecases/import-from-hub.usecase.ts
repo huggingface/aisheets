@@ -45,7 +45,7 @@ export const useImportFromHub = () =>
     const createdDataset = await createDataset({
       name: `${repoId} [${filePath}]`,
       // TODO: pass the user instead of the username and let the repository handle the createdBy
-      createdBy: session.user.username,
+      createdBy: session.username,
     });
 
     consola.info('Creating columns...');

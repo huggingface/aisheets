@@ -1,14 +1,15 @@
 import { type RequestEventBase, server$ } from '@builder.io/qwik-city';
 import { getColumnCells } from '~/services';
-import { type Cell, type Column, useServerSession } from '~/state';
+import { type Cell, type Column, serverSession } from '~/state';
 import { generateCells } from './generate-cells';
 
 export const useRegenerateCellsUseCase = () =>
   server$(async function* (
     this: RequestEventBase<QwikCityPlatform>,
     column: Column,
+    accessToken: string,
   ): AsyncGenerator<Cell> {
-    const session = useServerSession(this);
+    const session = await serverSession(accessToken);
     if (!column.process) return;
 
     const validatedCells = await getColumnCells({

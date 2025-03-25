@@ -42,6 +42,7 @@ export const MainSidebar = component$(() => {
 
   useVisibleTask$(async () => {
     if (!session.value) return;
+    if (!session.value.user) return;
 
     const dataset = await getAllUserDatasets(session.value.user.username);
 

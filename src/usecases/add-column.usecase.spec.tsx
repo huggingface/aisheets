@@ -71,7 +71,7 @@ test('should save 10 cells', async (t) => {
     },
   };
 
-  const columnAdded = await add(newColumn);
+  const columnAdded = await add(newColumn, 'accessToken');
   const cells = [];
 
   for await (const { column, cell } of columnAdded) {

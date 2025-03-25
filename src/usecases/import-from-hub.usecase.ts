@@ -1,5 +1,5 @@
 import { type RequestEventBase, server$ } from '@builder.io/qwik-city';
-import { type Dataset, useServerSession } from '~/state';
+import { type Dataset, serverSession } from '~/state';
 
 import consola from 'consola';
 import { createCell, createColumn, createDataset } from '~/services';
@@ -15,9 +15,10 @@ export const useImportFromHub = () =>
   server$(async function (
     this: RequestEventBase<QwikCityPlatform>,
     importParams: ImportFromHubParams,
+    accessToken: string,
   ): Promise<Dataset> {
     const { repoId, filePath } = importParams;
-    const session = useServerSession(this);
+    const session = await serverSession(accessToken);
 
     consola.info('Downloading file', repoId, filePath);
     const downloadedFilePath = await downloadDatasetFile({
@@ -45,7 +46,7 @@ export const useImportFromHub = () =>
     const createdDataset = await createDataset({
       name: `${repoId} [${filePath}]`,
       // TODO: pass the user instead of the username and let the repository handle the createdBy
-      createdBy: session.user.username,
+      createdBy: session.username,
     });
 
     consola.info('Creating columns...');

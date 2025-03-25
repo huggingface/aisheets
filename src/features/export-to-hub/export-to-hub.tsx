@@ -4,6 +4,7 @@ import {
   useComputed$,
   useSignal,
   useTask$,
+  useVisibleTask$,
 } from '@builder.io/qwik';
 import { LuArrowRightFromLine } from '@qwikest/icons/lucide';
 
@@ -14,6 +15,7 @@ import { useExportDataset } from '~/usecases/export-to-hub.usecase';
 
 export const ExportToHub = component$(() => {
   const exportDataset = useExportDataset();
+
   const session = useClientSession();
 
   const { openExportToHub } = useModals('exportToHub');
@@ -28,9 +30,17 @@ export const ExportToHub = component$(() => {
 
   const error = useSignal<string | null>(null);
 
-  const owner = useSignal<string>(session.value!.user.username);
+  const owner = useSignal<string>();
   const name = useSignal<string>(defaultExportName.value);
   const exportedRepoId = useSignal<string | undefined>(undefined);
+
+  useVisibleTask$(({ track }) => {
+    track(session);
+
+    if (!session.value) return;
+
+    owner.value = session?.value!.user.username;
+  });
 
   useTask$(({ track }) => {
     track(() => defaultExportName.value);
@@ -45,12 +55,15 @@ export const ExportToHub = component$(() => {
     error.value = null;
     isSubmitting.value = true;
     try {
-      const repoId = await exportDataset({
-        dataset: activeDataset.value,
-        owner: owner.value,
-        name: name.value ? name.value : defaultExportName.value,
-        private: isPrivate.value,
-      });
+      const repoId = await exportDataset(
+        {
+          dataset: activeDataset.value,
+          owner: owner.value,
+          name: name.value ? name.value : defaultExportName.value,
+          private: isPrivate.value,
+        },
+        session.value!.token,
+      );
 
       exportedRepoId.value = repoId;
     } catch (e: any) {

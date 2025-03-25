@@ -1,6 +1,6 @@
 import { type RequestEventBase, server$ } from '@builder.io/qwik-city';
 import consola from 'consola';
-import { useServerSession } from '~/state';
+import { serverSession } from '~/state';
 
 import { INFERENCE_PROVIDERS } from '@huggingface/inference';
 
@@ -49,8 +49,9 @@ export interface Model {
 
 export const useListModels = server$(async function (
   this: RequestEventBase<QwikCityPlatform>,
+  accessToken: string,
 ): Promise<Model[]> {
-  const session = useServerSession(this);
+  const session = await serverSession(accessToken);
 
   // Function to fetch models for a specific pipeline tag
   const fetchModelsForPipeline = async (

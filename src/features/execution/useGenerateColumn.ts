@@ -7,6 +7,7 @@ import {
   type Column,
   type CreateColumn,
   TEMPORAL_ID,
+  useClientSession,
   useColumnsStore,
 } from '~/state';
 import { useAddColumnUseCase } from '~/usecases/add-column.usecase';
@@ -37,10 +38,13 @@ export const useGenerateColumn = () => {
     }
   });
 
+  const session = useClientSession();
+
   const onCreateColumn = $(async (newColumn: CreateColumn) => {
     const response = await addNewColumn(
       newColumn.process!.cancellable!.signal,
       newColumn,
+      session.value?.token!,
     );
 
     let newColumnId: string | undefined;
@@ -74,7 +78,7 @@ export const useGenerateColumn = () => {
   });
 
   const onRegenerateCells = $(async (column: Column) => {
-    const response = await regenerateCells(column);
+    const response = await regenerateCells(column, session.value?.token!);
     const pendingCells = new Map<number, Cell>();
 
     for await (const cell of response) {
@@ -97,6 +101,7 @@ export const useGenerateColumn = () => {
     const response = await editColumn(
       persistedColumn.process!.cancellable!.signal,
       persistedColumn,
+      session.value?.token!,
     );
     const pendingCells = new Map<number, Cell>();
 

@@ -42,10 +42,13 @@ export const ImportFromHub = component$(() => {
     try {
       isImportingData.value = true;
 
-      const { id } = await importFromHub({
-        repoId: repoId.value!,
-        filePath: filePath.value!,
-      });
+      const { id } = await importFromHub(
+        {
+          repoId: repoId.value!,
+          filePath: filePath.value!,
+        },
+        session.value!.token,
+      );
       nav('/dataset/' + id);
     } catch (error) {
       console.error(error);

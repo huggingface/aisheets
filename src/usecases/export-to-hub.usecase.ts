@@ -13,12 +13,7 @@ import {
   getDatasetById,
   listDatasetRows,
 } from '~/services/repository/datasets';
-import {
-  type Cell,
-  type Dataset,
-  type Process,
-  useServerSession,
-} from '~/state';
+import { type Cell, type Dataset, type Process, serverSession } from '~/state';
 import { collectExamples } from './collect-examples';
 import { materializePrompt } from './materialize-prompt';
 
@@ -33,9 +28,10 @@ export const useExportDataset = () =>
   server$(async function (
     this: RequestEventBase<QwikCityPlatform>,
     exportParams: ExportDatasetParams,
+    accessToken: string,
   ): Promise<string> {
     const { dataset, name, owner: requestedOwner } = exportParams;
-    const session = useServerSession(this);
+    const session = await serverSession(accessToken);
     const foundDataset = await getDatasetById(dataset.id);
 
     if (!foundDataset) {
@@ -44,7 +40,7 @@ export const useExportDataset = () =>
 
     const tempFolder = await exportDatasetToFolder(foundDataset);
 
-    const owner = requestedOwner || session.user.username;
+    const owner = requestedOwner || session.username;
     const repoId = `${owner}/${name}`;
 
     try {

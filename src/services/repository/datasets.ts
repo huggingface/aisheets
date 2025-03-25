@@ -17,13 +17,18 @@ interface CreateDatasetParams {
 
 export const createDatasetIdByUser = async ({
   createdBy,
-}: { createdBy: string }): Promise<string> => {
+}: { createdBy: string }): Promise<Dataset> => {
   const model = await DatasetModel.create({
     name: 'New dataset',
     createdBy,
   });
 
-  return model.id;
+  return {
+    id: model.id,
+    name: model.name,
+    createdBy: model.createdBy,
+    columns: [],
+  };
 };
 
 export const getUserDatasets = async (username: string): Promise<Dataset[]> => {

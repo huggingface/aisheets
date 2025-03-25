@@ -14,6 +14,29 @@ export const TableCellHeader = component$<{ column: Column }>(({ column }) => {
     cn({ 'bg-neutral-100': columnId.value === column.id }),
   );
 
+  const visibleColumnType = useComputed$(() => {
+    if (hasBlobContent(column)) {
+      if (isArrayType(column)) {
+        return 'binary list';
+      }
+      return 'binary';
+    }
+
+    if (isArrayType(column)) {
+      return 'list';
+    }
+
+    if (isObjectType(column)) {
+      return 'dict';
+    }
+
+    if ('VARCHAR' === column.type) {
+      return column.type.replace('VARCHAR', 'string').toLowerCase();
+    }
+
+    return column.type.toLowerCase();
+  });
+
   const isStatic = column.kind === 'static';
 
   return (
@@ -28,6 +51,7 @@ export const TableCellHeader = component$<{ column: Column }>(({ column }) => {
           ) : (
             <LuZap class="text-sm text-primary-foreground" />
           )}
+
           <ColumnProperties column={column} />
         </div>
 
@@ -36,6 +60,29 @@ export const TableCellHeader = component$<{ column: Column }>(({ column }) => {
           <CellSettings column={column} />
         </div>
       </div>
+      <p class="text-sm text-neutral-500 font-light">
+        {visibleColumnType.value}
+      </p>
     </th>
   );
 });
+
+export const hasBlobContent = (column: Column): boolean => {
+  return column.type.includes('BLOB');
+};
+
+export const isArrayType = (column: Column): boolean => {
+  return column.type.includes('[]');
+};
+
+export const isObjectType = (column: Column): boolean => {
+  return column.type.includes('STRUCT');
+};
+
+export const isTextType = (column: Column): boolean => {
+  return (
+    column.type.includes('TEXT') ||
+    column.type.includes('STRING') ||
+    column.type.includes('CHAR')
+  );
+};

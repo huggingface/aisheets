@@ -28,9 +28,6 @@ function materializePromptFromScratch(
   examples?: Example[],
 ): string {
   const outputExamples = examples?.map((ex) => ex.output);
-  console.log('Original examples:', examples);
-  console.log('Output examples:', outputExamples);
-  console.log('Template data:', { instruction, examples: outputExamples });
 
   return mustache.render(
     `

@@ -15,26 +15,19 @@ export const TableCellHeader = component$<{ column: Column }>(({ column }) => {
   );
 
   const visibleColumnType = useComputed$(() => {
+    let columnType = column.type.toLowerCase();
+
     if (hasBlobContent(column)) {
-      if (isArrayType(column)) {
-        return 'binary list';
-      }
-      return 'binary';
+      columnType = 'binary';
+    } else if (isArrayType(column)) {
+      columnType = 'list';
+    } else if (isObjectType(column)) {
+      columnType = 'dict';
+    } else if (columnType.startsWith('varchar')) {
+      columnType = 'string';
     }
 
-    if (isArrayType(column)) {
-      return 'list';
-    }
-
-    if (isObjectType(column)) {
-      return 'dict';
-    }
-
-    if ('VARCHAR' === column.type) {
-      return column.type.replace('VARCHAR', 'string').toLowerCase();
-    }
-
-    return column.type.toLowerCase();
+    return columnType;
   });
 
   const isStatic = column.kind === 'static';

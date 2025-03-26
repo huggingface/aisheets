@@ -115,17 +115,17 @@ export const runPromptExecutionStream = async function* ({
 
   try {
     let accumulated = '';
-    const stream = chatCompletionStream(
-      createApiParams(
-        modelName,
-        [{ role: 'user', content: inputPrompt }],
-        modelProvider,
-        accessToken,
-      ),
-      {
-        signal: AbortSignal.timeout(timeout ?? INFERENCE_TIMEOUT),
-      },
+    const apiParams = createApiParams(
+      modelName,
+      [{ role: 'user', content: inputPrompt }],
+      modelProvider,
+      accessToken,
     );
+
+    console.log('Calling chatCompletionStream with params: ', apiParams);
+    const stream = chatCompletionStream(apiParams, {
+      signal: AbortSignal.timeout(timeout ?? INFERENCE_TIMEOUT),
+    });
 
     for await (const chunk of stream) {
       if (chunk.choices?.[0]?.delta?.content) {

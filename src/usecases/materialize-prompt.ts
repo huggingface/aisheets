@@ -28,11 +28,14 @@ function materializePromptFromScratch(
   examples?: Example[],
 ): string {
   const outputExamples = examples?.map((ex) => ex.output);
+  console.log('Original examples:', examples);
+  console.log('Output examples:', outputExamples);
+  console.log('Template data:', { instruction, examples: outputExamples });
 
   return mustache.render(
     `
 # System Role
-You are a rigorous text-generation engine. Generate only the requested output format, with no explanations following the user instruction. Prioritize originality and diversity with respect to the existing dataset, and the adherence to constraints and the user instruction.
+You are a rigorous text-generation engine. Generate only the requested output format, with no explanations following the user instruction. Prioritize originality and diversity with respect to the existing dataset (if available in the Current dataset section), and the adherence to constraints and the user instruction.
 
 # Core Constraints (Always Apply)
 
@@ -52,21 +55,25 @@ Ensure your output differs meaningfully from the existing data points in topic, 
 # User Instruction
 {{instruction}}
 
-{{#examples}}
+{{#hasExamples}}
 # Current dataset
 Read carefully these data points to avoid repeating them and ensure diversity across the whole dataset. Data points are prior outputs to avoid mimicking. Treat them as exclusion criteria.
 ## Data points
-{{#.}}
+{{#examples}}
 - {{.}}
-{{/.}}
 {{/examples}}
+{{/hasExamples}}
 
 # Output Format
 Generate **only** the output requested in the user instruction. No additional introductions, explanations, or labels.
 
 # Output
 `,
-    { instruction, examples: outputExamples ? [outputExamples] : undefined },
+    {
+      instruction,
+      examples: outputExamples,
+      hasExamples: outputExamples && outputExamples.length > 0,
+    },
   );
 }
 

@@ -320,7 +320,7 @@ export const TableCell = component$<{
                 <CellContentRenderer
                   content={content.value}
                   column={cellColumn.value!}
-                  isExpanded={isEditing.value}
+                  isExpanded={false}
                 />
               </div>
             </>

@@ -21,7 +21,7 @@ import {
   ImageRenderer,
   UnsupportedContent,
   VideoRenderer,
-} from './components/media-renderer';
+} from './components/cell-media-renderer';
 import { processMediaContent } from './utils/binary-content';
 import { detectMimeType, getMimeTypeCategory } from './utils/mime-types';
 

@@ -1,10 +1,12 @@
 import { component$, useComputed$ } from '@builder.io/qwik';
 import { cn } from '@qwik-ui/utils';
 import { LuText, LuZap } from '@qwikest/icons/lucide';
+import { Popover, buttonVariants } from '~/components';
 import { useExecution } from '~/features/add-column';
 import { CellGeneration } from '~/features/table/components/header/cell-generation';
 import { CellSettings } from '~/features/table/components/header/cell-settings';
-import { ColumnProperties } from '~/features/table/components/header/column-properties';
+import { ColumnNameEdition } from '~/features/table/components/header/column-name-edition';
+import { HideColumn } from '~/features/table/components/header/hide-column';
 import type { Column } from '~/state';
 
 export const TableCellHeader = component$<{ column: Column }>(({ column }) => {
@@ -40,25 +42,48 @@ export const TableCellHeader = component$<{ column: Column }>(({ column }) => {
       id={column.id}
       class={`min-w-80 w-80 max-w-80 min-h-8 h-8 p-2 text-left border-[0.5px] first:rounded-tl-sm border-r-0 border-l-neutral-300 border-r-neutral-300 ${classes.value}`}
     >
-      <div class="flex items-center justify-between gap-2 w-full">
-        <div class="flex items-center gap-2 text-wrap w-[82%]">
-          {isStatic ? (
-            <LuText class="text-sm text-primary-foreground" />
-          ) : (
-            <LuZap class="text-sm text-primary-foreground" />
-          )}
+      <Popover.Root flip={false} gutter={8} floating="bottom-start">
+        <Popover.Trigger class="block text-left w-full">
+          <div class="flex items-center justify-between gap-2 w-full">
+            <div class="flex items-center gap-2 text-wrap w-[82%]">
+              {isStatic ? (
+                <LuText class="text-sm text-primary-foreground" />
+              ) : (
+                <LuZap class="text-sm text-primary-foreground" />
+              )}
+              <span
+                class={cn(
+                  buttonVariants({ look: 'ghost' }),
+                  'text-neutral-600',
+                )}
+              >
+                {column.name}
+              </span>
+            </div>
 
-          <ColumnProperties column={column} />
-        </div>
-
-        <div class="flex items-center gap-1 w-[18%] h-0 pr-0">
-          <CellGeneration column={column} />
-          <CellSettings column={column} />
-        </div>
-      </div>
-      <p class="text-sm text-neutral-500 font-light">
-        {visibleColumnType.value}
-      </p>
+            <div class="flex items-center gap-1 w-[18%] h-0 pr-0">
+              <CellGeneration column={column} />
+              <CellSettings column={column} />
+            </div>
+          </div>
+          <p class="text-sm text-neutral-500 font-light ml-6">
+            {visibleColumnType.value}
+          </p>
+        </Popover.Trigger>
+        <Popover.Panel>
+          <div class="flex flex-col gap-0.5">
+            <ColumnNameEdition column={column} />
+            <div class="rounded-sm hover:bg-neutral-100 transition-colors mt-2">
+              <CellSettings column={column}>
+                <span class="font-normal">Edit configuration</span>
+              </CellSettings>
+            </div>
+            <div class="rounded-sm hover:bg-neutral-100 transition-colors">
+              <HideColumn column={column} />
+            </div>
+          </div>
+        </Popover.Panel>
+      </Popover.Root>
     </th>
   );
 });

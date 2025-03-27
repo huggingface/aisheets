@@ -47,7 +47,6 @@ export const ImageRenderer = component$<MediaRendererProps>(
   ({ src, path, isExpanded }) => {
     return (
       <div class="flex flex-col">
-        {path && <div class="text-xs text-gray-500 mb-1">{path}</div>}
         <div class="relative w-full h-full flex items-center justify-center">
           <img
             src={src}

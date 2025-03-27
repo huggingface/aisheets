@@ -63,8 +63,25 @@ export const TableBody = component$(() => {
 
     rowCount.value = Math.max(firstColumn.value.cells.length, 8);
 
-    const getCell = (column: Column, rowIndex: number): Cell | undefined => {
+    const getCell = (column: Column, rowIndex: number): Cell => {
       const cell = column.cells[rowIndex];
+
+      if (!cell) {
+        // Temporal cell for skeleton
+        return {
+          id: undefined,
+          value: '',
+          error: '',
+          validated: false,
+          column: {
+            id: column.id,
+          },
+          updatedAt: new Date(),
+          generating: false,
+          idx: rowIndex,
+        };
+      }
+
       return cell;
     };
 

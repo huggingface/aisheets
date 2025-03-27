@@ -29,7 +29,7 @@ export const TableBody = component$(() => {
   const startIndex = useSignal(0);
   const endIndex = useSignal(0);
 
-  const data = useSignal<(Cell | undefined)[][]>([]);
+  const data = useSignal<Cell[][]>([]);
   const rowCount = useSignal(0);
 
   useOnWindow(
@@ -63,8 +63,25 @@ export const TableBody = component$(() => {
 
     rowCount.value = Math.max(firstColumn.value.cells.length, 8);
 
-    const getCell = (column: Column, rowIndex: number): Cell | undefined => {
+    const getCell = (column: Column, rowIndex: number): Cell => {
       const cell = column.cells[rowIndex];
+
+      if (!cell) {
+        // Temporal cell for skeleton
+        return {
+          id: undefined,
+          value: '',
+          error: '',
+          validated: false,
+          column: {
+            id: column.id,
+          },
+          updatedAt: new Date(),
+          generating: false,
+          idx: rowIndex,
+        };
+      }
+
       return cell;
     };
 
@@ -101,11 +118,11 @@ export const TableBody = component$(() => {
             {row.map((cell, j) => {
               return (
                 <Fragment key={`${i}-${j}`}>
-                  {!cell || cell?.column?.id === TEMPORAL_ID ? (
+                  {cell.column?.id === TEMPORAL_ID ? (
                     <td class="min-w-80 w-80 max-w-80 px-2 min-h-[100px] h-[100px] border-[0.5px] border-t-0 border-r-0" />
                   ) : (
                     <>
-                      <TableCell cell={cell!} />
+                      <TableCell cell={cell} />
                       {/* When the user scrolls until this cell we should load
                         If the user has 20 rows, on rowCount - buffer, should be fetch
                         The buffer now is 2, so on cell number 18, we should fetch new rows
@@ -117,7 +134,7 @@ export const TableBody = component$(() => {
                     </>
                   )}
 
-                  <ExecutionFormDebounced column={cell?.column} />
+                  <ExecutionFormDebounced column={cell.column} />
                 </Fragment>
               );
             })}

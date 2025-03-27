@@ -1,8 +1,6 @@
 import {
   $,
-  type Signal,
   component$,
-  useComputed$,
   useSignal,
   useTask$,
   useVisibleTask$,
@@ -36,8 +34,8 @@ const loadCell = server$(async (cellId: string) => {
   };
 });
 
-export const hasBlobContent = (column: Column): boolean => {
-  return column.type.includes('BLOB');
+export const hasBlobContent = (column: Column | undefined): boolean => {
+  return column?.type?.includes('BLOB') ?? false;
 };
 
 export const isArrayType = (column: Column): boolean => {
@@ -109,24 +107,119 @@ export const CellContentRenderer = component$<{
   return <p>{content}</p>;
 });
 
+// Cache for processed media content
+const mediaContentCache = new Map<string, string>();
+
 export const TableCell = component$<{
   cell: Cell;
 }>(({ cell }) => {
   const { replaceCell, columns } = useColumnsStore();
   const validateCell = useValidateCellUseCase();
 
-  const cellColumn: Signal<Column | undefined> = useComputed$(() =>
-    columns.value.find((col) => col.id === cell.column?.id),
-  );
-
-  const isStatic = useComputed$(() => cellColumn.value?.kind === 'static');
+  const cellColumn = useSignal<Column | undefined>();
+  const isStatic = useSignal(false);
   const isEditing = useSignal(false);
   const originalValue = useSignal(cell.value);
   const newCellValue = useSignal(cell.value);
   const isTruncated = useSignal(false);
+  const contentValue = useSignal<string | undefined>(undefined);
+  const isInViewport = useSignal(false);
 
   const editCellValueInput = useSignal<HTMLElement>();
   const contentRef = useSignal<HTMLElement>();
+
+  // Track viewport visibility
+  useVisibleTask$(({ track }) => {
+    track(contentRef);
+    if (!contentRef.value) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        isInViewport.value = entries[0].isIntersecting;
+      },
+      { threshold: 0.1 },
+    );
+
+    observer.observe(contentRef.value);
+    return () => observer.disconnect();
+  });
+
+  // Track column changes
+  useTask$(({ track }) => {
+    track(() => columns.value);
+    cellColumn.value = columns.value.find((col) => col.id === cell.column?.id);
+    isStatic.value = cellColumn.value?.kind === 'static';
+  });
+
+  // Process content
+  useTask$(async ({ track }) => {
+    track(originalValue);
+    track(cellColumn);
+    track(isEditing);
+    track(isInViewport);
+
+    // Skip processing if not in viewport and not being edited
+    if (!isInViewport.value && !isEditing.value) {
+      contentValue.value = undefined;
+      return;
+    }
+
+    // Early return if cell or column is not properly initialized
+    if (!cellColumn.value) {
+      contentValue.value = undefined;
+      return;
+    }
+
+    // Early return if no value to process
+    if (originalValue.value === undefined || originalValue.value === null) {
+      contentValue.value = undefined;
+      return;
+    }
+
+    const rawContent = originalValue.value;
+    const column = cellColumn.value;
+
+    try {
+      if (hasBlobContent(column)) {
+        // Only process if we have valid content
+        if (!rawContent || !rawContent.bytes) {
+          contentValue.value = undefined;
+          return;
+        }
+
+        // Check cache first
+        const cacheKey = JSON.stringify(rawContent);
+        if (mediaContentCache.has(cacheKey)) {
+          contentValue.value = mediaContentCache.get(cacheKey);
+          return;
+        }
+
+        const processedContent = await processMediaContent(
+          rawContent,
+          isEditing.value,
+        );
+        if (processedContent) {
+          mediaContentCache.set(cacheKey, processedContent);
+          contentValue.value = processedContent;
+        } else {
+          contentValue.value =
+            '<div class="error-content">Unable to process media content</div>';
+        }
+        return;
+      }
+
+      if (isObjectType(column) || isArrayType(column)) {
+        contentValue.value = JSON.stringify(rawContent, null, 2);
+        return;
+      }
+
+      contentValue.value = rawContent.toString();
+    } catch (error) {
+      console.error('Error processing content:', error);
+      contentValue.value =
+        '<div class="error-content">Error processing content</div>';
+    }
+  });
 
   useVisibleTask$(async () => {
     if (cell.generating) return;
@@ -219,23 +312,6 @@ export const TableCell = component$<{
     isEditing.value = false;
   });
 
-  const content = useComputed$(async () => {
-    if (!originalValue.value || !cellColumn.value) return undefined;
-
-    const rawContent = originalValue.value;
-    const column = cellColumn.value;
-
-    if (hasBlobContent(column)) {
-      return await processMediaContent(rawContent, isEditing.value);
-    }
-
-    if (isObjectType(column) || isArrayType(column)) {
-      return JSON.stringify(rawContent, null, 2);
-    }
-
-    return rawContent.toString();
-  });
-
   const ref = useClickOutside(
     $(() => {
       if (!isEditing.value) return;
@@ -256,7 +332,7 @@ export const TableCell = component$<{
       onDblClick$={(e) => {
         e.stopPropagation();
 
-        if (hasBlobContent(cellColumn.value!)) {
+        if (hasBlobContent(cellColumn.value)) {
           const mimeType =
             cell.value?.mimeType ??
             detectMimeType(cell.value?.bytes, cell.value?.path);
@@ -317,11 +393,17 @@ export const TableCell = component$<{
                 </Button>
               )}
               <div class="h-full mt-2 p-4">
-                <CellContentRenderer
-                  content={content.value}
-                  column={cellColumn.value!}
-                  isExpanded={false}
-                />
+                {!contentValue.value && hasBlobContent(cellColumn.value) ? (
+                  <div class="flex items-center justify-center h-full">
+                    <div class="w-full h-full max-w-[120px] max-h-[80px] bg-gray-200 rounded animate-pulse" />
+                  </div>
+                ) : (
+                  <CellContentRenderer
+                    content={contentValue.value}
+                    column={cellColumn.value!}
+                    isExpanded={false}
+                  />
+                )}
               </div>
             </>
           )}
@@ -346,11 +428,11 @@ export const TableCell = component$<{
                 }
               }}
             >
-              {hasBlobContent(cellColumn.value!) ? (
+              {hasBlobContent(cellColumn.value) ? (
                 <div class="absolute inset-0 w-full h-full flex items-center justify-center p-4 bg-neutral-50">
                   <div class="max-w-full max-h-full overflow-auto">
                     <CellContentRenderer
-                      content={content.value}
+                      content={contentValue.value}
                       column={cellColumn.value!}
                       isExpanded={true}
                     />
@@ -359,7 +441,7 @@ export const TableCell = component$<{
               ) : !isEditableValue(cellColumn.value!) ? (
                 <div class="absolute inset-0 w-full h-full p-4 rounded-none text-sm resize-none focus-visible:outline-none focus-visible:ring-0 border-none shadow-none overflow-auto whitespace-pre-wrap break-words scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
                   <CellContentRenderer
-                    content={content.value}
+                    content={contentValue.value}
                     column={cellColumn.value!}
                   />
                 </div>

@@ -11,7 +11,6 @@ export const VideoRenderer = component$<MediaRendererProps>(
   ({ src, path, isExpanded }) => {
     return (
       <div class="flex flex-col">
-        {path && <div class="text-xs text-gray-500 mb-1">{path}</div>}
         <video
           controls
           playsInline
@@ -30,7 +29,6 @@ export const AudioRenderer = component$<MediaRendererProps>(
   ({ src, path, isExpanded }) => {
     return (
       <div class="flex flex-col">
-        {path && <div class="text-xs text-gray-500 mb-1">{path}</div>}
         <audio
           controls
           src={src}

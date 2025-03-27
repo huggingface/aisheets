@@ -23,7 +23,14 @@ export const getClientSession = (): ClientSession | null => {
   const data = localStorage.getItem('oauth');
   if (!data) return null;
 
-  return JSON.parse(data);
+  const session = JSON.parse(data);
+
+  if (new Date(session.expires) < new Date()) {
+    localStorage.removeItem('oauth');
+    return null;
+  }
+
+  return session;
 };
 
 export const useClientSession = () => {

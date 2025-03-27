@@ -23,7 +23,10 @@ export const TableCellHeader = component$<{ column: Column }>(({ column }) => {
       columnType = 'list';
     } else if (isObjectType(column)) {
       columnType = 'dict';
-    } else if (columnType.startsWith('varchar')) {
+    } else if (
+      columnType.startsWith('varchar') ||
+      columnType.startsWith('text')
+    ) {
       columnType = 'string';
     }
 

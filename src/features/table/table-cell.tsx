@@ -266,7 +266,16 @@ export const TableCell = component$<{
                 }
               }}
             >
-              {!isEditableValue(cellColumn.value!) ? (
+              {hasBlobContent(cellColumn.value!) ? (
+                <div class="absolute inset-0 w-full h-full flex items-center justify-center p-4 bg-neutral-50">
+                  <div class="max-w-full max-h-full overflow-auto">
+                    <CellContentRenderer
+                      content={content.value}
+                      column={cellColumn.value!}
+                    />
+                  </div>
+                </div>
+              ) : !isEditableValue(cellColumn.value!) ? (
                 <div class="absolute inset-0 w-full h-full p-4 rounded-none text-sm resize-none focus-visible:outline-none focus-visible:ring-0 border-none shadow-none overflow-auto whitespace-pre-wrap break-words scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
                   <CellContentRenderer
                     content={content.value}

@@ -1,6 +1,5 @@
 import { component$, useComputed$ } from '@builder.io/qwik';
 import { cn } from '@qwik-ui/utils';
-import { LuText, LuZap } from '@qwikest/icons/lucide';
 import { Popover, buttonVariants } from '~/components';
 import { useExecution } from '~/features/add-column';
 import { CellGeneration } from '~/features/table/components/header/cell-generation';
@@ -46,11 +45,6 @@ export const TableCellHeader = component$<{ column: Column }>(({ column }) => {
         <Popover.Trigger class="block text-left w-full">
           <div class="flex items-center justify-between gap-2 w-full">
             <div class="flex items-center gap-2 text-wrap w-[82%]">
-              {isStatic ? (
-                <LuText class="text-sm text-primary-foreground" />
-              ) : (
-                <LuZap class="text-sm text-primary-foreground" />
-              )}
               <span
                 class={cn(
                   buttonVariants({ look: 'ghost' }),
@@ -66,7 +60,7 @@ export const TableCellHeader = component$<{ column: Column }>(({ column }) => {
               <CellSettings column={column} />
             </div>
           </div>
-          <p class="text-sm text-neutral-500 font-light ml-6">
+          <p class="text-sm text-neutral-500 font-light">
             {visibleColumnType.value}
           </p>
         </Popover.Trigger>

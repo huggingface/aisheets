@@ -285,7 +285,7 @@ export const TableCell = component$<{
                   bind:value={newCellValue}
                   preventEnterNewline
                   look="ghost"
-                  class="w-full h-full p-8 text-sm resize-none whitespace-pre-wrap break-words overflow-auto"
+                  class="w-full h-full p-8 text-base resize-none whitespace-pre-wrap break-words overflow-auto"
                   onKeyDown$={(e) => {
                     if (e.key === 'Enter') {
                       if (e.shiftKey) return;

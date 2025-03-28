@@ -218,6 +218,10 @@ export const TableCell = component$<{
         };
 
         contentValue.value = await processBlob(rawContent);
+      } else if (isObjectType(column) || isArrayType(column)) {
+        contentValue.value = JSON.stringify(rawContent, null, 2);
+      } else {
+        contentValue.value = rawContent.toString();
       }
     } catch (error) {
       console.error('Error processing content:', error);

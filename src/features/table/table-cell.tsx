@@ -247,7 +247,7 @@ export const TableCell = component$<{
                   ref={editCellValueInput}
                   bind:value={newCellValue}
                   preventEnterNewline
-                  class="absolute inset-0 w-full h-full p-4 rounded-none text-sm resize-none focus-visible:outline-none focus-visible:ring-0 border-none shadow-none overflow-auto whitespace-pre-wrap break-words scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent"
+                  class="absolute inset-0 w-full h-full p-8 rounded-none text-sm resize-none focus-visible:outline-none focus-visible:ring-0 border-none shadow-none overflow-auto whitespace-pre-wrap break-words scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent"
                   onKeyDown$={(e) => {
                     if (e.key === 'Enter') {
                       if (e.shiftKey) return;

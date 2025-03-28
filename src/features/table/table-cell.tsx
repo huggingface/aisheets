@@ -21,7 +21,6 @@ import {
   VideoRenderer,
 } from './components/cell-media-renderer';
 import { processMediaContent } from './utils/binary-content';
-import { detectMimeType, getMimeTypeCategory } from './utils/mime-types';
 
 const loadCell = server$(async (cellId: string) => {
   const persistedCell = await getColumnCellById(cellId);
@@ -123,6 +122,7 @@ export const TableCell = component$<{
   const newCellValue = useSignal(cell.value);
   const isTruncated = useSignal(false);
   const contentValue = useSignal<string | undefined>(undefined);
+  const contentCategory = useSignal<string | undefined>(undefined);
   const isInViewport = useSignal(false);
 
   const editCellValueInput = useSignal<HTMLElement>();
@@ -181,39 +181,44 @@ export const TableCell = component$<{
 
     try {
       if (hasBlobContent(column)) {
-        // Only process if we have valid content
-        if (!rawContent || !rawContent.bytes) {
-          contentValue.value = undefined;
-          return;
-        }
+        const processBlob = async (content: any): Promise<any> => {
+          if (Array.isArray(content)) {
+            const divs = await Promise.all(
+              content.map((item) => processBlob(item)),
+            );
+            contentValue.value = `<div>${divs.join(' ')}</div>`;
+          }
+          // Only process if we have valid content
+          if (!content || !content.bytes) {
+            return contentValue.value;
+          }
 
-        // Check cache first
-        const cacheKey = JSON.stringify(rawContent);
-        if (mediaContentCache.has(cacheKey)) {
-          contentValue.value = mediaContentCache.get(cacheKey);
-          return;
-        }
+          // Check cache first
+          const cacheKey = JSON.stringify(content);
+          if (mediaContentCache.has(cacheKey)) {
+            contentValue.value = mediaContentCache.get(cacheKey);
+            return contentValue.value;
+          }
 
-        const processedContent = await processMediaContent(
-          rawContent,
-          isEditing.value,
-        );
-        if (processedContent) {
-          mediaContentCache.set(cacheKey, processedContent);
-          contentValue.value = processedContent;
-        } else {
-          contentValue.value =
-            '<div class="error-content">Unable to process media content</div>';
-        }
-        return;
+          const processedInfo = await processMediaContent(
+            content,
+            isEditing.value,
+          );
+
+          if (processedInfo) {
+            mediaContentCache.set(cacheKey, processedInfo.content);
+            contentValue.value = processedInfo.content;
+            contentCategory.value = processedInfo.category;
+          } else {
+            contentValue.value =
+              '<div class="error-content">Unable to process media content</div>';
+          }
+
+          return contentValue.value;
+        };
+
+        contentValue.value = await processBlob(rawContent);
       }
-
-      if (isObjectType(column) || isArrayType(column)) {
-        contentValue.value = JSON.stringify(rawContent, null, 2);
-        return;
-      }
-
-      contentValue.value = rawContent.toString();
     } catch (error) {
       console.error('Error processing content:', error);
       contentValue.value =
@@ -333,14 +338,8 @@ export const TableCell = component$<{
         e.stopPropagation();
 
         if (hasBlobContent(cellColumn.value)) {
-          const mimeType =
-            cell.value?.mimeType ??
-            detectMimeType(cell.value?.bytes, cell.value?.path);
-          const category = getMimeTypeCategory(mimeType);
-
-          if (category !== 'IMAGE') {
-            return;
-          }
+          if (!contentValue.value) return;
+          if (contentCategory.value !== 'IMAGE') return;
         }
 
         isEditing.value = true;

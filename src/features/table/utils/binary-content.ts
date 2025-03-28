@@ -21,16 +21,15 @@ export const createDataURI = async (
 export const processMediaContent = async (
   value: any,
   isExpanded = false,
-): Promise<string | undefined> => {
+): Promise<
+  | {
+      content: string;
+      category: string;
+      mimeType: string;
+    }
+  | undefined
+> => {
   if (!value) return undefined;
-
-  // Handle array of binary content
-  if (Array.isArray(value)) {
-    const allValue = await Promise.all(
-      value.map((v) => processMediaContent(v, isExpanded)),
-    );
-    return allValue.filter(Boolean).join('\n');
-  }
 
   // Handle binary content
   for (const key in value) {
@@ -44,7 +43,8 @@ export const processMediaContent = async (
         const dataURI = await createDataURI(bytes, mimeType);
 
         if (!isMimeTypeSupported(mimeType)) {
-          return createUnsupportedContent(category, mimeType, path);
+          const content = createUnsupportedContent(category, mimeType, path);
+          return { content, category, mimeType };
         }
 
         const filenameDisplay = path
@@ -53,27 +53,48 @@ export const processMediaContent = async (
 
         switch (category) {
           case 'VIDEO':
-            return createVideoContent(
-              dataURI,
+            return {
+              content: createVideoContent(
+                dataURI,
+                mimeType,
+                filenameDisplay,
+                isExpanded,
+              ),
+              category,
               mimeType,
-              filenameDisplay,
-              isExpanded,
-            );
+            };
           case 'AUDIO':
-            return createAudioContent(dataURI, filenameDisplay, isExpanded);
+            return {
+              content: createAudioContent(dataURI, filenameDisplay, isExpanded),
+              category,
+              mimeType,
+            };
+
           case 'IMAGE':
-            return createImageContent(
-              dataURI,
-              path,
-              filenameDisplay,
-              isExpanded,
-            );
+            return {
+              content: createImageContent(
+                dataURI,
+                path,
+                filenameDisplay,
+                isExpanded,
+              ),
+              category,
+              mimeType,
+            };
           default:
-            return createUnsupportedContent(category, mimeType, path);
+            return {
+              content: createUnsupportedContent(category, mimeType, path),
+              category,
+              mimeType,
+            };
         }
       } catch (error: unknown) {
         console.error('Error processing binary content:', error);
-        return createErrorContent(error);
+        return {
+          content: createErrorContent(error),
+          category: 'ERROR',
+          mimeType,
+        };
       }
     }
   }

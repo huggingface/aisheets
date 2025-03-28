@@ -190,7 +190,7 @@ const Loader = component$<{ actualRowIndex: number }>(({ actualRowIndex }) => {
         .filter((column) => column.id !== TEMPORAL_ID)
         .map((column) => column.id),
       offset: actualRowIndex,
-      limit: 10,
+      limit: 5,
     });
 
     for (const cell of newCells) {

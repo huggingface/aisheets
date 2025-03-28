@@ -220,39 +220,44 @@ export const TableCell = component$<{
           )}
 
           {isEditing.value && (
-            <div
-              class="fixed z-20 bg-white border border-neutral-500 focus:border-secondary-300 focus:outline-none shadow-lg cursor-text"
-              style={{
-                left: '50%',
-                top: '50%',
-                transform: 'translate(-50%, -50%)',
-                width: '55rem',
-                height: '700px',
-                maxWidth: '90vw',
-                maxHeight: '85vh',
-                borderWidth: '1px',
-              }}
-              onClick$={(e) => {
-                e.stopPropagation();
-                if (editCellValueInput.value) {
-                  editCellValueInput.value.focus();
-                }
-              }}
-            >
-              <Textarea
-                ref={editCellValueInput}
-                bind:value={newCellValue}
-                preventEnterNewline
-                class="absolute inset-0 w-full h-full p-4 rounded-none text-sm resize-none focus-visible:outline-none focus-visible:ring-0 border-none shadow-none overflow-auto whitespace-pre-wrap break-words scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent"
-                onKeyDown$={(e) => {
-                  if (e.key === 'Enter') {
-                    if (e.shiftKey) return;
-                    e.preventDefault();
-                    onUpdateCell();
+            <>
+              {/* Backdrop */}
+              <div class="fixed inset-0 bg-neutral-700/40 z-30" />
+
+              <div
+                class="fixed z-40 bg-white border border-neutral-500 focus:border-secondary-300 focus:outline-none shadow-lg cursor-text"
+                style={{
+                  left: '50%',
+                  top: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  width: '55rem',
+                  height: '700px',
+                  maxWidth: '90vw',
+                  maxHeight: '85vh',
+                  borderWidth: '1px',
+                }}
+                onClick$={(e) => {
+                  e.stopPropagation();
+                  if (editCellValueInput.value) {
+                    editCellValueInput.value.focus();
                   }
                 }}
-              />
-            </div>
+              >
+                <Textarea
+                  ref={editCellValueInput}
+                  bind:value={newCellValue}
+                  preventEnterNewline
+                  class="absolute inset-0 w-full h-full p-4 rounded-none text-sm resize-none focus-visible:outline-none focus-visible:ring-0 border-none shadow-none overflow-auto whitespace-pre-wrap break-words scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent"
+                  onKeyDown$={(e) => {
+                    if (e.key === 'Enter') {
+                      if (e.shiftKey) return;
+                      e.preventDefault();
+                      onUpdateCell();
+                    }
+                  }}
+                />
+              </div>
+            </>
           )}
         </div>
       </div>

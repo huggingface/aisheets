@@ -117,7 +117,7 @@ export const TableBody = component$(() => {
           >
             {row.map((cell, j) => {
               return (
-                <Fragment key={`${i}-${j}`}>
+                <Fragment key={`${i}-${cell.column!.id}`}>
                   {cell.column?.id === TEMPORAL_ID ? (
                     <td class="min-w-80 w-80 max-w-80 px-2 min-h-[100px] h-[100px] border-[0.5px] border-t-0 border-r-0" />
                   ) : (

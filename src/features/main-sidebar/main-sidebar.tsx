@@ -1,27 +1,19 @@
-import {
-  component$,
-  useSignal,
-  useTask$,
-  useVisibleTask$,
-} from '@builder.io/qwik';
-import { Link, server$ } from '@builder.io/qwik-city';
+import { component$, useSignal, useTask$ } from '@builder.io/qwik';
+import { Link } from '@builder.io/qwik-city';
 import { useToggle } from '~/components/hooks';
 import { Logo } from '~/components/ui/logo/logo';
 import { Tooltip } from '~/components/ui/tooltip/tooltip';
 
 import { LuLibrary, LuPanelLeft } from '@qwikest/icons/lucide';
-import { getUserDatasets } from '~/services';
-import { type Dataset, useClientSession, useDatasetsStore } from '~/state';
-
-const getAllUserDatasets = server$(
-  async (username: string) => await getUserDatasets(username),
-);
+import { useAllDatasetsLoader } from '~/loaders';
+import { useDatasetsStore } from '~/state';
 
 export const MainSidebar = component$(() => {
-  const session = useClientSession();
   const { isOpen, toggle } = useToggle(true);
   const { activeDataset } = useDatasetsStore();
-  const datasets = useSignal<Dataset[]>([]);
+
+  const datasetsLoaded = useAllDatasetsLoader();
+  const datasets = useSignal(datasetsLoaded.value);
 
   useTask$(({ track }) => {
     track(activeDataset);
@@ -38,14 +30,6 @@ export const MainSidebar = component$(() => {
     } else {
       datasets.value.push(activeDataset.value);
     }
-  });
-
-  useVisibleTask$(async () => {
-    if (!session.value) return;
-
-    const dataset = await getAllUserDatasets(session.value.user.username);
-
-    datasets.value = dataset;
   });
 
   return (

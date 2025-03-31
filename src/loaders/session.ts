@@ -6,7 +6,7 @@ export const useSession = routeLoader$((event) => {
   return useServerSession(event);
 });
 
-export const useClientOAuth = routeLoader$(() => {
+export const useOAuthClientEnv = routeLoader$(() => {
   return {
     scopes: OAUTH_SCOPES,
     clientId: CLIENT_ID,

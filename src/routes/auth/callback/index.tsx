@@ -5,11 +5,12 @@ import type { ClientSession } from '~/state';
 
 export default component$(() => {
   const nav = useNavigate();
+
   useVisibleTask$(async () => {
     const oauthResult = await hub.oauthHandleRedirectIfPresent();
 
     if (oauthResult) {
-      const clientSession: ClientSession = {
+      const currentSession: ClientSession = {
         expires: new Date(oauthResult.accessTokenExpiresAt),
         token: oauthResult.accessToken,
         user: {
@@ -19,12 +20,13 @@ export default component$(() => {
         },
       };
 
-      localStorage.setItem('oauth', JSON.stringify(clientSession));
+      localStorage.setItem('oauth', JSON.stringify(currentSession));
 
       document.cookie = `session=${JSON.stringify({
-        token: clientSession.token,
-        username: clientSession.user.username,
-      })}; path=/; SameSite=None; Secure"`;
+        token: currentSession.token,
+        username: currentSession.user.username,
+      })}; path=/; SameSite=None; Secure`;
+
       nav('/');
     }
   });

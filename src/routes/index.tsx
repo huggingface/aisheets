@@ -1,23 +1,13 @@
-import {
-  $,
-  component$,
-  isDev,
-  isServer,
-  useSignal,
-  useVisibleTask$,
-} from '@builder.io/qwik';
+import { $, component$, useSignal, useVisibleTask$ } from '@builder.io/qwik';
 import { Link, server$, useNavigate } from '@builder.io/qwik-city';
 import { LuDownload, LuFile, LuPencilLine, LuZap } from '@qwikest/icons/lucide';
 import { Tooltip } from '~/components/ui/tooltip/tooltip';
+import { createDatasetIdByUser } from '~/services';
 import {
   ActiveDatasetProvider,
   useClientSession,
   useServerSession,
 } from '~/state';
-
-import { oauthLoginUrl } from '@huggingface/hub';
-import { useClientOAuth } from '~/loaders/session';
-import { createDatasetIdByUser } from '~/services';
 
 const createDataset = server$(async function (this) {
   const session = useServerSession(this);
@@ -29,9 +19,14 @@ const createDataset = server$(async function (this) {
 
 export default component$(() => {
   const currentSession = useClientSession();
-  const oauth = useClientOAuth();
   const isTransitioning = useSignal(false);
   const nav = useNavigate();
+
+  useVisibleTask$(() => {
+    if (!currentSession.value) {
+      return nav('/auth/sign-in/');
+    }
+  });
 
   const handleCreateBlankDataset = $(async () => {
     const datasetId = await createDataset();
@@ -48,29 +43,6 @@ export default component$(() => {
     ]);
 
     nav(`/dataset/${datasetId}`);
-  });
-
-  useVisibleTask$(async () => {
-    if (isServer) return;
-    if (localStorage.getItem('oauth')) {
-      return;
-    }
-
-    document.cookie = 'session=; path=/';
-
-    const { clientId, scopes } = oauth.value;
-
-    const url = window.location.origin;
-    const redirectOrigin = !isDev ? url.replace('http://', 'https://') : url;
-    const redirectUrl = `${redirectOrigin}/auth/callback/`;
-
-    const oauthUrl = await oauthLoginUrl({
-      clientId,
-      scopes,
-      redirectUrl,
-    });
-
-    window.location.href = `${oauthUrl}&prompt=consent`;
   });
 
   return (

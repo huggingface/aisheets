@@ -9,9 +9,9 @@ export const onRequest = ({
   const session = cookie.get('session');
 
   if (!session) {
-    if (pathname === '/' || pathname === '/auth/callback/') return;
+    if (pathname === '/auth/sign-in/' || pathname === '/auth/callback/') return;
 
-    throw redirect(302, '/');
+    throw redirect(302, '/auth/sign-in/');
   }
 
   sharedMap.set('session', session.json());

@@ -47,8 +47,6 @@ export default component$(() => {
 
   return (
     <ActiveDatasetProvider>
-      {currentSession?.value?.user?.username}
-      {currentSession?.value?.user?.name}
       <div class="flex flex-col h-full w-fit overflow-hidden">
         <div
           class={`mt-12 w-[800px] transition-opacity duration-200 ${isTransitioning.value ? 'opacity-0' : 'opacity-100'}`}

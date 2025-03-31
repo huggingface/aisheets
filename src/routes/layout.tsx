@@ -3,7 +3,7 @@ import type { RequestHandler } from '@builder.io/qwik-city';
 
 import { ModalsProvider } from '~/components';
 import { MainSidebar } from '~/features/main-sidebar';
-import { ActiveDatasetProvider } from '~/state';
+import { ActiveDatasetProvider, SessionProvider } from '~/state';
 
 export const onGet: RequestHandler = async ({ cacheControl }) => {
   cacheControl({
@@ -16,15 +16,17 @@ export * from '~/loaders';
 
 export default component$(() => {
   return (
-    <ModalsProvider>
-      <div class="flex-row flex max-h-screen">
-        <ActiveDatasetProvider>
-          <MainSidebar />
-          <main class="min-w-screen h-screen px-6 pt-4 w-full overflow-hidden">
-            <Slot />
-          </main>
-        </ActiveDatasetProvider>
-      </div>
-    </ModalsProvider>
+    <SessionProvider>
+      <ModalsProvider>
+        <div class="flex-row flex max-h-screen">
+          <ActiveDatasetProvider>
+            <MainSidebar />
+            <main class="min-w-screen h-screen px-6 pt-4 w-full overflow-hidden">
+              <Slot />
+            </main>
+          </ActiveDatasetProvider>
+        </div>
+      </ModalsProvider>
+    </SessionProvider>
   );
 });

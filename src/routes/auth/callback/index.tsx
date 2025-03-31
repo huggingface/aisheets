@@ -1,12 +1,17 @@
 import { component$, useVisibleTask$ } from '@builder.io/qwik';
 import { useNavigate } from '@builder.io/qwik-city';
 import * as hub from '@huggingface/hub';
-import type { ClientSession } from '~/state';
+import { type ClientSession, useClientSession } from '~/state';
 
 export default component$(() => {
+  const { isLoggedIn, save } = useClientSession();
   const nav = useNavigate();
 
   useVisibleTask$(async () => {
+    if (isLoggedIn.value) {
+      return nav('/');
+    }
+
     const oauthResult = await hub.oauthHandleRedirectIfPresent();
 
     if (oauthResult) {
@@ -20,14 +25,9 @@ export default component$(() => {
         },
       };
 
-      localStorage.setItem('oauth', JSON.stringify(currentSession));
+      save(currentSession);
 
-      document.cookie = `session=${JSON.stringify({
-        token: currentSession.token,
-        username: currentSession.user.username,
-      })}; path=/; SameSite=None; Secure`;
-
-      nav('/');
+      return nav('/');
     }
   });
 

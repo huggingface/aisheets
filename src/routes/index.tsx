@@ -1,13 +1,9 @@
-import { $, component$, useSignal, useVisibleTask$ } from '@builder.io/qwik';
+import { $, component$, useSignal } from '@builder.io/qwik';
 import { Link, server$, useNavigate } from '@builder.io/qwik-city';
 import { LuDownload, LuFile, LuPencilLine, LuZap } from '@qwikest/icons/lucide';
 import { Tooltip } from '~/components/ui/tooltip/tooltip';
 import { createDatasetIdByUser } from '~/services';
-import {
-  ActiveDatasetProvider,
-  useClientSession,
-  useServerSession,
-} from '~/state';
+import { ActiveDatasetProvider, useServerSession } from '~/state';
 
 const createDataset = server$(async function (this) {
   const session = useServerSession(this);
@@ -18,15 +14,8 @@ const createDataset = server$(async function (this) {
 });
 
 export default component$(() => {
-  const currentSession = useClientSession();
   const isTransitioning = useSignal(false);
   const nav = useNavigate();
-
-  useVisibleTask$(() => {
-    if (!currentSession.value) {
-      return nav('/auth/sign-in/');
-    }
-  });
 
   const handleCreateBlankDataset = $(async () => {
     const datasetId = await createDataset();

@@ -5,17 +5,12 @@ import { useOAuthClientEnv } from '~/loaders';
 import { useClientSession } from '~/state';
 
 export default component$(() => {
-  const currentSession = useClientSession();
+  const { isLoggedIn } = useClientSession();
   const oauth = useOAuthClientEnv();
   const nav = useNavigate();
 
   useVisibleTask$(async () => {
-    if (currentSession.value) {
-      document.cookie = `session=${JSON.stringify({
-        token: currentSession.value.token,
-        username: currentSession.value.user.username,
-      })}; path=/; SameSite=None; Secure`;
-
+    if (isLoggedIn.value) {
       return nav('/');
     }
 

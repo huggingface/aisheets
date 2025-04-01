@@ -127,6 +127,7 @@ export const TableCell = component$<{
 
   const editCellValueInput = useSignal<HTMLElement>();
   const contentRef = useSignal<HTMLElement>();
+  const modalHeight = useSignal('200px');
 
   // Track viewport visibility
   useVisibleTask$(({ track }) => {
@@ -291,6 +292,44 @@ export const TableCell = component$<{
     }
   });
 
+  useTask$(({ track }) => {
+    track(() => newCellValue.value);
+
+    if (!newCellValue.value) {
+      modalHeight.value = '200px';
+      return;
+    }
+
+    // Calculate height based on content
+    const content = newCellValue.value;
+    const lines = content.split('\n');
+    const lineHeight = 20; // Line height in pixels
+    const padding = 64; // 32px padding top + bottom
+    const charsPerLine = 80; // Approximate chars that fit in 660px width with padding
+
+    // Calculate height for each line considering wrapping
+    let totalLines = 0;
+    for (const line of lines) {
+      if (line.length === 0) {
+        totalLines += 1; // Empty lines
+      } else {
+        totalLines += Math.max(1, Math.ceil(line.length / charsPerLine));
+      }
+    }
+
+    // For very short content (single line with few characters), use minimal height
+    if (lines.length === 1 && content.length < 50) {
+      modalHeight.value = '100px';
+      return;
+    }
+
+    const calculatedHeight = Math.min(
+      totalLines * lineHeight + padding,
+      window.innerHeight * 0.85,
+    );
+    modalHeight.value = `${Math.max(100, calculatedHeight)}px`;
+  });
+
   const onValidateCell = $(
     async (validatedContent: string, validated: boolean) => {
       const updatedCell = await validateCell({
@@ -412,58 +451,62 @@ export const TableCell = component$<{
           )}
 
           {isEditing.value && (
-            <div
-              class="fixed z-20 bg-white border border-neutral-500 focus:border-secondary-300 focus:outline-none shadow-lg cursor-text"
-              style={{
-                left: '50%',
-                top: '50%',
-                transform: 'translate(-50%, -50%)',
-                width: '55rem',
-                height: '700px',
-                maxWidth: '90vw',
-                maxHeight: '85vh',
-                borderWidth: '1px',
-              }}
-              onClick$={(e) => {
-                e.stopPropagation();
-                if (editCellValueInput.value) {
-                  editCellValueInput.value.focus();
-                }
-              }}
-            >
-              {hasBlobContent(cellColumn.value) ? (
-                <div class="absolute inset-0 w-full h-full flex items-center justify-center p-4 bg-neutral-50">
-                  <div class="max-w-full max-h-full overflow-auto">
+            <>
+              {/* Backdrop */}
+              <div class="fixed inset-0 bg-neutral-700/40 z-30" />
+
+              <div
+                class="fixed z-40 bg-white border border-neutral-500 shadow-sm"
+                style={{
+                  left: '50%',
+                  top: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  width: '660px',
+                  height: modalHeight.value,
+                  borderWidth: '1px',
+                }}
+                onClick$={(e) => {
+                  e.stopPropagation();
+                  if (editCellValueInput.value) {
+                    editCellValueInput.value.focus();
+                  }
+                }}
+              >
+                {hasBlobContent(cellColumn.value) ? (
+                  <div class="absolute inset-0 w-full h-full flex items-center justify-center p-4 bg-neutral-50">
+                    <div class="max-w-full max-h-full overflow-auto">
+                      <CellContentRenderer
+                        content={contentValue.value}
+                        column={cellColumn.value!}
+                        isExpanded={true}
+                      />
+                    </div>
+                  </div>
+                ) : !isEditableValue(cellColumn.value!) ? (
+                  <div class="absolute inset-0 w-full h-full p-4 rounded-none text-sm resize-none focus-visible:outline-none focus-visible:ring-0 border-none shadow-none overflow-auto whitespace-pre-wrap break-words scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
                     <CellContentRenderer
                       content={contentValue.value}
                       column={cellColumn.value!}
-                      isExpanded={true}
                     />
                   </div>
-                </div>
-              ) : !isEditableValue(cellColumn.value!) ? (
-                <div class="absolute inset-0 w-full h-full p-4 rounded-none text-sm resize-none focus-visible:outline-none focus-visible:ring-0 border-none shadow-none overflow-auto whitespace-pre-wrap break-words scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
-                  <CellContentRenderer
-                    content={contentValue.value}
-                    column={cellColumn.value!}
+                ) : (
+                  <Textarea
+                    ref={editCellValueInput}
+                    bind:value={newCellValue}
+                    preventEnterNewline
+                    look="ghost"
+                    class="w-full h-full p-8 text-base resize-none whitespace-pre-wrap break-words overflow-auto"
+                    onKeyDown$={(e) => {
+                      if (e.key === 'Enter') {
+                        if (e.shiftKey) return;
+                        e.preventDefault();
+                        onUpdateCell();
+                      }
+                    }}
                   />
-                </div>
-              ) : (
-                <Textarea
-                  ref={editCellValueInput}
-                  bind:value={newCellValue}
-                  preventEnterNewline
-                  class="absolute inset-0 w-full h-full p-4 rounded-none text-sm resize-none focus-visible:outline-none focus-visible:ring-0 border-none shadow-none overflow-auto whitespace-pre-wrap break-words scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent"
-                  onKeyDown$={(e) => {
-                    if (e.key === 'Enter') {
-                      if (e.shiftKey) return;
-                      e.preventDefault();
-                      onUpdateCell();
-                    }
-                  }}
-                />
-              )}
-            </div>
+                )}
+              </div>
+            </>
           )}
         </div>
       </div>

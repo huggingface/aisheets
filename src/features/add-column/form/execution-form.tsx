@@ -20,10 +20,7 @@ import {
 
 import { Button, Input, Label, Select } from '~/components';
 import { nextTick } from '~/components/hooks/tick';
-import {
-  TemplateTextArea,
-  type Variable,
-} from '~/features/add-column/components/template-textarea';
+import { TemplateTextArea } from '~/features/add-column/components/template-textarea';
 import { useExecution } from '~/features/add-column/form/execution';
 import {
   type Column,
@@ -56,7 +53,14 @@ export const ExecutionForm = component$<SidebarProps>(
 
     const prompt = useSignal<string>('');
     const columnsReferences = useSignal<string[]>([]);
-    const variables = useSignal<Variable[]>([]);
+    const variables = useComputed$(() =>
+      columns.value
+        .filter((c) => c.id !== column.id && !hasBlobContent(c))
+        .map((c) => ({
+          id: c.id,
+          name: c.name,
+        })),
+    );
 
     const selectedModel = useSignal<Model>();
     const selectedProvider = useSignal<string>();
@@ -90,13 +94,6 @@ export const ExecutionForm = component$<SidebarProps>(
     useTask$(async () => {
       const models = await loadModels.value;
 
-      variables.value = columns.value
-        .filter((c) => c.id !== column.id && !hasBlobContent(c))
-        .map((c) => ({
-          id: c.id,
-          name: c.name,
-        }));
-
       const { process } = column;
       if (!process) return;
 
@@ -108,7 +105,7 @@ export const ExecutionForm = component$<SidebarProps>(
           (m) => m.id === process.modelName,
         ) || {
           id: process.modelName,
-          providers: [process.modelProvider!],
+          providers: [process.modelProvider],
         };
         selectedProvider.value = process.modelProvider!;
       }
@@ -124,7 +121,7 @@ export const ExecutionForm = component$<SidebarProps>(
       inputModelId.value = process.modelName;
 
       rowsToGenerate.value =
-        mode.value === 'add' ? '1' : process!.limit.toString();
+        mode.value === 'add' ? '1' : process.limit.toString();
     });
 
     useVisibleTask$(async ({ track }) => {
@@ -179,7 +176,7 @@ export const ExecutionForm = component$<SidebarProps>(
             ...column.process,
             modelName,
             modelProvider,
-            prompt: prompt.value!,
+            prompt: prompt.value,
             columnsReferences: columnsReferences.value,
             offset: 0,
             limit: Number(rowsToGenerate.value),
@@ -244,9 +241,9 @@ export const ExecutionForm = component$<SidebarProps>(
                               <Select.DisplayValue />
                             </Select.Trigger>
                             <Select.Popover class="border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto">
-                              {models.map((model, idx) => (
+                              {models.map((model) => (
                                 <Select.Item
-                                  key={idx}
+                                  key={model.id}
                                   class="text-foreground hover:bg-accent"
                                   value={model.id}
                                   onClick$={$(() => {
@@ -288,9 +285,9 @@ export const ExecutionForm = component$<SidebarProps>(
                             </Select.Trigger>
                             <Select.Popover class="border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto">
                               {selectedModel.value?.providers?.map(
-                                (provider, idx) => (
+                                (provider) => (
                                   <Select.Item
-                                    key={idx}
+                                    key={provider}
                                     class="text-foreground hover:bg-accent"
                                     value={provider}
                                   >

@@ -80,7 +80,7 @@ export const generateCells = async function* ({
 
         let cell = await getColumnCellByIdx({ idx: i, columnId: column.id });
 
-        if (!cell || !cell.id) {
+        if (!cell?.id) {
           cell = await createCell({
             cell: { idx: i },
             columnId: column.id,

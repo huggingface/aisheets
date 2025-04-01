@@ -1,4 +1,4 @@
-import { isServer, useSignal, useVisibleTask$ } from '@builder.io/qwik';
+import { isServer, useComputed$, useVisibleTask$ } from '@builder.io/qwik';
 import { useNavigate } from '@builder.io/qwik-city';
 import { whoAmI } from '@huggingface/hub';
 
@@ -34,19 +34,23 @@ export const getClientSession = (): ClientSession | null => {
 };
 
 export const useClientSession = () => {
-  const currentSession = useSignal<ClientSession>();
   const nav = useNavigate();
   if (isServer) {
     console.log('useServerSession if you want to access from server side.');
   }
 
-  useVisibleTask$(() => {
+  const computedSession = useComputed$(() => {
     const session = getClientSession();
-    if (session) currentSession.value = session;
-    else nav('/signin');
+    return session;
   });
 
-  return currentSession;
+  useVisibleTask$(() => {
+    const session = getClientSession();
+
+    if (!session) nav('/signin');
+  });
+
+  return computedSession;
 };
 
 export const serverSession = async (

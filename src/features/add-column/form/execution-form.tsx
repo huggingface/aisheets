@@ -29,7 +29,6 @@ import {
   type Column,
   type CreateColumn,
   TEMPORAL_ID,
-  getClientSession,
   useClientSession,
   useColumnsStore,
 } from '~/state';
@@ -82,7 +81,7 @@ export const ExecutionForm = component$<SidebarProps>(
     });
 
     const loadModels = useResource$(async () => {
-      return await useListModels(getClientSession()!.token);
+      return await useListModels(session.value!.token);
     });
 
     useVisibleTask$(async ({ track }) => {

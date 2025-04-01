@@ -17,7 +17,7 @@ export const saveSession = async (cookie: Cookie, session: Session) => {
 
   cookie.delete('session');
   cookie.set('session', session, {
-    sameSite: 'none',
+    sameSite: 'None',
     secure: true,
     httpOnly: !isDev,
     maxAge,

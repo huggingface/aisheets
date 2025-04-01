@@ -57,7 +57,6 @@ export const onGet = async ({
         secure: true,
         httpOnly: !isDev,
         path: '/auth/callback',
-        domain: isDev ? undefined : 'hf.space',
       },
     );
     throw redirect(303, loginUrl);

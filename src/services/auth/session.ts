@@ -22,6 +22,5 @@ export const saveSession = async (cookie: Cookie, session: Session) => {
     httpOnly: !isDev,
     maxAge,
     path: '/',
-    domain: isDev ? undefined : 'hf.space',
   });
 };

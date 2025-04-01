@@ -11,11 +11,19 @@ import { Tooltip } from '~/components/ui/tooltip/tooltip';
 
 import { LuLibrary, LuPanelLeft } from '@qwikest/icons/lucide';
 import { getUserDatasets } from '~/services';
-import { type Dataset, useClientSession, useDatasetsStore } from '~/state';
+import {
+  type Dataset,
+  serverSession,
+  useClientSession,
+  useDatasetsStore,
+} from '~/state';
 
-const getAllUserDatasets = server$(
-  async (username: string) => await getUserDatasets(username),
-);
+const getAllUserDatasets = server$(async (accessToken: string) => {
+  const session = await serverSession(accessToken);
+  if (!session) return [];
+
+  return await getUserDatasets(session.username);
+});
 
 export const MainSidebar = component$(() => {
   const session = useClientSession();
@@ -42,9 +50,9 @@ export const MainSidebar = component$(() => {
 
   useVisibleTask$(async () => {
     if (!session.value) return;
-    if (!session.value.user) return;
+    if (!session.value.token) return;
 
-    const dataset = await getAllUserDatasets(session.value.user.username);
+    const dataset = await getAllUserDatasets(session.value.token);
 
     datasets.value = dataset;
   });

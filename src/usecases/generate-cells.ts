@@ -1,4 +1,4 @@
-import { getColumnSize, updateProcess } from '~/services';
+import { getGeneratedColumnSize, updateProcess } from '~/services';
 import {
   createCell,
   getColumnCellByIdx,
@@ -65,7 +65,7 @@ export const generateCells = async function* ({
 
   const validatedIdxs = validatedCells?.map((cell) => cell.idx);
 
-  if (!limit) limit = await getColumnSize(column);
+  if (!limit) limit = await getGeneratedColumnSize(column);
   if (!offset) offset = 0;
 
   try {
@@ -78,9 +78,14 @@ export const generateCells = async function* ({
       for (let i = offset; i < limit + offset; i++) {
         if (validatedIdxs?.includes(i)) continue;
 
-        const cell =
-          (await getColumnCellByIdx({ idx: i, columnId: column.id })) ??
-          (await createCell({ cell: { idx: i }, columnId: column.id }));
+        let cell = await getColumnCellByIdx({ idx: i, columnId: column.id });
+
+        if (!cell || !cell.id) {
+          cell = await createCell({
+            cell: { idx: i },
+            columnId: column.id,
+          });
+        }
 
         cell.generating = true;
         cells.set(i, cell);

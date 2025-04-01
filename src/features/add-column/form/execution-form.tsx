@@ -98,7 +98,7 @@ export const ExecutionForm = component$<SidebarProps>(
       const models = await loadModels.value;
 
       variables.value = columns.value
-        .filter((c) => c.id !== column.id)
+        .filter((c) => c.id !== column.id && !hasBlobContent(c))
         .map((c) => ({
           id: c.id,
           name: c.name,
@@ -416,3 +416,7 @@ export const ExecutionForm = component$<SidebarProps>(
     );
   },
 );
+
+export const hasBlobContent = (column: Column): boolean => {
+  return column.type.includes('BLOB');
+};

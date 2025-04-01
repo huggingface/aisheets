@@ -38,11 +38,11 @@ export const hasBlobContent = (column: Column | undefined): boolean => {
 };
 
 export const isArrayType = (column: Column): boolean => {
-  return column.type.includes('[]');
+  return column?.type?.includes('[]');
 };
 
 export const isObjectType = (column: Column): boolean => {
-  return column.type.includes('STRUCT');
+  return column?.type?.startsWith('STRUCT');
 };
 
 export const isEditableValue = (column: Column): boolean => {
@@ -105,9 +105,6 @@ export const CellContentRenderer = component$<{
 
   return <p>{content}</p>;
 });
-
-// Cache for processed media content
-const mediaContentCache = new Map<string, string>();
 
 export const TableCell = component$<{
   cell: Cell;
@@ -194,20 +191,12 @@ export const TableCell = component$<{
             return contentValue.value;
           }
 
-          // Check cache first
-          const cacheKey = JSON.stringify(content);
-          if (mediaContentCache.has(cacheKey)) {
-            contentValue.value = mediaContentCache.get(cacheKey);
-            return contentValue.value;
-          }
-
           const processedInfo = await processMediaContent(
             content,
             isEditing.value,
           );
 
           if (processedInfo) {
-            mediaContentCache.set(cacheKey, processedInfo.content);
             contentValue.value = processedInfo.content;
             contentCategory.value = processedInfo.category;
           } else {
@@ -295,8 +284,12 @@ export const TableCell = component$<{
   useTask$(({ track }) => {
     track(() => newCellValue.value);
 
-    if (!newCellValue.value) {
-      modalHeight.value = '200px';
+    if (
+      !newCellValue.value ||
+      !isEditableValue(newCellValue.value) ||
+      !(typeof newCellValue.value === 'string')
+    ) {
+      modalHeight.value = '320px';
       return;
     }
 

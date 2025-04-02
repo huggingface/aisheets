@@ -147,8 +147,6 @@ export const getColumnCellByIdx = async ({
 
   const cell = rowDataToCells({ rowIdx: idx, rowData: rows[0] })[0];
 
-  if (!cell.id) return null;
-
   const model = await ColumnCellModel.findOne({
     where: {
       idx,

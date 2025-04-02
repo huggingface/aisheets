@@ -360,7 +360,7 @@ const DragAndDrop = component$(() => {
       preventdefault:dragover
       preventdefault:drop
       for="fileInput"
-      class={`relative border-2 p-6 border-dashed text-center cursor-pointer transition z-[99999] ${
+      class={`relative border-2 p-6 border-dashed text-center cursor-pointer transition z-10 ${
         isDragging.value
           ? 'bg-blue-200 border-blue-500'
           : 'bg-gray-100 hover:bg-gray-200'

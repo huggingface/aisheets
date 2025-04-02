@@ -166,33 +166,59 @@ export const getValidatedColumnCells = async ({
     id: string;
   };
 }): Promise<Cell[]> => {
+  return await getPersistedColumnCells({
+    column,
+    filters: {
+      validated: true,
+    },
+  });
+};
+
+export const getPersistedColumnCells = async ({
+  column,
+  offset,
+  limit,
+  filters,
+}: {
+  column: {
+    id: string;
+  };
+  offset?: number;
+  limit?: number;
+  filters?: Record<string, any>;
+}): Promise<Cell[]> => {
   const dbColumn = await getColumnById(column.id);
   if (!dbColumn) throw new Error('Column not found');
 
   const models = await ColumnCellModel.findAll({
     where: {
       columnId: column.id,
-      validated: true,
+      ...filters,
     },
     order: [
       ['idx', 'ASC'],
       ['createdAt', 'ASC'],
     ],
+    offset,
+    limit,
   });
 
   if (models.length === 0) return [];
 
+  const resultOffset = models[0].idx;
+  const resultLimit = models[models.length - 1].idx - models[0].idx + 1;
+
   const rows = await listDatasetTableRows({
     dataset: dbColumn.dataset,
     columns: [column],
-    offset: models[0].idx,
-    limit: models[models.length - 1].idx - models[0].idx + 1,
+    offset: resultOffset,
+    limit: resultLimit,
   });
 
   const cells = models.map((model) => ({
     id: model.id,
     idx: model.idx,
-    value: rows[model.idx][column.id],
+    value: rows[model.idx - resultOffset][column.id],
     error: model.error,
     validated: model.validated,
     column: {

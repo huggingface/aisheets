@@ -7,11 +7,12 @@ import {
 } from '@builder.io/qwik';
 import { server$ } from '@builder.io/qwik-city';
 import { cn } from '@qwik-ui/utils';
-import { LuThumbsUp } from '@qwikest/icons/lucide';
+import { LuRepeat, LuThumbsUp } from '@qwikest/icons/lucide';
 import { Button, Skeleton, Textarea } from '~/components';
 import { useClickOutside } from '~/components/hooks/click/outside';
 import { getColumnCellById } from '~/services';
 import { type Cell, type Column, useColumnsStore } from '~/state';
+import { useRegenerateCellUseCase } from '~/usecases/regenerate-cell.usecase';
 import { useValidateCellUseCase } from '~/usecases/validate-cell.usecase';
 import {
   AudioRenderer,
@@ -111,6 +112,8 @@ export const TableCell = component$<{
 }>(({ cell }) => {
   const { replaceCell, columns } = useColumnsStore();
   const validateCell = useValidateCellUseCase();
+
+  const regenerateCell = useRegenerateCellUseCase();
 
   const cellColumn = useSignal<Column | undefined>();
   const isStatic = useSignal(false);
@@ -353,6 +356,19 @@ export const TableCell = component$<{
     isEditing.value = false;
   });
 
+  const onRegenerateErrorCell = $(async () => {
+    if (!cell.error) return;
+    if (!cell.id) return;
+    if (cell.generating) return;
+    if (cell.validated) return;
+
+    for await (const newCell of await regenerateCell(cell)) {
+      if (!newCell) return;
+      replaceCell(newCell);
+      originalValue.value = newCell.value;
+    }
+  });
+
   const ref = useClickOutside(
     $(() => {
       if (!isEditing.value) return;
@@ -402,10 +418,24 @@ export const TableCell = component$<{
           )}
 
           {cell.error ? (
-            <span class="mt-2 p-4 text-red-500 text-xs flex items-center gap-1">
-              <span>⚠</span>
-              <span>{cell.error}</span>
-            </span>
+            <div class="absolute inset-0 flex items-center justify-center">
+              <span class="mt-2 p-4 text-red-500 text-xs flex items-center gap-1">
+                <span>⚠</span>
+                <span>{cell.error}</span>
+              </span>
+              <Button
+                look="ghost"
+                hover={false}
+                size="sm"
+                class="center z-10 text-base top-0 left-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-100 text-gray-400"
+                onClick$={(e) => {
+                  e.stopPropagation();
+                  onRegenerateErrorCell();
+                }}
+              >
+                <LuRepeat class="text-sm" />
+              </Button>
+            </div>
           ) : (
             <>
               {!isStatic.value && (

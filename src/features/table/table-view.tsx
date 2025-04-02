@@ -22,7 +22,10 @@ export const TableView = component$(() => {
           <Popover.Panel class="rounded-md border bg-popover p-1 text-popover-foreground shadow-md">
             <div class="flex flex-col justify-start w-full gap-2">
               {columns.value.map((column) => (
-                <div key={column.name} class="hover:bg-neutral-100 rounded-sm">
+                <div
+                  key={`${column.id}-${column.name}`}
+                  class="hover:bg-neutral-100 rounded-sm"
+                >
                   <HideColumn column={column} label={column.name} />
                 </div>
               ))}

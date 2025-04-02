@@ -5,6 +5,7 @@ import {
   Resource,
   component$,
   noSerialize,
+  sync$,
   useComputed$,
   useResource$,
   useSignal,
@@ -354,57 +355,40 @@ const DragAndDrop = component$(() => {
   const file = useSignal<NoSerialize<File>>();
   const isDragging = useSignal(false);
 
-  const handleFileSelect$ = $((event: Event) => {
-    const input = event.target as HTMLInputElement;
-    if (input.files?.length) {
-      file.value = noSerialize(input.files[0]);
-    }
-  });
-
-  useVisibleTask$(({ track }) => {
-    const preventDefault = (event: Event) => {
-      event.preventDefault();
-      event.stopPropagation();
-    };
-
-    window.addEventListener('dragover', preventDefault);
-    window.addEventListener('drop', preventDefault);
-
-    return () => {
-      window.removeEventListener('dragover', preventDefault);
-      window.removeEventListener('drop', preventDefault);
-    };
-  });
-
   return (
     <label
+      preventdefault:dragover
+      preventdefault:drop
       for="fileInput"
-      class={`relative border-2 p-6 border-dashed text-center cursor-pointer transition ${
+      class={`relative border-2 p-6 border-dashed text-center cursor-pointer transition z-[99999] ${
         isDragging.value
           ? 'bg-blue-200 border-blue-500'
           : 'bg-gray-100 hover:bg-gray-200'
       }`}
-      onDragOver$={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
+      onDragOver$={() => {
         isDragging.value = true;
       }}
-      onDragLeave$={() => (isDragging.value = false)}
-      onDrop$={(e: DragEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
+      onDragLeave$={() => {
+        isDragging.value = false;
+      }}
+      onDrop$={sync$((e: DragEvent) => {
         isDragging.value = false;
 
         if (e.dataTransfer?.files?.length) {
           file.value = noSerialize(e.dataTransfer.files[0]);
         }
-      }}
+      })}
     >
       <input
         type="file"
         id="fileInput"
         class="hidden"
-        onChange$={handleFileSelect$}
+        onChange$={sync$((e: Event) => {
+          const input = e.target as HTMLInputElement;
+          if (input.files?.length) {
+            file.value = noSerialize(input.files[0]);
+          }
+        })}
       />
 
       <span>

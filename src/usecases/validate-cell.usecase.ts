@@ -16,7 +16,7 @@ interface EditCell {
 export const useValidateCellUseCase = () =>
   server$(async (editCell: EditCell): Promise<Cell> => {
     try {
-      return await updateCell(editCell);
+      return await updateCell({ ...editCell, error: undefined });
     } catch (error) {
       return await createCell({
         cell: editCell,

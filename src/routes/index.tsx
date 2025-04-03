@@ -111,7 +111,7 @@ export default component$(() => {
           onClick$={() => document.getElementById('prompt')?.focus()}
         >
           <div class="w-full h-52 min-h-52 max-h-52 bg-white border border-secondary-foreground rounded-sm pt-2">
-            <span class="p-4 text-neutral-500 select-none">
+            <span class="p-4 text-neutral-500 select-none cursor-text">
               From a simple idea:
             </span>
             <Textarea

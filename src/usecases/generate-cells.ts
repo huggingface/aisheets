@@ -78,14 +78,7 @@ export const generateCells = async function* ({
       for (let i = offset; i < limit + offset; i++) {
         if (validatedIdxs?.includes(i)) continue;
 
-        let cell = await getColumnCellByIdx({ idx: i, columnId: column.id });
-
-        if (!cell || !cell.id) {
-          cell = await createCell({
-            cell: { idx: i },
-            columnId: column.id,
-          });
-        }
+        const cell = await getOrCreateCellInDB(column.id, i);
 
         cell.generating = true;
         cells.set(i, cell);
@@ -148,10 +141,7 @@ export const generateCells = async function* ({
     for (let i = offset; i < limit + offset; i++) {
       if (validatedIdxs?.includes(i)) continue;
 
-      let cell = await getColumnCellByIdx({ idx: i, columnId: column.id });
-      if (!cell) {
-        cell = await createCell({ cell: { idx: i }, columnId: column.id });
-      }
+      const cell = await getOrCreateCellInDB(column.id, i);
 
       cell.generating = true;
       yield { cell };
@@ -197,4 +187,20 @@ export const generateCells = async function* ({
     process.updatedAt = new Date();
     await updateProcess(process);
   }
+};
+
+const getOrCreateCellInDB = async (
+  columnId: string,
+  idx: number,
+): Promise<Cell> => {
+  let cell = await getColumnCellByIdx({ idx, columnId });
+
+  if (!cell?.id) {
+    cell = await createCell({
+      cell: { idx },
+      columnId,
+    });
+  }
+
+  return cell;
 };

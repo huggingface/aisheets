@@ -364,8 +364,10 @@ export const ExecutionForm = component$<SidebarProps>(
                       look="primary"
                       onClick$={onGenerate}
                       disabled={
-                        !column.process?.isExecuting &&
-                        (!canRegenerate.value || !isTouched.value)
+                        (column.process?.isExecuting &&
+                          column.id === TEMPORAL_ID) ||
+                        (!column.process?.isExecuting &&
+                          (!canRegenerate.value || !isTouched.value))
                       }
                     >
                       <div class="flex items-center gap-4">

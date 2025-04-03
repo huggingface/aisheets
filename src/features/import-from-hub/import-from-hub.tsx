@@ -355,6 +355,32 @@ const DragAndDrop = component$(() => {
   const file = useSignal<NoSerialize<File>>();
   const isDragging = useSignal(false);
 
+  const handleUploadFile$ = $(async () => {
+    if (!file.value) return;
+
+    const stream = file.value.stream();
+    const reader = stream.getReader();
+    const uploadId = crypto.randomUUID();
+    const fileName = `${uploadId}-${file.value.name}`;
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      await fetch('/api/upload', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/octet-stream',
+          'X-Chunk-Size': value.byteLength.toString(),
+          'X-File-Name': encodeURIComponent(fileName),
+        },
+        body: value,
+      });
+    }
+
+    console.log('File uploaded successfully', fileName);
+  });
+
   return (
     <label
       preventdefault:dragover
@@ -376,6 +402,8 @@ const DragAndDrop = component$(() => {
 
         if (e.dataTransfer?.files?.length) {
           file.value = noSerialize(e.dataTransfer.files[0]);
+
+          handleUploadFile$();
         }
       })}
     >
@@ -387,6 +415,8 @@ const DragAndDrop = component$(() => {
           const input = e.target as HTMLInputElement;
           if (input.files?.length) {
             file.value = noSerialize(input.files[0]);
+
+            handleUploadFile$();
           }
         })}
       />
@@ -396,7 +426,7 @@ const DragAndDrop = component$(() => {
           ? isDragging.value
             ? 'Drag and drop your file here'
             : 'Drag and drop your file here or click to select'
-          : file.value?.name}
+          : file.value.name}
       </span>
     </label>
   );

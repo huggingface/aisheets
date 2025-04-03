@@ -1,5 +1,5 @@
 import { type RequestEventBase, server$ } from '@builder.io/qwik-city';
-import { getColumnCells, updateCell, updateColumn } from '~/services';
+import { getValidatedColumnCells, updateCell, updateColumn } from '~/services';
 import { type Cell, type Column, useServerSession } from '~/state';
 import { generateCells } from './generate-cells';
 
@@ -13,9 +13,8 @@ export const useEditColumnUseCase = () =>
 
     const session = useServerSession(this);
 
-    const validatedCells = await getColumnCells({
+    const validatedCells = await getValidatedColumnCells({
       column,
-      conditions: { validated: true },
     });
 
     for await (const { cell } of generateCells({

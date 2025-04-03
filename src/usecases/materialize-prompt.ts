@@ -71,6 +71,8 @@ Generate **only** the output requested in the user instruction. No additional in
       examples: outputExamples,
       hasExamples: outputExamples && outputExamples.length > 0,
     },
+    undefined,
+    { escape: escapeValues },
   );
 }
 
@@ -114,10 +116,20 @@ The following are correct, accurate example outputs with respect to the user ins
     `,
     {
       instruction: renderInstruction
-        ? mustache.render(instruction, data)
+        ? mustache.render(instruction, data, undefined, {
+            escape: escapeValues,
+          })
         : instruction,
       hasExamples: examples && examples.length > 0,
       formattedExamples,
     },
   );
 }
+
+const escapeValues = (value: any): string => {
+  if (typeof value === 'object' || Array.isArray(value)) {
+    return JSON.stringify(value);
+  }
+
+  return value;
+};

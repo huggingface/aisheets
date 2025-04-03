@@ -31,7 +31,7 @@ export const useGenerateColumn = () => {
       updateColumn(updated!);
 
       for (const c of column.cells.filter((c) => c.generating)) {
-        const cell = await getColumnCellById$(c.id);
+        const cell = await getColumnCellById$(c.id!);
         replaceCell(cell!);
       }
     }

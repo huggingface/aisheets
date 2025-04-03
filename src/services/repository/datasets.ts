@@ -52,31 +52,39 @@ export const importDatasetFromFile = async (
   },
   options?: {
     limit?: number;
+    secrets?: {
+      googleSheets?: string;
+    };
   },
 ): Promise<Dataset> => {
   const model = await DatasetModel.create({
     name,
     createdBy,
   });
-
-  const columns = await createDatasetTableFromFile(
-    {
-      dataset: {
-        id: model.id,
-        name: model.name,
-        createdBy: model.createdBy,
+  try {
+    const columns = await createDatasetTableFromFile(
+      {
+        dataset: {
+          id: model.id,
+          name: model.name,
+          createdBy: model.createdBy,
+        },
+        file,
       },
-      file,
-    },
-    options,
-  );
+      options,
+    );
 
-  return {
-    id: model.id,
-    name: model.name,
-    createdBy: model.createdBy,
-    columns,
-  };
+    return {
+      id: model.id,
+      name: model.name,
+      createdBy: model.createdBy,
+      columns,
+    };
+  } catch (error) {
+    console.error('Error importing dataset from file:', error);
+    await model.destroy();
+    throw new Error('Failed to import dataset from file');
+  }
 };
 
 export const createDataset = async ({
@@ -88,14 +96,20 @@ export const createDataset = async ({
     createdBy,
   });
 
-  await createDatasetTable({ dataset: model });
+  try {
+    await createDatasetTable({ dataset: model });
 
-  return {
-    id: model.id,
-    name: model.name,
-    createdBy: model.createdBy,
-    columns: [],
-  };
+    return {
+      id: model.id,
+      name: model.name,
+      createdBy: model.createdBy,
+      columns: [],
+    };
+  } catch (error) {
+    console.error('Error creating dataset:', error);
+    await model.destroy();
+    throw new Error('Failed to create dataset');
+  }
 };
 
 export const getDatasetById = async (

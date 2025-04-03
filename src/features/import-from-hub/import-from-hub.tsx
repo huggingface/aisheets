@@ -354,20 +354,22 @@ const FileSelection = component$(
 const DragAndDrop = component$(() => {
   const file = useSignal<NoSerialize<File>>();
   const isDragging = useSignal(false);
+  const navigate = useNavigate();
+
+  const uploadErrorMessage = useSignal<string | null>(null);
 
   const handleUploadFile$ = $(async () => {
     if (!file.value) return;
 
     const stream = file.value.stream();
     const reader = stream.getReader();
-    const uploadId = crypto.randomUUID();
-    const fileName = `${uploadId}-${file.value.name}`;
+    const fileName = `${file.value.name}`;
 
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
 
-      await fetch('/api/upload', {
+      const response = await fetch('/api/upload', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/octet-stream',
@@ -376,58 +378,71 @@ const DragAndDrop = component$(() => {
         },
         body: value,
       });
-    }
 
-    console.log('File uploaded successfully', fileName);
+      if (!response.ok) {
+        uploadErrorMessage.value =
+          'Failed to upload file. Please try again or provide another file.';
+        return;
+      }
+
+      const { id } = await response.json();
+      navigate('/dataset/' + id);
+    }
   });
 
   return (
-    <label
-      preventdefault:dragover
-      preventdefault:drop
-      for="fileInput"
-      class={`relative border-2 p-6 border-dashed text-center cursor-pointer transition z-10 ${
-        isDragging.value
-          ? 'bg-blue-200 border-blue-500'
-          : 'bg-gray-100 hover:bg-gray-200'
-      }`}
-      onDragOver$={() => {
-        isDragging.value = true;
-      }}
-      onDragLeave$={() => {
-        isDragging.value = false;
-      }}
-      onDrop$={sync$((e: DragEvent) => {
-        isDragging.value = false;
+    <>
+      <label
+        preventdefault:dragover
+        preventdefault:drop
+        for="fileInput"
+        class={`relative border-2 p-6 border-dashed text-center cursor-pointer transition z-10 ${
+          isDragging.value
+            ? 'bg-blue-200 border-blue-500'
+            : 'bg-gray-100 hover:bg-gray-200'
+        }`}
+        onDragOver$={() => {
+          isDragging.value = true;
+        }}
+        onDragLeave$={() => {
+          isDragging.value = false;
+        }}
+        onDrop$={sync$((e: DragEvent) => {
+          isDragging.value = false;
 
-        if (e.dataTransfer?.files?.length) {
-          file.value = noSerialize(e.dataTransfer.files[0]);
-
-          handleUploadFile$();
-        }
-      })}
-    >
-      <input
-        type="file"
-        id="fileInput"
-        class="hidden"
-        onChange$={sync$((e: Event) => {
-          const input = e.target as HTMLInputElement;
-          if (input.files?.length) {
-            file.value = noSerialize(input.files[0]);
+          if (e.dataTransfer?.files?.length) {
+            file.value = noSerialize(e.dataTransfer.files[0]);
 
             handleUploadFile$();
           }
         })}
-      />
+      >
+        <input
+          type="file"
+          id="fileInput"
+          class="hidden"
+          onChange$={sync$((e: Event) => {
+            const input = e.target as HTMLInputElement;
+            if (input.files?.length) {
+              file.value = noSerialize(input.files[0]);
 
-      <span>
-        {!file.value
-          ? isDragging.value
-            ? 'Drag and drop your file here'
-            : 'Drag and drop your file here or click to select'
-          : file.value.name}
-      </span>
-    </label>
+              handleUploadFile$();
+            }
+          })}
+        />
+
+        <span>
+          {!file.value
+            ? isDragging.value
+              ? 'Drag and drop your file here'
+              : 'Drag and drop your file here or click to select'
+            : file.value.name}
+        </span>
+      </label>
+
+      {uploadErrorMessage.value && (
+        <div class="text-red-500 text-sm mt-2">{uploadErrorMessage.value}</div>
+      )}
+    </>
   );
 });

@@ -43,3 +43,21 @@ export const INFERENCE_TIMEOUT = 90000;
  * Default value: 5, max. number of concurrent requests 10
  */
 export const NUM_CONCURRENT_REQUESTS = 5;
+
+/**
+ * The Serper API key used for web searches.
+ * This value is retrieved from the environment variable `SERPER_API_KEY`.
+ */
+export const SERPER_API_KEY: string | undefined = process.env.SERPER_API_KEY;
+
+/**
+ * The default model provider for inference operations.
+ * Default value: 'sambanova'
+ */
+export const DEFAULT_MODEL_PROVIDER: string =
+  process.env.DEFAULT_MODEL_PROVIDER ?? 'sambanova';
+
+/**
+ * The default model for inference operations.
+ */
+export const DEFAULT_MODEL: string = process.env.DEFAULT_MODEL ?? '';

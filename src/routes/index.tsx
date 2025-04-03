@@ -102,21 +102,23 @@ export default component$(() => {
   return (
     <ActiveDatasetProvider>
       <div class="w-full h-full flex flex-col items-center justify-center gap-2">
-        <h1 class="text-2xl font-medium">Design your data in a sheet</h1>
+        <h1 class="text-3xl font-medium text-neutral-700">
+          Design your data in a sheet
+        </h1>
 
         <div
           class="relative w-[600px] mt-6"
           onClick$={() => document.getElementById('prompt')?.focus()}
         >
           <div class="w-full h-96 min-h-96 max-h-96 bg-white border border-secondary-foreground rounded-sm pt-2">
-            <span class="p-4 text-gray-800 select-none">
+            <span class="p-4 text-neutral-500 select-none">
               From a simple idea:
             </span>
             <Textarea
               id="prompt"
               look="ghost"
               placeholder="Create customer claims. Categorize them as formal, humorous, neutral, or injurious, and respond to each in a neutral tone."
-              class="px-4 h-80 min-h-80 max-h-80 resize-none overflow-auto text-base rounded-sm text-gray-500"
+              class="px-4 h-80 min-h-80 max-h-80 resize-none overflow-auto text-base rounded-sm text-neutral-500 placeholder:text-neutral-400"
             />
           </div>
           <div
@@ -153,7 +155,7 @@ export default component$(() => {
           <hr class="w-full border-t border-gray-300" />
         </div>
 
-        <div class="w-[550px] flex flex-col justify-center items-center gap-1 mt-4">
+        <div class="w-[550px] flex flex-col justify-center items-center gap-3 mt-4">
           <span class="text-gray-500">From real-world data</span>
           <Button class="flex gap-1 bg-white">
             <LuFilePlus2 class="text-lg" />

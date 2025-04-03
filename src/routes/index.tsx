@@ -110,7 +110,7 @@ export default component$(() => {
           class="relative w-[600px] mt-6"
           onClick$={() => document.getElementById('prompt')?.focus()}
         >
-          <div class="w-full h-96 min-h-96 max-h-96 bg-white border border-secondary-foreground rounded-sm pt-2">
+          <div class="w-full h-52 min-h-52 max-h-52 bg-white border border-secondary-foreground rounded-sm pt-2">
             <span class="p-4 text-neutral-500 select-none">
               From a simple idea:
             </span>
@@ -118,7 +118,7 @@ export default component$(() => {
               id="prompt"
               look="ghost"
               placeholder="Create customer claims. Categorize them as formal, humorous, neutral, or injurious, and respond to each in a neutral tone."
-              class="px-4 h-80 min-h-80 max-h-80 resize-none overflow-auto text-base rounded-sm text-neutral-500 placeholder:text-neutral-400"
+              class="px-4 h-32 min-h-32 max-h-32 resize-none overflow-auto text-base rounded-sm text-neutral-500 placeholder:text-neutral-400"
             />
           </div>
           <div

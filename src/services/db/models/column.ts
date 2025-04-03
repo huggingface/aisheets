@@ -36,6 +36,10 @@ export class ColumnModel extends Model<
     return (this.dataValues as any).numberOfCells ?? 0;
   }
 
+  set numberOfCells(value: number) {
+    (this.dataValues as any).numberOfCells = value;
+  }
+
   declare static associations: {
     cells: Association<ColumnModel, ColumnCellModel>;
     dataset: Association<ColumnModel, DatasetModel>;

@@ -1,13 +1,8 @@
-import { Sequelize } from 'sequelize';
-import {
-  ColumnCellModel,
-  ColumnModel,
-  DatasetModel,
-  ProcessModel,
-} from '~/services/db/models';
+import { DatasetModel } from '~/services/db/models';
 import type { Dataset } from '~/state';
 import { getColumnCells } from './cells';
-import { modelToColumn } from './columns';
+import { getDatasetColumns } from './columns';
+import { createDatasetTable, createDatasetTableFromFile } from './tables';
 
 interface CreateDatasetParams {
   name: string;
@@ -22,6 +17,8 @@ export const createDatasetIdByUser = async ({
     name: 'New dataset',
     createdBy,
   });
+
+  await createDatasetTable({ dataset: model });
 
   return model.id;
 };
@@ -43,6 +40,45 @@ export const getUserDatasets = async (user: {
   return datasets;
 };
 
+export const importDatasetFromFile = async (
+  {
+    name,
+    createdBy,
+    file,
+  }: {
+    name: string;
+    createdBy: string;
+    file: string;
+  },
+  options?: {
+    limit?: number;
+  },
+): Promise<Dataset> => {
+  const model = await DatasetModel.create({
+    name,
+    createdBy,
+  });
+
+  const columns = await createDatasetTableFromFile(
+    {
+      dataset: {
+        id: model.id,
+        name: model.name,
+        createdBy: model.createdBy,
+      },
+      file,
+    },
+    options,
+  );
+
+  return {
+    id: model.id,
+    name: model.name,
+    createdBy: model.createdBy,
+    columns,
+  };
+};
+
 export const createDataset = async ({
   name,
   createdBy,
@@ -51,6 +87,8 @@ export const createDataset = async ({
     name,
     createdBy,
   });
+
+  await createDatasetTable({ dataset: model });
 
   return {
     id: model.id,
@@ -66,39 +104,28 @@ export const getDatasetById = async (
     cellsByColumn?: number;
   },
 ): Promise<Dataset | null> => {
-  const model = await DatasetModel.findByPk(id, {
-    include: [
-      {
-        association: DatasetModel.associations.columns,
-        separate: true,
-        order: [['createdAt', 'ASC']],
-        include: [
-          {
-            association: ColumnModel.associations.process,
-            include: [ProcessModel.associations.referredColumns],
-          },
-        ],
-      },
-    ],
-  });
+  const model = await DatasetModel.findByPk(id);
 
   if (!model) return null;
+
+  const columns = await getDatasetColumns(model);
 
   const dataset = {
     id: model.id,
     name: model.name,
     createdBy: model.createdBy,
-    columns: model.columns.map((column) => {
-      column.dataset = model;
-      return modelToColumn(column);
-    }),
+    columns,
   };
 
-  for (const column of dataset.columns) {
-    column.cells = await getColumnCells({
-      column,
-      limit: options?.cellsByColumn,
-    });
+  if (options?.cellsByColumn) {
+    await Promise.all(
+      dataset.columns.map(async (column) => {
+        column.cells = await getColumnCells({
+          column,
+          limit: options?.cellsByColumn,
+        });
+      }),
+    );
   }
 
   return dataset;
@@ -112,9 +139,7 @@ export const updateDataset = async ({
   name: string;
 }): Promise<Dataset> => {
   const model = await DatasetModel.findByPk(id);
-  if (!model) {
-    throw new Error('Dataset not found');
-  }
+  if (!model) throw new Error('Dataset not found');
 
   model.set({ name });
   await model.save();
@@ -125,37 +150,4 @@ export const updateDataset = async ({
     createdBy: model.createdBy,
     columns: [],
   };
-};
-
-export const listDatasetRows = async function* ({
-  dataset,
-  conditions,
-  visibleOnly,
-}: {
-  dataset: Dataset;
-  conditions?: Record<string, any>;
-  visibleOnly?: boolean;
-}): AsyncGenerator<Record<string, any>> {
-  let columns = dataset.columns;
-
-  if (visibleOnly) {
-    columns = dataset.columns?.filter((column) => column.visible);
-  }
-
-  const caseWhen = columns?.map((column) =>
-    Sequelize.literal(
-      `MAX(CASE WHEN columnId = '${column.id}' THEN value END) AS '${column.name}'`,
-    ),
-  );
-
-  const results = await ColumnCellModel.findAll({
-    raw: true,
-    attributes: ['idx', ...(caseWhen! as any)],
-    where: { ...conditions },
-    group: 'idx',
-  });
-
-  for await (const row of results) {
-    yield row;
-  }
 };

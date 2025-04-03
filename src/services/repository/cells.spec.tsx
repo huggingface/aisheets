@@ -26,11 +26,10 @@ describe('getRowCells', () => {
 
     const cell = await ColumnCellModel.create({
       idx: 1,
-      value: 'Test Row',
       columnId: column.id,
     });
 
-    const cells = await getRowCells({ rowIdx: 2 });
+    const cells = await getRowCells({ rowIdx: 2, columns: [column.id] });
     expect(cells).toEqual([]);
   });
 
@@ -66,27 +65,26 @@ describe('getRowCells', () => {
     const cells = await ColumnCellModel.bulkCreate([
       {
         idx,
-        value: 'Test Row',
         columnId: columns[0].id,
       },
       {
         idx,
-        value: '100',
         columnId: columns[1].id,
       },
       {
         idx,
-        value: 'true',
         columnId: columns[2].id,
       },
       {
         idx: 2,
-        value: 'Test Row with other values',
         columnId: columns[0].id,
       },
     ]);
 
-    const rowCells = await getRowCells({ rowIdx: idx });
+    const rowCells = await getRowCells({
+      rowIdx: idx,
+      columns: columns.map((c) => c.id),
+    });
     expect(rowCells).toHaveLength(3);
 
     expect(rowCells[0].column!).toBeDefined();

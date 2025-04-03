@@ -2,22 +2,22 @@ import { createWriteStream, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import type { RequestHandler } from '@builder.io/qwik-city';
 import { importDatasetFromFile } from '~/services/repository/datasets';
-import { type Session, useServerSession } from '~/state';
+import { useServerSession } from '~/state';
 
 import { DATA_DIR } from '~/config';
 
 import fs from 'node:fs/promises';
 
-export const onPost: RequestHandler = async (ev) => {
-  const { request, json } = ev;
+export const onPost: RequestHandler = async (event) => {
+  const { request, json } = event;
 
   let filePath: string | undefined = undefined;
 
   try {
-    const session = useServerSession(ev);
+    const session = useServerSession(event);
     const filename = decodeURIComponent(request.headers.get('X-File-Name')!);
 
-    filePath = await writeRequestFileLocally(request, filename, session);
+    filePath = await writeRequestFileLocally(request, filename);
 
     const newDataset = await importDatasetFromFile({
       name: filename,
@@ -38,7 +38,6 @@ export const onPost: RequestHandler = async (ev) => {
 const writeRequestFileLocally = async (
   request: Request,
   filename: string,
-  session: Session,
 ): Promise<string> => {
   const chunk = await request.arrayBuffer();
 

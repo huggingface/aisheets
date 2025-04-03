@@ -1,5 +1,5 @@
 import { Slot, component$ } from '@builder.io/qwik';
-import type { RequestHandler } from '@builder.io/qwik-city';
+import { type RequestHandler, useLocation } from '@builder.io/qwik-city';
 
 import { ModalsProvider } from '~/components';
 import { MainSidebar } from '~/features/main-sidebar';
@@ -12,9 +12,17 @@ export const onGet: RequestHandler = async ({ cacheControl }) => {
   });
 };
 
+const remove_layout = ['/sign-in'];
+
 export * from '~/loaders';
 
 export default component$(() => {
+  const location = useLocation();
+
+  if (remove_layout.some((path) => location.url.pathname.startsWith(path))) {
+    return <Slot />;
+  }
+
   return (
     <ModalsProvider>
       <div class="flex-row flex max-h-screen">

@@ -1,8 +1,9 @@
 import { component$, isDev, useSignal } from '@builder.io/qwik';
-import { type RequestEvent, server$, useNavigate } from '@builder.io/qwik-city';
+import { type RequestEvent, server$ } from '@builder.io/qwik-city';
 import * as hub from '@huggingface/hub';
-import { LuEgg, LuFilePlus2 } from '@qwikest/icons/lucide';
+import { LuEgg, LuFilePlus2, LuGlobe } from '@qwikest/icons/lucide';
 import { Button, Textarea } from '~/components';
+import { Logo } from '~/components/ui/logo/logo';
 
 import { CLIENT_ID, HF_TOKEN, OAUTH_SCOPES } from '~/config';
 import { createDatasetIdByUser } from '~/services';
@@ -92,31 +93,59 @@ const createDataset = server$(async function (this) {
 
 export default component$(() => {
   const isTransitioning = useSignal(false);
-  const nav = useNavigate();
+
+  const startingPrompts = [
+    'Summaries of popular Motown songs by artist, including lyrics',
+    'Top list of recent climate-related disaster with a description of the event and location',
+  ];
 
   return (
     <ActiveDatasetProvider>
-      <div class="w-full h-full flex flex-col items-center justify-center gap-6">
+      <div class="w-full h-full flex flex-col items-center justify-center gap-2">
         <h1 class="text-2xl font-medium">Design your data in a sheet</h1>
 
-        <div class="relative w-[600px] mt-6">
-          <div class="w-full h-96 min-h-96 max-h-96 bg-white border border-secondary-foreground rounded-sm">
+        <div
+          class="relative w-[600px] mt-6"
+          onClick$={() => document.getElementById('prompt')?.focus()}
+        >
+          <div class="w-full h-96 min-h-96 max-h-96 bg-white border border-secondary-foreground rounded-sm pt-2">
+            <span class="p-4 text-gray-800 select-none">
+              From a simple idea:
+            </span>
             <Textarea
               id="prompt"
               look="ghost"
-              class="p-4 h-80 min-h-80 max-h-80 resize-none overflow-auto text-base rounded-sm"
+              placeholder="Create customer claims. Categorize them as formal, humorous, neutral, or injurious, and respond to each in a neutral tone."
+              class="px-4 h-80 min-h-80 max-h-80 resize-none overflow-auto text-base rounded-sm text-gray-500"
             />
           </div>
           <div
-            class="w-full absolute bottom-2 right-2 flex flex-row items-center justify-between cursor-text"
+            class="w-full absolute bottom-2 px-4 flex flex-row items-center justify-between cursor-text"
             onClick$={() => document.getElementById('prompt')?.focus()}
           >
-            <div class="flex w-full justify-end items-center">
+            <div class="flex w-full justify-between items-center">
+              <Button look="secondary" class="flex gap-1 p-2 h-9">
+                <LuGlobe class="text-lg" />
+                Search the web
+              </Button>
+
               <Button look="primary" disabled>
                 <LuEgg class="text-2xl" />
               </Button>
             </div>
           </div>
+        </div>
+        <div class="w-[600px] flex flex-col justify-between items-start gap-1">
+          {startingPrompts.map((prompt) => (
+            <Button
+              key={prompt}
+              look="secondary"
+              class="flex gap-1 text-xs px-2 rounded-xl"
+            >
+              <Logo class="w-5" />
+              {prompt}
+            </Button>
+          ))}
         </div>
         <div class="w-[550px] flex justify-center items-center">
           <hr class="w-full border-t border-gray-300" />
@@ -124,8 +153,9 @@ export default component$(() => {
           <hr class="w-full border-t border-gray-300" />
         </div>
 
-        <div class="w-[550px] flex justify-center items-center">
-          <Button class="flex gap-1">
+        <div class="w-[550px] flex flex-col justify-center items-center gap-1 mt-4">
+          <span class="text-gray-500">From real-world data</span>
+          <Button class="flex gap-1 bg-white">
             <LuFilePlus2 class="text-lg" />
             Drop or click to start with a file
           </Button>

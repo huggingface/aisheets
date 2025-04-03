@@ -1,4 +1,4 @@
-import { getColumnSize, updateProcess } from '~/services';
+import { getGeneratedColumnSize, updateProcess } from '~/services';
 import {
   createCell,
   getColumnCellByIdx,
@@ -46,14 +46,18 @@ export const generateCells = async function* ({
   session,
   limit,
   offset,
-  validatedCells,
+  validatedCells = [],
   stream = true,
   timeout,
-  parallel,
+  parallel = false,
 }: GenerateCellsParams) {
   const { columnsReferences, modelName, modelProvider, prompt } = process;
 
-  const examples = await collectExamples({
+  // Track all our generated cells to use as examples
+  const generatedCells: Cell[] = [];
+
+  // Get initial examples from validated cells
+  let currentExamples = await collectExamples({
     column,
     validatedCells,
     columnsReferences,
@@ -61,144 +65,112 @@ export const generateCells = async function* ({
 
   const validatedIdxs = validatedCells?.map((cell) => cell.idx);
 
-  if (!limit) limit = await getColumnSize(column);
+  if (!limit) limit = await getGeneratedColumnSize(column);
   if (!offset) offset = 0;
 
   try {
-    // Only use parallel execution when we have referenced columns
+    // Parallel execution (when we have column references)
     if (parallel && columnsReferences?.length > 0) {
       const streamRequests: PromptExecutionParams[] = [];
       const cells = new Map<number, Cell>();
-      const pendingResults = new Map<
-        number,
-        { value?: string; error?: string }
-      >();
 
+      // Create all cells and requests in order
       for (let i = offset; i < limit + offset; i++) {
         if (validatedIdxs?.includes(i)) continue;
+
+        let cell = await getColumnCellByIdx({ idx: i, columnId: column.id });
+
+        if (!cell || !cell.id) {
+          cell = await createCell({
+            cell: { idx: i },
+            columnId: column.id,
+          });
+        }
+
+        cell.generating = true;
+        cells.set(i, cell);
 
         const args: PromptExecutionParams = {
           accessToken: session.token,
           modelName,
           modelProvider,
-          examples,
+          examples: currentExamples,
           instruction: prompt,
           timeout,
           data: {},
-          idx: i, // Make sure idx is always defined
+          idx: i,
         };
 
-        // We know we have referenced columns here
-        const rowCells = await getRowCells({
-          rowIdx: i,
-          columns: columnsReferences,
-        });
-        args.data = Object.fromEntries(
-          rowCells.map((cell) => [cell.column!.name, cell.value]),
-        );
+        if (columnsReferences?.length) {
+          const rowCells = await getRowCells({
+            rowIdx: i,
+            columns: columnsReferences,
+          });
+          args.data = Object.fromEntries(
+            rowCells.map((cell) => [cell.column!.name, cell.value]),
+          );
+        }
 
-        const cell =
-          (await getColumnCellByIdx({ idx: i, columnId: column.id })) ??
-          (await createCell({
-            cell: { idx: i },
-            columnId: column.id,
-          }));
-
-        cell.generating = true;
-        cells.set(i, cell);
         streamRequests.push(args);
       }
 
-      // Create an ordered array to track which cells we need to update
-      const orderedCells = Array.from(cells.keys()).sort((a, b) => a - b);
+      // Initial yield of empty cells in order
+      const orderedIndices = Array.from(cells.keys()).sort((a, b) => a - b);
+      for (const idx of orderedIndices) {
+        const cell = cells.get(idx);
+        if (cell) yield { cell };
+      }
 
+      // Process responses in order
       for await (const { idx, response } of runPromptExecutionStreamBatch(
         streamRequests,
       )) {
-        if (idx === undefined) {
-          console.error('Received undefined idx in response');
-          continue;
-        }
+        if (idx === undefined) continue;
 
         const cell = cells.get(idx);
-        if (!cell) {
-          console.error(`No cell found for idx ${idx}`);
-          continue;
-        }
+        if (!cell) continue;
 
-        // Update the cell with the latest response
-        cell.value = response.value;
+        // Update cell with response
+        cell.value = response.value || '';
         cell.error = response.error;
 
-        // Store the latest result
-        pendingResults.set(idx, {
-          value: response.value,
-          error: response.error,
-        });
-
-        // If the response is done, mark the cell as complete
-        if (response.done) {
+        if (response.done || !cell.value) {
           cell.generating = false;
           await updateCell(cell);
+          yield { cell };
         }
-
-        // Yield the cell immediately - this allows for streaming updates
-        yield { cell };
       }
 
       return;
     }
 
+    // Sequential execution for fromScratch to accumulate examples
     for (let i = offset; i < limit + offset; i++) {
       if (validatedIdxs?.includes(i)) continue;
+
+      let cell = await getColumnCellByIdx({ idx: i, columnId: column.id });
+      if (!cell) {
+        cell = await createCell({ cell: { idx: i }, columnId: column.id });
+      }
+
+      cell.generating = true;
+      yield { cell };
 
       const args = {
         accessToken: session.token,
         modelName,
         modelProvider,
-        examples,
+        examples: currentExamples,
         instruction: prompt,
         timeout,
         data: {},
       };
 
-      const rowCells = columnsReferences?.length
-        ? await getRowCells({
-            rowIdx: i,
-            columns: columnsReferences,
-          })
-        : [];
-
-      if (rowCells) {
-        args.data = Object.fromEntries(
-          rowCells.map((cell) => [cell.column!.name, cell.value]),
-        );
-      }
-
-      let cell = await getColumnCellByIdx({ idx: i, columnId: column.id });
-
-      if (!cell) {
-        cell = await createCell({
-          cell: { idx: i },
-          columnId: column.id,
-        });
-      }
-
-      cell.generating = true;
-
-      yield { cell };
-
       if (stream) {
-        for await (const response of runPromptExecutionStream({
-          ...args,
-          data: Object.fromEntries(
-            rowCells.map((cell) => [cell.column!.name, cell.value]),
-          ),
-        })) {
+        for await (const response of runPromptExecutionStream(args)) {
           cell.value = response.value;
           cell.error = response.error;
-
-          if (!response.done) yield { cell };
+          yield { cell };
         }
       } else {
         const response = await runPromptExecution(args);
@@ -207,21 +179,21 @@ export const generateCells = async function* ({
       }
 
       cell.generating = false;
-
       await updateCell(cell);
-
       yield { cell };
 
-      // Add newly generated values as examples when there are no validated cells or referred columns
-      if (
-        cell.value &&
-        !(validatedCells?.length || columnsReferences?.length)
-      ) {
-        examples.push({ output: cell.value, inputs: {} });
+      // Add this newly generated cell to our collection if it's valid
+      if (cell.value && !cell.error) {
+        generatedCells.push(cell);
+        // Recollect examples using ALL validated and generated cells
+        currentExamples = await collectExamples({
+          column,
+          validatedCells: [...validatedCells, ...generatedCells],
+          columnsReferences,
+        });
       }
     }
   } finally {
-    // update the process to reflect the latest execution (we should use a more explict attribute for this)
     process.updatedAt = new Date();
     await updateProcess(process);
   }

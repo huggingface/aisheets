@@ -98,7 +98,10 @@ export const useListModels = server$(async function (
         .filter((provider: any) => provider.status === 'live')
         .map((provider: any) => provider.provider);
 
-      if (availableProviders.length > 0) {
+      if (
+        availableProviders.length > 0 &&
+        model.tags?.includes('conversational')
+      ) {
         let sizeInB = 0;
         if (model.safetensors) {
           const paramCounts = Object.entries(

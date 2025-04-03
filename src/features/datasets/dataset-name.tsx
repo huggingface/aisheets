@@ -1,12 +1,7 @@
-import {
-  $,
-  component$,
-  useSignal,
-  useStore,
-  useVisibleTask$,
-} from '@builder.io/qwik';
+import { $, component$, useStore, useVisibleTask$ } from '@builder.io/qwik';
 import { server$ } from '@builder.io/qwik-city';
 import { Input } from '~/components';
+import { useClickOutside } from '~/components/hooks/click/outside';
 import { updateDataset } from '~/services/repository/datasets';
 import { useDatasetsStore } from '~/state';
 
@@ -20,8 +15,6 @@ export const DatasetName = component$(() => {
   });
 
   const { updateOnActiveDataset } = useDatasetsStore();
-
-  const inputRef = useSignal<HTMLInputElement>();
 
   const handleSave = $(() => {
     if (!state.isEditing) return;
@@ -41,6 +34,8 @@ export const DatasetName = component$(() => {
       await updateDataset({ id: datasetId, name: newName });
     })(activeDataset.value.id, newName);
   });
+
+  const inputRef = useClickOutside<HTMLInputElement>(handleSave);
 
   useVisibleTask$(({ track }) => {
     track(activeDataset);
@@ -80,7 +75,7 @@ export const DatasetName = component$(() => {
   const isDefaultName = state.displayName === 'New dataset';
 
   return (
-    <div class="h-[40px] flex items-center w-fit">
+    <div class="h-[40px] flex items-center w-full">
       {state.isEditing ? (
         <Input
           ref={inputRef}
@@ -88,11 +83,11 @@ export const DatasetName = component$(() => {
           value={state.name}
           onInput$={handleChange}
           onKeyDown$={handleKeyDown}
-          class="text-3xl font-bold w-full px-2 my-0 border-none outline-none leading-none"
+          class="text-3xl font-bold px-2 my-0 border-none outline-none leading-none"
         />
       ) : (
         <h1
-          class={`text-3xl font-bold w-full min-w-[200px] truncate leading-none px-2 ${isDefaultName ? 'text-neutral-400' : ''}`}
+          class={`text-3xl font-bold truncate leading-none px-2 ${isDefaultName ? 'text-neutral-400' : ''}`}
           onClick$={handleEditClick}
         >
           {state.displayName}

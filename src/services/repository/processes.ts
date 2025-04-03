@@ -51,7 +51,7 @@ export const createProcess = async ({
     modelProvider: model.modelProvider,
     offset: model.offset,
     prompt: model.prompt,
-    columnsReferences: process.columnsReferences || [],
+    columnsReferences: process?.columnsReferences || [],
     updatedAt: model.updatedAt,
   };
 };

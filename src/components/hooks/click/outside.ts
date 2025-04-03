@@ -1,7 +1,9 @@
 import { type QRL, useSignal, useVisibleTask$ } from '@builder.io/qwik';
 
-export function useClickOutside(callback: QRL<() => void>) {
-  const ref = useSignal<Element>();
+export function useClickOutside<T extends HTMLElement>(
+  callback: QRL<() => void>,
+) {
+  const ref = useSignal<T>();
 
   useVisibleTask$(({ track }) => {
     track(() => ref.value);

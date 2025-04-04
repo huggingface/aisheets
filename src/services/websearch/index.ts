@@ -136,3 +136,4 @@ export class WebScraper {
 export * from './types';
 export { scrapeUrl } from './scrape/scrape';
 export { htmlToMarkdownTree, markdownTreeToString } from './markdown/tree';
+export * from './embed';

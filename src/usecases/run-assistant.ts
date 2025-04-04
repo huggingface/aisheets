@@ -6,7 +6,11 @@ import {
   INFERENCE_TIMEOUT,
   SERPER_API_KEY,
 } from '~/config';
-import { WebScraper } from '~/services/websearch';
+import {
+  MockEmbeddingModel,
+  WebScraper,
+  createEmbeddings,
+} from '~/services/websearch';
 import type { SearchResult } from '~/services/websearch/search';
 import { useServerSession } from '~/state';
 
@@ -209,6 +213,14 @@ function isValidApiKey(key?: string): boolean {
 export interface SearchResultWithContent extends SearchResult {
   scrapedContent?: string;
   scrapedTitle?: string;
+  // Add embedding info for UI display
+  embeddingChunks?: Array<{
+    text: string;
+    embedding: number[]; // The actual vector
+    type?: string; // Type of element (e.g., 'header', 'paragraph')
+    parentHeader?: string; // Parent header for context
+    metadata?: Record<string, any>; // Additional metadata
+  }>;
 }
 
 /**
@@ -486,6 +498,62 @@ export const runAssistant = async function (
               console.log(
                 `✅ [Assistant] Average content per result: ${Math.floor(totalChars / scrapedCount).toLocaleString()} characters`,
               );
+
+              // Apply embedding to create chunk embeddings
+              try {
+                console.log(
+                  '⚙️ [Assistant] Creating embeddings for scraped content',
+                );
+
+                // Create a mock embedding model (for now)
+                const embeddingModel = new MockEmbeddingModel();
+
+                // Prepare sources for embedding
+                const sourcesForEmbedding = enrichedResults
+                  .filter((r) => r.scraped?.markdownTree)
+                  .map((r) => ({
+                    url: r.link || '',
+                    title: r.title,
+                    page: r.scraped!,
+                  }));
+
+                // Create embeddings for all chunks without filtering for relevance
+                const embeddedSources = await createEmbeddings(
+                  sourcesForEmbedding,
+                  embeddingModel,
+                );
+
+                console.log(
+                  `✅ [Assistant] Created embeddings for ${embeddedSources.length} sources`,
+                );
+
+                // Add the chunks with embeddings to the results
+                for (const embeddedSource of embeddedSources) {
+                  const resultToEnhance = resultWithContent.find(
+                    (r) => r.link === embeddedSource.url,
+                  );
+
+                  if (resultToEnhance) {
+                    // Store all chunks with their embeddings (no filtering)
+                    resultToEnhance.embeddingChunks = embeddedSource.chunks;
+                  }
+                }
+
+                const totalChunks = embeddedSources.reduce(
+                  (sum, source) => sum + source.chunks.length,
+                  0,
+                );
+
+                console.log(
+                  `✅ [Assistant] Total embedded chunks: ${totalChunks} across ${embeddedSources.length} sources`,
+                );
+              } catch (error) {
+                console.error(
+                  '❌ [Assistant] Error creating embeddings:',
+                  error,
+                );
+                // Continue with the original results on error
+              }
             }
           } catch (error) {
             console.error('❌ [Assistant] Error scraping content:', error);

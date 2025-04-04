@@ -19,6 +19,9 @@ import { Button, Label } from '~/components';
 import type { SearchResultWithContent } from '~/usecases/run-assistant';
 import { runAssistant } from '~/usecases/run-assistant';
 
+/**
+ * Result structure returned by the assistant
+ */
 export interface AssistantResult {
   columns?: string[];
   queries?: string[];
@@ -505,6 +508,91 @@ export const Assistant = component$(() => {
                           </details>
                         </div>
                       )}
+
+                      {source.embeddingChunks &&
+                        source.embeddingChunks.length > 0 && (
+                          <div class="mt-3 pt-3 border-t border-gray-100">
+                            <details>
+                              <summary class="text-sm font-medium cursor-pointer text-purple-600 hover:underline mb-2 flex items-center gap-1">
+                                <LuFileText class="h-3 w-3" />
+                                <span>Embedding chunks</span>
+                                <span class="ml-1 text-xs text-gray-500">
+                                  ({source.embeddingChunks.length} chunks)
+                                </span>
+                              </summary>
+                              <div class="mt-2 space-y-4 max-h-[600px] overflow-y-auto">
+                                {source.embeddingChunks.map((chunk, i) => (
+                                  <div
+                                    key={i}
+                                    class="bg-purple-50 p-3 rounded-sm border border-purple-100"
+                                  >
+                                    <div class="flex justify-between items-center mb-2">
+                                      <div class="text-xs font-medium text-purple-800">
+                                        Chunk #{i + 1}
+                                        {chunk.type && (
+                                          <span class="ml-2 px-2 py-0.5 bg-purple-200 text-purple-800 rounded-full">
+                                            Type: {chunk.type}
+                                          </span>
+                                        )}
+                                        {chunk.parentHeader && (
+                                          <span class="ml-2 text-xs text-gray-600">
+                                            Parent:{' '}
+                                            {chunk.parentHeader.substring(
+                                              0,
+                                              30,
+                                            )}
+                                            {chunk.parentHeader.length > 30
+                                              ? '...'
+                                              : ''}
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+                                    <div class="text-sm mb-3 bg-white p-2 rounded border border-purple-100">
+                                      <pre class="whitespace-pre-wrap font-sans text-xs">
+                                        {chunk.text}
+                                      </pre>
+                                    </div>
+                                    <div>
+                                      <div class="text-xs mb-1 font-medium text-purple-800">
+                                        Embedding vector (first 10 dimensions):
+                                      </div>
+                                      <div class="bg-white p-2 rounded text-xs font-mono overflow-x-auto border border-purple-100">
+                                        [
+                                        {chunk.embedding
+                                          .slice(0, 10)
+                                          .map((n) => n.toFixed(4))
+                                          .join(', ')}
+                                        {chunk.embedding.length > 10
+                                          ? ', ...'
+                                          : ''}
+                                        ]
+                                      </div>
+                                      <div class="mt-1 text-xs text-gray-500">
+                                        Total dimensions:{' '}
+                                        {chunk.embedding.length}
+                                      </div>
+                                      {chunk.metadata && (
+                                        <div class="mt-2 text-xs">
+                                          <div class="text-xs mb-1 font-medium text-purple-800">
+                                            Metadata:
+                                          </div>
+                                          <div class="bg-white p-2 rounded text-xs font-mono overflow-x-auto border border-purple-100">
+                                            {JSON.stringify(
+                                              chunk.metadata,
+                                              null,
+                                              2,
+                                            )}
+                                          </div>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </details>
+                          </div>
+                        )}
                     </div>
                   ))}
                 </div>

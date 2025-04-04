@@ -17,6 +17,11 @@ interface DBSCANOptions<T> {
  */
 export function spatialParser(): {
   title: string;
+  siteName?: string;
+  author?: string;
+  description?: string;
+  createdAt?: string;
+  updatedAt?: string;
   elements: SerializedHTMLElement[];
 } {
   const DBSCAN = <T>({
@@ -172,9 +177,7 @@ export function spatialParser(): {
     }
 
     if (!parent) {
-      throw new Error(
-        'disconnected node found, this should not really be possible when traversing through the dom',
-      );
+      throw new Error('Disconnected node found during DOM traversal');
     }
 
     if (['span', 'code', 'div'].includes(parent.nodeName.toLowerCase())) {

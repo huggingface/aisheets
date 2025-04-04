@@ -1,7 +1,7 @@
 import consola from 'consola';
 import { htmlToMarkdownTree } from '../markdown/tree';
 import { markdownTreeToString } from '../markdown/tree';
-import type { ScrapedPage, SerializedHTMLElement } from '../types';
+import type { ScrapedPage } from '../types';
 import { timeout } from '../utils/timeout';
 import { spatialParser } from './parser';
 import { closeBrowser, withPage } from './playwright';
@@ -21,7 +21,7 @@ const DEFAULT_MAX_CHARS_PER_ELEMENT = 1000;
  */
 const MAX_TOTAL_CONTENT_LENGTH = 25000;
 
-// Add a cleanup handler for application shutdown
+// Register cleanup handler
 process.on('exit', () => {
   closeBrowser().catch(() => {});
 });
@@ -46,22 +46,17 @@ export async function scrapeUrl(
         throw new Error(`Failed to load page: ${response.status()}`);
       }
 
-      // Check content type to determine how to process
       const contentType = response.headers()['content-type'] || '';
       let content = '';
       let title = '';
       let markdownTree = null;
-      let pageData = {
+
+      // Initialize with default empty values
+      let pageData: ReturnType<typeof spatialParser> = {
         title: '',
-        elements: [] as SerializedHTMLElement[],
-        siteName: undefined as string | undefined,
-        author: undefined as string | undefined,
-        description: undefined as string | undefined,
-        createdAt: undefined as string | undefined,
-        updatedAt: undefined as string | undefined,
+        elements: [],
       };
 
-      // Get page title
       title = await page.title();
 
       if (
@@ -71,48 +66,36 @@ export async function scrapeUrl(
         contentType.includes('application/xml') ||
         contentType.includes('text/csv')
       ) {
-        // For plain text content types, get the text directly
+        // For plain text content types
         content = await page.content();
-
-        // Create a simple markdown tree for plain text
         markdownTree = htmlToMarkdownTree(
           title,
           [{ tagName: 'p', attributes: {}, content: [content] }],
           maxCharsPerElem,
         );
-
-        // Convert markdown tree to string
         content = markdownTreeToString(markdownTree);
       } else {
-        // For HTML, extract the main content
-        // First, wait for any potential JavaScript to load
+        // For HTML content
         try {
           await page.waitForLoadState('networkidle', { timeout: 5000 });
         } catch (e) {
-          logger.warn(`Timeout waiting for network idle: ${url}`);
           // Continue with what we have
         }
 
-        // Use the spatial parser to extract the content
         try {
-          pageData = (await timeout(
-            page.evaluate(spatialParser),
-            10000,
-          )) as ReturnType<typeof spatialParser>;
+          pageData = await timeout(page.evaluate(spatialParser), 10000);
 
-          // Create markdown tree from the scraped HTML elements
           markdownTree = htmlToMarkdownTree(
             pageData.title || title,
             pageData.elements,
             maxCharsPerElem,
           );
-
-          // Convert markdown tree to string
           content = markdownTreeToString(markdownTree);
         } catch (e: unknown) {
           const error = e instanceof Error ? e : new Error(String(e));
           logger.error(`Error running spatial parser: ${error.message}`);
-          // Create a basic content representation if spatial parser fails
+
+          // Fallback to basic content extraction
           content = await page.content();
           markdownTree = htmlToMarkdownTree(
             title,
@@ -129,23 +112,20 @@ export async function scrapeUrl(
       }
 
       return {
-        title: pageData?.title || title,
-        siteName: pageData?.siteName,
-        author: pageData?.author,
-        description: pageData?.description,
-        createdAt: pageData?.createdAt,
-        updatedAt: pageData?.updatedAt,
+        title: pageData.title || title,
+        siteName: pageData.siteName,
+        author: pageData.author,
+        description: pageData.description,
+        createdAt: pageData.createdAt,
+        updatedAt: pageData.updatedAt,
         content,
         markdownTree,
       };
     });
 
     logger.success(
-      `Scraped URL: ${url} (${result.content.length} chars, took ${
-        Date.now() - startTime
-      }ms)`,
+      `Scraped ${url}: ${result.content.length} chars in ${Date.now() - startTime}ms`,
     );
-
     return result;
   } catch (error) {
     logger.error(`Error scraping URL: ${url}`, error);

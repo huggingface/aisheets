@@ -14,7 +14,6 @@ import {
 
 /**
  * Convert HTML element to Markdown elements
- * Based on the HuggingFace implementation
  */
 export function htmlElementToMarkdownElements(
   parent: HeaderElement,

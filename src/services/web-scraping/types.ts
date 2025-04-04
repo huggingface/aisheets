@@ -12,7 +12,7 @@ export interface SerializedHTMLElement {
 }
 
 /**
- * Types for Markdown parsing
+ * Markdown element types
  */
 export enum MarkdownElementType {
   Header = 'header',
@@ -30,7 +30,7 @@ export enum MarkdownElementType {
 }
 
 /**
- * Map HTML tag names to Markdown element types
+ * HTML tag to markdown element mapping
  */
 export const tagNameMap: Record<string, MarkdownElementType> = {
   h1: MarkdownElementType.Header,
@@ -51,7 +51,7 @@ export const tagNameMap: Record<string, MarkdownElementType> = {
 };
 
 /**
- * Base markdown element interface
+ * Base markdown element
  */
 export interface BaseMarkdownElement {
   type: MarkdownElementType;
@@ -60,7 +60,7 @@ export interface BaseMarkdownElement {
 }
 
 /**
- * Header element with children
+ * Header element
  */
 export interface HeaderElement extends BaseMarkdownElement {
   type: MarkdownElementType.Header;
@@ -69,7 +69,7 @@ export interface HeaderElement extends BaseMarkdownElement {
 }
 
 /**
- * List item element with depth
+ * List item element
  */
 export interface ListItemElement extends BaseMarkdownElement {
   type:
@@ -79,7 +79,7 @@ export interface ListItemElement extends BaseMarkdownElement {
 }
 
 /**
- * Block quote element with depth
+ * Block quote element
  */
 export interface BlockQuoteElement extends BaseMarkdownElement {
   type: MarkdownElementType.BlockQuote;
@@ -87,7 +87,7 @@ export interface BlockQuoteElement extends BaseMarkdownElement {
 }
 
 /**
- * Union type of all markdown elements
+ * All markdown element types
  */
 export type MarkdownElement =
   | HeaderElement
@@ -104,7 +104,7 @@ export type MarkdownElement =
     });
 
 /**
- * Conversion state for HTML to Markdown
+ * HTML to Markdown conversion state
  */
 export interface ConversionState {
   defaultType:
@@ -127,11 +127,11 @@ export interface ScrapedPage {
   createdAt?: string;
   updatedAt?: string;
   content: string;
-  markdownTree?: any; // Replace with the appropriate type from your markdown module
+  markdownTree?: HeaderElement;
 }
 
 /**
- * Search result type imported from serper-search
+ * Search result from external source
  */
 export interface SearchResult {
   title: string;

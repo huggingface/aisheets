@@ -1,6 +1,5 @@
 /**
  * A helper function to wait for a specified amount of time
- * Similar to the HuggingFace implementation
  */
 export function timeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   return new Promise<T>((resolve, reject) => {

@@ -12,7 +12,6 @@ import {
 
 /**
  * Converts HTML elements to Markdown elements and creates a tree based on header tags
- * Follows the HuggingFace implementation
  */
 export function htmlToMarkdownTree(
   title: string,
@@ -50,7 +49,6 @@ export function htmlToMarkdownTree(
     // Pop up header levels until reaching the same level as the current header
     // or until we reach the root
     let currentParent = parent;
-    // Use a labeled loop to match HuggingFace's implementation
     while (currentParent !== null && currentParent.parent !== null) {
       if (currentParent.level < headerElem.level) break;
       currentParent = currentParent.parent;

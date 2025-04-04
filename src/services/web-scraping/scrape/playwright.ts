@@ -17,28 +17,23 @@ const logger = consola.withTag('playwright');
  */
 const DEFAULT_TIMEOUT = 15000;
 
-// Singleton instance
+// Singleton browser management
 let browserInstance: Browser | null = null;
-// Track active contexts to prevent premature browser closure
 let activeContexts = 0;
-// Promise to track browser initialization to prevent race conditions
 let browserInitializationPromise: Promise<Browser> | null = null;
 
 /**
  * Get a singleton browser instance with race condition protection
  */
 export async function getBrowser(): Promise<Browser> {
-  // If browser initialization is in progress, wait for it
   if (browserInitializationPromise) {
     return browserInitializationPromise;
   }
 
-  // If browser exists and is connected, return it
   if (browserInstance?.isConnected()) {
     return browserInstance;
   }
 
-  // Otherwise, initialize browser with promise tracking to prevent race conditions
   try {
     browserInitializationPromise = chromium.launch({
       headless: true,
@@ -47,15 +42,12 @@ export async function getBrowser(): Promise<Browser> {
     logger.info('Launching browser');
     browserInstance = await browserInitializationPromise;
 
-    // Add event listener for disconnection
     browserInstance.on('disconnected', () => {
-      logger.warn('Browser disconnected');
       browserInstance = null;
     });
 
     return browserInstance;
   } finally {
-    // Clear initialization promise to allow future launches if needed
     browserInitializationPromise = null;
   }
 }
@@ -65,8 +57,6 @@ export async function getBrowser(): Promise<Browser> {
  */
 export async function getPlaywrightContext(): Promise<BrowserContext> {
   const browser = await getBrowser();
-
-  // Track active context
   activeContexts++;
 
   const context = await browser.newContext({
@@ -77,7 +67,6 @@ export async function getPlaywrightContext(): Promise<BrowserContext> {
     bypassCSP: true,
   });
 
-  // Set up listener to track when context is closed
   context.on('close', () => {
     activeContexts--;
   });
@@ -91,14 +80,11 @@ export async function getPlaywrightContext(): Promise<BrowserContext> {
 export async function closeBrowser(): Promise<void> {
   if (browserInstance && activeContexts === 0) {
     try {
-      logger.info('Closing browser - no active contexts');
       await browserInstance.close();
       browserInstance = null;
     } catch (error) {
       logger.error('Error closing browser:', error);
     }
-  } else if (activeContexts > 0) {
-    logger.info(`Not closing browser - ${activeContexts} active contexts`);
   }
 }
 
@@ -113,36 +99,29 @@ export async function withPage<T>(
   const page = await context.newPage();
 
   try {
-    logger.info(`Navigating to: ${url}`);
     const response = await page.goto(url, {
       waitUntil: 'domcontentloaded',
       timeout: 30000,
     });
 
-    logger.info(`Loaded page: ${url}`);
-    const result = await fn(page, response);
-
-    return result;
+    return await fn(page, response);
   } finally {
     await page.close();
     await context.close();
   }
 }
 
-// Automatic cleanup based on time rather than just process signals
+// Auto cleanup
 let cleanupInterval: NodeJS.Timeout | null = null;
 
-// Start the cleanup interval when the module is imported
 function startCleanupInterval() {
   if (cleanupInterval === null) {
-    // Check every 60 seconds if we can close the browser
     cleanupInterval = setInterval(() => {
       if (activeContexts === 0 && browserInstance) {
         closeBrowser().catch(() => {});
       }
     }, 60000);
 
-    // Don't let the interval prevent the process from exiting
     if (cleanupInterval.unref) {
       cleanupInterval.unref();
     }
@@ -151,16 +130,7 @@ function startCleanupInterval() {
 
 startCleanupInterval();
 
-// Set up cleanup handlers for graceful shutdown
-process.on('SIGINT', async () => {
-  if (cleanupInterval) {
-    clearInterval(cleanupInterval);
-    cleanupInterval = null;
-  }
-  await closeBrowser();
-  process.exit(130);
-});
-
+// Handle shutdown
 const exitHandler = async () => {
   if (cleanupInterval) {
     clearInterval(cleanupInterval);
@@ -169,7 +139,7 @@ const exitHandler = async () => {
   await closeBrowser();
 };
 
-// Remove any existing listeners first
+// Remove any existing listeners
 const existingListeners = process.listeners('exit');
 for (const listener of existingListeners) {
   if (listener.name === 'exitHandler') {
@@ -177,5 +147,7 @@ for (const listener of existingListeners) {
   }
 }
 
-// Then add your listener
 process.on('exit', exitHandler);
+process.on('SIGINT', () => {
+  exitHandler().then(() => process.exit(130));
+});

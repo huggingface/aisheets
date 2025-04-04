@@ -31,7 +31,6 @@ export class WebScraper {
    */
   async scrapeUrl(url: string): Promise<ScrapedPage | null> {
     try {
-      logger.info(`Scraping URL: ${url}`);
       return await scrapeUrl(url, this.maxCharsPerElement);
     } catch (error) {
       logger.error(`Error scraping URL: ${url}`, error);
@@ -57,71 +56,58 @@ export class WebScraper {
     let skipped = 0;
 
     logger.info(
-      `Starting to enrich ${searchResults.length} search results with scraped content (concurrency: ${concurrencyLimit})`,
+      `Enriching ${searchResults.length} results (concurrency: ${concurrencyLimit})`,
     );
 
-    // Create an array to store the results in the same order as the input
-    const enrichedResults = searchResults.map((result) => ({ ...result }));
-
-    // Create a queue of indexes to process
+    // Create results array and processing queue
+    const enrichedResults: EnrichedSearchResult[] = searchResults.map(
+      (result) => ({ ...result }),
+    );
     const queue = searchResults.map((_, index) => index);
 
     // Process in batches with concurrency limit
     const processQueue = async () => {
-      // Process in batches based on concurrency limit
       while (queue.length > 0) {
         const batch = queue.splice(0, concurrencyLimit);
         const batchPromises = batch.map(async (index) => {
           const result = searchResults[index];
           const enrichedResult = enrichedResults[index];
 
-          // Only scrape if the result has a valid link
           if (result.link && this.isValidUrl(result.link)) {
             try {
-              logger.info(`Scraping content from: ${result.link}`);
               const startTime = Date.now();
               const scrapedContent = await this.scrapeUrl(result.link);
 
               if (scrapedContent) {
                 enrichedResult.scraped = scrapedContent;
                 scraped++;
-                logger.success(
-                  `Successfully scraped content from ${result.link} (${scrapedContent.content.length} chars, took ${Date.now() - startTime}ms)`,
+                logger.debug(
+                  `Scraped ${result.link}: ${scrapedContent.content.length} chars in ${Date.now() - startTime}ms`,
                 );
               } else {
                 errors++;
-                logger.warn(`No content scraped from ${result.link}`);
               }
             } catch (error) {
               errors++;
-              logger.error(
-                `Error enriching search result: ${result.link}`,
-                error,
-              );
+              logger.error(`Error scraping: ${result.link}`, error);
             }
           } else {
             skipped++;
-            logger.warn(
-              `Skipping invalid URL: ${result.link || 'no link provided'}`,
-            );
           }
 
           return index;
         });
 
-        // Wait for this batch to complete before moving to the next
         await Promise.all(batchPromises);
       }
     };
 
-    // Start processing the queue
     const startTime = Date.now();
     await processQueue();
     const totalTime = Date.now() - startTime;
 
-    // Log completion statistics
     logger.info(
-      `Enrichment complete: ${scraped} scraped, ${errors} errors, ${skipped} skipped (took ${totalTime}ms)`,
+      `Done: ${scraped} scraped, ${errors} errors, ${skipped} skipped (${totalTime}ms)`,
     );
 
     return enrichedResults;

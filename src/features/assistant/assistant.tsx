@@ -213,7 +213,7 @@ export const Assistant = component$(() => {
                       enableScraping.value = !enableScraping.value;
                     })}
                   >
-                    Scrape content (Raw)
+                    Scrape content
                   </span>
                 </div>
               </>

@@ -51,6 +51,15 @@ export async function scrapeUrl(
       let content = '';
       let title = '';
       let markdownTree = null;
+      let pageData = {
+        title: '',
+        elements: [] as SerializedHTMLElement[],
+        siteName: undefined as string | undefined,
+        author: undefined as string | undefined,
+        description: undefined as string | undefined,
+        createdAt: undefined as string | undefined,
+        updatedAt: undefined as string | undefined,
+      };
 
       // Get page title
       title = await page.title();
@@ -84,21 +93,34 @@ export async function scrapeUrl(
           // Continue with what we have
         }
 
-        // Extract the HTML structure using JavaScript in the page context
-        const scrapedOutput = (await timeout(
-          page.evaluate(spatialParser),
-          10000,
-        )) as { title: string; elements: SerializedHTMLElement[] };
+        // Use the spatial parser to extract the content
+        try {
+          pageData = (await timeout(
+            page.evaluate(spatialParser),
+            10000,
+          )) as ReturnType<typeof spatialParser>;
 
-        // Create markdown tree from the scraped HTML elements
-        markdownTree = htmlToMarkdownTree(
-          scrapedOutput.title,
-          scrapedOutput.elements,
-          maxCharsPerElem,
-        );
+          // Create markdown tree from the scraped HTML elements
+          markdownTree = htmlToMarkdownTree(
+            pageData.title || title,
+            pageData.elements,
+            maxCharsPerElem,
+          );
 
-        // Convert markdown tree to string
-        content = markdownTreeToString(markdownTree);
+          // Convert markdown tree to string
+          content = markdownTreeToString(markdownTree);
+        } catch (e: unknown) {
+          const error = e instanceof Error ? e : new Error(String(e));
+          logger.error(`Error running spatial parser: ${error.message}`);
+          // Create a basic content representation if spatial parser fails
+          content = await page.content();
+          markdownTree = htmlToMarkdownTree(
+            title,
+            [{ tagName: 'p', attributes: {}, content: [content] }],
+            maxCharsPerElem,
+          );
+          content = markdownTreeToString(markdownTree);
+        }
       }
 
       // Limit content length
@@ -107,7 +129,12 @@ export async function scrapeUrl(
       }
 
       return {
-        title,
+        title: pageData?.title || title,
+        siteName: pageData?.siteName,
+        author: pageData?.author,
+        description: pageData?.description,
+        createdAt: pageData?.createdAt,
+        updatedAt: pageData?.updatedAt,
         content,
         markdownTree,
       };

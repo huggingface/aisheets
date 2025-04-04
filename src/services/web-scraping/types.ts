@@ -121,8 +121,13 @@ export interface ConversionState {
  */
 export interface ScrapedPage {
   title: string;
+  siteName?: string;
+  author?: string;
+  description?: string;
+  createdAt?: string;
+  updatedAt?: string;
   content: string;
-  markdownTree?: HeaderElement;
+  markdownTree?: any; // Replace with the appropriate type from your markdown module
 }
 
 /**

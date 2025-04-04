@@ -1,5 +1,11 @@
 import consola from 'consola';
-import { type Browser, type BrowserContext, chromium } from 'playwright-core';
+import {
+  type Browser,
+  type BrowserContext,
+  type Page,
+  type Response,
+  chromium,
+} from 'playwright-core';
 
 /**
  * Logger for the Playwright module
@@ -11,112 +17,165 @@ const logger = consola.withTag('playwright');
  */
 const DEFAULT_TIMEOUT = 15000;
 
-/**
- * Browser singleton to avoid creating multiple instances
- */
-let browserSingleton: Promise<Browser> | undefined;
+// Singleton instance
+let browserInstance: Browser | null = null;
+// Track active contexts to prevent premature browser closure
+let activeContexts = 0;
+// Promise to track browser initialization to prevent race conditions
+let browserInitializationPromise: Promise<Browser> | null = null;
 
 /**
- * Get or create a shared browser instance
+ * Get a singleton browser instance with race condition protection
  */
-async function getBrowser(): Promise<Browser> {
-  const browser = await chromium.launch({ headless: true });
-
-  // Handle disconnection to reset the singleton
-  browser.on('disconnected', () => {
-    logger.warn('Browser closed');
-    browserSingleton = undefined;
-  });
-
-  return browser;
-}
-
-/**
- * Get a new browser context with optimized settings
- */
-async function getPlaywrightContext(): Promise<BrowserContext> {
-  // Initialize browser singleton if not already done
-  if (!browserSingleton) {
-    browserSingleton = getBrowser();
+export async function getBrowser(): Promise<Browser> {
+  // If browser initialization is in progress, wait for it
+  if (browserInitializationPromise) {
+    return browserInitializationPromise;
   }
 
-  const browser = await browserSingleton;
+  // If browser exists and is connected, return it
+  if (browserInstance?.isConnected()) {
+    return browserInstance;
+  }
 
-  // Optimize context settings for better performance and accuracy
-  return browser.newContext({
-    viewport: { width: 1920, height: 1080 },
-    userAgent:
-      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-    // Reduce motion for faster loading
-    reducedMotion: 'reduce',
-    // Block downloads for security
-    acceptDownloads: false,
-  });
+  // Otherwise, initialize browser with promise tracking to prevent race conditions
+  try {
+    browserInitializationPromise = chromium.launch({
+      headless: true,
+    });
+
+    logger.info('Launching browser');
+    browserInstance = await browserInitializationPromise;
+
+    // Add event listener for disconnection
+    browserInstance.on('disconnected', () => {
+      logger.warn('Browser disconnected');
+      browserInstance = null;
+    });
+
+    return browserInstance;
+  } finally {
+    // Clear initialization promise to allow future launches if needed
+    browserInitializationPromise = null;
+  }
 }
 
 /**
- * A wrapper function to run operations with a Playwright browser page
+ * Get a browser context with specific settings
+ */
+export async function getPlaywrightContext(): Promise<BrowserContext> {
+  const browser = await getBrowser();
+
+  // Track active context
+  activeContexts++;
+
+  const context = await browser.newContext({
+    viewport: { width: 1280, height: 720 },
+    userAgent:
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+    ignoreHTTPSErrors: true,
+    bypassCSP: true,
+  });
+
+  // Set up listener to track when context is closed
+  context.on('close', () => {
+    activeContexts--;
+  });
+
+  return context;
+}
+
+/**
+ * Close the browser instance gracefully, but only if no contexts are active
+ */
+export async function closeBrowser(): Promise<void> {
+  if (browserInstance && activeContexts === 0) {
+    try {
+      logger.info('Closing browser - no active contexts');
+      await browserInstance.close();
+      browserInstance = null;
+    } catch (error) {
+      logger.error('Error closing browser:', error);
+    }
+  } else if (activeContexts > 0) {
+    logger.info(`Not closing browser - ${activeContexts} active contexts`);
+  }
+}
+
+/**
+ * Execute operations with a page
  */
 export async function withPage<T>(
   url: string,
-  fn: (page: any, response: any) => Promise<T>,
-  timeout = DEFAULT_TIMEOUT,
+  fn: (page: Page, response: Response | null) => Promise<T>,
 ): Promise<T> {
-  const ctx = await getPlaywrightContext();
+  const context = await getPlaywrightContext();
+  const page = await context.newPage();
 
   try {
-    logger.info(`Opening page for URL: ${url}`);
-    const page = await ctx.newPage();
-
-    // Block non-HTTPS resources for security (optional, remove if needed)
-    await page.route('**', (route, request) => {
-      const requestUrl = request.url();
-      if (!requestUrl.startsWith('https://')) {
-        logger.warn(`Blocked request to: ${requestUrl}`);
-        return route.abort();
-      }
-      return route.continue();
+    logger.info(`Navigating to: ${url}`);
+    const response = await page.goto(url, {
+      waitUntil: 'domcontentloaded',
+      timeout: 30000,
     });
 
-    // Set timeout for navigation
-    page.setDefaultTimeout(timeout);
-
-    // Navigate to the URL
-    logger.info(`Navigating to: ${url}`);
-    const response = await page
-      .goto(url, {
-        waitUntil: 'domcontentloaded',
-        timeout,
-      })
-      .catch(() => {
-        logger.warn(`Failed to load page within ${timeout / 1000}s: ${url}`);
-        return undefined;
-      });
-
-    // Run the provided function with the page and response
-    logger.info('Page loaded, executing handler function');
-    const result = await fn(page, response ?? undefined);
+    logger.info(`Loaded page: ${url}`);
+    const result = await fn(page, response);
 
     return result;
   } finally {
-    // Close the context when done
-    await ctx.close();
-    logger.info('Browser context closed');
+    await page.close();
+    await context.close();
   }
 }
 
-/**
- * Explicitly close the browser singleton when shutting down
- */
-export async function closeBrowser(): Promise<void> {
-  if (browserSingleton) {
-    try {
-      const browser = await browserSingleton;
-      await browser.close();
-      browserSingleton = undefined;
-      logger.info('Browser singleton closed');
-    } catch (error) {
-      logger.error('Error closing browser singleton:', error);
+// Automatic cleanup based on time rather than just process signals
+let cleanupInterval: NodeJS.Timeout | null = null;
+
+// Start the cleanup interval when the module is imported
+function startCleanupInterval() {
+  if (cleanupInterval === null) {
+    // Check every 60 seconds if we can close the browser
+    cleanupInterval = setInterval(() => {
+      if (activeContexts === 0 && browserInstance) {
+        closeBrowser().catch(() => {});
+      }
+    }, 60000);
+
+    // Don't let the interval prevent the process from exiting
+    if (cleanupInterval.unref) {
+      cleanupInterval.unref();
     }
   }
 }
+
+startCleanupInterval();
+
+// Set up cleanup handlers for graceful shutdown
+process.on('SIGINT', async () => {
+  if (cleanupInterval) {
+    clearInterval(cleanupInterval);
+    cleanupInterval = null;
+  }
+  await closeBrowser();
+  process.exit(130);
+});
+
+const exitHandler = async () => {
+  if (cleanupInterval) {
+    clearInterval(cleanupInterval);
+    cleanupInterval = null;
+  }
+  await closeBrowser();
+};
+
+// Remove any existing listeners first
+const existingListeners = process.listeners('exit');
+for (const listener of existingListeners) {
+  if (listener.name === 'exitHandler') {
+    process.removeListener('exit', listener);
+  }
+}
+
+// Then add your listener
+process.on('exit', exitHandler);

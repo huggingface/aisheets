@@ -34,13 +34,6 @@ export class SerperSearch {
     }
 
     try {
-      console.log(
-        '🔍 [SerperSearch] Searching with API key:',
-        this.apiKey.substring(0, 4) +
-          '...' +
-          this.apiKey.substring(this.apiKey.length - 4),
-      );
-
       const response = await fetch(this.baseUrl, {
         method: 'POST',
         headers: {

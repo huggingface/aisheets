@@ -41,61 +41,90 @@ export class WebScraper {
 
   /**
    * Enrich search results with scraped content
+   * Uses concurrent processing with a configurable limit
    *
    * @param searchResults Search results to enrich
+   * @param concurrencyLimit Maximum number of concurrent scraping operations (default: 10)
    * @returns Enriched search results with scraped content
    */
   async enrichSearchResults(
     searchResults: SearchResult[],
+    concurrencyLimit = 10,
   ): Promise<EnrichedSearchResult[]> {
-    const enriched: EnrichedSearchResult[] = [];
+    // Statistics tracking
     let scraped = 0;
     let errors = 0;
     let skipped = 0;
 
     logger.info(
-      `Starting to enrich ${searchResults.length} search results with scraped content`,
+      `Starting to enrich ${searchResults.length} search results with scraped content (concurrency: ${concurrencyLimit})`,
     );
 
-    for (const result of searchResults) {
-      const enrichedResult: EnrichedSearchResult = { ...result };
+    // Create an array to store the results in the same order as the input
+    const enrichedResults = searchResults.map((result) => ({ ...result }));
 
-      // Only scrape if the result has a valid link
-      if (result.link && this.isValidUrl(result.link)) {
-        try {
-          logger.info(`Scraping content from: ${result.link}`);
-          const scrapedContent = await this.scrapeUrl(result.link);
+    // Create a queue of indexes to process
+    const queue = searchResults.map((_, index) => index);
 
-          if (scrapedContent) {
-            enrichedResult.scraped = scrapedContent;
-            logger.success(
-              `Successfully scraped content from ${result.link} (${scrapedContent.content.length} chars)`,
-            );
-            scraped++;
+    // Process in batches with concurrency limit
+    const processQueue = async () => {
+      // Process in batches based on concurrency limit
+      while (queue.length > 0) {
+        const batch = queue.splice(0, concurrencyLimit);
+        const batchPromises = batch.map(async (index) => {
+          const result = searchResults[index];
+          const enrichedResult = enrichedResults[index];
+
+          // Only scrape if the result has a valid link
+          if (result.link && this.isValidUrl(result.link)) {
+            try {
+              logger.info(`Scraping content from: ${result.link}`);
+              const startTime = Date.now();
+              const scrapedContent = await this.scrapeUrl(result.link);
+
+              if (scrapedContent) {
+                enrichedResult.scraped = scrapedContent;
+                scraped++;
+                logger.success(
+                  `Successfully scraped content from ${result.link} (${scrapedContent.content.length} chars, took ${Date.now() - startTime}ms)`,
+                );
+              } else {
+                errors++;
+                logger.warn(`No content scraped from ${result.link}`);
+              }
+            } catch (error) {
+              errors++;
+              logger.error(
+                `Error enriching search result: ${result.link}`,
+                error,
+              );
+            }
           } else {
-            logger.warn(`No content scraped from ${result.link}`);
-            errors++;
+            skipped++;
+            logger.warn(
+              `Skipping invalid URL: ${result.link || 'no link provided'}`,
+            );
           }
-        } catch (error) {
-          logger.error(`Error enriching search result: ${result.link}`, error);
-          errors++;
-          // Continue with the original result on error
-        }
-      } else {
-        logger.warn(
-          `Skipping invalid URL: ${result.link || 'no link provided'}`,
-        );
-        skipped++;
+
+          return index;
+        });
+
+        // Wait for this batch to complete before moving to the next
+        await Promise.all(batchPromises);
       }
+    };
 
-      enriched.push(enrichedResult);
-    }
+    // Start processing the queue
+    const startTime = Date.now();
+    await processQueue();
+    const totalTime = Date.now() - startTime;
 
+    // Log completion statistics
     logger.info(
-      `Enrichment complete: ${scraped} scraped, ${errors} errors, ${skipped} skipped`,
+      `Enrichment complete: ${scraped} scraped, ${errors} errors, ${skipped} skipped (took ${totalTime}ms)`,
     );
 
-    return enriched;
+    return enrichedResults;
   }
 
   /**

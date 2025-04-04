@@ -4,7 +4,7 @@ import { markdownTreeToString } from '../markdown/tree';
 import type { ScrapedPage, SerializedHTMLElement } from '../types';
 import { timeout } from '../utils/timeout';
 import { spatialParser } from './parser';
-import { withPage } from './playwright';
+import { closeBrowser, withPage } from './playwright';
 
 /**
  * Logger for the scrape module
@@ -20,6 +20,11 @@ const DEFAULT_MAX_CHARS_PER_ELEMENT = 1000;
  * Maximum total characters for a page
  */
 const MAX_TOTAL_CONTENT_LENGTH = 25000;
+
+// Add a cleanup handler for application shutdown
+process.on('exit', () => {
+  closeBrowser().catch(() => {});
+});
 
 /**
  * Scrape a URL to extract content

@@ -1,14 +1,10 @@
+import type { SearchResult } from './types';
+
 /**
  * The Serper API key used for web searches.
  * This value is retrieved from the environment variable `SERPER_API_KEY`.
  */
 export const SERPER_API_KEY: string | undefined = process.env.SERPER_API_KEY;
-
-export interface SearchResult {
-  title: string;
-  link: string;
-  snippet: string;
-}
 
 export class SerperSearch {
   private apiKey: string;

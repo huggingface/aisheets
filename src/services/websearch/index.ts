@@ -1,6 +1,6 @@
 import consola from 'consola';
-import type { SearchResult } from '../serper-search';
 import { scrapeUrl } from './scrape/scrape';
+import type { SearchResult } from './search';
 import type { EnrichedSearchResult, ScrapedPage } from './types';
 
 /**

@@ -6,8 +6,8 @@ import {
   INFERENCE_TIMEOUT,
   SERPER_API_KEY,
 } from '~/config';
-import type { SearchResult } from '~/services/serper-search';
-import { WebScraper } from '~/services/web-scraping';
+import { WebScraper } from '~/services/websearch';
+import type { SearchResult } from '~/services/websearch/search';
 import { useServerSession } from '~/state';
 
 /**
@@ -359,7 +359,7 @@ export const runAssistant = async function (
 
       try {
         // Import SerperSearch dynamically to ensure it exists
-        const { SerperSearch } = await import('~/services/serper-search');
+        const { SerperSearch } = await import('~/services/websearch/search');
 
         console.log('⚙️ [Assistant] Initializing SerperSearch with API key');
         const serper = new SerperSearch(apiKey);

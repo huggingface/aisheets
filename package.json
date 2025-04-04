@@ -73,6 +73,8 @@
     "express": "4.20.0",
     "marked": "^15.0.7",
     "mustache": "^4.2.0",
+    "playwright": "^1.51.1",
+    "playwright-core": "^1.51.1",
     "sequelize": "^6.37.5",
     "sqlite3": "^5.1.7",
     "yaml": "^2.7.0"

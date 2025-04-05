@@ -1,11 +1,12 @@
 import { component$, isDev, useSignal } from '@builder.io/qwik';
 import { type RequestEvent, server$ } from '@builder.io/qwik-city';
 import * as hub from '@huggingface/hub';
-import { LuEgg, LuFilePlus2, LuGlobe } from '@qwikest/icons/lucide';
+import { LuEgg, LuGlobe } from '@qwikest/icons/lucide';
 import { Button, Textarea } from '~/components';
 import { Logo } from '~/components/ui/logo/logo';
 
 import { CLIENT_ID, HF_TOKEN, OAUTH_SCOPES } from '~/config';
+import { DragAndDrop } from '~/features/import-from-file/drag-n-drop';
 import { createDatasetIdByUser } from '~/services';
 import { saveSession } from '~/services/auth/session';
 import { ActiveDatasetProvider, useServerSession } from '~/state';
@@ -126,7 +127,10 @@ export default component$(() => {
             onClick$={() => document.getElementById('prompt')?.focus()}
           >
             <div class="flex w-full justify-between items-center">
-              <Button look="secondary" class="flex gap-1 p-2 h-9">
+              <Button
+                look="secondary"
+                class="flex gap-1 p-2 h-9 text-neutral-700"
+              >
                 <LuGlobe class="text-lg" />
                 Search the web
               </Button>
@@ -151,16 +155,12 @@ export default component$(() => {
         </div>
         <div class="w-[550px] flex justify-center items-center">
           <hr class="w-full border-t border-gray-300" />
-          <span class="mx-4 text-gray-400">OR</span>
+          <span class="mx-10 text-gray-400">OR</span>
           <hr class="w-full border-t border-gray-300" />
         </div>
 
-        <div class="w-[550px] flex flex-col justify-center items-center gap-3 mt-4">
-          <span class="text-gray-500">From real-world data</span>
-          <Button class="flex gap-1 bg-white">
-            <LuFilePlus2 class="text-lg" />
-            Drop or click to start with a file
-          </Button>
+        <div class="w-[530px] h-[230px]">
+          <DragAndDrop />
         </div>
       </div>
     </ActiveDatasetProvider>

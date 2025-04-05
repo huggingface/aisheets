@@ -23,3 +23,12 @@ export const connectAndClose = async <T>(
     db.close();
   }
 };
+
+await connectAndClose(async (db) => {
+  // Install plugins and extensions
+
+  await db.run(`
+    INSTALL gsheets FROM community;
+    LOAD gsheets;
+  `);
+});

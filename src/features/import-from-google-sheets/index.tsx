@@ -78,7 +78,7 @@ export const ImportFromGoogleSheets = component$(() => {
         name: await datasetName(),
         secretToken: googleSheetsToken.value,
       });
-      nav(`/dataset/${dataset.id}`);
+      nav(`/home/dataset/${dataset.id}`);
     } finally {
       isImporting.value = false;
     }

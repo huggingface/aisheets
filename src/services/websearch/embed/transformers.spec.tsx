@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { TransformersJSEmbeddingModel } from './transformers';
 
 describe('TransformersJSEmbeddingModel', () => {
-  it('should generate embeddings using TransformersJSEmbeddingModel', async () => {
-    const model = new TransformersJSEmbeddingModel('Xenova/gte-small');
+  it('should create embeddings', async () => {
+    const model = new TransformersJSEmbeddingModel();
     console.log('Created model with name:', model.name);
 
     const texts = ['This is a test sentence.'];

@@ -16,8 +16,8 @@ import type { Embedding, EmbeddingChunk, EmbeddingModel } from './types';
  */
 const logger = consola.withTag('websearch:transformers');
 
-// Single model instance for the entire application
 let modelInstance: Promise<FeatureExtractionPipeline> | null = null;
+let modelInstances: any[] = [];
 const MODEL_NAME = 'Xenova/gte-small';
 
 async function getModelInstance(): Promise<FeatureExtractionPipeline> {
@@ -161,4 +161,15 @@ export async function createEmbeddings(
 // Export a function to clean up the model when the application shuts down
 export async function cleanup(): Promise<void> {
   await disposeModelInstance();
+}
+
+export function disposeTransformersModels() {
+  for (const model of modelInstances) {
+    try {
+      model.dispose();
+    } catch (error) {
+      logger.error('Error disposing model:', error);
+    }
+  }
+  modelInstances = [];
 }

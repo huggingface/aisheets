@@ -91,13 +91,13 @@ export const isArrayType = (column: Column): boolean => {
 };
 
 export const isObjectType = (column: Column): boolean => {
-  return column.type.includes('STRUCT');
+  return column.type.startsWith('STRUCT') || column.type.startsWith('MAP');
 };
 
 export const isTextType = (column: Column): boolean => {
   return (
-    column.type.includes('TEXT') ||
-    column.type.includes('STRING') ||
-    column.type.includes('CHAR')
+    column.type.startsWith('TEXT') ||
+    column.type.startsWith('STRING') ||
+    column.type.startsWith('VARCHAR')
   );
 };

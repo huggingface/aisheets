@@ -39,6 +39,10 @@ export const TableHeader = component$(() => {
               {indexToAlphanumeric(i + 1)}
             </th>
           ))}
+
+        {columns.value.filter((c) => c.id !== TEMPORAL_ID).length >= 1 && (
+          <TableAddCellHeaderPlaceHolder />
+        )}
       </tr>
       <tr>
         {columns.value
@@ -50,10 +54,6 @@ export const TableHeader = component$(() => {
               <ExecutionFormDebounced column={column} />
             </Fragment>
           ))}
-
-        {columns.value.filter((c) => c.id !== TEMPORAL_ID).length >= 1 && (
-          <TableAddCellHeaderPlaceHolder />
-        )}
       </tr>
     </thead>
   );

@@ -29,16 +29,21 @@ export const TableHeader = component$(() => {
           rowSpan={2}
         />
 
-        {columns.value
-          .filter((c) => c.visible)
-          .map((column, i) => (
-            <th
-              key={column.id}
-              class="min-w-80 w-80 max-w-80 h-[30px] border-[0.5px] border-l-0 bg-neutral-100"
-            >
-              {indexToAlphanumeric(i + 1)}
-            </th>
-          ))}
+        {columns.value.map(
+          (column, i) =>
+            column.visible && (
+              <Fragment key={column.id}>
+                <th
+                  key={column.id}
+                  class="min-w-80 w-80 max-w-80 h-[30px] border-[0.5px] border-l-0 bg-neutral-100"
+                >
+                  {indexToAlphanumeric(i + 1)}
+                </th>
+
+                <ExecutionFormDebounced column={column} />
+              </Fragment>
+            ),
+        )}
 
         {columns.value.filter((c) => c.id !== TEMPORAL_ID).length >= 1 && (
           <TableAddCellHeaderPlaceHolder />
@@ -51,7 +56,7 @@ export const TableHeader = component$(() => {
             <Fragment key={column.id}>
               <TableCellHeader column={column} />
 
-              <ExecutionFormDebounced column={column} />
+              <ExecutionHeaderDebounced column={column} />
             </Fragment>
           ))}
       </tr>
@@ -80,3 +85,28 @@ const ExecutionFormDebounced = component$<{ column: Column }>(({ column }) => {
 
   return <ExecutionForm column={column} onGenerateColumn={onGenerateColumn} />;
 });
+
+const ExecutionHeaderDebounced = component$<{ column: Column }>(
+  ({ column }) => {
+    const { columnId } = useExecution();
+
+    const state = useStore({
+      isVisible: columnId.value === column.id,
+    });
+
+    useTask$(({ track }) => {
+      track(() => columnId.value);
+      const isVisible = columnId.value === column.id;
+
+      nextTick(() => {
+        state.isVisible = isVisible;
+      }, 100);
+    });
+
+    if (!state.isVisible) return null;
+
+    return (
+      <th class="min-w-[660px] w-[660px] bg-neutral-100 border-[0.5px] border-l-0" />
+    );
+  },
+);

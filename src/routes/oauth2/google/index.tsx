@@ -21,7 +21,9 @@ export default component$(() => {
 
   return (
     <div class="flex flex-col h-full w-fit overflow-hidden ml-4 mt-4">
-      <h1 class="text-2xl font-bold">AISheets for Google Spreadsheets</h1>
+      <h1 class="text-2xl font-bold">Add from Google Drive</h1>
+
+      <p class="text-sm mt-4 gray-500">Click on the token area to copy</p>
 
       <pre
         class="flex flex-col mt-2 rounded-md p-4 w-fit"
@@ -56,11 +58,6 @@ export default component$(() => {
           {accessToken.value}
         </code>
       </pre>
-
-      <p class="text-sm mt-4 gray-500">
-        Click on the access token to copy it to your clipboard. You can use this
-        token import your Google Sheets data into AISheets.
-      </p>
     </div>
   );
 });

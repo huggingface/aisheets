@@ -1,7 +1,7 @@
 import { $, component$, useComputed$, useSignal } from '@builder.io/qwik';
 import { useNavigate } from '@builder.io/qwik-city';
 import { LuChevronRightSquare, LuExternalLink } from '@qwikest/icons/lucide';
-import { Button } from '~/components';
+import { Button, Label } from '~/components';
 import { userServerConfig } from '~/loaders';
 import { useImportFromURL } from '~/usecases/import-from-url.usecase';
 
@@ -87,30 +87,29 @@ export const ImportFromGoogleSheets = component$(() => {
   return (
     <div class="flex flex-col w-full max-w-2xl mt-8 gap-4">
       <div class="flex flex-col justify-between gap-4">
-        <h1 class="text-3xl font-bold w-full">
-          Import Dataset from Google Sheets URL
-        </h1>
+        <h1 class="text-3xl font-bold w-full">Add from Google Drive</h1>
       </div>
 
-      <div class="text-sm text-gray-500 flex flex-col gap-2">
-        <span class="text-xs text-gray-500">
-          Please, enter a valid Google Sheets URL. Expore your Google Sheets{' '}
-          <a
-            href="https://docs.google.com/spreadsheets/u/0/?tgif=d"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="text-blue-500 underline inline-flex items-center gap-1"
-          >
-            here
-            <LuExternalLink />
-          </a>
-          .
-        </span>
+      <div class="flex flex-col gap-2">
+        <Label class="flex gap-1 mb-2 font-light">
+          <span class="text-gray-500">
+            Enter a Google sheet URL exploring{' '}
+            <a
+              href="https://docs.google.com/spreadsheets/u/0/?tgif=d"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-blue-500 underline inline-flex items-center gap-1"
+            >
+              My drive
+              <LuExternalLink />
+            </a>
+          </span>
+        </Label>
 
         <input
           class="h-10 w-full outline-none border border-gray-300 rounded px-3"
           type="text"
-          placeholder="Enter or copy/paste the URL"
+          placeholder="Paste the URL"
           value={url.value}
           onInput$={(event) =>
             (url.value = (event.target as HTMLInputElement).value)
@@ -118,25 +117,26 @@ export const ImportFromGoogleSheets = component$(() => {
         />
         <div>
           {isGoogleSheetsURL.value && (
-            <div class="text-sm text-gray-500 flex flex-col gap-2">
-              <span class="text-xs text-gray-500">
-                To generate a secret for Google Sheets, please follow this{' '}
-                <a
-                  href={googleOauthURL.value}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="text-blue-500 underline inline-flex items-center gap-1"
-                >
-                  link
-                  <LuExternalLink />
-                </a>
-                . Then paste the token here:
-              </span>
+            <div class="flex flex-col gap-2">
+              <Label class="flex gap-1 mb-2 font-light">
+                <span class="text-gray-500">
+                  Enter the token generated{' '}
+                  <a
+                    href={googleOauthURL.value}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="text-blue-500 underline inline-flex items-center gap-1"
+                  >
+                    here
+                    <LuExternalLink />
+                  </a>
+                </span>
+              </Label>
 
               <input
                 class="h-10 w-full outline-none border border-gray-300 rounded px-3"
                 type="text"
-                placeholder="Enter a secret token to import google sheets"
+                placeholder="Paste the token"
                 value={googleSheetsToken.value}
                 onInput$={(event) =>
                   (googleSheetsToken.value = (

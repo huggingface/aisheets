@@ -141,11 +141,6 @@ export const TableBody = component$(() => {
                 </Fragment>
               );
             })}
-
-            {/* td for (add + ) column */}
-            {columns.value.filter((c) => c.id !== TEMPORAL_ID).length >= 1 && (
-              <td class="min-w-80 w-80 max-w-80 min-h-[100px] h-[100px] border-[0.5px] border-l-0 border-t-0" />
-            )}
           </tr>
         );
       })}
@@ -226,7 +221,7 @@ const ExecutionFormDebounced = component$<{ column?: { id: Column['id'] } }>(
     if (!state.isVisible) return null;
 
     return (
-      <td class="min-w-[660px] w-[660px] border-[0.5px] bg-neutral-100 border-t-0 border-b-0" />
+      <td class="min-w-[660px] w-[660px] border-[0.5px] bg-neutral-100 border-t-0 border-l-0 border-b-0" />
     );
   },
 );

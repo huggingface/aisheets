@@ -1,6 +1,6 @@
 import { $, component$, useComputed$, useSignal } from '@builder.io/qwik';
 import { useNavigate } from '@builder.io/qwik-city';
-import { LuChevronRightSquare } from '@qwikest/icons/lucide';
+import { LuChevronRightSquare, LuExternalLink } from '@qwikest/icons/lucide';
 import { Button } from '~/components';
 import { userServerConfig } from '~/loaders';
 import { useImportFromURL } from '~/usecases/import-from-url.usecase';
@@ -99,9 +99,10 @@ export const ImportFromGoogleSheets = component$(() => {
             href="https://docs.google.com/spreadsheets/u/0/?tgif=d"
             target="_blank"
             rel="noopener noreferrer"
-            class="text-blue-500 underline"
+            class="text-blue-500 underline inline-flex items-center gap-1"
           >
             here
+            <LuExternalLink />
           </a>
           .
         </span>
@@ -124,9 +125,10 @@ export const ImportFromGoogleSheets = component$(() => {
                   href={googleOauthURL.value}
                   target="_blank"
                   rel="noopener noreferrer"
-                  class="text-blue-500 underline"
+                  class="text-blue-500 underline inline-flex items-center gap-1"
                 >
                   link
+                  <LuExternalLink />
                 </a>
                 . Then paste the token here:
               </span>

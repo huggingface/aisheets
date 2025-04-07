@@ -7,7 +7,7 @@ import {
   SERPER_API_KEY,
 } from '~/config';
 import {
-  MockEmbeddingModel,
+  TransformersJSEmbeddingModel,
   WebScraper,
   createEmbeddings,
 } from '~/services/websearch';
@@ -23,6 +23,9 @@ const FALLBACK_MODEL = 'meta-llama/Llama-3.3-70B-Instruct';
  * Maximum number of search queries to request from the model
  */
 const MAX_NUM_SEARCH_QUERIES = 2;
+
+// Create a single instance of the embedding model
+const embeddingModel = new TransformersJSEmbeddingModel();
 
 export interface AssistantParams {
   accessToken?: string;
@@ -235,8 +238,8 @@ export const runAssistant = async function (
     searchEnabled = false,
     timeout,
     serperApiKey,
-    maxSearchQueries = MAX_NUM_SEARCH_QUERIES, // Default to the constant
-    enableScraping = false, // Default to not scraping
+    maxSearchQueries = MAX_NUM_SEARCH_QUERIES,
+    enableScraping = false,
   }: AssistantParams,
 ): Promise<
   | string
@@ -499,60 +502,33 @@ export const runAssistant = async function (
                 `✅ [Assistant] Average content per result: ${Math.floor(totalChars / scrapedCount).toLocaleString()} characters`,
               );
 
-              // Apply embedding to create chunk embeddings
-              try {
-                console.log(
-                  '⚙️ [Assistant] Creating embeddings for scraped content',
-                );
+              // Create embeddings for scraped content
+              if (enableScraping && resultWithContent.length > 0) {
+                try {
+                  const sourcesForEmbedding = enrichedResults
+                    .filter((r) => r.scraped?.markdownTree)
+                    .map((r) => ({
+                      url: r.link || '',
+                      title: r.title,
+                      page: r.scraped!,
+                    }));
 
-                // Create a mock embedding model (for now)
-                const embeddingModel = new MockEmbeddingModel();
-
-                // Prepare sources for embedding
-                const sourcesForEmbedding = enrichedResults
-                  .filter((r) => r.scraped?.markdownTree)
-                  .map((r) => ({
-                    url: r.link || '',
-                    title: r.title,
-                    page: r.scraped!,
-                  }));
-
-                // Create embeddings for all chunks without filtering for relevance
-                const embeddedSources = await createEmbeddings(
-                  sourcesForEmbedding,
-                  embeddingModel,
-                );
-
-                console.log(
-                  `✅ [Assistant] Created embeddings for ${embeddedSources.length} sources`,
-                );
-
-                // Add the chunks with embeddings to the results
-                for (const embeddedSource of embeddedSources) {
-                  const resultToEnhance = resultWithContent.find(
-                    (r) => r.link === embeddedSource.url,
+                  const embeddedSources = await createEmbeddings(
+                    sourcesForEmbedding,
+                    embeddingModel,
                   );
 
-                  if (resultToEnhance) {
-                    // Store all chunks with their embeddings (no filtering)
-                    resultToEnhance.embeddingChunks = embeddedSource.chunks;
+                  for (const embeddedSource of embeddedSources) {
+                    const resultToEnhance = resultWithContent.find(
+                      (r) => r.link === embeddedSource.url,
+                    );
+                    if (resultToEnhance) {
+                      resultToEnhance.embeddingChunks = embeddedSource.chunks;
+                    }
                   }
+                } catch (error) {
+                  console.error('Error creating embeddings:', error);
                 }
-
-                const totalChunks = embeddedSources.reduce(
-                  (sum, source) => sum + source.chunks.length,
-                  0,
-                );
-
-                console.log(
-                  `✅ [Assistant] Total embedded chunks: ${totalChunks} across ${embeddedSources.length} sources`,
-                );
-              } catch (error) {
-                console.error(
-                  '❌ [Assistant] Error creating embeddings:',
-                  error,
-                );
-                // Continue with the original results on error
               }
             }
           } catch (error) {

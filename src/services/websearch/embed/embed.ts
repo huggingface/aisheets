@@ -1,10 +1,11 @@
 import consola from 'consola';
 import { stringifyMarkdownElement } from '../markdown/utils/stringify';
 import type { ScrapedPage } from '../types';
-import type { MarkdownElement } from '../types';
+import type { HeaderElement, MarkdownElement } from '../types';
 import { MarkdownElementType } from '../types';
 import { getCombinedSentenceSimilarity } from './combine';
 import { getSentenceSimilarity, innerProduct } from './similarity';
+import { TransformersJSEmbeddingModel } from './transformers';
 import { flattenTree } from './tree';
 import type { EmbeddedSource, EmbeddingChunk, EmbeddingModel } from './types';
 
@@ -14,8 +15,12 @@ import type { EmbeddedSource, EmbeddingChunk, EmbeddingModel } from './types';
 const logger = consola.withTag('websearch:embed');
 
 // Minimum and maximum character limits for context selection
-const MIN_CHARS = 3000;
-const SOFT_MAX_CHARS = 8000;
+const MIN_CHARS = 100;
+const SOFT_MAX_CHARS = 1000;
+const SIMILARITY_THRESHOLD = 0.25;
+
+// Create a single instance of the embedding model
+const embeddingModel = new TransformersJSEmbeddingModel();
 
 /**
  * Find the most relevant content from scraped sources based on a prompt
@@ -29,7 +34,7 @@ export async function findContextSources(
 
   // Get all markdown elements from all sources
   const sourcesMarkdownElems = sources
-    .filter((source) => source.page.markdownTree) // Only include sources with markdown trees
+    .filter((source) => source.page.markdownTree)
     .map((source) => flattenTree(source.page.markdownTree!));
 
   // Flatten all elements into a single array
@@ -60,7 +65,7 @@ export async function findContextSources(
       : elem,
   );
 
-  // Get embeddings and sort by relevance (lower distance = more relevant)
+  // Get embeddings and sort by relevance
   const embeddings = await embeddingFunc(
     embeddingModel,
     prompt,
@@ -69,7 +74,6 @@ export async function findContextSources(
 
   const topEmbeddings = embeddings
     .sort((a, b) => a.distance - b.distance)
-    // Filter out headers since they're generally not content-rich
     .filter(
       (embedding) =>
         markdownElems[embedding.idx].type !== MarkdownElementType.Header,
@@ -83,7 +87,7 @@ export async function findContextSources(
   for (const embedding of topEmbeddings) {
     const elem = markdownElems[embedding.idx];
 
-    // Ignore elements that are too similar to already selected elements (deduplication)
+    // Ignore elements that are too similar to already selected elements
     const tooSimilar = selectedEmbeddings.some(
       (selectedEmbedding) =>
         innerProduct(selectedEmbedding, embedding.embedding) < 0.01,
@@ -135,7 +139,7 @@ export async function findContextSources(
         context,
       };
     })
-    .filter(Boolean) as EmbeddedSource[]; // Filter out null values
+    .filter(Boolean) as EmbeddedSource[];
 
   const duration = Date.now() - startTime;
   logger.info(
@@ -147,7 +151,6 @@ export async function findContextSources(
 
 /**
  * Processes documents and creates embeddings for their content
- * without filtering for relevance
  */
 export async function createEmbeddings(
   sources: { url: string; title: string; page: ScrapedPage }[],
@@ -158,7 +161,7 @@ export async function createEmbeddings(
   // Get all markdown elements from all sources
   const sourcesWithMarkdown = sources.filter(
     (source) => source.page.markdownTree,
-  ); // Only include sources with markdown trees
+  );
 
   if (sourcesWithMarkdown.length === 0) {
     logger.warn('No markdown trees found in sources');
@@ -186,22 +189,73 @@ export async function createEmbeddings(
       // Generate embeddings for all elements
       const embeddings = await embeddingModel.embed(limitedElemStrings);
 
-      // Create chunks with their embeddings
-      const chunks: EmbeddingChunk[] = elements.map((elem, idx) => {
-        // Get parent header text for context
-        const parentText = elem.parent?.content || '';
+      // Filter out headers and similar embeddings
+      const selectedElements = new Set<MarkdownElement>();
+      const selectedEmbeddings: number[][] = [];
+      let discardedCount = 0;
 
-        return {
-          text: limitedElemStrings[idx],
-          embedding: embeddings[idx],
-          type: elem.type,
-          parentHeader: parentText,
-          metadata: {
-            position: idx,
-            elementType: elem.type,
-          },
-        };
-      });
+      // Sort embeddings by distance (lower is better)
+      const sortedEmbeddings = embeddings
+        .map((embedding, idx) => ({
+          embedding,
+          idx,
+          element: elements[idx],
+        }))
+        .sort((a, b) => {
+          // Calculate distance using inner product
+          const distA = innerProduct(a.embedding, a.embedding);
+          const distB = innerProduct(b.embedding, b.embedding);
+          return distA - distB;
+        });
+
+      for (const { embedding, idx, element } of sortedEmbeddings) {
+        // Skip headers
+        if (element.type === MarkdownElementType.Header) {
+          discardedCount++;
+          continue;
+        }
+
+        // Check for similarity with already selected embeddings
+        const tooSimilar = selectedEmbeddings.some(
+          (selectedEmbedding) =>
+            innerProduct(selectedEmbedding, embedding) < 0.01,
+        );
+
+        if (tooSimilar) {
+          discardedCount++;
+          continue;
+        }
+
+        // Add element and its embedding
+        selectedElements.add(element);
+        selectedEmbeddings.push(embedding);
+
+        // Add parent header if exists
+        if (element.parent) {
+          selectedElements.add(element.parent);
+        }
+      }
+
+      logger.info(
+        `Filtered ${discardedCount}/${elements.length} embeddings for source ${source.url}`,
+      );
+
+      // Create chunks with their embeddings
+      const chunks: EmbeddingChunk[] = Array.from(selectedElements).map(
+        (elem) => {
+          const idx = elements.indexOf(elem);
+          return {
+            text: limitedElemStrings[idx],
+            embedding: embeddings[idx],
+            type: elem.type,
+            parentHeader: elem.parent?.content || '',
+            metadata: {
+              position: idx,
+              elementType: elem.type,
+            },
+          };
+        },
+      );
 
       return {
         url: source.url,
@@ -222,4 +276,64 @@ export async function createEmbeddings(
   );
 
   return embeddedSources;
+}
+
+export async function selectRelevantContext(
+  query: string,
+  sources: { url: string; embeddingChunks: EmbeddingChunk[] }[],
+): Promise<{ url: string; elements: MarkdownElement[] }[]> {
+  try {
+    const queryEmbedding = await embeddingModel.embed([query]);
+    const results = sources.map((source) => {
+      const embeddings = source.embeddingChunks.map((chunk) => ({
+        chunk,
+        similarity: innerProduct(queryEmbedding[0], chunk.embedding),
+      }));
+
+      const selectedElements = new Set<MarkdownElement>();
+      let totalChars = 0;
+
+      for (const { chunk, similarity } of embeddings.sort(
+        (a, b) => b.similarity - a.similarity,
+      )) {
+        if (totalChars > SOFT_MAX_CHARS) break;
+        if (totalChars > MIN_CHARS && similarity < SIMILARITY_THRESHOLD) break;
+
+        if (
+          chunk.type === MarkdownElementType.Paragraph ||
+          chunk.type === MarkdownElementType.UnorderedList ||
+          chunk.type === MarkdownElementType.OrderedList ||
+          chunk.type === MarkdownElementType.CodeBlock ||
+          chunk.type === MarkdownElementType.Code ||
+          chunk.type === MarkdownElementType.Link ||
+          chunk.type === MarkdownElementType.Image ||
+          chunk.type === MarkdownElementType.Table
+        ) {
+          const element: MarkdownElement = {
+            type: chunk.type,
+            content: chunk.text,
+            parent: chunk.parentHeader
+              ? ({
+                  type: MarkdownElementType.Header,
+                  content: chunk.parentHeader,
+                } as HeaderElement)
+              : null,
+          };
+
+          selectedElements.add(element);
+          totalChars += chunk.text.length;
+        }
+      }
+
+      return {
+        url: source.url,
+        elements: Array.from(selectedElements),
+      };
+    });
+
+    return results;
+  } catch (error) {
+    logger.error('Error selecting relevant context:', error);
+    throw error;
+  }
 }

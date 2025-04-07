@@ -4,5 +4,9 @@ export * from './similarity';
 export * from './combine';
 export * from './embed';
 
-// Export a convenient factory function for creating the mock embedding model
+// Export models
 export { MockEmbeddingModel } from './types';
+export {
+  TransformersJSEmbeddingModel,
+  disposeTransformersModels,
+} from './transformers';

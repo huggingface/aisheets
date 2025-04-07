@@ -2,23 +2,31 @@ import { $, component$, useComputed$, useSignal } from '@builder.io/qwik';
 import { useNavigate } from '@builder.io/qwik-city';
 import { LuChevronRightSquare } from '@qwikest/icons/lucide';
 import { Button } from '~/components';
+import { userServerConfig } from '~/loaders';
 import { useImportFromURL } from '~/usecases/import-from-url.usecase';
 
-const OAUTH_CLIENT_ID =
-  '793766532675-rehqgocfn88h0nl88322ht6d1i12kl4e.apps.googleusercontent.com';
-
-const OAUTH_REDIRECT_URI = 'https://duckdb-gsheets.com/oauth';
-
-const SECRET_URL = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${OAUTH_CLIENT_ID}&redirect_uri=${OAUTH_REDIRECT_URI}&response_type=token&scope=https://www.googleapis.com/auth/spreadsheets&state=74lkGOhrZA`;
-
 export const ImportFromGoogleSheets = component$(() => {
+  const config = userServerConfig();
+  const nav = useNavigate();
+
   const url = useSignal('');
   const googleSheetsToken = useSignal('');
   const isImporting = useSignal(false);
 
-  const nav = useNavigate();
-
   const importFromURI = useImportFromURL();
+
+  const googleOauthURL = useComputed$(() => {
+    const { GOOGLE_CLIENT_ID, GOOGLE_REDIRECT_URI } = config.value;
+
+    const params = new URLSearchParams({
+      client_id: GOOGLE_CLIENT_ID,
+      redirect_uri: GOOGLE_REDIRECT_URI,
+      response_type: 'token',
+      scope: 'https://www.googleapis.com/auth/spreadsheets',
+    });
+
+    return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+  });
 
   const isValidURL = useComputed$(() => {
     if (!url.value) return false;
@@ -113,7 +121,7 @@ export const ImportFromGoogleSheets = component$(() => {
               <span class="text-xs text-gray-500">
                 To generate a secret for Google Sheets, please follow this{' '}
                 <a
-                  href={SECRET_URL}
+                  href={googleOauthURL.value}
                   target="_blank"
                   rel="noopener noreferrer"
                   class="text-blue-500 underline"

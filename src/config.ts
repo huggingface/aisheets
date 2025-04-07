@@ -1,3 +1,5 @@
+import { isDev } from '@builder.io/qwik';
+
 /**
  * The OAuth client ID used for authentication.
  * This value is retrieved from the environment variable `OAUTH_CLIENT_ID`.
@@ -43,3 +45,12 @@ export const INFERENCE_TIMEOUT = 90000;
  * Default value: 5, max. number of concurrent requests 10
  */
 export const NUM_CONCURRENT_REQUESTS = 5;
+
+export const GOOGLE_CLIENT_ID: string | undefined =
+  process.env.GOOGLE_CLIENT_ID ||
+  '163754164780-6u2jcqp2srk8mdl1cgbauaas23lqjdcu.apps.googleusercontent.com';
+
+export const GOOGLE_REDIRECT_URI: string | undefined =
+  process.env.GOOGLE_REDIRECT_URI || isDev
+    ? 'http://localhost:5173/oauth2/google'
+    : 'https://huggingfacedg-dataground.hf.space/oauth2/google';

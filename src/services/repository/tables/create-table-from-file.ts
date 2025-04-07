@@ -21,11 +21,32 @@ export const createDatasetTableFromFile = async (
   },
   options?: {
     limit?: number;
+    secrets?: {
+      googleSheets?: string;
+    };
   },
 ): Promise<Column[]> => {
   return await connectAndClose(async (db) => {
     const tableName = getDatasetTableName(dataset);
     const sequenceName = getDatasetRowSequenceName(dataset);
+
+    let secretDropStatement = '';
+
+    await db.run(`
+      BEGIN TRANSACTION;
+    `);
+
+    if (options?.secrets?.googleSheets) {
+      await db.run(`
+        CREATE OR REPLACE SECRET gsheet_secret(
+          TYPE gsheet,
+          PROVIDER access_token, 
+          TOKEN '${options.secrets.googleSheets}'
+        );  
+      `);
+
+      secretDropStatement = 'DROP SECRET gsheet_secret;';
+    }
 
     const results = await db.run(`
       DESCRIBE (SELECT * FROM '${file}');
@@ -58,6 +79,10 @@ export const createDatasetTableFromFile = async (
       ALTER TABLE ${tableName} ADD PRIMARY KEY (rowIdx);
       
       SHOW ${tableName};
+
+      ${secretDropStatement}
+
+      COMMIT;
     `);
 
     return dbColumns.map((column) => {

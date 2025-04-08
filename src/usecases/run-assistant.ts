@@ -4,14 +4,11 @@ import {
   DEFAULT_MODEL,
   DEFAULT_MODEL_PROVIDER,
   INFERENCE_TIMEOUT,
-  SERPER_API_KEY,
 } from '~/config';
 import {
-  TransformersJSEmbeddingModel,
-  WebScraper,
-  createEmbeddings,
-} from '~/services/websearch';
-import type { SearchResult } from '~/services/websearch/search';
+  type Source,
+  collectSearchSources,
+} from '~/services/websearch/search-sources';
 import { useServerSession } from '~/state';
 
 /**
@@ -24,9 +21,6 @@ const FALLBACK_MODEL = 'meta-llama/Llama-3.3-70B-Instruct';
  */
 const MAX_NUM_SEARCH_QUERIES = 2;
 
-// Create a single instance of the embedding model
-const embeddingModel = new TransformersJSEmbeddingModel();
-
 export interface AssistantParams {
   accessToken?: string;
   modelName?: string;
@@ -34,9 +28,7 @@ export interface AssistantParams {
   instruction: string;
   searchEnabled?: boolean;
   timeout?: number;
-  serperApiKey?: string; // Allow overriding the API key
-  maxSearchQueries?: number; // Number of search queries to request
-  enableScraping?: boolean; // Whether to scrape content from search results
+  maxSearchQueries?: number;
 }
 
 export interface WebSearchQuery {
@@ -49,21 +41,9 @@ export interface ColumnSourcesResult {
     // In the current version, we only return the queries
     queries: string[];
     // For future implementation
-    sources?: SearchResult[];
+    sources?: Source[];
   };
 }
-
-/**
- * Regular expressions to extract search queries from assistant output
- */
-// Pattern for websearch("query") format
-const WEB_SEARCH_REGEX = /websearch\(['"]([^'"]+)['"]\)/g;
-
-// Simple pattern for indented queries like "- query text"
-const SIMPLE_QUERY_REGEX = /^\s*-\s+(.+)$/;
-
-// Pattern to extract quoted text - handles both single and double quotes
-const QUOTED_TEXT_REGEX = /["']([^"']+)["']/;
 
 /**
  * Template for the search-enabled prompt
@@ -111,28 +91,9 @@ Only include columns that are directly relevant to the request.
 `.trim();
 
 /**
- * Organize extracted queries by column
- */
-function organizeQueriesByColumn(
-  queries: WebSearchQuery[],
-): ColumnSourcesResult {
-  const result: ColumnSourcesResult = {};
-
-  for (const { column, query } of queries) {
-    if (!result[column]) {
-      result[column] = { queries: [] };
-    }
-
-    result[column].queries.push(query);
-  }
-
-  return result;
-}
-
-/**
  * Function to extract column names and search queries from the assistant output
  */
-function extractWebSearchResults(text: string, searchEnabled = true) {
+function extractDatasetConfig(text: string, searchEnabled = true) {
   console.log('⚙️ [Assistant] Extracting results from text:', text);
 
   const columns: string[] = [];
@@ -190,83 +151,37 @@ function extractWebSearchResults(text: string, searchEnabled = true) {
 }
 
 /**
- * Handle errors from the inference API
- */
-const handleError = (e: unknown): string => {
-  console.error('🔍 [Assistant] Full error:', e);
-  if (e instanceof Error) {
-    console.error('🔍 [Assistant] Error name:', e.name);
-    console.error('🔍 [Assistant] Error message:', e.message);
-    console.error('🔍 [Assistant] Error stack:', e.stack);
-    return e.message;
-  }
-  return JSON.stringify(e);
-};
-
-/**
- * Check if an API key is valid (has at least 10 characters)
- */
-function isValidApiKey(key?: string): boolean {
-  return !!key && key.length >= 10;
-}
-
-/**
- * Search result with optional scraped content
- */
-export interface SearchResultWithContent extends SearchResult {
-  scrapedContent?: string;
-  scrapedTitle?: string;
-  // Add embedding info for UI display
-  embeddingChunks?: Array<{
-    text: string;
-    embedding: number[]; // The actual vector
-    type?: string; // Type of element (e.g., 'header', 'paragraph')
-    parentHeader?: string; // Parent header for context
-    metadata?: Record<string, any>; // Additional metadata
-  }>;
-}
-
-/**
  * Executes the assistant with the provided parameters
  */
 export const runAssistant = async function (
   this: RequestEventBase<QwikCityPlatform>,
-  {
-    modelName,
-    modelProvider = DEFAULT_MODEL_PROVIDER,
-    instruction,
-    searchEnabled = false,
-    timeout,
-    serperApiKey,
-    maxSearchQueries = MAX_NUM_SEARCH_QUERIES,
-    enableScraping = false,
-  }: AssistantParams,
+  params: AssistantParams,
 ): Promise<
   | string
   | {
       columns: string[];
       queries: string[];
-      sources?: SearchResultWithContent[];
+      sources?: Source[];
     }
 > {
   // Get the session directly from the request context
   const session = useServerSession(this);
 
   // Use the model name from config if none is specified
-  const finalModelName = modelName || DEFAULT_MODEL || FALLBACK_MODEL;
+  const finalModelName = params.modelName || DEFAULT_MODEL || FALLBACK_MODEL;
 
   // Use the model provider directly from config
-  const finalModelProvider = modelProvider;
+  const finalModelProvider = params.modelProvider || DEFAULT_MODEL_PROVIDER;
 
   console.log('🚀 [Assistant] Starting assistant execution');
   console.log('⚙️ [Assistant] Parameters:', {
     modelName: finalModelName,
     modelProvider: finalModelProvider,
     instruction:
-      instruction.substring(0, 100) + (instruction.length > 100 ? '...' : ''),
-    searchEnabled,
-    maxSearchQueries,
-    enableScraping,
+      params.instruction.substring(0, 100) +
+      (params.instruction.length > 100 ? '...' : ''),
+    searchEnabled: params.searchEnabled,
+    maxSearchQueries: params.maxSearchQueries,
   });
 
   // Log token information for debugging (safely)
@@ -278,14 +193,14 @@ export const runAssistant = async function (
   });
 
   // Prepare the prompt
-  const promptText = searchEnabled
-    ? SEARCH_PROMPT_TEMPLATE.replace('{instruction}', instruction).replace(
-        '{maxSearchQueries}',
-        maxSearchQueries.toString(),
-      )
-    : NO_SEARCH_PROMPT_TEMPLATE.replace('{instruction}', instruction);
+  const promptText = params.searchEnabled
+    ? SEARCH_PROMPT_TEMPLATE.replace(
+        '{instruction}',
+        params.instruction,
+      ).replace('{maxSearchQueries}', params.maxSearchQueries?.toString() || '')
+    : NO_SEARCH_PROMPT_TEMPLATE.replace('{instruction}', params.instruction);
 
-  console.log('⚙️ [Assistant] Using search enabled:', searchEnabled);
+  console.log('⚙️ [Assistant] Using search enabled:', params.searchEnabled);
   console.log('\n🔷 Assistant Prompt 🔷');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   console.log('Model:', finalModelName);
@@ -307,7 +222,7 @@ export const runAssistant = async function (
         accessToken: session.token,
       },
       {
-        signal: AbortSignal.timeout(timeout ?? INFERENCE_TIMEOUT),
+        signal: AbortSignal.timeout(params.timeout ?? INFERENCE_TIMEOUT),
       },
     );
 
@@ -319,9 +234,9 @@ export const runAssistant = async function (
     );
 
     // Extract columns and search queries from the assistant output
-    const { columns, queries } = extractWebSearchResults(
+    const { columns, queries } = extractDatasetConfig(
       responseText,
-      searchEnabled,
+      params.searchEnabled,
     );
 
     // If no structured data found, return the original response
@@ -333,7 +248,7 @@ export const runAssistant = async function (
     }
 
     // If search is not enabled, just return the columns
-    if (!searchEnabled) {
+    if (!params.searchEnabled) {
       console.log('⚙️ [Assistant] Search not enabled, returning columns only');
       return { columns, queries: [] };
     }
@@ -347,218 +262,28 @@ export const runAssistant = async function (
     }
 
     // If we have queries and search is enabled, perform web searches
-    if (queries.length > 0) {
+    if (queries.length > 0 && params.searchEnabled) {
       console.log(
         '⚙️ [Assistant] Found search queries, performing web searches',
       );
 
-      // Use the provided API key, otherwise use the one from environment
-      const apiKey = serperApiKey || SERPER_API_KEY;
-
-      // Check if API key is valid
-      if (!isValidApiKey(apiKey)) {
-        console.log('❌ [Assistant] Error: No valid Serper API key provided');
-        return {
-          columns,
-          queries,
-          sources: [
-            {
-              title: 'Search Error',
-              link: '',
-              snippet:
-                'No valid Serper API key provided for web search. Please set the SERPER_API_KEY environment variable or provide it directly.',
-            },
-          ],
-        };
-      }
-
       try {
-        // Import SerperSearch dynamically to ensure it exists
-        const { SerperSearch } = await import('~/services/websearch/search');
+        // Collect search sources
+        const sources = await collectSearchSources(queries);
 
-        console.log('⚙️ [Assistant] Initializing SerperSearch with API key');
-        const serper = new SerperSearch(apiKey);
-
-        // Perform web searches for all queries
-        const sources: SearchResult[] = [];
-
-        console.log(
-          `⚙️ [Assistant] Starting searches for ${queries.length} queries`,
-        );
-
-        for (const query of queries) {
-          try {
-            console.log(`⚙️ [Assistant] Searching for query: "${query}"`);
-
-            // Perform web search
-            const searchResults = await serper.search(query);
-            console.log(
-              `⚙️ [Assistant] Got ${searchResults.length} results for "${query}"`,
-            );
-
-            // Add search results to the combined sources
-            sources.push(...searchResults);
-          } catch (error) {
-            console.error(
-              `❌ [Assistant] Error searching for "${query}":`,
-              error,
-            );
-
-            // Add the error message as a source so it's visible to the user
-            sources.push({
-              title: 'Search Error',
-              link: '',
-              snippet: `Failed to search for "${query}": ${error instanceof Error ? error.message : String(error)}`,
-            });
-          }
-        }
-
-        console.log('✅ [Assistant] Completed all searches');
         console.log('✅ [Assistant] Found', sources.length, 'total results');
 
-        // Deduplicate sources by link
-        const uniqueSources = Array.from(
-          new Map(
-            sources.map((source) => [source.link || source.title, source]),
-          ).values(),
-        );
-
-        console.log(
-          '✅ [Assistant] Deduplicated to',
-          uniqueSources.length,
-          'unique results',
-        );
-
-        // If scraping is enabled, scrape the content from the search results
-        let resultWithContent: SearchResultWithContent[] = uniqueSources;
-
-        if (enableScraping) {
-          try {
-            console.log('⚙️ [Assistant] Scraping content from search results');
-            console.log(
-              `⚙️ [Assistant] Will attempt to scrape ${uniqueSources.length} result URLs`,
-            );
-
-            // Create a new WebScraper instance
-            const scraper = new WebScraper();
-            const scrapeStartTime = Date.now();
-
-            // Enrich the search results with scraped content
-            const enrichedResults =
-              await scraper.enrichSearchResults(uniqueSources);
-
-            const scrapeEndTime = Date.now();
-            const scrapeDuration = scrapeEndTime - scrapeStartTime;
-
-            // Convert the enriched results to the expected format
-            resultWithContent = enrichedResults.map((result) => {
-              const enhanced: SearchResultWithContent = {
-                title: result.title,
-                link: result.link || '',
-                snippet: result.snippet,
-              };
-
-              if (result.scraped) {
-                enhanced.scrapedTitle = result.scraped.title;
-
-                // Store the markdown content
-                if (result.scraped.content) {
-                  enhanced.scrapedContent = result.scraped.content;
-
-                  // Create a preview snippet from the content
-                  const previewLength = 200;
-                  const plainText = result.scraped.content
-                    .replace(/#+ /g, '') // Remove headers
-                    .replace(/\*\*/g, '') // Remove bold
-                    .replace(/\n+/g, ' ') // Normalize whitespace
-                    .trim();
-
-                  enhanced.snippet =
-                    plainText.substring(0, previewLength) +
-                    (plainText.length > previewLength ? '...' : '');
-                }
-              }
-
-              return enhanced;
-            });
-
-            const scrapedCount = resultWithContent.filter(
-              (r) => r.scrapedContent,
-            ).length;
-
-            console.log(
-              `✅ [Assistant] Scraped content from ${scrapedCount}/${uniqueSources.length} search results (took ${scrapeDuration}ms)`,
-            );
-
-            if (scrapedCount > 0) {
-              const totalChars = resultWithContent.reduce(
-                (sum, r) => sum + (r.scrapedContent?.length || 0),
-                0,
-              );
-              console.log(
-                `✅ [Assistant] Total content scraped: ${totalChars.toLocaleString()} characters`,
-              );
-              console.log(
-                `✅ [Assistant] Average content per result: ${Math.floor(totalChars / scrapedCount).toLocaleString()} characters`,
-              );
-
-              // Create embeddings for scraped content
-              if (enableScraping && resultWithContent.length > 0) {
-                try {
-                  const sourcesForEmbedding = enrichedResults
-                    .filter((r) => r.scraped?.markdownTree)
-                    .map((r) => ({
-                      url: r.link || '',
-                      title: r.title,
-                      page: r.scraped!,
-                    }));
-
-                  const embeddedSources = await createEmbeddings(
-                    sourcesForEmbedding,
-                    embeddingModel,
-                  );
-
-                  for (const embeddedSource of embeddedSources) {
-                    const resultToEnhance = resultWithContent.find(
-                      (r) => r.link === embeddedSource.url,
-                    );
-                    if (resultToEnhance) {
-                      resultToEnhance.embeddingChunks = embeddedSource.chunks;
-                    }
-                  }
-                } catch (error) {
-                  console.error('Error creating embeddings:', error);
-                }
-              }
-            }
-          } catch (error) {
-            console.error('❌ [Assistant] Error scraping content:', error);
-            // Continue with the original results on error
-          }
-        }
-
-        return { columns, queries, sources: resultWithContent };
+        return { columns, queries, sources };
       } catch (error) {
-        console.error('❌ [Assistant] Error initializing SerperSearch:', error);
-        return {
-          columns,
-          queries,
-          sources: [
-            {
-              title: 'Search Error',
-              link: '',
-              snippet: `Error initializing search: ${error instanceof Error ? error.message : String(error)}`,
-            },
-          ],
-        };
+        console.error('❌ [Assistant] Error collecting sources:', error);
+        return { columns, queries };
       }
     }
 
     // If no queries to search for, just return the columns and queries
     return { columns, queries };
   } catch (error) {
-    const errorMessage = handleError(error);
-    console.error('❌ [Assistant] Error in assistant execution:', errorMessage);
-    return errorMessage;
+    console.error('❌ [Assistant] Error in assistant execution:', error);
+    return error instanceof Error ? error.message : String(error);
   }
 };

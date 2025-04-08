@@ -16,7 +16,7 @@ import {
   LuX,
 } from '@qwikest/icons/lucide';
 import { Button, Label } from '~/components';
-import type { SearchResultWithContent } from '~/usecases/run-assistant';
+import type { Source } from '~/services/websearch/search-sources';
 import { runAssistant } from '~/usecases/run-assistant';
 
 /**
@@ -25,7 +25,7 @@ import { runAssistant } from '~/usecases/run-assistant';
 export interface AssistantResult {
   columns?: string[];
   queries?: string[];
-  sources?: SearchResultWithContent[];
+  sources?: Source[];
   logs?: string[];
 }
 
@@ -471,35 +471,34 @@ export const Assistant = component$(() => {
                   {response.result.sources.map((source, i) => (
                     <div key={i} class="p-3 border border-gray-200 rounded-sm">
                       <h4 class="font-medium text-lg">{source.title}</h4>
-                      {source.link && (
+                      {source.url && (
                         <a
-                          href={source.link}
+                          href={source.url}
                           target="_blank"
                           rel="noopener noreferrer"
                           class="text-blue-500 hover:underline flex items-center gap-1 mb-2 text-sm"
                         >
-                          <span class="truncate">{source.link}</span>
+                          <span class="truncate">{source.url}</span>
                           <LuExternalLink class="h-3 w-3 flex-shrink-0" />
                         </a>
                       )}
                       <p class="text-sm text-gray-600">{source.snippet}</p>
 
-                      {source.scrapedContent && (
+                      {source.content && (
                         <div class="mt-3 pt-3 border-t border-gray-100">
                           <details>
                             <summary class="text-sm font-medium cursor-pointer text-blue-500 hover:underline mb-2 flex items-center gap-1">
                               <LuFileText class="h-3 w-3" />
                               <span>View scraped content</span>
                               <span class="ml-1 text-xs text-gray-500">
-                                ({source.scrapedContent.length.toLocaleString()}{' '}
-                                chars)
+                                ({source.content.length.toLocaleString()} chars)
                               </span>
                             </summary>
                             <div class="mt-2 text-sm text-gray-700 max-h-[400px] overflow-y-auto bg-gray-50 p-3 rounded-sm">
                               <pre class="whitespace-pre-wrap font-mono text-xs">
-                                {source.scrapedContent}
+                                {source.content}
                               </pre>
-                              {source.scrapedContent.length > 10000 && (
+                              {source.content.length > 10000 && (
                                 <div class="mt-2 text-xs text-gray-500">
                                   (Content truncated for performance)
                                 </div>
@@ -509,50 +508,47 @@ export const Assistant = component$(() => {
                         </div>
                       )}
 
-                      {source.embeddingChunks &&
-                        source.embeddingChunks.length > 0 && (
-                          <div class="mt-3 pt-3 border-t border-gray-100">
-                            <details>
-                              <summary class="text-sm font-medium cursor-pointer text-purple-600 hover:underline mb-2 flex items-center gap-1">
-                                <LuFileText class="h-3 w-3" />
-                                <span>Embedding chunks</span>
-                                <span class="ml-1 text-xs text-gray-500">
-                                  ({source.embeddingChunks.length} chunks)
-                                </span>
-                              </summary>
-                              <div class="mt-2 space-y-4 max-h-[600px] overflow-y-auto">
-                                {source.embeddingChunks.map((chunk, i) => (
-                                  <div
-                                    key={i}
-                                    class="bg-purple-50 p-3 rounded-sm border border-purple-100"
-                                  >
-                                    <div class="flex justify-between items-center mb-2">
-                                      <div class="text-xs font-medium text-purple-800">
-                                        Chunk #{i + 1}
-                                        {chunk.type && (
-                                          <span class="ml-2 px-2 py-0.5 bg-purple-200 text-purple-800 rounded-full">
-                                            Type: {chunk.type}
-                                          </span>
-                                        )}
-                                        {chunk.parentHeader && (
-                                          <span class="ml-2 text-xs text-gray-600">
-                                            Parent:{' '}
-                                            {chunk.parentHeader.substring(
-                                              0,
-                                              30,
-                                            )}
-                                            {chunk.parentHeader.length > 30
-                                              ? '...'
-                                              : ''}
-                                          </span>
-                                        )}
-                                      </div>
+                      {source.chunks && source.chunks.length > 0 && (
+                        <div class="mt-3 pt-3 border-t border-gray-100">
+                          <details>
+                            <summary class="text-sm font-medium cursor-pointer text-purple-600 hover:underline mb-2 flex items-center gap-1">
+                              <LuFileText class="h-3 w-3" />
+                              <span>Embedding chunks</span>
+                              <span class="ml-1 text-xs text-gray-500">
+                                ({source.chunks.length} chunks)
+                              </span>
+                            </summary>
+                            <div class="mt-2 space-y-4 max-h-[600px] overflow-y-auto">
+                              {source.chunks.map((chunk, i) => (
+                                <div
+                                  key={i}
+                                  class="bg-purple-50 p-3 rounded-sm border border-purple-100"
+                                >
+                                  <div class="flex justify-between items-center mb-2">
+                                    <div class="text-xs font-medium text-purple-800">
+                                      Chunk #{i + 1}
+                                      {chunk.type && (
+                                        <span class="ml-2 px-2 py-0.5 bg-purple-200 text-purple-800 rounded-full">
+                                          Type: {chunk.type}
+                                        </span>
+                                      )}
+                                      {chunk.parentHeader && (
+                                        <span class="ml-2 text-xs text-gray-600">
+                                          Parent:{' '}
+                                          {chunk.parentHeader.substring(0, 30)}
+                                          {chunk.parentHeader.length > 30
+                                            ? '...'
+                                            : ''}
+                                        </span>
+                                      )}
                                     </div>
-                                    <div class="text-sm mb-3 bg-white p-2 rounded border border-purple-100">
-                                      <pre class="whitespace-pre-wrap font-sans text-xs">
-                                        {chunk.text}
-                                      </pre>
-                                    </div>
+                                  </div>
+                                  <div class="text-sm mb-3 bg-white p-2 rounded border border-purple-100">
+                                    <pre class="whitespace-pre-wrap font-sans text-xs">
+                                      {chunk.text}
+                                    </pre>
+                                  </div>
+                                  {chunk.embedding && (
                                     <div>
                                       <div class="text-xs mb-1 font-medium text-purple-800">
                                         Embedding vector (first 10 dimensions):
@@ -572,27 +568,28 @@ export const Assistant = component$(() => {
                                         Total dimensions:{' '}
                                         {chunk.embedding.length}
                                       </div>
-                                      {chunk.metadata && (
-                                        <div class="mt-2 text-xs">
-                                          <div class="text-xs mb-1 font-medium text-purple-800">
-                                            Metadata:
-                                          </div>
-                                          <div class="bg-white p-2 rounded text-xs font-mono overflow-x-auto border border-purple-100">
-                                            {JSON.stringify(
-                                              chunk.metadata,
-                                              null,
-                                              2,
-                                            )}
-                                          </div>
-                                        </div>
-                                      )}
                                     </div>
-                                  </div>
-                                ))}
-                              </div>
-                            </details>
-                          </div>
-                        )}
+                                  )}
+                                  {chunk.metadata && (
+                                    <div class="mt-2 text-xs">
+                                      <div class="text-xs mb-1 font-medium text-purple-800">
+                                        Metadata:
+                                      </div>
+                                      <div class="bg-white p-2 rounded text-xs font-mono overflow-x-auto border border-purple-100">
+                                        {JSON.stringify(
+                                          chunk.metadata,
+                                          null,
+                                          2,
+                                        )}
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          </details>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>

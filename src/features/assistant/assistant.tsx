@@ -68,14 +68,12 @@ const runAssistantAction = server$(async function (
   instruction: string,
   searchEnabled: boolean,
   maxSearchQueries: number,
-  enableScraping: boolean,
 ) {
   console.log('🚀 [Assistant Component] Server action called with:', {
     instruction:
       instruction.substring(0, 100) + (instruction.length > 100 ? '...' : ''),
     searchEnabled,
     maxSearchQueries,
-    enableScraping,
   });
 
   try {
@@ -87,7 +85,6 @@ const runAssistantAction = server$(async function (
       instruction,
       searchEnabled,
       maxSearchQueries,
-      enableScraping,
     });
 
     console.log(
@@ -165,7 +162,6 @@ export const Assistant = component$(() => {
         (instruction.value.length > 100 ? '...' : ''),
       searchEnabled: searchEnabled.value,
       maxSearchQueries: maxSearchQueries.value,
-      enableScraping: enableScraping.value,
     });
 
     isLoading.value = true;
@@ -182,7 +178,6 @@ export const Assistant = component$(() => {
         instruction.value,
         searchEnabled.value,
         maxSearchQueries.value,
-        enableScraping.value,
       );
 
       console.log('✅ [Assistant Component] Got response from server action');

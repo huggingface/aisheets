@@ -1,12 +1,12 @@
 import { component$, isDev, useSignal } from '@builder.io/qwik';
 import { type RequestEvent, server$ } from '@builder.io/qwik-city';
 import * as hub from '@huggingface/hub';
-import { LuEgg, LuGlobe } from '@qwikest/icons/lucide';
-import { Button, Textarea } from '~/components';
+import { Button } from '~/components';
 import { Logo } from '~/components/ui/logo/logo';
+import { AssistantPrompt } from '~/features/assistant/assistant-prompt';
+import { DragAndDrop } from '~/features/import-from-file/drag-n-drop';
 
 import { CLIENT_ID, HF_TOKEN, OAUTH_SCOPES } from '~/config';
-import { DragAndDrop } from '~/features/import-from-file/drag-n-drop';
 import { createDatasetIdByUser } from '~/services';
 import { saveSession } from '~/services/auth/session';
 import { ActiveDatasetProvider, useServerSession } from '~/state';
@@ -107,37 +107,8 @@ export default component$(() => {
           Design your data in a sheet
         </h1>
 
-        <div
-          class="relative w-[600px] mt-6"
-          onClick$={() => document.getElementById('prompt')?.focus()}
-        >
-          <div class="w-full h-52 min-h-52 max-h-52 bg-white border border-secondary-foreground rounded-sm pt-2">
-            <Textarea
-              id="prompt"
-              look="ghost"
-              placeholder="Create customer claims. Categorize them as formal, humorous, neutral, or injurious, and respond to each in a neutral tone."
-              class="px-4 h-32 min-h-32 max-h-32 resize-none overflow-auto text-base rounded-sm text-neutral-500 placeholder:text-neutral-400"
-            />
-          </div>
-          <div
-            class="w-full absolute bottom-2 px-4 flex flex-row items-center justify-between cursor-text"
-            onClick$={() => document.getElementById('prompt')?.focus()}
-          >
-            <div class="flex w-full justify-between items-center">
-              <Button
-                look="secondary"
-                class="flex gap-1 p-2 h-9 text-neutral-700"
-              >
-                <LuGlobe class="text-lg" />
-                Search the web
-              </Button>
+        <AssistantPrompt />
 
-              <Button look="primary" disabled>
-                <LuEgg class="text-2xl" />
-              </Button>
-            </div>
-          </div>
-        </div>
         <div class="w-[600px] flex flex-col justify-between items-start gap-1">
           {startingPrompts.map((prompt) => (
             <Button

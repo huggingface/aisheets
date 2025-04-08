@@ -12,8 +12,6 @@ import {
   LuExternalLink,
   LuFileText,
   LuGlobe,
-  LuTerminal,
-  LuX,
 } from '@qwikest/icons/lucide';
 import { Button, Label } from '~/components';
 import type { Source } from '~/services/websearch/search-sources';
@@ -110,10 +108,8 @@ const runAssistantAction = server$(async function (
 export const Assistant = component$(() => {
   const instruction = useSignal('');
   const searchEnabled = useSignal(true);
-  const maxSearchQueries = useSignal(2);
-  const enableScraping = useSignal(false);
+  const maxSearchQueries = useSignal(1);
   const isLoading = useSignal(false);
-  const showLogs = useSignal(false);
   const isPollingLogs = useSignal(false);
   const response = useStore<{
     text?: string;
@@ -140,9 +136,6 @@ export const Assistant = component$(() => {
           }
         }
       }, 500); // Poll every 500ms
-
-      // Make sure logs are visible
-      showLogs.value = true;
     }
 
     cleanup(() => {
@@ -260,87 +253,23 @@ export const Assistant = component$(() => {
             </div>
 
             {searchEnabled.value && (
-              <>
-                <div class="flex items-center gap-2">
-                  <Label class="text-sm whitespace-nowrap">
-                    Search queries:
-                  </Label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="5"
-                    class="w-12 h-8 p-1 border border-secondary-foreground rounded-sm text-center"
-                    value={maxSearchQueries.value}
-                    onChange$={(e, el) => {
-                      const val = Number.parseInt(el.value, 10);
-                      if (!Number.isNaN(val) && val > 0 && val <= 5) {
-                        maxSearchQueries.value = val;
-                      }
-                    }}
-                  />
-                </div>
-
-                <div class="flex items-center gap-2">
-                  <div
-                    class={`p-1.5 rounded-full hover:bg-neutral-100 cursor-pointer ${enableScraping.value ? 'bg-blue-100 text-blue-600' : ''}`}
-                    onClick$={$(() => {
-                      console.log(
-                        '📄 [Assistant Component] Toggle scraping:',
-                        !enableScraping.value,
-                      );
-                      enableScraping.value = !enableScraping.value;
-                    })}
-                    role="button"
-                    tabIndex={0}
-                    aria-label={
-                      enableScraping.value
-                        ? 'Disable content scraping'
-                        : 'Enable content scraping'
+              <div class="flex items-center gap-2">
+                <Label class="text-sm whitespace-nowrap">Search queries:</Label>
+                <input
+                  type="number"
+                  min="1"
+                  max="5"
+                  class="w-12 h-8 p-1 border border-secondary-foreground rounded-sm text-center"
+                  value={maxSearchQueries.value}
+                  onChange$={(e, el) => {
+                    const val = Number.parseInt(el.value, 10);
+                    if (!Number.isNaN(val) && val > 0 && val <= 5) {
+                      maxSearchQueries.value = val;
                     }
-                  >
-                    <LuFileText class="text-lg" />
-                  </div>
-                  <span
-                    class="text-sm font-medium cursor-pointer"
-                    onClick$={$(() => {
-                      enableScraping.value = !enableScraping.value;
-                    })}
-                  >
-                    Scrape content
-                  </span>
-                </div>
-              </>
-            )}
-
-            {/* Logs toggle */}
-            <div class="flex items-center gap-2">
-              <div
-                class={`p-1.5 rounded-full hover:bg-neutral-100 cursor-pointer ${showLogs.value ? 'bg-blue-100 text-blue-600' : ''}`}
-                onClick$={$(() => {
-                  showLogs.value = !showLogs.value;
-                })}
-                role="button"
-                tabIndex={0}
-                aria-label={
-                  showLogs.value ? 'Hide debug logs' : 'Show debug logs'
-                }
-              >
-                <LuTerminal class="text-lg" />
+                  }}
+                />
               </div>
-              <span
-                class="text-sm font-medium cursor-pointer"
-                onClick$={$(() => {
-                  showLogs.value = !showLogs.value;
-                })}
-              >
-                Debug logs
-                {isPollingLogs.value && (
-                  <span class="ml-2 inline-block px-1.5 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full animate-pulse">
-                    Running
-                  </span>
-                )}
-              </span>
-            </div>
+            )}
           </div>
 
           <div class="flex items-center">
@@ -364,8 +293,8 @@ export const Assistant = component$(() => {
       </div>
 
       <div class="mt-4 pb-20">
-        {/* Logs section - moved to the top when processing */}
-        {showLogs.value && response.logs && response.logs.length > 0 && (
+        {/* Debug logs section - always shown */}
+        {response.logs && response.logs.length > 0 && (
           <div class="bg-black text-green-400 border border-gray-700 rounded-sm p-4 mb-4 relative">
             <div class="flex justify-between items-center mb-2">
               <h3 class="text-xl font-mono font-semibold flex items-center">
@@ -376,26 +305,14 @@ export const Assistant = component$(() => {
                   </span>
                 )}
               </h3>
-              <div class="flex gap-2">
-                <button
-                  type="button"
-                  onClick$={copyLogs}
-                  class="text-white hover:text-green-300 p-1"
-                  aria-label="Copy logs"
-                >
-                  <LuClipboard class="h-4 w-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick$={$(() => {
-                    showLogs.value = false;
-                  })}
-                  class="text-white hover:text-red-300 p-1"
-                  aria-label="Close logs"
-                >
-                  <LuX class="h-4 w-4" />
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick$={copyLogs}
+                class="text-white hover:text-green-300 p-1"
+                aria-label="Copy logs"
+              >
+                <LuClipboard class="h-4 w-4" />
+              </button>
             </div>
             <pre
               class="font-mono text-xs overflow-x-auto max-h-[400px] overflow-y-auto"

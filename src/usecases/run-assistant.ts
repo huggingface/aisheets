@@ -266,12 +266,22 @@ export const runAssistant = async function (
       console.log(
         '⚙️ [Assistant] Found search queries, performing web searches',
       );
+      console.log('📊 [Assistant] Number of queries:', queries.length);
+      console.log('🔍 [Assistant] Queries:', queries);
 
       try {
         // Collect search sources
         const sources = await collectSearchSources(queries);
 
         console.log('✅ [Assistant] Found', sources.length, 'total results');
+        console.log(
+          '📝 [Assistant] Results with content:',
+          sources.filter((s) => s.content).length,
+        );
+        console.log(
+          '🧮 [Assistant] Results with embeddings:',
+          sources.filter((s) => s.chunks?.length).length,
+        );
 
         return { columns, queries, sources };
       } catch (error) {

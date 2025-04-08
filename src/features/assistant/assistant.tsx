@@ -5,7 +5,7 @@ import {
   useStore,
   useVisibleTask$,
 } from '@builder.io/qwik';
-import { server$ } from '@builder.io/qwik-city';
+import { server$, useNavigate } from '@builder.io/qwik-city';
 import {
   LuClipboard,
   LuEgg,
@@ -21,10 +21,11 @@ import { runAssistant } from '~/usecases/run-assistant';
  * Result structure returned by the assistant
  */
 export interface AssistantResult {
-  columns?: string[];
+  columns?: Array<{ name: string; prompt: string }>;
   queries?: string[];
   sources?: Source[];
   logs?: string[];
+  dataset?: string;
 }
 
 // Store logs in a global array (temporary solution)
@@ -117,6 +118,7 @@ export const Assistant = component$(() => {
     error?: string;
     logs?: string[];
   }>({});
+  const nav = useNavigate();
 
   // Set up log polling
   useVisibleTask$(({ track, cleanup }) => {
@@ -176,16 +178,24 @@ export const Assistant = component$(() => {
       console.log('✅ [Assistant Component] Got response from server action');
 
       // Handle the different response types
-      if (result.text) {
+      if ('text' in result && result.text) {
         console.log('📝 [Assistant Component] Setting text response');
         response.text = result.text;
-      } else {
+      } else if ('dataset' in result && result.dataset) {
         console.log('🔍 [Assistant Component] Setting structured result');
         response.result = result as AssistantResult;
+
+        // Redirect to the dataset page
+        console.log(
+          '🔄 [Assistant Component] Redirecting to dataset:',
+          result.dataset,
+        );
+        await nav(`/dataset/${result.dataset}/`);
+        return;
       }
 
       // Store final logs
-      response.logs = result.logs || [];
+      response.logs = Array.from(result.logs || []);
     } catch (error: any) {
       console.error('❌ [Assistant Component] Error running assistant:', error);
       response.error = error.message || 'An error occurred';
@@ -348,165 +358,161 @@ export const Assistant = component$(() => {
         )}
 
         {/* Structured result */}
-        {response.result && (
-          <div class="space-y-6">
-            {response.result.columns && response.result.columns.length > 0 && (
-              <div class="bg-white border border-secondary-foreground rounded-sm p-4 mb-4">
-                <h3 class="text-xl font-semibold mb-3">Suggested Columns</h3>
-                <ul class="list-disc pl-5 space-y-1">
-                  {response.result.columns.map((column, i) => (
-                    <li key={i} class="text-sm font-medium">
-                      {column}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
+        {response.result?.columns && response.result.columns.length > 0 && (
+          <div class="bg-white border border-secondary-foreground rounded-sm p-4 mb-4">
+            <h3 class="text-xl font-semibold mb-3">Suggested Columns</h3>
+            <ul class="list-disc pl-5 space-y-2">
+              {response.result.columns.map((column, i) => (
+                <li key={i}>
+                  <div class="text-sm">
+                    <span class="font-medium">{column.name}</span>
+                    {column.prompt && (
+                      <div class="text-gray-600 mt-1 pl-2 font-mono">
+                        {column.prompt}
+                      </div>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
-            {response.result.queries && response.result.queries.length > 0 && (
-              <div class="bg-white border border-secondary-foreground rounded-sm p-4 mb-4">
-                <h3 class="text-xl font-semibold mb-3">Search Queries</h3>
-                <ul class="list-disc pl-5 space-y-2">
-                  {response.result.queries.map((query, i) => (
-                    <li key={i} class="text-sm">
-                      {query}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
+        {response.result?.queries && response.result.queries.length > 0 && (
+          <div class="bg-white border border-secondary-foreground rounded-sm p-4 mb-4">
+            <h3 class="text-xl font-semibold mb-3">Search Queries</h3>
+            <ul class="list-disc pl-5 space-y-2">
+              {response.result.queries.map((query, i) => (
+                <li key={i} class="text-sm">
+                  {query}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
-            {response.result.sources && response.result.sources.length > 0 && (
-              <div class="bg-white border border-secondary-foreground rounded-sm p-4">
-                <h3 class="text-xl font-semibold mb-3">Search Results</h3>
-                <div class="space-y-4">
-                  {response.result.sources.map((source, i) => (
-                    <div key={i} class="p-3 border border-gray-200 rounded-sm">
-                      <h4 class="font-medium text-lg">{source.title}</h4>
-                      {source.url && (
-                        <a
-                          href={source.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          class="text-blue-500 hover:underline flex items-center gap-1 mb-2 text-sm"
-                        >
-                          <span class="truncate">{source.url}</span>
-                          <LuExternalLink class="h-3 w-3 flex-shrink-0" />
-                        </a>
-                      )}
-                      <p class="text-sm text-gray-600">{source.snippet}</p>
+        {response.result?.sources && response.result.sources.length > 0 && (
+          <div class="bg-white border border-secondary-foreground rounded-sm p-4">
+            <h3 class="text-xl font-semibold mb-3">Search Results</h3>
+            <div class="space-y-4">
+              {response.result.sources.map((source, i) => (
+                <div key={i} class="p-3 border border-gray-200 rounded-sm">
+                  <h4 class="font-medium text-lg">{source.title}</h4>
+                  {source.url && (
+                    <a
+                      href={source.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="text-blue-500 hover:underline flex items-center gap-1 mb-2 text-sm"
+                    >
+                      <span class="truncate">{source.url}</span>
+                      <LuExternalLink class="h-3 w-3 flex-shrink-0" />
+                    </a>
+                  )}
+                  <p class="text-sm text-gray-600">{source.snippet}</p>
 
-                      {source.content && (
-                        <div class="mt-3 pt-3 border-t border-gray-100">
-                          <details>
-                            <summary class="text-sm font-medium cursor-pointer text-blue-500 hover:underline mb-2 flex items-center gap-1">
-                              <LuFileText class="h-3 w-3" />
-                              <span>View scraped content</span>
-                              <span class="ml-1 text-xs text-gray-500">
-                                ({source.content.length.toLocaleString()} chars)
-                              </span>
-                            </summary>
-                            <div class="mt-2 text-sm text-gray-700 max-h-[400px] overflow-y-auto bg-gray-50 p-3 rounded-sm">
-                              <pre class="whitespace-pre-wrap font-mono text-xs">
-                                {source.content}
-                              </pre>
-                              {source.content.length > 10000 && (
-                                <div class="mt-2 text-xs text-gray-500">
-                                  (Content truncated for performance)
+                  {source.content && (
+                    <div class="mt-3 pt-3 border-t border-gray-100">
+                      <details>
+                        <summary class="text-sm font-medium cursor-pointer text-blue-500 hover:underline mb-2 flex items-center gap-1">
+                          <LuFileText class="h-3 w-3" />
+                          <span>View scraped content</span>
+                          <span class="ml-1 text-xs text-gray-500">
+                            ({source.content.length.toLocaleString()} chars)
+                          </span>
+                        </summary>
+                        <div class="mt-2 text-sm text-gray-700 max-h-[400px] overflow-y-auto bg-gray-50 p-3 rounded-sm">
+                          <pre class="whitespace-pre-wrap font-mono text-xs">
+                            {source.content}
+                          </pre>
+                          {source.content.length > 10000 && (
+                            <div class="mt-2 text-xs text-gray-500">
+                              (Content truncated for performance)
+                            </div>
+                          )}
+                        </div>
+                      </details>
+                    </div>
+                  )}
+
+                  {source.chunks && source.chunks.length > 0 && (
+                    <div class="mt-3 pt-3 border-t border-gray-100">
+                      <details>
+                        <summary class="text-sm font-medium cursor-pointer text-purple-600 hover:underline mb-2 flex items-center gap-1">
+                          <LuFileText class="h-3 w-3" />
+                          <span>Embedding chunks</span>
+                          <span class="ml-1 text-xs text-gray-500">
+                            ({source.chunks.length} chunks)
+                          </span>
+                        </summary>
+                        <div class="mt-2 space-y-4 max-h-[600px] overflow-y-auto">
+                          {source.chunks.map((chunk, i) => (
+                            <div
+                              key={i}
+                              class="bg-purple-50 p-3 rounded-sm border border-purple-100"
+                            >
+                              <div class="flex justify-between items-center mb-2">
+                                <div class="text-xs font-medium text-purple-800">
+                                  Chunk #{i + 1}
+                                  {chunk.type && (
+                                    <span class="ml-2 px-2 py-0.5 bg-purple-200 text-purple-800 rounded-full">
+                                      Type: {chunk.type}
+                                    </span>
+                                  )}
+                                  {chunk.parentHeader && (
+                                    <span class="ml-2 text-xs text-gray-600">
+                                      Parent:{' '}
+                                      {chunk.parentHeader.substring(0, 30)}
+                                      {chunk.parentHeader.length > 30
+                                        ? '...'
+                                        : ''}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                              <div class="text-sm mb-3 bg-white p-2 rounded border border-purple-100">
+                                <pre class="whitespace-pre-wrap font-sans text-xs">
+                                  {chunk.text}
+                                </pre>
+                              </div>
+                              {chunk.embedding && (
+                                <div>
+                                  <div class="text-xs mb-1 font-medium text-purple-800">
+                                    Embedding vector (first 10 dimensions):
+                                  </div>
+                                  <div class="bg-white p-2 rounded text-xs font-mono overflow-x-auto border border-purple-100">
+                                    [
+                                    {chunk.embedding
+                                      .slice(0, 10)
+                                      .map((n) => n.toFixed(4))
+                                      .join(', ')}
+                                    {chunk.embedding.length > 10 ? ', ...' : ''}
+                                    ]
+                                  </div>
+                                  <div class="mt-1 text-xs text-gray-500">
+                                    Total dimensions: {chunk.embedding.length}
+                                  </div>
+                                </div>
+                              )}
+                              {chunk.metadata && (
+                                <div class="mt-2 text-xs">
+                                  <div class="text-xs mb-1 font-medium text-purple-800">
+                                    Metadata:
+                                  </div>
+                                  <div class="bg-white p-2 rounded text-xs font-mono overflow-x-auto border border-purple-100">
+                                    {JSON.stringify(chunk.metadata, null, 2)}
+                                  </div>
                                 </div>
                               )}
                             </div>
-                          </details>
+                          ))}
                         </div>
-                      )}
-
-                      {source.chunks && source.chunks.length > 0 && (
-                        <div class="mt-3 pt-3 border-t border-gray-100">
-                          <details>
-                            <summary class="text-sm font-medium cursor-pointer text-purple-600 hover:underline mb-2 flex items-center gap-1">
-                              <LuFileText class="h-3 w-3" />
-                              <span>Embedding chunks</span>
-                              <span class="ml-1 text-xs text-gray-500">
-                                ({source.chunks.length} chunks)
-                              </span>
-                            </summary>
-                            <div class="mt-2 space-y-4 max-h-[600px] overflow-y-auto">
-                              {source.chunks.map((chunk, i) => (
-                                <div
-                                  key={i}
-                                  class="bg-purple-50 p-3 rounded-sm border border-purple-100"
-                                >
-                                  <div class="flex justify-between items-center mb-2">
-                                    <div class="text-xs font-medium text-purple-800">
-                                      Chunk #{i + 1}
-                                      {chunk.type && (
-                                        <span class="ml-2 px-2 py-0.5 bg-purple-200 text-purple-800 rounded-full">
-                                          Type: {chunk.type}
-                                        </span>
-                                      )}
-                                      {chunk.parentHeader && (
-                                        <span class="ml-2 text-xs text-gray-600">
-                                          Parent:{' '}
-                                          {chunk.parentHeader.substring(0, 30)}
-                                          {chunk.parentHeader.length > 30
-                                            ? '...'
-                                            : ''}
-                                        </span>
-                                      )}
-                                    </div>
-                                  </div>
-                                  <div class="text-sm mb-3 bg-white p-2 rounded border border-purple-100">
-                                    <pre class="whitespace-pre-wrap font-sans text-xs">
-                                      {chunk.text}
-                                    </pre>
-                                  </div>
-                                  {chunk.embedding && (
-                                    <div>
-                                      <div class="text-xs mb-1 font-medium text-purple-800">
-                                        Embedding vector (first 10 dimensions):
-                                      </div>
-                                      <div class="bg-white p-2 rounded text-xs font-mono overflow-x-auto border border-purple-100">
-                                        [
-                                        {chunk.embedding
-                                          .slice(0, 10)
-                                          .map((n) => n.toFixed(4))
-                                          .join(', ')}
-                                        {chunk.embedding.length > 10
-                                          ? ', ...'
-                                          : ''}
-                                        ]
-                                      </div>
-                                      <div class="mt-1 text-xs text-gray-500">
-                                        Total dimensions:{' '}
-                                        {chunk.embedding.length}
-                                      </div>
-                                    </div>
-                                  )}
-                                  {chunk.metadata && (
-                                    <div class="mt-2 text-xs">
-                                      <div class="text-xs mb-1 font-medium text-purple-800">
-                                        Metadata:
-                                      </div>
-                                      <div class="bg-white p-2 rounded text-xs font-mono overflow-x-auto border border-purple-100">
-                                        {JSON.stringify(
-                                          chunk.metadata,
-                                          null,
-                                          2,
-                                        )}
-                                      </div>
-                                    </div>
-                                  )}
-                                </div>
-                              ))}
-                            </div>
-                          </details>
-                        </div>
-                      )}
+                      </details>
                     </div>
-                  ))}
+                  )}
                 </div>
-              </div>
-            )}
+              ))}
+            </div>
           </div>
         )}
       </div>

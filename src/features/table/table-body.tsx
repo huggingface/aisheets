@@ -18,7 +18,6 @@ import { type Cell, type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
 
 export const TableBody = component$(() => {
   const { columns, firstColumn } = useColumnsStore();
-  const expandedRows = useSignal<Set<number>>(new Set());
 
   const tableBody = useSignal<HTMLElement>();
   const rowHeight = 100;
@@ -115,11 +114,15 @@ export const TableBody = component$(() => {
             key={actualRowIndex}
             class="hover:bg-gray-50/50 transition-colors"
           >
-            {row.map((cell, j) => {
+            <td class="px-2 text-center border-[0.5px] border-t-0 bg-neutral-100">
+              {actualRowIndex + 1}
+            </td>
+
+            {row.map((cell) => {
               return (
                 <Fragment key={`${i}-${cell.column!.id}`}>
                   {cell.column?.id === TEMPORAL_ID ? (
-                    <td class="min-w-80 w-80 max-w-80 px-2 min-h-[100px] h-[100px] border-[0.5px] border-t-0 border-r-0" />
+                    <td class="min-w-80 w-80 max-w-80 px-2 min-h-[100px] h-[100px] border-[0.5px] border-l-0 border-t-0" />
                   ) : (
                     <>
                       <TableCell cell={cell} />
@@ -138,11 +141,6 @@ export const TableBody = component$(() => {
                 </Fragment>
               );
             })}
-
-            {/* td for (add + ) column */}
-            {columns.value.filter((c) => c.id !== TEMPORAL_ID).length >= 1 && (
-              <td class="min-w-80 w-80 max-w-80 min-h-[100px] h-[100px] border-[0.5px] border-t-0 border-r-0" />
-            )}
           </tr>
         );
       })}
@@ -223,9 +221,7 @@ const ExecutionFormDebounced = component$<{ column?: { id: Column['id'] } }>(
     if (!state.isVisible) return null;
 
     return (
-      <td
-        class={`min-w-[660px] w-[660px] bg-neutral-100 border-[0.5px] border-b-0 border-t-0 ${columnId.value !== TEMPORAL_ID ? 'border-r-0' : ''}`}
-      />
+      <td class="min-w-[660px] w-[660px] border-[0.5px] bg-neutral-100 border-t-0 border-l-0 border-b-0" />
     );
   },
 );

@@ -10,11 +10,11 @@ export const TableView = component$(() => {
     columns.value.filter((c) => c.id !== TEMPORAL_ID).length > 1;
 
   return (
-    <div class="h-10 flex items-center">
-      {hasMultipleColumns ? (
+    <div class="h-10">
+      {hasMultipleColumns && (
         <Popover.Root floating="bottom-start" gutter={4}>
           <Popover.Trigger
-            class={`${buttonVariants({ look: 'ghost' })} flex gap-1 text-primary-foreground my-1 p-2`}
+            class={`${buttonVariants({ look: 'ghost' })} flex gap-1 text-primary-foreground my-1`}
           >
             <LuColumns class="text-sm text-neutral" />
             <span class="text-neutral-600">View columns</span>
@@ -29,8 +29,6 @@ export const TableView = component$(() => {
             </div>
           </Popover.Panel>
         </Popover.Root>
-      ) : (
-        <div class="h-10 w-10" />
       )}
     </div>
   );

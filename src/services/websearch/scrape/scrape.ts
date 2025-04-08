@@ -21,6 +21,11 @@ const DEFAULT_MAX_CHARS_PER_ELEMENT = 1000;
  */
 const MAX_TOTAL_CONTENT_LENGTH = 25000;
 
+/**
+ * Maximum number of concurrent scraping operations
+ */
+const MAX_CONCURRENT_SCRAPES = 5;
+
 // Register cleanup handler
 process.on('exit', () => {
   closeBrowser().catch(() => {});
@@ -131,4 +136,42 @@ export async function scrapeUrl(
     logger.error(`Error scraping URL: ${url}`, error);
     return null;
   }
+}
+
+/**
+ * Scrape multiple URLs in parallel with concurrency control
+ */
+export async function scrapeUrlsBatch(
+  urls: string[],
+  maxConcurrent = MAX_CONCURRENT_SCRAPES,
+): Promise<Map<string, ScrapedPage | null>> {
+  logger.info(`Starting parallel scraping of ${urls.length} URLs`);
+  const results = new Map<string, ScrapedPage | null>();
+
+  // Process URLs in chunks to limit concurrency
+  for (let i = 0; i < urls.length; i += maxConcurrent) {
+    const chunk = urls.slice(i, i + maxConcurrent);
+    logger.info(
+      `Processing chunk ${i / maxConcurrent + 1}: ${chunk.length} URLs`,
+    );
+
+    const promises = chunk.map(async (url) => {
+      try {
+        const result = await scrapeUrl(url);
+        results.set(url, result);
+      } catch (error) {
+        logger.error(`Failed to scrape ${url}:`, error);
+        results.set(url, null);
+      }
+    });
+
+    await Promise.all(promises);
+  }
+
+  const successCount = Array.from(results.values()).filter(Boolean).length;
+  logger.success(
+    `Completed scraping: ${successCount}/${urls.length} successful`,
+  );
+
+  return results;
 }

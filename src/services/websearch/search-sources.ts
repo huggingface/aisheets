@@ -1,6 +1,6 @@
 import { createEmbeddings } from './embed/embed';
 import { TransformersJSEmbeddingModel } from './embed/transformers';
-import { scrapeUrl } from './scrape';
+import { scrapeUrlsBatch } from './scrape';
 import { SerperSearch } from './search';
 import type { ScrapedPage } from './types';
 
@@ -70,18 +70,27 @@ export async function collectSearchSources(
   );
 
   // Enrich with content
-  for (const source of uniqueSources) {
-    if (source.url) {
-      try {
-        const scraped = await scrapeUrl(source.url);
+  const urlsToScrape = uniqueSources
+    .filter((source) => source.url)
+    .map((source) => source.url!);
+
+  if (urlsToScrape.length > 0) {
+    console.log(
+      `🔍 [Search] Starting parallel scraping of ${urlsToScrape.length} URLs`,
+    );
+    const scrapedResults = await scrapeUrlsBatch(urlsToScrape);
+
+    // Merge scraped results back into sources
+    for (const source of uniqueSources) {
+      if (source.url) {
+        const scraped = scrapedResults.get(source.url);
         if (scraped) {
           source.content = scraped.content;
           source.markdownTree = scraped.markdownTree;
         }
-      } catch (error) {
-        console.error(`Failed to scrape ${source.url}:`, error);
       }
     }
+    console.log(`✅ [Search] Completed scraping ${scrapedResults.size} URLs`);
   }
 
   // Create embeddings for all valid sources

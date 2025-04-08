@@ -48,7 +48,7 @@ export const NUM_CONCURRENT_REQUESTS = 5;
 
 export const GOOGLE_CLIENT_ID: string | undefined =
   process.env.GOOGLE_CLIENT_ID ??
-  '163754164780-6u2jcqp2srk8mdl1cgbauaas23lqjdcu.apps.googleusercontent.com';
+  '905039472434-7khf7dpl6002etvrn1h3ne1g0t2gv5r8.apps.googleusercontent.com';
 
 export const GOOGLE_REDIRECT_URI: string | undefined =
   process.env.GOOGLE_REDIRECT_URI ??

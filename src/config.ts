@@ -63,3 +63,10 @@ export const DEFAULT_MODEL_PROVIDER: string =
  */
 export const DEFAULT_MODEL: string =
   process.env.DEFAULT_MODEL ?? 'meta-llama/Llama-3.3-70B-Instruct';
+
+/**
+ * The directory for vector database storage.
+ * Default value: '$DATA_DIR/embeddings.db'
+ */
+export const VECTOR_DB_DIR: string =
+  process.env.VECTOR_DB_DIR ?? `${DATA_DIR}/embeddings`;

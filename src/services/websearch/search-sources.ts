@@ -1,12 +1,24 @@
-import { createEmbeddings } from './embed/embed';
-import { TransformersJSEmbeddingModel } from './embed/transformers';
+import { indexDatasetSources } from './embed/engine';
 import { scrapeUrlsBatch } from './scrape';
 import { SerperSearch } from './search';
-import type { ScrapedPage } from './types';
+import type { HeaderElement } from './types';
 
-// Initialize embedding model immediately
-const embeddingModel = new TransformersJSEmbeddingModel();
-console.log('✅ [Search] Embedding model initialized');
+import * as config from '~/config';
+
+export interface WebSource {
+  url: string;
+  title?: string;
+  snippet?: string;
+  markdownTree?: HeaderElement;
+
+  contentType: 'web';
+}
+
+export interface ErrorSource {
+  title: string;
+  snippet: string;
+  contentType: 'error';
+}
 
 export interface Source {
   title?: string;
@@ -14,7 +26,7 @@ export interface Source {
   snippet?: string;
   content?: string;
   contentType?: string; // 'web', 'pdf', 'docx', etc.
-  markdownTree?: any;
+  markdownTree?: HeaderElement;
   chunks?: Array<{
     text: string;
     embedding?: number[];
@@ -24,37 +36,91 @@ export interface Source {
   }>;
 }
 
-export async function collectSearchSources(
-  queries: string[],
-): Promise<Source[]> {
-  // Service handles API key internally
-  const apiKey = process.env.SERPER_API_KEY;
-  if (!apiKey) {
-    return [
-      {
-        title: 'Search Error',
-        snippet: 'Search service not configured. Missing API key.',
-        contentType: 'error',
-      },
-    ];
+export async function createSourcesFromWebQueries({
+  dataset,
+  queries,
+  options,
+}: {
+  dataset: {
+    id: string;
+    name: string;
+  };
+  queries: string[];
+  options: {
+    accessToken: string;
+  };
+}): Promise<{
+  sources: WebSource[];
+  errors?: ErrorSource[];
+}> {
+  if (!queries || queries.length === 0) throw new Error('No queries provided');
+  if (!dataset || !dataset.id) throw new Error('No dataset provided');
+
+  const { sources: webSources, errors } = await searchQueriesToSources(queries);
+
+  const scrappedUrls = await scrapeUrlsBatch(
+    webSources.map((source) => source.url),
+  );
+
+  for (const source of webSources) {
+    const scrapped = scrappedUrls.get(source.url);
+    if (scrapped) source.markdownTree = scrapped.markdownTree;
   }
 
-  const serper = new SerperSearch(apiKey);
-  const sources: Source[] = [];
+  const indexSize = await indexDatasetSources({
+    dataset,
+    sources: webSources,
+    options,
+  });
 
-  // Collect all search results and convert them to Sources
+  if (indexSize === 0) {
+    console.error('No sources indexed');
+    return { sources: [], errors };
+  }
+
+  return {
+    sources: webSources,
+    errors,
+  };
+}
+
+const searchQueriesToSources = async (
+  queries: string[],
+): Promise<{
+  sources: WebSource[];
+  errors?: ErrorSource[];
+}> => {
+  // Check if the API key is set
+  if (!config.SERPER_API_KEY) throw new Error('No SERPER API key provided');
+
+  const sourcesMap = new Map<string, WebSource>();
+  const serper = new SerperSearch(config.SERPER_API_KEY);
+
+  const errors = [] as ErrorSource[];
+
   for (const query of queries) {
     try {
-      const searchResults = await serper.search(query);
-      const webSources = searchResults.map((result) => ({
-        title: result.title,
-        url: result.link,
-        snippet: result.snippet,
-        contentType: 'web',
-      }));
-      sources.push(...webSources);
+      const webSearch = await serper.search(query);
+
+      for (const result of webSearch) {
+        if (!result.link) continue;
+
+        const source: WebSource = {
+          ...result,
+          url: result.link!,
+          title: result.title || 'Untitled',
+          contentType: 'web',
+        };
+
+        // Check if the source already exists
+        const sourceKey = source.url!;
+        if (sourcesMap.has(sourceKey)) continue;
+
+        sourcesMap.set(sourceKey!, source);
+      }
     } catch (error) {
-      sources.push({
+      console.error(`Error searching for query "${query}":`, error);
+      errors.push({
         title: 'Search Error',
         snippet: `Failed to search for "${query}": ${error instanceof Error ? error.message : String(error)}`,
         contentType: 'error',
@@ -62,85 +128,9 @@ export async function collectSearchSources(
     }
   }
 
-  // Deduplicate by URL if present
-  const uniqueSources = Array.from(
-    new Map(
-      sources.map((source) => [source.url || source.title, source]),
-    ).values(),
-  );
-
-  // Enrich with content
-  const urlsToScrape = uniqueSources
-    .filter((source) => source.url)
-    .map((source) => source.url!);
-
-  if (urlsToScrape.length > 0) {
-    console.log(
-      `🔍 [Search] Starting parallel scraping of ${urlsToScrape.length} URLs`,
-    );
-    const scrapedResults = await scrapeUrlsBatch(urlsToScrape);
-
-    // Merge scraped results back into sources
-    for (const source of uniqueSources) {
-      if (source.url) {
-        const scraped = scrapedResults.get(source.url);
-        if (scraped) {
-          source.content = scraped.content;
-          source.markdownTree = scraped.markdownTree;
-        }
-      }
-    }
-    console.log(`✅ [Search] Completed scraping ${scrapedResults.size} URLs`);
-  }
-
-  // Create embeddings for all valid sources
-  console.log('🔧 [Search] Starting embedding process...');
-  try {
-    const sourcesForEmbedding = uniqueSources
-      .filter((source) => source.content && source.url && source.markdownTree)
-      .map((source) => ({
-        url: source.url!,
-        title: source.title || 'Untitled',
-        page: {
-          title: source.title || 'Untitled',
-          content: source.content!,
-          markdownTree: source.markdownTree,
-          siteName: undefined,
-          author: undefined,
-          description: undefined,
-          createdAt: undefined,
-          updatedAt: undefined,
-        } as ScrapedPage,
-      }));
-
-    console.log(
-      `📊 [Search] Found ${sourcesForEmbedding.length} sources to embed`,
-    );
-
-    const embeddedSources = await createEmbeddings(
-      sourcesForEmbedding,
-      embeddingModel,
-    );
-
-    console.log(
-      `✅ [Search] Successfully embedded ${embeddedSources.length} sources`,
-    );
-
-    // Merge embeddings back into sources
-    for (const embeddedSource of embeddedSources) {
-      const sourceToEnhance = uniqueSources.find(
-        (s) => s.url === embeddedSource.url,
-      );
-      if (sourceToEnhance) {
-        sourceToEnhance.chunks = embeddedSource.chunks;
-        console.log(
-          `📝 [Search] Added ${embeddedSource.chunks.length} chunks to source: ${sourceToEnhance.url}`,
-        );
-      }
-    }
-  } catch (error) {
-    console.error('❌ [Search] Error creating embeddings:', error);
-  }
-
-  return uniqueSources;
-}
+  return {
+    // Limit the number of sources to 5
+    sources: Array.from(sourcesMap.values()).slice(0, 5),
+    errors,
+  };
+};

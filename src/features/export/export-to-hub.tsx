@@ -67,9 +67,10 @@ export const ExportToHub = component$(() => {
   });
 
   return (
-    <>
+    <div class="flex flex-col gap-2 md:flex-row md:items-center">
       <Button
-        look="secondary"
+        look="ghost"
+        size="md"
         onClick$={handleOpenExportToHubSidebar}
         disabled={
           activeDataset.value.columns.filter((c) => c.id !== TEMPORAL_ID)
@@ -123,7 +124,7 @@ export const ExportToHub = component$(() => {
       <Modal
         name="exportToHub"
         title="Save to Hugging Face Hub"
-        class="fixed !right-4 !top-[4rem] w-[480px] shadow-md z-50"
+        class="fixed !left-4 !top-[4rem] w-[480px] shadow-md z-50"
       >
         <div class="flex flex-col gap-10">
           <div class="flex flex-col gap-6">
@@ -221,6 +222,6 @@ export const ExportToHub = component$(() => {
           </div>
         </div>
       </Modal>
-    </>
+    </div>
   );
 });

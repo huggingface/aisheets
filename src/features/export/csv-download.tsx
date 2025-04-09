@@ -1,4 +1,5 @@
 import { $, component$, useComputed$, useSignal } from '@builder.io/qwik';
+import { LuDownload } from '@qwikest/icons/lucide';
 import { Button } from '~/components';
 import { type Column, useColumnsStore, useDatasetsStore } from '~/state';
 import { useGenerateCSVFile } from '~/usecases/generate-csv-file.usecase';
@@ -52,18 +53,19 @@ export const CSVDownload = component$(() => {
   });
 
   return (
-    <div class="flex flex-col gap-2">
-      {canDowloadCSV.value ? (
-        <Button onClick$={downloadTask} disabled={downloading.value}>
+    <div class="flex flex-col gap-2 md:flex-row md:items-center">
+      <Button
+        look="ghost"
+        size="md"
+        class="disabled:text-neutral-300"
+        onClick$={downloadTask}
+        disabled={downloading.value || !canDowloadCSV.value}
+      >
+        <div class="flex items-center gap-4">
+          <LuDownload class="h-4 w-4 mr-2" />
           Download CSV
-        </Button>
-      ) : (
-        <div class="text-sm text-neutral-500">
-          <Button class="text-sm text-neutral-500" disabled={true}>
-            CSV download is not available
-          </Button>
         </div>
-      )}
+      </Button>
     </div>
   );
 });

@@ -1,5 +1,5 @@
 import { component$, isDev, useSignal } from '@builder.io/qwik';
-import { type RequestEvent, server$ } from '@builder.io/qwik-city';
+import type { RequestEvent } from '@builder.io/qwik-city';
 import * as hub from '@huggingface/hub';
 import { LuEgg, LuGlobe } from '@qwikest/icons/lucide';
 import { Button, Textarea } from '~/components';
@@ -7,9 +7,8 @@ import { Logo } from '~/components/ui/logo/logo';
 
 import { CLIENT_ID, HF_TOKEN, OAUTH_SCOPES } from '~/config';
 import { DragAndDrop } from '~/features/import-from-file/drag-n-drop';
-import { createDatasetIdByUser } from '~/services';
 import { saveSession } from '~/services/auth/session';
-import { ActiveDatasetProvider, useServerSession } from '~/state';
+import { ActiveDatasetProvider } from '~/state';
 
 export const onGet = async ({
   cookie,
@@ -83,14 +82,6 @@ export const onGet = async ({
 
   throw Error('Missing HF_TOKEN or OAUTH_CLIENT_ID');
 };
-
-const createDataset = server$(async function (this) {
-  const session = useServerSession(this);
-
-  return await createDatasetIdByUser({
-    createdBy: session.user.username,
-  });
-});
 
 export default component$(() => {
   const isTransitioning = useSignal(false);

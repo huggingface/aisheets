@@ -119,66 +119,90 @@ COLUMNS:
 `.trim();
 
 /**
- * Function to extract column names and search queries from the assistant output
+ * Extracts structured dataset configuration from LLM output
  */
 function extractDatasetConfig(text: string, searchEnabled = true) {
-  const columns: Array<{ name: string; prompt: string }> = [];
-  const queries: string[] = [];
-  let datasetName = 'Auto-generated Dataset';
+  // Define result structure with defaults
+  const result = {
+    datasetName: 'Auto-generated Dataset',
+    columns: [] as Array<{ name: string; prompt: string }>,
+    queries: [] as string[],
+  };
 
-  let currentSection: 'name' | 'columns' | 'queries' | null = null;
-  const lines = text.split('\n');
+  // Define regex patterns for better maintainability
+  const sectionPatterns = {
+    name: /^DATASET NAME:$/i,
+    columns: /^COLUMNS:$/i,
+    queries: /^SEARCH QUERIES:$/i,
+    bulletPoint: /^\s*-\s+(.+)$/,
+    quotedText: /^["'](.+)["']$/,
+  };
 
-  for (const line of lines) {
-    if (!line.trim()) continue;
+  let currentSection: keyof typeof sectionPatterns | null = null;
 
-    if (line.match(/^DATASET NAME:$/i)) {
+  // Process text line by line
+  for (const line of text.split('\n').map((l) => l.trim())) {
+    // Skip empty lines
+    if (!line) continue;
+
+    // Check for section headers
+    if (sectionPatterns.name.test(line)) {
       currentSection = 'name';
       continue;
     }
 
-    if (line.match(/^COLUMNS:$/i)) {
+    if (sectionPatterns.columns.test(line)) {
       currentSection = 'columns';
       continue;
     }
 
-    if (searchEnabled && line.match(/^SEARCH QUERIES:$/i)) {
+    if (searchEnabled && sectionPatterns.queries.test(line)) {
       currentSection = 'queries';
       continue;
     }
 
+    // Skip if no section identified yet
     if (!currentSection) continue;
 
-    if (currentSection === 'name' && line.trim()) {
-      datasetName = line.trim();
+    // Process dataset name
+    if (currentSection === 'name') {
+      result.datasetName = line;
       continue;
     }
 
-    const bulletMatch = line.match(/^\s*-\s+(.+)$/);
-    if (bulletMatch) {
-      const item = bulletMatch[1].trim();
+    // Process bulleted items
+    const bulletMatch = line.match(sectionPatterns.bulletPoint);
+    if (!bulletMatch) continue;
 
-      if (currentSection === 'columns') {
-        const [columnName, ...promptParts] = item
-          .split(':')
-          .map((part) => part.trim());
-        if (columnName) {
-          columns.push({
-            name: columnName,
-            prompt: promptParts.join(':') || '',
-          });
-        }
+    const item = bulletMatch[1].trim();
+
+    // Handle columns section
+    if (currentSection === 'columns') {
+      const colonIndex = item.indexOf(':');
+
+      // Skip malformed entries
+      if (colonIndex === -1) continue;
+
+      const columnName = item.substring(0, colonIndex).trim();
+      const prompt = item.substring(colonIndex + 1).trim();
+
+      if (columnName) {
+        result.columns.push({ name: columnName, prompt });
       }
+    }
 
-      if (searchEnabled && currentSection === 'queries') {
-        const quotedMatch = item.match(/^["'](.+)["']$/);
-        const query = quotedMatch ? quotedMatch[1] : item;
-        queries.push(query);
+    // Handle queries section
+    if (searchEnabled && currentSection === 'queries') {
+      const quotedMatch = item.match(sectionPatterns.quotedText);
+      const query = quotedMatch ? quotedMatch[1] : item;
+
+      if (query) {
+        result.queries.push(query);
       }
     }
   }
 
-  return { datasetName, columns, queries };
+  return result;
 }
 
 /**

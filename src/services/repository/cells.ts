@@ -331,6 +331,30 @@ export const updateCell = async (cell: Partial<Cell>): Promise<Cell> => {
   };
 };
 
+export const deleteCell = async (
+  datasetId: string,
+  cellIdx: number[],
+): Promise<boolean> => {
+  const columns = await ColumnModel.findAll({
+    where: {
+      datasetId,
+    },
+  });
+
+  const deletedCount = await ColumnCellModel.destroy({
+    where: {
+      columnId: {
+        [Op.in]: columns.map((column) => column.id),
+      },
+      idx: {
+        [Op.in]: cellIdx,
+      },
+    },
+  });
+
+  return deletedCount === cellIdx.length;
+};
+
 export const getGeneratedCellsCount = async (
   filter: Record<string, any>,
 ): Promise<number> => {

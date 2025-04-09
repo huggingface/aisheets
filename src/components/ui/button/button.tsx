@@ -3,7 +3,7 @@ import { cn } from '@qwik-ui/utils';
 import { type VariantProps, cva } from 'class-variance-authority';
 
 export const buttonVariants = cva(
-  'inline-flex items-center justify-center rounded text-sm font-medium transition-all duration-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring',
+  'inline-flex items-center justify-center rounded text-sm font-normal transition-all duration-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring',
   {
     variants: {
       look: {

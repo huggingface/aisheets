@@ -47,7 +47,7 @@ export const MainSidebar = component$(() => {
         >
           {isOpen.value && (
             <span class="text-base font-semibold px-4 font-inter">
-              DataGround
+              AISheets
             </span>
           )}
           <button

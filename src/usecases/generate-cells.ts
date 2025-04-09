@@ -5,6 +5,7 @@ import {
   getRowCells,
   updateCell,
 } from '~/services/repository/cells';
+import { queryDatasetSources } from '~/services/websearch/embed';
 import type { Cell, Column, Process, Session } from '~/state';
 import { collectExamples } from './collect-examples';
 import {
@@ -62,6 +63,16 @@ export const generateCells = async function* ({
     validatedCells,
     columnsReferences,
   });
+
+  const sourcesContext = await queryDatasetSources({
+    dataset: column.dataset,
+    query: process.prompt,
+    options: {
+      accessToken: session.token,
+    },
+  });
+
+  console.log('Found relevant content from sources', sourcesContext);
 
   const validatedIdxs = validatedCells?.map((cell) => cell.idx);
 

@@ -58,6 +58,8 @@ export const DEFAULT_MODEL_PROVIDER: string =
   process.env.DEFAULT_MODEL_PROVIDER ?? 'sambanova';
 
 /**
- * The default model for inference operations.
+ * The default model for inference.
+ * Default value: 'meta-llama/Llama-3.3-70B-Instruct'
  */
-export const DEFAULT_MODEL: string = process.env.DEFAULT_MODEL ?? '';
+export const DEFAULT_MODEL: string =
+  process.env.DEFAULT_MODEL ?? 'meta-llama/Llama-3.3-70B-Instruct';

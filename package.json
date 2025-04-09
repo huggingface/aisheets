@@ -30,7 +30,8 @@
     "test": "vitest",
     "test.unit.ui": "vitest --ui",
     "qwik": "qwik",
-    "prepare": "husky"
+    "prepare": "husky",
+    "playwright-install": "playwright install"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",

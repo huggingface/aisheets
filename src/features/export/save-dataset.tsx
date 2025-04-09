@@ -15,10 +15,9 @@ export const SaveDataset = component$(() => {
             <LuDownload class="w-4 h-4" />
           </Label>
         </Popover.Trigger>
-        <Popover.Panel class="w-96 max-h-60">
-          <div class="flex flex-col gap-1 p-4 bg-white">
+        <Popover.Panel class="w-86 max-h-40">
+          <div>
             <ExportToHub />
-
             <CSVDownload />
           </div>
         </Popover.Panel>

@@ -123,7 +123,7 @@ export const ExportToHub = component$(() => {
 
       <Modal
         name="exportToHub"
-        title="Save to Hugging Face Hub"
+        title=""
         class="fixed !left-4 !top-[4rem] w-[480px] shadow-md z-50"
       >
         <div class="flex flex-col gap-10">

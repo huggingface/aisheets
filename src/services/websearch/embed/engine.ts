@@ -5,6 +5,8 @@ import { VECTOR_DB_DIR } from '~/config';
 import type { WebSource } from '~/services/websearch/search-sources';
 import { flattenTree, stringifyMarkdownElement } from '../markdown';
 
+import { isDev } from '@builder.io/qwik';
+
 export const configureEmbeddingsIndex = async () => {
   // Check if the database is empty
   const db = await lancedb.connect(VECTOR_DB_DIR);
@@ -22,10 +24,16 @@ export const configureEmbeddingsIndex = async () => {
     ),
   ]);
 
-  const embeddingsIndex = await db.createEmptyTable('embeddings', schema, {
-    existOk: true,
-    mode: 'create',
-  });
+  const embeddingsIndex = isDev
+    ? await db.createEmptyTable('embeddings.dev', schema, {
+        mode: 'overwrite',
+      })
+    : await db.createEmptyTable('embeddings', schema, {
+        existOk: true,
+        mode: 'create',
+      });
+
+  await embeddingsIndex.createIndex('dataset_id', { replace: true });
 
   return {
     db,
@@ -33,14 +41,18 @@ export const configureEmbeddingsIndex = async () => {
   };
 };
 
-const { embeddingsIndex } = await configureEmbeddingsIndex();
+const { embeddingsIndex, db } = await configureEmbeddingsIndex();
+
+export const deleteIndex = async () => {
+  await db.dropTable(embeddingsIndex.name);
+};
 
 export const embedder = async (
   texts: string[],
   options: {
     accessToken: string;
   },
-): Promise<number[]> => {
+): Promise<number[][]> => {
   if (texts.length === 0) return [];
 
   const results = await featureExtraction({
@@ -54,7 +66,7 @@ export const embedder = async (
     throw new Error('Invalid response from Hugging Face API');
   }
 
-  return results as number[]; // TODO: How to control the type of this?
+  return results as number[][]; // TODO: How to control the type of this?
 };
 
 export const indexDatasetSources = async ({
@@ -98,4 +110,36 @@ export const indexDatasetSources = async ({
   await embeddingsIndex.add(indexData);
 
   return indexData.length;
+};
+
+export const queryDatasetSources = async ({
+  dataset,
+  query,
+  options,
+}: {
+  dataset: {
+    id: string;
+  };
+  query: string;
+  options: {
+    accessToken: string;
+  };
+}): Promise<
+  {
+    text: string;
+    source_uri: string;
+  }[]
+> => {
+  const embeddings = await embedder([query], options);
+
+  const results = await embeddingsIndex
+    .search(embeddings[0], 'vector')
+    .where(`dataset_id = "${dataset.id}"`)
+    .limit(10)
+    .toArray();
+
+  return results.map((result) => ({
+    text: result.text,
+    source_uri: result.source_uri,
+  }));
 };

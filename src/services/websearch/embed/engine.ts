@@ -3,8 +3,7 @@ import * as lancedb from '@lancedb/lancedb';
 import * as arrow from 'apache-arrow';
 import { VECTOR_DB_DIR } from '~/config';
 import type { WebSource } from '~/services/websearch/search-sources';
-import { stringifyMarkdownElement } from '../markdown';
-import { flattenTree } from './tree';
+import { flattenTree, stringifyMarkdownElement } from '../markdown';
 
 export const configureEmbeddingsIndex = async () => {
   // Check if the database is empty

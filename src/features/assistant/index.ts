@@ -1,1 +1,1 @@
-export { Assistant } from './assistant';
+export * from './autodataset-prompt';

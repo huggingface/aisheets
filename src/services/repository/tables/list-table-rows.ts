@@ -7,6 +7,7 @@ import path from 'node:path';
 import {
   DuckDBBlobValue,
   DuckDBListValue,
+  DuckDBMapValue,
   DuckDBStructValue,
 } from '@duckdb/node-api';
 
@@ -74,7 +75,7 @@ export const listDatasetTableRows = async ({
         return row;
       }
 
-      if (row instanceof DuckDBStructValue) {
+      if (row instanceof DuckDBStructValue || row instanceof DuckDBMapValue) {
         row = row.entries;
         return cleanValues(row);
       }
@@ -90,7 +91,10 @@ export const listDatasetTableRows = async ({
           }
         }
 
-        if (value instanceof DuckDBStructValue) {
+        if (
+          value instanceof DuckDBStructValue ||
+          row instanceof DuckDBMapValue
+        ) {
           value = value.entries;
           cleanValues(value);
           row[key] = value;

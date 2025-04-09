@@ -23,7 +23,7 @@ export const CellGeneration = component$<{ column: Column }>(({ column }) => {
   return (
     <Tooltip text="Regenerate">
       <div
-        class="p-1.5 rounded-full hover:bg-neutral-100 cursor-pointer transition-colors"
+        class="p-1.5 rounded-full hover:bg-neutral-100 cursor-pointer transition-colors z-10"
         onClick$={() => onRegenerateCells(column)}
         role="button"
         tabIndex={0}

@@ -67,8 +67,9 @@ export const Textarea = component$<TextareaProps>(
           onKeyDown$={handleKeyDown}
           onInput$={handleOnInput}
           class={cn(
+            '[&::-webkit-scrollbar-track]:bg-blue flex min-h-[60px] w-full rounded-md bg-transparent px-3 py-2 text-sm placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50',
             {
-              '[&::-webkit-scrollbar-track]:bg-blue flex min-h-[60px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50':
+              'border border-input focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring shadow-sm':
                 look === 'default',
               'border-none outline-none': look === 'ghost',
             },

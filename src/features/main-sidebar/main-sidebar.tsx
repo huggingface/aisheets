@@ -76,14 +76,7 @@ export const MainSidebar = component$(() => {
           'w-[240px]': isOpenMainSidebar.value,
         })}
       >
-        <span class="text-base font-semibold px-4 font-inter">DataGround</span>
-        {/* <button
-          type="button"
-          onClick$={closeMainSidebar}
-          class="transition-all duration-300 p-1.5 rounded-full hover:bg-neutral-200 text-gray-400"
-        >
-          <LuPanelLeft class="w-4 h-4" />
-        </button> */}
+        <span class="text-base font-semibold px-4 font-inter">AISheets</span>
       </div>
 
       {isOpenMainSidebar.value && (

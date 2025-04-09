@@ -16,7 +16,7 @@ import { Button, Popover } from '~/components';
 import { nextTick } from '~/components/hooks/tick';
 import { useExecution } from '~/features/add-column';
 import { TableCell } from '~/features/table/table-cell';
-import { deleteCell, getColumnCells } from '~/services';
+import { deleteRowsCells, getColumnCells } from '~/services';
 import { type Cell, type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
 
 export const TableBody = component$(() => {
@@ -49,7 +49,7 @@ export const TableBody = component$(() => {
       .getElementById(`delete-row-${actualRowIndex}-panel`)
       ?.hidePopover();
 
-    const ok = await server$(deleteCell)(
+    const ok = await server$(deleteRowsCells)(
       firstColumn.value.dataset.id,
       selectedRows.value,
     );

@@ -23,7 +23,8 @@ COPY ./package.json ./
 COPY ./pnpm-lock.yaml ./
 
 # Install dependencies with pnpm
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile \
+&& pnpm exec playwright install
 
 # Copy the rest of the source code
 COPY ./ ./

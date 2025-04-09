@@ -5,6 +5,7 @@ import {
   DEFAULT_MODEL_PROVIDER,
   INFERENCE_TIMEOUT,
 } from '~/config';
+import { createSourcesFromWebQueries } from '~/services/websearch/search-sources';
 import type { Column, Session } from '~/state';
 import type { ColumnKind } from '~/state/columns';
 import { createColumn } from '../services/repository/columns';
@@ -272,8 +273,16 @@ export const runAutoDataset = async function (
       datasetName,
     );
 
+    await createSourcesFromWebQueries({
+      dataset,
+      queries,
+      options: {
+        accessToken: session.token,
+      },
+    });
+
     // Return the columns, queries, and dataset
-    return { columns, queries, dataset, createdColumns };
+    return { columns, queries, dataset: dataset.id, createdColumns };
   } catch (error) {
     console.error('❌ [Assistant] Error in assistant execution:', error);
     return error instanceof Error ? error.message : String(error);
@@ -362,7 +371,7 @@ async function createAutoDataset(
   });
 
   return {
-    dataset: dataset.id,
+    dataset,
     columns: createdColumns.map((col) => ({
       name: col.name,
       prompt:

@@ -3,13 +3,16 @@ import {
   Fragment,
   component$,
   useComputed$,
-  useOnWindow,
   useSignal,
   useStore,
   useTask$,
   useVisibleTask$,
 } from '@builder.io/qwik';
 import { server$ } from '@builder.io/qwik-city';
+import { usePopover } from '@qwik-ui/headless';
+import { cn } from '@qwik-ui/utils';
+import { LuTrash } from '@qwikest/icons/lucide';
+import { Button, Popover } from '~/components';
 import { nextTick } from '~/components/hooks/tick';
 import { useExecution } from '~/features/add-column';
 import { TableCell } from '~/features/table/table-cell';
@@ -18,6 +21,8 @@ import { type Cell, type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
 
 export const TableBody = component$(() => {
   const { columns, firstColumn } = useColumnsStore();
+  const selectedRows = useSignal<number[]>([]);
+  usePopover();
 
   const tableBody = useSignal<HTMLElement>();
   const rowHeight = 100;
@@ -31,16 +36,23 @@ export const TableBody = component$(() => {
   const data = useSignal<Cell[][]>([]);
   const rowCount = useSignal(0);
 
-  useOnWindow(
-    'scroll',
-    $((event) => {
-      const target = event.target as HTMLElement;
+  const handleSelectRow$ = $((idx: number) => {
+    if (selectedRows.value.includes(idx)) {
+      selectedRows.value = selectedRows.value.filter((row) => row !== idx);
+    } else {
+      selectedRows.value = [...selectedRows.value, idx];
+    }
+  });
 
-      if (!target.classList.contains('scrollable')) return;
+  const handleDeleteClick$ = $((actualRowIndex: number) => {
+    document
+      .getElementById(`delete-row-${actualRowIndex}-panel`)
+      ?.hidePopover();
 
-      scrollTop.value = target.scrollTop - tableBody.value!.offsetTop;
-    }),
-  );
+    console.log('Delete row', selectedRows.value);
+
+    selectedRows.value = [];
+  });
 
   useVisibleTask$(({ track }) => {
     track(scrollTop);
@@ -114,8 +126,49 @@ export const TableBody = component$(() => {
             key={actualRowIndex}
             class="hover:bg-gray-50/50 transition-colors"
           >
-            <td class="px-2 text-center border-[0.5px] border-t-0 bg-neutral-100">
-              {actualRowIndex + 1}
+            <td
+              class={cn(
+                'px-2 text-center border-[0.5px] border-t-0 bg-neutral-100 select-none',
+                {
+                  'bg-neutral-300': selectedRows.value.includes(actualRowIndex),
+                },
+              )}
+              preventdefault:contextmenu
+              onClick$={(e) => {
+                if (e.button === 2) {
+                  e.preventDefault();
+                  return;
+                }
+                handleSelectRow$(actualRowIndex);
+              }}
+              onContextMenu$={(e) => {
+                nextTick(() => {
+                  document
+                    .getElementById(`delete-row-${actualRowIndex}-panel`)
+                    ?.showPopover();
+                }, 100);
+              }}
+            >
+              <Popover.Root
+                gutter={20}
+                floating="right"
+                id={`delete-row-${actualRowIndex}`}
+              >
+                <Popover.Trigger class="pointer-events-none">
+                  {actualRowIndex + 1}
+                </Popover.Trigger>
+
+                <Popover.Panel class="p-1" stoppropagation:click>
+                  <Button
+                    look="ghost"
+                    onClick$={() => handleDeleteClick$(actualRowIndex)}
+                    class="w-full hover:bg-neutral-200 hover:border-neutral-500 p-2"
+                  >
+                    <LuTrash class="mr-2" />
+                    Delete
+                  </Button>
+                </Popover.Panel>
+              </Popover.Root>
             </td>
 
             {row.map((cell) => {

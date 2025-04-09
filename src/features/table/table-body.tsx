@@ -16,11 +16,11 @@ import { Button, Popover } from '~/components';
 import { nextTick } from '~/components/hooks/tick';
 import { useExecution } from '~/features/add-column';
 import { TableCell } from '~/features/table/table-cell';
-import { getColumnCells } from '~/services';
+import { deleteCell, getColumnCells } from '~/services';
 import { type Cell, type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
 
 export const TableBody = component$(() => {
-  const { columns, firstColumn } = useColumnsStore();
+  const { columns, firstColumn, updateColumn } = useColumnsStore();
   const selectedRows = useSignal<number[]>([]);
   usePopover();
 
@@ -44,14 +44,27 @@ export const TableBody = component$(() => {
     }
   });
 
-  const handleDeleteClick$ = $((actualRowIndex: number) => {
+  const handleDeleteClick$ = $(async (actualRowIndex: number) => {
     document
       .getElementById(`delete-row-${actualRowIndex}-panel`)
       ?.hidePopover();
 
-    console.log('Delete row', selectedRows.value);
+    const ok = await server$(deleteCell)(
+      firstColumn.value.dataset.id,
+      selectedRows.value,
+    );
 
-    selectedRows.value = [];
+    if (ok) {
+      selectedRows.value = [];
+
+      for (const column of columns.value) {
+        column.cells = column.cells.filter(
+          (cell) => !selectedRows.value.includes(cell.idx),
+        );
+
+        updateColumn(column);
+      }
+    }
   });
 
   useVisibleTask$(({ track }) => {

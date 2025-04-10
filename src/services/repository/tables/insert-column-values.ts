@@ -24,14 +24,29 @@ export const upsertColumnValuesFromGenerator = async ({
     const generator = valuesGenerator();
 
     const insert_values = [];
+    const rowIdxSet = new Set<number>();
+
     for await (const [idx, value] of generator) {
       insert_values.push(`(${idx}, ${escapeValue(value)})`);
-    }
+      rowIdxSet.add(idx);
 
-    return await db.run(`
-      INSERT OR REPLACE INTO ${tableName} (rowIdx, ${columnName}) 
-      VALUES ${insert_values.join(',')}
-    `);
+      const result = await db.run(`
+        SELECT count(*) FROM ${tableName} WHERE rowIdx = ${idx};
+      `);
+
+      if (result.rowCount > 0) {
+        // Update existing row
+        await db.run(`
+          UPDATE ${tableName} SET ${columnName} = ${escapeValue(value)} WHERE rowIdx = ${idx};
+        `);
+      } else {
+        // Insert new row
+        await db.run(`
+        INSERT INTO ${tableName} (rowIdx, ${columnName})
+        VALUES (${idx}, ${escapeValue(value)});
+      `);
+      }
+    }
   });
 };
 

@@ -99,7 +99,7 @@ export default component$(() => {
         <h2 class="text-neutral-500">From a simple idea</h2>
 
         <div
-          class="relative w-[600px] mt-6"
+          class="relative w-[720px] mt-6"
           onClick$={() => document.getElementById('prompt')?.focus()}
         >
           <div class="w-full h-52 min-h-52 max-h-52 bg-white border border-secondary-foreground rounded-sm pt-2">
@@ -129,7 +129,7 @@ export default component$(() => {
             </div>
           </div>
         </div>
-        <div class="w-[600px] flex flex-col justify-between items-start gap-1">
+        <div class="w-[720px] flex flex-col justify-between items-start gap-1">
           {startingPrompts.map((prompt) => (
             <Button
               key={prompt}

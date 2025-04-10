@@ -42,6 +42,7 @@ WORKDIR /usr/src/app
 COPY --from=build /usr/src/app/node_modules ./node_modules
 COPY --from=build /usr/src/app/server ./server
 COPY --from=build /usr/src/app/dist ./dist
+COPY --from=build /home/node/.cache /home/node/.cache
 # COPY --from=build /usr/src/app/.env ./
 
 # Expose the application port

@@ -93,15 +93,14 @@ export default component$(() => {
 
   return (
     <ActiveDatasetProvider>
-      <div class="w-full h-full flex flex-col items-center justify-center gap-2">
+      <div class="w-full h-full flex flex-col items-center justify-center">
         <h1 class="text-3xl font-medium text-neutral-700">
           Design your data in a sheet
         </h1>
-
         <h2 class="text-neutral-500">From a simple idea</h2>
 
         <div
-          class="relative w-[720px] mt-6"
+          class="relative w-[720px] mt-12"
           onClick$={() => document.getElementById('prompt')?.focus()}
         >
           <div class="w-full h-48 min-h-48 max-h-48 bg-white border border-secondary-foreground rounded-lg pt-2 shadow-[0px_4px_6px_rgba(0,0,0,0.1)]">
@@ -137,7 +136,8 @@ export default component$(() => {
             </div>
           </div>
         </div>
-        <div class="w-[720px] flex flex-col justify-between items-start gap-2 mt-1">
+
+        <div class="w-[720px] flex flex-col justify-between items-start gap-2 mt-3">
           {startingPrompts.map((prompt) => (
             <Button
               key={prompt}
@@ -149,7 +149,8 @@ export default component$(() => {
             </Button>
           ))}
         </div>
-        <div class="w-[550px] flex justify-center items-center">
+
+        <div class="w-[550px] flex justify-center items-center mt-8">
           <hr class="w-full border-t border-gray-300" />
           <span class="mx-10 text-gray-400">OR</span>
           <hr class="w-full border-t border-gray-300" />

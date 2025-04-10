@@ -43,8 +43,8 @@ COPY --from=build /usr/src/app/server ./server
 COPY --from=build /usr/src/app/dist ./dist
 
 # COPY --from=build /usr/src/app/.env ./
-
-RUN npm exec playwright install --with-deps chromium-headless-shell
+RUN npm install -g playwright@1.48.2 \
+    && playwright install chromium
 
 # Expose the application port
 EXPOSE 3000

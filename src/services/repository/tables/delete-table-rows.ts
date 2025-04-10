@@ -22,7 +22,7 @@ export const deleteDatasetTableRows = async ({
       await db.run(`
         UPDATE ${tableName}
         SET rowIdx = rowIdx - 1
-        WHERE rowIdx = ${rowIdx}
+        WHERE rowIdx > ${rowIdx}
       `);
     }
   });

@@ -336,6 +336,8 @@ export const deleteRowsCells = async (
   datasetId: string,
   rowIdxs: number[],
 ): Promise<boolean> => {
+  rowIdxs = rowIdxs.sort((a, b) => a - b);
+
   const columns = await ColumnModel.findAll({
     where: {
       datasetId,
@@ -353,10 +355,15 @@ export const deleteRowsCells = async (
     },
   });
 
-  for (const rowIdx in rowIdxs.sort((a, b) => b - a)) {
+  for (const rowIdx in rowIdxs) {
     await ColumnCellModel.decrement('idx', {
       by: 1,
-      where: { idx: { [Op.gt]: rowIdx } },
+      where: {
+        columnId: {
+          [Op.in]: columns.map((column) => column.id),
+        },
+        idx: { [Op.gt]: rowIdx },
+      },
     });
   }
 

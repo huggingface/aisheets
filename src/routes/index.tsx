@@ -142,7 +142,7 @@ export default component$(() => {
             <Button
               key={prompt}
               look="secondary"
-              class="flex gap-1 text-xs px-2 rounded-xl"
+              class="flex gap-1 text-xs px-2 rounded-lg outline-neutral-300 bg-neutral-100"
             >
               <Logo class="w-5" />
               {prompt}

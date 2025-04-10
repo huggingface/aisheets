@@ -5,7 +5,7 @@ import {
   useSignal,
   useTask$,
 } from '@builder.io/qwik';
-import { LuArrowRightFromLine } from '@qwikest/icons/lucide';
+import { LuArrowRightFromLine, LuDownload } from '@qwikest/icons/lucide';
 
 import { Button, Checkbox, Input, Label, Modal } from '~/components';
 import { useModals } from '~/components/hooks/modals/use-modals';
@@ -70,6 +70,7 @@ export const ExportToHub = component$(() => {
     <>
       <Button
         look="secondary"
+        size="sm"
         onClick$={handleOpenExportToHubSidebar}
         disabled={
           activeDataset.value.columns.filter((c) => c.id !== TEMPORAL_ID)
@@ -77,8 +78,7 @@ export const ExportToHub = component$(() => {
         }
       >
         <div class="flex items-center gap-4">
-          <LuArrowRightFromLine class="text-md" />
-          Push to Hub
+          <LuDownload class="text-md" />
         </div>
       </Button>
 

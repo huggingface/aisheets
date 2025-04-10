@@ -103,6 +103,7 @@ export const generateCells = async function* ({
           accessToken: session.token,
           modelName,
           modelProvider,
+          sourcesContext,
           examples: currentExamples,
           instruction: prompt,
           timeout,
@@ -168,6 +169,7 @@ export const generateCells = async function* ({
         modelProvider,
         examples: currentExamples,
         instruction: prompt,
+        sourcesContext,
         timeout,
         data: {},
       };

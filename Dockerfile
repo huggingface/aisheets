@@ -23,8 +23,7 @@ COPY ./package.json ./
 COPY ./pnpm-lock.yaml ./
 
 # Install dependencies with pnpm
-RUN pnpm install --frozen-lockfile \
-&& pnpm exec playwright install
+RUN pnpm install --frozen-lockfile 
 
 # Copy the rest of the source code
 COPY ./ ./
@@ -42,8 +41,10 @@ WORKDIR /usr/src/app
 COPY --from=build /usr/src/app/node_modules ./node_modules
 COPY --from=build /usr/src/app/server ./server
 COPY --from=build /usr/src/app/dist ./dist
-COPY --from=build /home/node/.cache/ms-playwright /home/node/.cache/ms-playwright
+
 # COPY --from=build /usr/src/app/.env ./
+
+RUN npm exec playwright install --with-deps chromium-headless-shell
 
 # Expose the application port
 EXPOSE 3000

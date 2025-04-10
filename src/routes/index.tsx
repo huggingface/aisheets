@@ -137,7 +137,7 @@ export default component$(() => {
             </div>
           </div>
         </div>
-        <div class="w-[720px] flex flex-col justify-between items-start gap-1">
+        <div class="w-[720px] flex flex-col justify-between items-start gap-2">
           {startingPrompts.map((prompt) => (
             <Button
               key={prompt}

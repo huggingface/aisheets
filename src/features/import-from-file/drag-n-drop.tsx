@@ -92,7 +92,7 @@ export const DragAndDrop = component$(() => {
           'opacity-30': isDragging.value,
         })}
       >
-        <span>From real-world data</span>
+        <span class="text-neutral-500">From real-world data</span>
 
         <Button
           class="flex gap-1 bg-white rounded-sm"

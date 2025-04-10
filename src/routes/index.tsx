@@ -120,7 +120,7 @@ export default component$(() => {
               <Button
                 look="secondary"
                 class={cn(
-                  'flex gap-1 p-2 h-9 text-neutral-700 bg-white hover:bg-primary-50/80',
+                  'flex gap-1 p-2 h-9 text-neutral-700 bg-white hover:bg-primary-50/80 rounded-lg',
                   {
                     'outline-primary-100 bg-primary-50': searchOnWeb.value,
                   },

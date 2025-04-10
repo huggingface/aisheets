@@ -117,7 +117,7 @@ export default component$(() => {
             <div class="flex w-full justify-between items-center">
               <Button
                 look="secondary"
-                class="flex gap-1 p-2 h-9 text-neutral-700"
+                class="flex gap-1 p-2 h-9 text-neutral-700 bg-white"
               >
                 <LuGlobe class="text-lg" />
                 Search the web

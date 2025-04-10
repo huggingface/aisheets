@@ -273,13 +273,15 @@ export const runAutoDataset = async function (
       datasetName,
     );
 
-    await createSourcesFromWebQueries({
-      dataset,
-      queries,
-      options: {
-        accessToken: session.token,
-      },
-    });
+    if (params.searchEnabled) {
+      await createSourcesFromWebQueries({
+        dataset,
+        queries,
+        options: {
+          accessToken: session.token,
+        },
+      });
+    }
 
     // Return the columns, queries, and dataset
     return { columns, queries, dataset: dataset.id, createdColumns };

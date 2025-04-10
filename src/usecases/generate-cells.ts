@@ -72,7 +72,12 @@ export const generateCells = async function* ({
     },
   });
 
-  console.log('Found relevant content from sources', sourcesContext);
+  console.log('\n🔷 Dataset source extraction 🔷');
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('Prompt:', process.prompt);
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log(sourcesContext);
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
   const validatedIdxs = validatedCells?.map((cell) => cell.idx);
 

@@ -1,18 +1,50 @@
-import { component$, useSignal, useTask$ } from '@builder.io/qwik';
+import { $, component$, useSignal, useTask$ } from '@builder.io/qwik';
 import { Link } from '@builder.io/qwik-city';
-import { useToggle } from '~/components/hooks';
+import { cn } from '@qwik-ui/utils';
+import { LuLibrary, LuPanelLeft } from '@qwikest/icons/lucide';
+import { useModals } from '~/components/hooks';
+import { useClickOutside } from '~/components/hooks/click/outside';
 import { Logo } from '~/components/ui/logo/logo';
 import { Tooltip } from '~/components/ui/tooltip/tooltip';
-
-import { LuLibrary, LuPanelLeft } from '@qwikest/icons/lucide';
 import { useAllDatasetsLoader } from '~/loaders';
 import { useDatasetsStore } from '~/state';
 
+export const MainSidebarButton = component$(() => {
+  const { isOpenMainSidebar, openMainSidebar, closeMainSidebar } =
+    useModals('mainSidebar');
+
+  const handleClick$ = $(() => {
+    if (isOpenMainSidebar.value) {
+      return closeMainSidebar();
+    }
+
+    openMainSidebar();
+  });
+
+  return (
+    <button
+      type="button"
+      onClick$={handleClick$}
+      class="transition-all duration-300 p-1.5 rounded-full hover:bg-neutral-200 text-gray-400"
+    >
+      <LuPanelLeft class="w-4 h-4" />
+    </button>
+  );
+});
+
 export const MainSidebar = component$(() => {
-  const { isOpen, toggle } = useToggle(true);
+  const { isOpenMainSidebar, closeMainSidebar } = useModals('mainSidebar');
   const { activeDataset } = useDatasetsStore();
   const datasetsLoaded = useAllDatasetsLoader();
   const datasets = useSignal(datasetsLoaded.value);
+
+  const ref = useClickOutside(
+    $(() => {
+      if (isOpenMainSidebar.value) {
+        closeMainSidebar();
+      }
+    }),
+  );
 
   useTask$(({ track }) => {
     track(activeDataset);
@@ -33,34 +65,21 @@ export const MainSidebar = component$(() => {
 
   return (
     <div
-      class={`transition-all duration-300 shrink-0 overflow-hidden ${
-        isOpen.value
-          ? 'bg-gradient-to-r from-white to-gray-50 h-screen w-[240px]'
-          : 'bg-white w-10'
-      }`}
+      ref={ref}
+      class={cn('transition-all duration-300 shrink-0 overflow-hidden w-0', {
+        'bg-gradient-to-r from-white to-gray-50 h-screen w-[240px]':
+          isOpenMainSidebar.value,
+      })}
     >
-      <div class="h-14 relative">
-        <div
-          class={`absolute inset-0 transition-all duration-300 flex items-center ${
-            isOpen.value ? 'w-[240px]' : 'w-10'
-          }`}
-        >
-          {isOpen.value && (
-            <span class="text-base font-semibold px-4 font-inter">
-              AISheets
-            </span>
-          )}
-          <button
-            type="button"
-            onClick$={toggle}
-            class="absolute right-2 transition-all duration-300 p-1.5 rounded-full hover:bg-neutral-200 text-gray-400"
-          >
-            <LuPanelLeft class="w-4 h-4" />
-          </button>
-        </div>
+      <div
+        class={cn('flex items-center justify-between px-2 mt-5 w-0', {
+          'w-[240px]': isOpenMainSidebar.value,
+        })}
+      >
+        <span class="text-base font-semibold px-4 font-inter">AISheets</span>
       </div>
 
-      {isOpen.value && (
+      {isOpenMainSidebar.value && (
         <div class="transition-all duration-300">
           <div class="overflow-y-auto overflow-x-hidden">
             <div class="block space-y-4 px-4 mt-8 mb-8">

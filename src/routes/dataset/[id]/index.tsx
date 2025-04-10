@@ -3,6 +3,7 @@ import { type DocumentHead, useLocation } from '@builder.io/qwik-city';
 import { useActiveModal } from '~/components';
 import { DatasetName } from '~/features/datasets';
 import { SaveDataset } from '~/features/export';
+import { MainSidebarButton } from '~/features/main-sidebar';
 
 import { Table } from '~/features/table';
 import { Username } from '~/features/user/username';
@@ -20,14 +21,17 @@ export default component$(() => {
   });
 
   return (
-    <div class="flex flex-col h-full w-full gap-2">
+    <div class="flex flex-col h-full w-full">
       <div class="sticky">
         <div class="flex flex-col gap-2">
-          <div class="flex justify-end items-center w-full gap-4">
+          <div class="flex justify-between items-center w-full gap-1">
+            <div class="flex items-center w-fit gap-4">
+              <MainSidebarButton />
+              <DatasetName />
+              <SaveDataset />
+            </div>
             <Username />
           </div>
-          <DatasetName />
-          <SaveDataset />
         </div>
       </div>
       <Table />

@@ -9,5 +9,8 @@ export const initialState: State = {
     exportToHub: {
       status: 'closed',
     },
+    mainSidebar: {
+      status: 'closed',
+    },
   },
 };

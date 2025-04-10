@@ -104,7 +104,7 @@ export default component$(() => {
           class="relative w-[720px] mt-6"
           onClick$={() => document.getElementById('prompt')?.focus()}
         >
-          <div class="w-full h-48 min-h-48 max-h-48 bg-white border border-secondary-foreground rounded-lg pt-2 shadow-sm">
+          <div class="w-full h-48 min-h-48 max-h-48 bg-white border border-secondary-foreground rounded-lg pt-2 shadow-[0px_4px_6px_rgba(0,0,0,0.1)]">
             <Textarea
               id="prompt"
               look="ghost"
@@ -137,7 +137,7 @@ export default component$(() => {
             </div>
           </div>
         </div>
-        <div class="w-[720px] flex flex-col justify-between items-start gap-2">
+        <div class="w-[720px] flex flex-col justify-between items-start gap-2 mt-1">
           {startingPrompts.map((prompt) => (
             <Button
               key={prompt}

@@ -8,6 +8,7 @@ import {
 import { queryDatasetSources } from '~/services/websearch/embed';
 import type { Cell, Column, Process, Session } from '~/state';
 import { collectExamples } from './collect-examples';
+import { renderInstruction } from './materialize-prompt';
 import {
   runPromptExecution,
   runPromptExecutionStream,
@@ -64,21 +65,6 @@ export const generateCells = async function* ({
     columnsReferences,
   });
 
-  const sourcesContext = await queryDatasetSources({
-    dataset: column.dataset,
-    query: process.prompt,
-    options: {
-      accessToken: session.token,
-    },
-  });
-
-  console.log('\n🔷 Dataset source extraction 🔷');
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('Prompt:', process.prompt);
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log(sourcesContext);
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-
   const validatedIdxs = validatedCells?.map((cell) => cell.idx);
 
   if (!limit) limit = await getGeneratedColumnSize(column);
@@ -103,13 +89,14 @@ export const generateCells = async function* ({
           accessToken: session.token,
           modelName,
           modelProvider,
-          sourcesContext,
           examples: currentExamples,
           instruction: prompt,
           timeout,
           data: {},
           idx: i,
         };
+
+        let queryPrompt = process.prompt;
 
         if (columnsReferences?.length) {
           const rowCells = await getRowCells({
@@ -119,7 +106,17 @@ export const generateCells = async function* ({
           args.data = Object.fromEntries(
             rowCells.map((cell) => [cell.column!.name, cell.value]),
           );
+
+          queryPrompt = renderInstruction(process.prompt, args.data);
         }
+
+        args.sourcesContext = await queryDatasetSources({
+          dataset: column.dataset,
+          query: queryPrompt,
+          options: {
+            accessToken: session.token,
+          },
+        });
 
         streamRequests.push(args);
       }
@@ -153,6 +150,14 @@ export const generateCells = async function* ({
 
       return;
     }
+
+    const sourcesContext = await queryDatasetSources({
+      dataset: column.dataset,
+      query: process.prompt,
+      options: {
+        accessToken: session.token,
+      },
+    });
 
     // Sequential execution for fromScratch to accumulate examples
     for (let i = offset; i < limit + offset; i++) {

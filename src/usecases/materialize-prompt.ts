@@ -167,6 +167,15 @@ The following are the dataset sources that might be relevant to the user instruc
   );
 }
 
+export const renderInstruction = (
+  instruction: string,
+  data: object,
+): string => {
+  return mustache.render(instruction, data, undefined, {
+    escape: escapeValues,
+  });
+};
+
 const escapeValues = (value: any): string => {
   if (typeof value === 'object' || Array.isArray(value)) {
     return JSON.stringify(value);

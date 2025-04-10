@@ -1,5 +1,5 @@
 # Use Debian-based Node.js image as the base for building
-FROM node:20-slim AS build
+FROM node:lts-bullseye AS build
 
 # Set the working directory
 WORKDIR /usr/src/app
@@ -32,7 +32,7 @@ COPY ./ ./
 RUN pnpm build
 
 # Use a Debian-based Node.js image for production
-FROM node:20-slim AS production
+FROM node:lts-bullseye AS production
 
 # Set the working directory
 WORKDIR /usr/src/app
@@ -44,6 +44,7 @@ COPY --from=build /usr/src/app/dist ./dist
 
 # COPY --from=build /usr/src/app/.env ./
 RUN npm install -g playwright@1.48.2 \
+    && playwright install-deps \
     && playwright install chromium
 
 # Expose the application port

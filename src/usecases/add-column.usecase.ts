@@ -42,7 +42,7 @@ export const useAddColumnUseCase = () =>
       column,
       process: column.process!,
       session,
-      limit: column.process!.limit!,
+      limit: column.process!.limit,
       offset: column.process!.offset,
       parallel: column.process!.columnsReferences?.length > 0,
     })) {

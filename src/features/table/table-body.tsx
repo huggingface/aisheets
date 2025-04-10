@@ -20,7 +20,7 @@ import { deleteRowsCells, getColumnCells } from '~/services';
 import { type Cell, type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
 
 export const TableBody = component$(() => {
-  const { columns, firstColumn, updateColumn } = useColumnsStore();
+  const { columns, firstColumn, deleteCellByIdx } = useColumnsStore();
   const selectedRows = useSignal<number[]>([]);
   usePopover();
 
@@ -55,15 +55,9 @@ export const TableBody = component$(() => {
     );
 
     if (ok) {
+      deleteCellByIdx(...selectedRows.value);
+
       selectedRows.value = [];
-
-      for (const column of columns.value) {
-        column.cells = column.cells.filter(
-          (cell) => !selectedRows.value.includes(cell.idx),
-        );
-
-        updateColumn(column);
-      }
     }
   });
 
@@ -154,7 +148,11 @@ export const TableBody = component$(() => {
                 }
                 handleSelectRow$(actualRowIndex);
               }}
-              onContextMenu$={(e) => {
+              onContextMenu$={async () => {
+                if (selectedRows.value.length === 0) {
+                  await handleSelectRow$(actualRowIndex);
+                }
+
                 nextTick(() => {
                   document
                     .getElementById(`delete-row-${actualRowIndex}-panel`)

@@ -307,5 +307,14 @@ export const useColumnsStore = () => {
 
       replaceColumn(columns.value);
     }),
+    deleteCellByIdx: $((...idxs: number[]) => {
+      for (const column of columns.value) {
+        for (const idx of idxs) {
+          column.cells = column.cells.filter((c) => c.idx !== idx);
+        }
+      }
+
+      replaceColumn(columns.value);
+    }),
   };
 };

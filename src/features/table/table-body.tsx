@@ -18,7 +18,6 @@ import { type Cell, type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
 
 export const TableBody = component$(() => {
   const { columns, firstColumn } = useColumnsStore();
-  const expandedRows = useSignal<Set<number>>(new Set());
 
   const tableBody = useSignal<HTMLElement>();
   const rowHeight = 100;
@@ -32,6 +31,10 @@ export const TableBody = component$(() => {
   const data = useSignal<Cell[][]>([]);
   const rowCount = useSignal(0);
 
+  const debounceStore = useStore({
+    timeout: 0 as number | null,
+  });
+
   useOnWindow(
     'scroll',
     $((event) => {
@@ -39,7 +42,13 @@ export const TableBody = component$(() => {
 
       if (!target.classList.contains('scrollable')) return;
 
-      scrollTop.value = target.scrollTop - tableBody.value!.offsetTop;
+      if (debounceStore.timeout) {
+        clearTimeout(debounceStore.timeout);
+      }
+
+      debounceStore.timeout = window.setTimeout(() => {
+        scrollTop.value = target.scrollTop - tableBody.value!.offsetTop;
+      }, 30);
     }),
   );
 
@@ -85,11 +94,10 @@ export const TableBody = component$(() => {
       return cell;
     };
 
+    const visibleColumns = columns.value.filter((c) => c.visible);
     data.value = Array.from({ length: rowCount.value }, (_, rowIndex) =>
-      Array.from(
-        { length: columns.value.filter((c) => c.visible).length },
-        (_, colIndex) =>
-          getCell(columns.value.filter((c) => c.visible)[colIndex], rowIndex),
+      Array.from({ length: visibleColumns.length }, (_, colIndex) =>
+        getCell(visibleColumns[colIndex], rowIndex),
       ),
     );
   });
@@ -115,11 +123,15 @@ export const TableBody = component$(() => {
             key={actualRowIndex}
             class="hover:bg-gray-50/50 transition-colors"
           >
-            {row.map((cell, j) => {
+            <td class="px-2 text-center border-[0.5px] border-t-0 bg-neutral-100">
+              {actualRowIndex + 1}
+            </td>
+
+            {row.map((cell) => {
               return (
                 <Fragment key={`${i}-${cell.column!.id}`}>
                   {cell.column?.id === TEMPORAL_ID ? (
-                    <td class="min-w-80 w-80 max-w-80 px-2 min-h-[100px] h-[100px] border-[0.5px] border-t-0 border-r-0" />
+                    <td class="min-w-80 w-80 max-w-80 px-2 min-h-[100px] h-[100px] border-[0.5px] border-l-0 border-t-0" />
                   ) : (
                     <>
                       <TableCell cell={cell} />
@@ -138,11 +150,6 @@ export const TableBody = component$(() => {
                 </Fragment>
               );
             })}
-
-            {/* td for (add + ) column */}
-            {columns.value.filter((c) => c.id !== TEMPORAL_ID).length >= 1 && (
-              <td class="min-w-80 w-80 max-w-80 min-h-[100px] h-[100px] border-[0.5px] border-t-0 border-r-0" />
-            )}
           </tr>
         );
       })}
@@ -158,6 +165,7 @@ export const TableBody = component$(() => {
 
 const Loader = component$<{ actualRowIndex: number }>(({ actualRowIndex }) => {
   const { columns, replaceCell } = useColumnsStore();
+  const isLoading = useSignal(false);
 
   const loadColumnsCells = server$(
     async ({
@@ -184,7 +192,11 @@ const Loader = component$<{ actualRowIndex: number }>(({ actualRowIndex }) => {
       return allCells.flat();
     },
   );
+
   useVisibleTask$(async () => {
+    if (isLoading.value) return;
+    isLoading.value = true;
+
     const newCells = await loadColumnsCells({
       columnIds: columns.value
         .filter((column) => column.id !== TEMPORAL_ID)
@@ -196,6 +208,8 @@ const Loader = component$<{ actualRowIndex: number }>(({ actualRowIndex }) => {
     for (const cell of newCells) {
       replaceCell(cell);
     }
+
+    isLoading.value = false;
   });
 
   return <Fragment />;
@@ -223,9 +237,7 @@ const ExecutionFormDebounced = component$<{ column?: { id: Column['id'] } }>(
     if (!state.isVisible) return null;
 
     return (
-      <td
-        class={`min-w-[660px] w-[660px] bg-neutral-100 border-[0.5px] border-b-0 border-t-0 ${columnId.value !== TEMPORAL_ID ? 'border-r-0' : ''}`}
-      />
+      <td class="min-w-[660px] w-[660px] border-[0.5px] bg-neutral-100 border-t-0 border-l-0 border-b-0" />
     );
   },
 );

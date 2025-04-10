@@ -199,9 +199,7 @@ export const ExecutionForm = component$<SidebarProps>(
     });
 
     return (
-      <th
-        class={`z-20 min-w-[660px] w-[660px] bg-neutral-100 font-normal border-[0.5px] border-neutral-300 text-left ${column.id !== TEMPORAL_ID ? 'border-r-0' : ''}`}
-      >
+      <th class="z-20 min-w-[660px] w-[660px] bg-neutral-100 font-normal border-[0.5px] border-l-0 text-left">
         <div class="flex justify-end items-center px-1">
           <div
             class={`${columns.value.filter((c) => c.id !== TEMPORAL_ID).length >= 1 ? 'visible' : 'invisible'} p-1.5 rounded-full hover:bg-neutral-200 cursor-pointer transition-colors`}

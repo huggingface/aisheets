@@ -363,7 +363,7 @@ export const TableCell = component$<{
   return (
     <td
       class={cn(
-        'relative min-w-80 w-80 max-w-80 cursor-pointer border-[0.5px] border-t-0 border-r-0 break-words align-top group',
+        'relative min-w-80 w-80 max-w-80 cursor-pointer border-[0.5px] border-l-0 border-t-0 break-words align-top group',
         {
           'bg-green-50 border-green-300': cell.validated,
           'border-neutral-300': !cell.validated,

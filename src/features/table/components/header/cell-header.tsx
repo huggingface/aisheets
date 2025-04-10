@@ -34,12 +34,10 @@ export const TableCellHeader = component$<{ column: Column }>(({ column }) => {
     return columnType;
   });
 
-  const isStatic = column.kind === 'static';
-
   return (
     <th
       id={column.id}
-      class={`min-w-80 w-80 max-w-80 min-h-[50px] h-[50px] px-4 py-2 text-left border-[0.5px] first:rounded-tl-sm border-r-0 border-l-neutral-300 border-r-neutral-300 ${classes.value}`}
+      class={`min-w-80 w-80 max-w-80 min-h-[50px] h-[50px] px-4 py-2 text-left border-[0.5px] border-l-0 border-t-0 ${classes.value}`}
     >
       <Popover.Root flip={false} gutter={8} floating="bottom-start">
         <Popover.Trigger class="block text-left w-full">

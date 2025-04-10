@@ -1,6 +1,7 @@
-import { component$, isDev } from '@builder.io/qwik';
+import { component$, isDev, useSignal } from '@builder.io/qwik';
 import type { RequestEvent } from '@builder.io/qwik-city';
 import * as hub from '@huggingface/hub';
+import { cn } from '@qwik-ui/utils';
 import { LuEgg, LuGlobe } from '@qwikest/icons/lucide';
 import { Button, Textarea } from '~/components';
 import { Logo } from '~/components/ui/logo/logo';
@@ -88,6 +89,7 @@ export default component$(() => {
     'Summaries of popular Motown songs by artist, including lyrics',
     'Top list of recent climate-related disaster with a description of the event and location',
   ];
+  const searchOnWeb = useSignal(false);
 
   return (
     <ActiveDatasetProvider>
@@ -117,7 +119,13 @@ export default component$(() => {
             <div class="flex w-full justify-between items-center">
               <Button
                 look="secondary"
-                class="flex gap-1 p-2 h-9 text-neutral-700 bg-white"
+                class={cn(
+                  'flex gap-1 p-2 h-9 text-neutral-700 bg-white hover:bg-primary-50/80',
+                  {
+                    'outline-primary-100 bg-primary-50': searchOnWeb.value,
+                  },
+                )}
+                onClick$={() => (searchOnWeb.value = !searchOnWeb.value)}
               >
                 <LuGlobe class="text-lg" />
                 Search the web

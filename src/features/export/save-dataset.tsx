@@ -7,7 +7,7 @@ import { ExportToHub } from './export-to-hub';
 export const SaveDataset = component$(() => {
   return (
     <div class="flex items-left w-full gap-2 ">
-      <Popover.Root flip={false}>
+      <Popover.Root flip={false} floating="right-start" gutter={14}>
         <Popover.Trigger
           class={buttonVariants({ look: 'outline', size: 'sm' })}
         >
@@ -15,11 +15,10 @@ export const SaveDataset = component$(() => {
             <LuDownload class="w-4 h-4" />
           </Label>
         </Popover.Trigger>
-        <Popover.Panel class="w-86 max-h-40">
-          <div>
-            <ExportToHub />
-            <CSVDownload />
-          </div>
+        <Popover.Panel class="w-86 max-h-40 shadow-lg p-0">
+          <ExportToHub />
+          <hr class="border-t border-slate-200 dark:border-slate-700" />
+          <CSVDownload />
         </Popover.Panel>
       </Popover.Root>
     </div>

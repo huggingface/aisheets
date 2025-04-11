@@ -1,5 +1,5 @@
-import { component$, isDev, useSignal } from '@builder.io/qwik';
-import type { RequestEvent } from '@builder.io/qwik-city';
+import { $, component$, isDev, useSignal } from '@builder.io/qwik';
+import { type RequestEvent, server$, useNavigate } from '@builder.io/qwik-city';
 import * as hub from '@huggingface/hub';
 import { cn } from '@qwik-ui/utils';
 import { LuEgg, LuGlobe } from '@qwikest/icons/lucide';
@@ -9,8 +9,9 @@ import { SecondLogo } from '~/components/ui/logo/logo';
 import { CLIENT_ID, HF_TOKEN, OAUTH_SCOPES } from '~/config';
 import { DragAndDrop } from '~/features/import-from-file/drag-n-drop';
 import { MainSidebarButton } from '~/features/main-sidebar';
+import { createDatasetIdByUser } from '~/services';
 import { saveSession } from '~/services/auth/session';
-import { ActiveDatasetProvider } from '~/state';
+import { ActiveDatasetProvider, useServerSession } from '~/state';
 
 export const onGet = async ({
   cookie,
@@ -86,6 +87,19 @@ export const onGet = async ({
 };
 
 export default component$(() => {
+  const nav = useNavigate();
+  const createDataset = $(async () => {
+    const dataset = await server$(async function (this) {
+      const session = useServerSession(this);
+
+      return await createDatasetIdByUser({
+        createdBy: session.user.username,
+      });
+    })();
+
+    nav(`/dataset/${dataset}`);
+  });
+
   const startingPrompts = [
     'Summaries of popular Motown songs by artist, including lyrics',
     'Top list of recent climate-related disaster with a description of the event and location',
@@ -136,7 +150,7 @@ export default component$(() => {
                     Search the web
                   </Button>
 
-                  <Button look="primary" disabled>
+                  <Button look="primary" onClick$={createDataset}>
                     <LuEgg class="text-2xl" />
                   </Button>
                 </div>

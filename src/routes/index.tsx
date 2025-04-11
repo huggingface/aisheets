@@ -1,5 +1,5 @@
-import { component$, isDev, useSignal } from '@builder.io/qwik';
-import { type RequestEvent, server$ } from '@builder.io/qwik-city';
+import { $, component$, isDev } from '@builder.io/qwik';
+import { type RequestEvent, server$, useNavigate } from '@builder.io/qwik-city';
 import * as hub from '@huggingface/hub';
 import { Button } from '~/components';
 import { Logo } from '~/components/ui/logo/logo';
@@ -84,16 +84,19 @@ export const onGet = async ({
   throw Error('Missing HF_TOKEN or OAUTH_CLIENT_ID');
 };
 
-const createDataset = server$(async function (this) {
-  const session = useServerSession(this);
-
-  return await createDatasetIdByUser({
-    createdBy: session.user.username,
-  });
-});
-
 export default component$(() => {
-  const isTransitioning = useSignal(false);
+  const nav = useNavigate();
+  const createDataset = $(async () => {
+    const dataset = await server$(async function (this) {
+      const session = useServerSession(this);
+
+      return await createDatasetIdByUser({
+        createdBy: session.user.username,
+      });
+    })();
+
+    nav(`/dataset/${dataset}`);
+  });
 
   const startingPrompts = [
     'Summaries of popular Motown songs by artist, including lyrics',
@@ -109,27 +112,6 @@ export default component$(() => {
 
         <AutoDatasetPrompt />
 
-        <div class="w-[600px] flex flex-col justify-between items-start gap-1">
-          {startingPrompts.map((prompt) => (
-            <Button
-              key={prompt}
-              look="secondary"
-              class="flex gap-1 text-xs px-2 rounded-xl"
-            >
-              <Logo class="w-5" />
-              {prompt}
-            </Button>
-          ))}
-        </div>
-        <div class="w-[550px] flex justify-center items-center">
-          <hr class="w-full border-t border-gray-300" />
-          <span class="mx-10 text-gray-400">OR</span>
-          <hr class="w-full border-t border-gray-300" />
-        </div>
-
-        <div class="w-[530px] h-[230px]">
-          <DragAndDrop />
-        </div>
       </div>
     </ActiveDatasetProvider>
   );

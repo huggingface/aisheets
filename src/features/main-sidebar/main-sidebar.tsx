@@ -4,7 +4,7 @@ import { cn } from '@qwik-ui/utils';
 import { LuLibrary, LuPanelLeft } from '@qwikest/icons/lucide';
 import { useModals } from '~/components/hooks';
 import { useClickOutside } from '~/components/hooks/click/outside';
-import { Logo } from '~/components/ui/logo/logo';
+import { MainLogo } from '~/components/ui/logo/logo';
 import { Tooltip } from '~/components/ui/tooltip/tooltip';
 import { useAllDatasetsLoader } from '~/loaders';
 import { useDatasetsStore } from '~/state';
@@ -87,7 +87,7 @@ export const MainSidebar = component$(() => {
                 href="/"
                 class="flex items-center gap-3 py-2 hover:bg-gray-100 rounded text-sm font-light truncate max-w-full pl-3"
               >
-                <Logo
+                <MainLogo
                   class="w-6 h-6 rotate-15"
                   fillColor="#89FF14"
                   strokeColor="#849AFF"

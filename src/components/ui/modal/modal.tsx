@@ -8,10 +8,11 @@ import { Label } from '@qwik-ui/headless';
 import { LuX } from '@qwikest/icons/lucide';
 import { useModals } from '~/components/hooks';
 import type { ID } from '~/components/hooks/modals/config';
+import { Button } from '~/components/ui/button/button';
 
 interface ModalProps extends PropsOf<'div'> {
   name: ID;
-  title: string;
+  title?: string;
 }
 
 export const Modal = component$<ModalProps>(({ name, title, ...rest }) => {
@@ -51,16 +52,17 @@ export const Modal = component$<ModalProps>(({ name, title, ...rest }) => {
     >
       <div class="flex h-full flex-col justify-between p-4">
         <div class="flex w-full items-center h-12 relative">
-          <Label>{title}</Label>
-          <div
+          {title && <Label>{title}</Label>}
+          <Button
+            look="ghost"
+            size="sm"
             class="absolute -top-1 -right-1 p-1.5 rounded-full hover:bg-neutral-100 cursor-pointer transition-colors"
             onClick$={close}
-            role="button"
             tabIndex={0}
             aria-label="Close modal"
           >
             <LuX class="text-lg text-neutral" />
-          </div>
+          </Button>
         </div>
         <Slot />
       </div>

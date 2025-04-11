@@ -54,7 +54,7 @@ export const DragAndDrop = component$(() => {
     <div
       preventdefault:dragover
       preventdefault:drop
-      class={cn('relative w-full h-full p-6 text-center transition z-10', {
+      class={cn('relative w-full h-full text-center transition z-10', {
         'bg-primary-50 rounded-sm': isDragging.value,
       })}
       onDragOver$={() => {
@@ -88,14 +88,14 @@ export const DragAndDrop = component$(() => {
       />
 
       <div
-        class={cn('w-full flex flex-col justify-center items-center gap-3', {
+        class={cn('w-full flex flex-col justify-center items-center gap-5', {
           'opacity-30': isDragging.value,
         })}
       >
-        <span>From real-world data</span>
+        <span class="text-neutral-500 font-medium">From real-world data</span>
 
         <Button
-          class="flex gap-1 bg-white"
+          class="flex gap-1 bg-white rounded-[8px]"
           onClick$={() => document.getElementById('file-select')?.click()}
         >
           <LuFilePlus2 class="text-lg" />

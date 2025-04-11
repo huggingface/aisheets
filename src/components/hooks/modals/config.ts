@@ -1,4 +1,4 @@
-export type ID = 'exportToHub' | 'mainSidebar';
+export type ID = 'mainSidebar';
 
 export type Status = 'open' | 'closed';
 
@@ -7,7 +7,6 @@ type Modal = {
 };
 
 export type Modals = {
-  exportToHub: Modal;
   mainSidebar: Modal;
 };
 

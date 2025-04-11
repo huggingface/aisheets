@@ -7,6 +7,7 @@ import { Logo } from '~/components/ui/logo/logo';
 
 import { CLIENT_ID, HF_TOKEN, OAUTH_SCOPES } from '~/config';
 import { DragAndDrop } from '~/features/import-from-file/drag-n-drop';
+import { MainSidebarButton } from '~/features/main-sidebar';
 import { createDatasetIdByUser } from '~/services';
 import { saveSession } from '~/services/auth/session';
 import { ActiveDatasetProvider, useServerSession } from '~/state';
@@ -105,6 +106,7 @@ export default component$(() => {
 
   return (
     <ActiveDatasetProvider>
+      <MainSidebarButton />
       <div class="w-full h-full flex flex-col items-center justify-center gap-2">
         <h1 class="text-3xl font-medium text-neutral-700">
           Design your data in a sheet

@@ -11,9 +11,9 @@ import {
   useVisibleTask$,
 } from '@builder.io/qwik';
 import {
-  LuBookmark,
   LuCheck,
   LuEgg,
+  LuSettings,
   LuStopCircle,
   LuX,
 } from '@qwikest/icons/lucide';
@@ -51,6 +51,8 @@ export const ExecutionForm = component$<SidebarProps>(
       canGenerate,
       updateColumn,
     } = useColumnsStore();
+
+    const isOpenModel = useSignal(false);
 
     const canRegenerate = useSignal(true);
 
@@ -179,7 +181,7 @@ export const ExecutionForm = component$<SidebarProps>(
             ...column.process,
             modelName,
             modelProvider,
-            prompt: prompt.value!,
+            prompt: prompt.value,
             columnsReferences: columnsReferences.value,
             offset: 0,
             limit: Number(rowsToGenerate.value),
@@ -201,10 +203,10 @@ export const ExecutionForm = component$<SidebarProps>(
     return (
       <th class="z-20 min-w-[660px] w-[660px] bg-neutral-100 font-normal border-[0.5px] border-l-0 text-left">
         <div class="flex justify-end items-center px-1">
-          <div
+          <Button
+            look="ghost"
             class={`${columns.value.filter((c) => c.id !== TEMPORAL_ID).length >= 1 ? 'visible' : 'invisible'} p-1.5 rounded-full hover:bg-neutral-200 cursor-pointer transition-colors`}
             onClick$={handleCloseForm}
-            role="button"
             tabIndex={0}
             aria-label="Close"
             style={{
@@ -214,178 +216,42 @@ export const ExecutionForm = component$<SidebarProps>(
             }}
           >
             <LuX class="text-lg text-neutral" />
-          </div>
+          </Button>
         </div>
+
         <div class="relative h-full w-full">
           <div class="absolute h-full w-full flex flex-col">
             <div class="flex flex-col gap-4 px-8 bg-neutral-100">
-              <Resource
-                value={loadModels}
-                onPending={() => (
-                  <Select.Disabled>Loading models...</Select.Disabled>
-                )}
-                onResolved={(models) => {
-                  if (!selectedModel.value?.id) {
-                    selectedModel.value = models[0];
-                    selectedProvider.value = models[0].providers[0];
-                  }
-
-                  return (
-                    <div class="flex flex-col gap-4">
-                      <div class="flex gap-4">
-                        <div class="flex-[2]">
-                          <Label class="flex gap-1 mb-2 font-light">
-                            Model
-                          </Label>
-                          <Select.Root value={selectedModel.value?.id}>
-                            <Select.Trigger class="px-4 bg-white rounded-base border-neutral-300-foreground">
-                              <Select.DisplayValue />
-                            </Select.Trigger>
-                            <Select.Popover class="border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto">
-                              {models.map((model, idx) => (
-                                <Select.Item
-                                  key={idx}
-                                  class="text-foreground hover:bg-accent"
-                                  value={model.id}
-                                  onClick$={$(() => {
-                                    selectedModel.value = model;
-                                    selectedProvider.value = model.providers[0];
-                                  })}
-                                >
-                                  <Select.ItemLabel>
-                                    {model.id}
-                                  </Select.ItemLabel>
-                                  {model.size && (
-                                    <span class="ml-2 bg-gray-100 text-gray-700 px-2 py-0.5 rounded text-sm">
-                                      {model.size}
-                                    </span>
-                                  )}
-                                  <Select.ItemIndicator>
-                                    <LuCheck class="h-4 w-4" />
-                                  </Select.ItemIndicator>
-                                </Select.Item>
-                              ))}
-                            </Select.Popover>
-                          </Select.Root>
-                        </div>
-                        <div class="flex-1" key={selectedModel.value.id}>
-                          <Label class="flex gap-1 mb-2 font-light">
-                            Inference Provider
-                          </Label>
-                          <Select.Root
-                            value={selectedProvider.value}
-                            onChange$={$((value: string | string[]) => {
-                              const provider = Array.isArray(value)
-                                ? value[0]
-                                : value;
-                              selectedProvider.value = provider;
-                            })}
-                          >
-                            <Select.Trigger class="px-4 bg-white rounded-base border-neutral-300-foreground">
-                              <Select.DisplayValue />
-                            </Select.Trigger>
-                            <Select.Popover class="border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto">
-                              {selectedModel.value?.providers?.map(
-                                (provider, idx) => (
-                                  <Select.Item
-                                    key={idx}
-                                    class="text-foreground hover:bg-accent"
-                                    value={provider}
-                                  >
-                                    <Select.ItemLabel>
-                                      {provider}
-                                    </Select.ItemLabel>
-                                    <Select.ItemIndicator>
-                                      <LuCheck class="h-4 w-4" />
-                                    </Select.ItemIndicator>
-                                  </Select.Item>
-                                ),
-                              ) || []}
-                            </Select.Popover>
-                          </Select.Root>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                }}
-                onRejected={() => {
-                  return (
-                    <Input
-                      bind:value={inputModelId}
-                      class="bg-white px-4 h-10 border-neutral-300-foreground"
-                      placeholder="Cannot load model suggestions. Please enter the model ID manually."
-                    />
-                  );
-                }}
-              />
               <div class="relative">
-                <div class="flex flex-col gap-4">
-                  <Label class="text-left font-light">
-                    Prompt to generate each cell of the column
-                  </Label>
-
-                  <div class="h-96 min-h-96 max-h-96 bg-white border border-secondary-foreground rounded-sm">
-                    <TemplateTextArea
-                      bind:value={prompt}
-                      variables={variables}
-                      onSelectedVariables={onSelectedVariables}
-                    />
-                  </div>
+                <div class="h-96 min-h-96 max-h-96 bg-white border border-secondary-foreground rounded-sm">
+                  <TemplateTextArea
+                    bind:value={prompt}
+                    variables={variables}
+                    onSelectedVariables={onSelectedVariables}
+                  />
                 </div>
-                <div class="absolute bottom-4 flex flex-row items-center justify-between px-6 gap-8 w-full">
-                  <div class="p-1.5 rounded-full hover:bg-neutral-100 cursor-pointer">
-                    <LuBookmark class="text-lg text-neutral" />
-                  </div>
-
-                  <div class="flex flex-1 gap-1 items-center justify-end">
-                    <Label class="font-light">Rows:</Label>
-                    <Input
-                      type="number"
-                      class="h-8 border-neutral-300-foreground w-fit bg-neutral-100"
-                      max={maxRows.value}
-                      min="1"
-                      onInput$={(_, el) => {
-                        if (Number(el.value) > maxRows.value) {
-                          nextTick(() => {
-                            rowsToGenerate.value = String(maxRows.value);
-                          });
-                        }
-
-                        rowsToGenerate.value = el.value;
-                      }}
-                      value={rowsToGenerate.value}
-                    />
-                  </div>
-                  <div class="flex items-center">
-                    <Button
-                      key={column.process?.isExecuting?.toString()}
-                      look="primary"
-                      onClick$={onGenerate}
-                      disabled={
-                        !column.process?.isExecuting &&
-                        (!canRegenerate.value || !isTouched.value)
-                      }
-                    >
-                      <div class="flex items-center gap-4">
-                        {column.process?.isExecuting ? (
-                          <>
-                            <LuStopCircle class="text-2xl" />
-                            Stop generating
-                          </>
-                        ) : (
-                          <>
-                            <LuEgg class="text-2xl" />
-                            Generate
-                          </>
-                        )}
-                      </div>
-                    </Button>
-                    {column.process?.isExecuting && (
-                      <div class="ml-3">
-                        <div class="h-6 w-6 animate-spin rounded-full border-2 border-primary-100 border-t-transparent" />
-                      </div>
+                <div class="absolute bottom-4 flex flex-row items-center justify-end px-6 gap-8 w-full">
+                  <Button
+                    key={column.process?.isExecuting?.toString()}
+                    look="primary"
+                    class="w-[45px] h-[45px] rounded-full flex items-center justify-center p-0"
+                    onClick$={onGenerate}
+                    disabled={
+                      !column.process?.isExecuting &&
+                      (!canRegenerate.value || !isTouched.value)
+                    }
+                  >
+                    {column.process?.isExecuting ? (
+                      <LuStopCircle class="w-6 h-6" />
+                    ) : (
+                      <LuEgg class="w-6 h-6" />
                     )}
-                  </div>
+                  </Button>
+                  {column.process?.isExecuting && (
+                    <div class="ml-3">
+                      <div class="h-6 w-6 animate-spin rounded-full border-2 border-primary-100 border-t-transparent" />
+                    </div>
+                  )}
                 </div>
               </div>
               {!isTouched.value && (
@@ -398,6 +264,138 @@ export const ExecutionForm = component$<SidebarProps>(
               {!canRegenerate.value && (
                 <div class="flex items-center justify-center text-primary-500">
                   Some columns referenced in the prompt need to be regenerated.
+                </div>
+              )}
+
+              <div class="flex items-center justify-start gap-1">
+                Model
+                <p class="text-neutral-500 underline">
+                  {selectedModel.value?.id}
+                </p>
+                with inference provider
+                <p class="italic">{selectedProvider.value}</p>
+                <Button
+                  look="ghost"
+                  class="hover:bg-neutral-200"
+                  onClick$={() => (isOpenModel.value = true)}
+                >
+                  <LuSettings class="text-neutral-500" />
+                </Button>
+              </div>
+
+              {isOpenModel.value && (
+                <div class="px-3 pb-4 pt-2 bg-white border border-secondary-foreground rounded-sm">
+                  <div class="flex justify-end items-center">
+                    <Button
+                      look="ghost"
+                      class="p-1.5 rounded-full hover:bg-neutral-200 cursor-pointer"
+                      onClick$={() => (isOpenModel.value = false)}
+                      aria-label="Close"
+                    >
+                      <LuX class="text-lg text-neutral" />
+                    </Button>
+                  </div>
+
+                  <Resource
+                    value={loadModels}
+                    onPending={() => (
+                      <Select.Disabled>Loading models...</Select.Disabled>
+                    )}
+                    onResolved={(models) => {
+                      if (!selectedModel.value?.id) {
+                        selectedModel.value = models[0];
+                        selectedProvider.value = models[0].providers[0];
+                      }
+
+                      return (
+                        <div class="flex flex-col gap-4">
+                          <div class="flex gap-4">
+                            <div class="flex-[2]">
+                              <Label class="flex gap-1 mb-2 font-normal">
+                                Model
+                              </Label>
+                              <Select.Root value={selectedModel.value?.id}>
+                                <Select.Trigger class="px-4 bg-white rounded-base border-neutral-300-foreground">
+                                  <Select.DisplayValue />
+                                </Select.Trigger>
+                                <Select.Popover class="border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto">
+                                  {models.map((model, idx) => (
+                                    <Select.Item
+                                      key={idx}
+                                      class="text-foreground hover:bg-accent"
+                                      value={model.id}
+                                      onClick$={$(() => {
+                                        selectedModel.value = model;
+                                        selectedProvider.value =
+                                          model.providers[0];
+                                      })}
+                                    >
+                                      <Select.ItemLabel>
+                                        {model.id}
+                                      </Select.ItemLabel>
+                                      {model.size && (
+                                        <span class="ml-2 bg-gray-100 text-gray-700 px-2 py-0.5 rounded text-sm">
+                                          {model.size}
+                                        </span>
+                                      )}
+                                      <Select.ItemIndicator>
+                                        <LuCheck class="h-4 w-4" />
+                                      </Select.ItemIndicator>
+                                    </Select.Item>
+                                  ))}
+                                </Select.Popover>
+                              </Select.Root>
+                            </div>
+                            <div class="flex-1" key={selectedModel.value.id}>
+                              <Label class="flex gap-1 mb-2 font-normal">
+                                Inference Providers
+                              </Label>
+                              <Select.Root
+                                value={selectedProvider.value}
+                                onChange$={$((value: string | string[]) => {
+                                  const provider = Array.isArray(value)
+                                    ? value[0]
+                                    : value;
+                                  selectedProvider.value = provider;
+                                })}
+                              >
+                                <Select.Trigger class="px-4 bg-white rounded-base border-neutral-300-foreground">
+                                  <Select.DisplayValue />
+                                </Select.Trigger>
+                                <Select.Popover class="border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto">
+                                  {selectedModel.value?.providers?.map(
+                                    (provider, idx) => (
+                                      <Select.Item
+                                        key={idx}
+                                        class="text-foreground hover:bg-accent"
+                                        value={provider}
+                                      >
+                                        <Select.ItemLabel>
+                                          {provider}
+                                        </Select.ItemLabel>
+                                        <Select.ItemIndicator>
+                                          <LuCheck class="h-4 w-4" />
+                                        </Select.ItemIndicator>
+                                      </Select.Item>
+                                    ),
+                                  ) || []}
+                                </Select.Popover>
+                              </Select.Root>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    }}
+                    onRejected={() => {
+                      return (
+                        <Input
+                          bind:value={inputModelId}
+                          class="bg-white px-4 h-10 border-neutral-300-foreground"
+                          placeholder="Cannot load model suggestions. Please enter the model ID manually."
+                        />
+                      );
+                    }}
+                  />
                 </div>
               )}
             </div>

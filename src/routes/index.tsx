@@ -8,6 +8,7 @@ import { SecondLogo } from '~/components/ui/logo/logo';
 
 import { CLIENT_ID, HF_TOKEN, OAUTH_SCOPES } from '~/config';
 import { DragAndDrop } from '~/features/import-from-file/drag-n-drop';
+import { MainSidebarButton } from '~/features/main-sidebar';
 import { saveSession } from '~/services/auth/session';
 import { ActiveDatasetProvider } from '~/state';
 
@@ -93,6 +94,7 @@ export default component$(() => {
 
   return (
     <ActiveDatasetProvider>
+      <MainSidebarButton />
       <div class="w-full h-full flex flex-col items-center justify-center">
         <div class="flex flex-col items-center justify-center space-y-14">
           <div class="flex flex-col items-center justify-center space-y-4">

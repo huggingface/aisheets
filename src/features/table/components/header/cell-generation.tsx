@@ -32,6 +32,8 @@ export const CellGeneration = component$<{ column: Column }>(({ column }) => {
           opacity: !canRegenerate.value ? '0.5' : '1',
           pointerEvents: !canRegenerate.value ? 'none' : 'auto',
         }}
+        preventdefault:click
+        stoppropagation:click
       >
         {canRegenerate.value ? (
           <LuEgg class="text-sm text-neutral" />

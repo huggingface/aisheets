@@ -10,6 +10,9 @@ import {
   useVisibleTask$,
 } from '@builder.io/qwik';
 import { server$ } from '@builder.io/qwik-city';
+import { cn } from '@qwik-ui/utils';
+import { LuDot } from '@qwikest/icons/lucide';
+import { Button } from '~/components';
 import { nextTick } from '~/components/hooks/tick';
 import { useExecution } from '~/features/add-column';
 import { TableCell } from '~/features/table/table-cell';
@@ -107,6 +110,53 @@ export const TableBody = component$(() => {
     Math.max(0, (rowCount.value - endIndex.value) * rowHeight),
   );
 
+  const selectedCellsId = useSignal<Cell[]>([]);
+
+  const latestCellSelected = useComputed$(() => {
+    return selectedCellsId.value[selectedCellsId.value.length - 1];
+  });
+  const isDragging = useSignal(false);
+  const dragStartCell = useSignal<Cell>();
+  const handleMouseDown = $((cell: Cell) => {
+    isDragging.value = true;
+    dragStartCell.value = cell;
+
+    selectedCellsId.value = [cell];
+  });
+
+  const handleMouseOver = $((cell: Cell) => {
+    if (isDragging.value && dragStartCell.value) {
+      if (dragStartCell.value.column?.id !== cell.column?.id) return;
+
+      const startRowIndex = dragStartCell.value.idx;
+      const endRowIndex = cell.idx;
+      const start = Math.min(startRowIndex, endRowIndex);
+      const end = Math.max(startRowIndex, endRowIndex);
+
+      const selectedCells = [];
+
+      for (let i = start; i <= end; i++) {
+        selectedCells.push(
+          data.value[i].find((c) => c.column?.id === cell.column?.id),
+        );
+      }
+      selectedCellsId.value = selectedCells.filter((c) => c) as Cell[];
+    }
+  });
+
+  const handleMouseUp = $(() => {
+    if (dragStartCell.value) {
+      console.log(
+        'FROM',
+        dragStartCell.value.idx,
+        'TO',
+        latestCellSelected.value?.idx,
+      );
+      isDragging.value = false;
+      dragStartCell.value = undefined;
+    }
+  });
+
   return (
     <tbody ref={tableBody}>
       {/* Top spacer row to maintain scroll position */}
@@ -116,7 +166,7 @@ export const TableBody = component$(() => {
         </tr>
       )}
 
-      {data.value.slice(startIndex.value, endIndex.value).map((row, i) => {
+      {data.value.slice(startIndex.value, endIndex.value).map((rows, i) => {
         const actualRowIndex = startIndex.value + i;
         return (
           <tr
@@ -127,14 +177,42 @@ export const TableBody = component$(() => {
               {actualRowIndex + 1}
             </td>
 
-            {row.map((cell) => {
+            {rows.map((cell) => {
               return (
                 <Fragment key={`${i}-${cell.column!.id}`}>
                   {cell.column?.id === TEMPORAL_ID ? (
                     <td class="min-w-80 w-80 max-w-80 px-2 min-h-[100px] h-[100px] border-[0.5px] border-l-0 border-t-0" />
                   ) : (
                     <>
-                      <TableCell cell={cell} />
+                      <div
+                        onMouseUp$={handleMouseUp}
+                        class={cn({
+                          'relative outline outline-1 outline-primary-300 mt-[0.2px]':
+                            selectedCellsId.value.some(
+                              (selectedCell) =>
+                                selectedCell.column?.id === cell.column?.id &&
+                                selectedCell.idx === cell.idx,
+                            ),
+                        })}
+                        onMouseDown$={() => handleMouseDown(cell)}
+                        onMouseOver$={() => handleMouseOver(cell)}
+                      >
+                        <TableCell cell={cell} />
+
+                        {latestCellSelected.value?.column?.id ===
+                          cell.column?.id &&
+                          latestCellSelected.value?.idx === cell.idx && (
+                            <div class="absolute bottom-1 right-4 w-3 h-3 cursor-crosshair z-10">
+                              <Button
+                                size="sm"
+                                look="ghost"
+                                class="cursor-crosshair p-1"
+                              >
+                                <LuDot class="text-5xl text-primary-300" />
+                              </Button>
+                            </div>
+                          )}
+                      </div>
                       {/* When the user scrolls until this cell we should load
                         If the user has 20 rows, on rowCount - buffer, should be fetch
                         The buffer now is 2, so on cell number 18, we should fetch new rows

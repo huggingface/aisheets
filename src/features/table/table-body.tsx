@@ -160,11 +160,6 @@ export const TableBody = component$(() => {
       if (!column) return;
       if (!dragStartCell.value.value) return;
 
-      column.process!.cancellable = noSerialize(new AbortController());
-      column.process!.isExecuting = true;
-
-      updateColumn(column);
-
       let offset = 0;
       for (const cell of selectedCellsId.value) {
         offset = cell.idx;
@@ -178,6 +173,16 @@ export const TableBody = component$(() => {
 
       selectedCellsId.value = [];
       dragStartCell.value = undefined;
+
+      const selectedCellsHasValue = column.cells.some(
+        (c) => c.idx >= offset && c.idx <= limit + offset,
+      );
+      if (selectedCellsHasValue) return;
+
+      column.process!.cancellable = noSerialize(new AbortController());
+      column.process!.isExecuting = true;
+
+      updateColumn(column);
 
       await onGenerateColumn({
         ...column,

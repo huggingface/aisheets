@@ -13,8 +13,8 @@ export const SaveDataset = component$(() => {
     <Popover.Root flip={false} floating="right-start" gutter={14}>
       <Popover.Trigger
         class={cn(
-          buttonVariants({ look: 'outline', size: 'sm' }),
-          'disabled:text-neutral-300 disabled:cursor-not-allowed',
+          buttonVariants({ look: 'secondary', size: 'sm' }),
+          'disabled:cursor-not-allowed bg-white',
         )}
         disabled={
           activeDataset.value.columns.filter((c) => c.id !== TEMPORAL_ID)

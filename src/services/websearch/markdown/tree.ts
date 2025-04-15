@@ -18,7 +18,7 @@ export function htmlToMarkdownTree(
   htmlElements: SerializedHTMLElement[],
   maxCharsPerElem: number,
 ): HeaderElement {
-  let parent: HeaderElement = {
+  const root: HeaderElement = {
     type: MarkdownElementType.Header,
     level: 1,
     parent: null,
@@ -28,42 +28,39 @@ export function htmlToMarkdownTree(
 
   const markdownElements = chunkElements(
     mergeAdjacentElements(
-      htmlElements.flatMap((elem) =>
-        htmlElementToMarkdownElements(parent, elem),
-      ),
+      htmlElements.flatMap((elem) => htmlElementToMarkdownElements(root, elem)),
     ),
     maxCharsPerElem,
   );
 
+  let currentHeader = root;
+  let currentContent: MarkdownElement[] = [];
+
   for (const elem of markdownElements) {
-    if (elem.type !== MarkdownElementType.Header) {
-      elem.parent = parent;
-      parent.children.push(elem);
-      continue;
+    if (elem.type === MarkdownElementType.Header) {
+      // When we hit a header, attach accumulated content to current header
+      if (currentContent.length > 0) {
+        currentHeader.children.push(...currentContent);
+        currentContent = [];
+      }
+
+      const headerElem = elem as HeaderElement;
+      headerElem.parent = root;
+      root.children.push(headerElem);
+      currentHeader = headerElem;
+    } else {
+      // Attach content to current header
+      elem.parent = currentHeader;
+      currentContent.push(elem);
     }
-
-    // Add 1 to current level to offset for the title being level 1
-    const headerElem = elem as HeaderElement;
-    headerElem.level += 1;
-
-    // Pop up header levels until reaching the same level as the current header
-    // or until we reach the root
-    let currentParent = parent;
-    while (currentParent !== null && currentParent.parent !== null) {
-      if (currentParent.level < headerElem.level) break;
-      currentParent = currentParent.parent;
-    }
-
-    currentParent.children.push(headerElem);
-    parent = headerElem;
   }
 
-  // Pop up to the root
-  while (parent.parent !== null) {
-    parent = parent.parent;
+  // Don't forget remaining content
+  if (currentContent.length > 0) {
+    currentHeader.children.push(...currentContent);
   }
 
-  return parent;
+  return root;
 }
 
 /**
@@ -74,9 +71,7 @@ export function removeParents<T extends MarkdownElement>(elem: T): T {
     return {
       ...elem,
       parent: null,
-      children: (elem as HeaderElement).children.map((child) =>
-        removeParents(child),
-      ),
+      children: (elem as HeaderElement).children.map(removeParents),
     } as T;
   }
   return { ...elem, parent: null } as T;

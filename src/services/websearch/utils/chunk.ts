@@ -1,6 +1,7 @@
 // @ts-ignore Missing type definitions for sbd
 import { sentences as splitBySentences } from 'sbd';
 import type { MarkdownElement } from '../types';
+import { MarkdownElementType } from '../types';
 
 /**
  * Chunk large markdown elements into smaller pieces
@@ -14,13 +15,22 @@ export function chunkElements(
   if (!maxCharsPerElem || maxCharsPerElem <= 0) return elements;
 
   return elements.flatMap((elem) => {
+    // Skip chunking for lists and headers
+    if (
+      elem.type === MarkdownElementType.UnorderedListItem ||
+      elem.type === MarkdownElementType.OrderedListItem ||
+      elem.type === MarkdownElementType.Header
+    ) {
+      return [elem] as MarkdownElement[];
+    }
+
     // Only chunk regular paragraphs and other content
     const contentChunks = splitIntoChunks(elem.content, maxCharsPerElem);
     return contentChunks.map((chunk) => ({
       ...elem,
       content: chunk,
       parent: elem.parent,
-    }));
+    })) as MarkdownElement[];
   });
 }
 

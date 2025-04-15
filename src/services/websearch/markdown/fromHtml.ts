@@ -5,6 +5,12 @@ import type {
   SerializedHTMLElement,
 } from '../types';
 import { MarkdownElementType, tagNameMap } from '../types';
+import {
+  collapseString,
+  sanitizeString,
+  stringifyHTMLElements,
+  stringifyHTMLElementsUnformatted,
+} from '../utils/string';
 
 /**
  * Convert HTML element to Markdown elements
@@ -18,6 +24,7 @@ export function htmlElementToMarkdownElements(
     blockQuoteDepth: 0,
   },
 ): MarkdownElement | MarkdownElement[] {
+  // Found text so create an element based on the previous state
   if (typeof elem === 'string') {
     if (elem.trim().length === 0) return [];
 
@@ -50,24 +57,9 @@ export function htmlElementToMarkdownElements(
   }
 
   const type = tagNameMap[elem.tagName] ?? MarkdownElementType.Paragraph;
+
+  // Update the state based on the current element
   const state: ConversionState = { ...prevState };
-
-  if (elem.tagName === 'li') {
-    const listContent = elem.content
-      .flatMap((child) => htmlElementToMarkdownElements(parent, child, state))
-      .map((result) => {
-        if (typeof result === 'string') return result;
-        return result.content;
-      })
-      .join('');
-
-    return {
-      parent,
-      type: state.defaultType,
-      content: listContent.trim(),
-      depth: state.listDepth,
-    };
-  }
 
   if (
     type === MarkdownElementType.UnorderedList ||
@@ -80,9 +72,47 @@ export function htmlElementToMarkdownElements(
         : MarkdownElementType.OrderedListItem;
   }
 
-  return elem.content.flatMap((el) =>
+  if (type === MarkdownElementType.BlockQuote) {
+    state.defaultType = MarkdownElementType.BlockQuote;
+    state.blockQuoteDepth += 1;
+  }
+
+  // Headers
+  if (type === MarkdownElementType.Header) {
+    return {
+      parent,
+      type,
+      level: Number(elem.tagName[1]),
+      content: collapseString(stringifyHTMLElements(elem.content)),
+      children: [],
+    };
+  }
+
+  // Code blocks
+  if (type === MarkdownElementType.CodeBlock) {
+    return {
+      parent,
+      type,
+      content: sanitizeString(stringifyHTMLElementsUnformatted(elem.content)),
+    };
+  }
+
+  // Special handling for list items to keep them together
+  if (elem.tagName === 'li') {
+    return {
+      parent,
+      type: state.defaultType,
+      content: stringifyHTMLElementsUnformatted(elem.content),
+      depth: state.listDepth,
+    };
+  }
+
+  // Typical case, we want to flatten the DOM and only create elements when we see text
+  const result = elem.content.flatMap((el) =>
     htmlElementToMarkdownElements(parent, el, state),
   );
+
+  return result;
 }
 
 /**

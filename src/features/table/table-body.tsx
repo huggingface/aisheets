@@ -2,6 +2,7 @@ import {
   $,
   Fragment,
   component$,
+  noSerialize,
   useComputed$,
   useOnWindow,
   useSignal,
@@ -15,12 +16,14 @@ import { LuDot } from '@qwikest/icons/lucide';
 import { Button } from '~/components';
 import { nextTick } from '~/components/hooks/tick';
 import { useExecution } from '~/features/add-column';
+import { useGenerateColumn } from '~/features/execution';
 import { TableCell } from '~/features/table/table-cell';
 import { getColumnCells } from '~/services';
 import { type Cell, type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
 
 export const TableBody = component$(() => {
-  const { columns, firstColumn } = useColumnsStore();
+  const { columns, firstColumn, updateColumn } = useColumnsStore();
+  const { onGenerateColumn } = useGenerateColumn();
 
   const tableBody = useSignal<HTMLElement>();
   const rowHeight = 100;
@@ -115,17 +118,21 @@ export const TableBody = component$(() => {
   const latestCellSelected = useComputed$(() => {
     return selectedCellsId.value[selectedCellsId.value.length - 1];
   });
-  const isDragging = useSignal(false);
+
   const dragStartCell = useSignal<Cell>();
-  const handleMouseDown = $((cell: Cell) => {
-    isDragging.value = true;
+
+  const handleMouseDown$ = $((cell: Cell) => {
+    selectedCellsId.value = [cell];
+  });
+
+  const handleMouseDragging$ = $((cell: Cell) => {
     dragStartCell.value = cell;
 
     selectedCellsId.value = [cell];
   });
 
-  const handleMouseOver = $((cell: Cell) => {
-    if (isDragging.value && dragStartCell.value) {
+  const handleMouseOver$ = $((cell: Cell) => {
+    if (dragStartCell.value) {
       if (dragStartCell.value.column?.id !== cell.column?.id) return;
 
       const startRowIndex = dragStartCell.value.idx;
@@ -140,20 +147,46 @@ export const TableBody = component$(() => {
           data.value[i].find((c) => c.column?.id === cell.column?.id),
         );
       }
+
       selectedCellsId.value = selectedCells.filter((c) => c) as Cell[];
     }
   });
 
-  const handleMouseUp = $(() => {
+  const handleMouseUp$ = $(async () => {
     if (dragStartCell.value) {
-      console.log(
-        'FROM',
-        dragStartCell.value.idx,
-        'TO',
-        latestCellSelected.value?.idx,
+      const column = columns.value.find(
+        (column) => column.id === dragStartCell.value?.column?.id,
       );
-      isDragging.value = false;
+      if (!column) return;
+      if (!dragStartCell.value.value) return;
+
+      column.process!.cancellable = noSerialize(new AbortController());
+      column.process!.isExecuting = true;
+
+      updateColumn(column);
+
+      let offset = 0;
+      for (const cell of selectedCellsId.value) {
+        offset = cell.idx;
+
+        if (!cell.value) {
+          break;
+        }
+      }
+
+      const limit = latestCellSelected.value?.idx - offset + 1;
+
+      selectedCellsId.value = [];
       dragStartCell.value = undefined;
+
+      await onGenerateColumn({
+        ...column,
+        process: {
+          ...column.process!,
+          offset,
+          limit,
+        },
+      });
     }
   });
 
@@ -185,17 +218,17 @@ export const TableBody = component$(() => {
                   ) : (
                     <>
                       <div
-                        onMouseUp$={handleMouseUp}
+                        onMouseUp$={handleMouseUp$}
                         class={cn({
-                          'relative outline outline-1 outline-primary-300 mt-[0.2px]':
+                          'relative outline outline-1 outline-primary-300 mt-[1px]':
                             selectedCellsId.value.some(
                               (selectedCell) =>
                                 selectedCell.column?.id === cell.column?.id &&
                                 selectedCell.idx === cell.idx,
                             ),
                         })}
-                        onMouseDown$={() => handleMouseDown(cell)}
-                        onMouseOver$={() => handleMouseOver(cell)}
+                        onMouseDown$={() => handleMouseDown$(cell)}
+                        onMouseOver$={() => handleMouseOver$(cell)}
                       >
                         <TableCell cell={cell} />
 
@@ -207,6 +240,7 @@ export const TableBody = component$(() => {
                                 size="sm"
                                 look="ghost"
                                 class="cursor-crosshair p-1"
+                                onMouseDown$={() => handleMouseDragging$(cell)}
                               >
                                 <LuDot class="text-5xl text-primary-300" />
                               </Button>

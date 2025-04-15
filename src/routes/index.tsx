@@ -137,7 +137,7 @@ export default component$(() => {
                   <Button
                     look="secondary"
                     class={cn(
-                      'flex gap-1 bg-white hover:bg-neutral-100 rounded-lg',
+                      'flex px-[10px] py-[8px] gap-[10px] bg-white hover:bg-neutral-100 h-[30px] rounded-[8px]',
                       {
                         'border-primary-100 outline-primary-100 bg-primary-50':
                           searchOnWeb.value,

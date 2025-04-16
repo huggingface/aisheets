@@ -1,4 +1,4 @@
-import { $, component$, isDev, useSignal } from '@builder.io/qwik';
+import { $, component$, isDev, useSignal, useStore } from '@builder.io/qwik';
 import { type RequestEvent, server$, useNavigate } from '@builder.io/qwik-city';
 import * as hub from '@huggingface/hub';
 import { cn } from '@qwik-ui/utils';
@@ -9,9 +9,10 @@ import { SecondLogo } from '~/components/ui/logo/logo';
 import { CLIENT_ID, HF_TOKEN, OAUTH_SCOPES } from '~/config';
 import { DragAndDrop } from '~/features/import-from-file/drag-n-drop';
 import { MainSidebarButton } from '~/features/main-sidebar';
-import { createDatasetIdByUser } from '~/services';
+
 import { saveSession } from '~/services/auth/session';
-import { ActiveDatasetProvider, useServerSession } from '~/state';
+import { ActiveDatasetProvider } from '~/state';
+import { runAutoDataset } from '~/usecases/run-autodataset';
 
 export const onGet = async ({
   cookie,
@@ -86,25 +87,63 @@ export const onGet = async ({
   throw Error('Missing HF_TOKEN or OAUTH_CLIENT_ID');
 };
 
+// Server action to run the autodataset action
+const runAutoDatasetAction = server$(async function (
+  instruction: string,
+  searchEnabled: boolean,
+) {
+  return await runAutoDataset.call(this, {
+    instruction,
+    searchEnabled,
+    maxSearchQueries: 2,
+  });
+});
+
 export default component$(() => {
   const nav = useNavigate();
-  const createDataset = $(async () => {
-    const dataset = await server$(async function (this) {
-      const session = useServerSession(this);
-
-      return await createDatasetIdByUser({
-        createdBy: session.user.username,
-      });
-    })();
-
-    nav(`/dataset/${dataset}`);
-  });
-
+  const prompt = useSignal('');
+  const searchOnWeb = useSignal(true);
   const startingPrompts = [
     'Summaries of popular Motown songs by artist, including lyrics',
     'Top list of recent climate-related disaster with a description of the event and location',
   ];
-  const searchOnWeb = useSignal(false);
+
+  const isLoading = useSignal(false);
+  const response = useStore<{
+    text?: string;
+    error?: string;
+  }>({});
+
+  const handleAssistant = $(async () => {
+    if (!prompt.value.trim()) {
+      console.warn('Prompt is empty');
+      return;
+    }
+
+    isLoading.value = true;
+    response.text = undefined;
+    response.error = undefined;
+
+    try {
+      const result = await runAutoDatasetAction(
+        prompt.value,
+        searchOnWeb.value,
+      );
+
+      if (typeof result === 'string') {
+        response.text = result;
+      } else if ('dataset' in result && result.dataset) {
+        // Navigate to the dataset page
+        await nav(`/dataset/${result.dataset}/`);
+        return;
+      }
+    } catch (error) {
+      console.error('Error running assistant:', error);
+      response.error = error instanceof Error ? error.message : String(error);
+    } finally {
+      isLoading.value = false;
+    }
+  });
 
   return (
     <ActiveDatasetProvider>
@@ -125,9 +164,12 @@ export default component$(() => {
                 <Textarea
                   id="prompt"
                   look="ghost"
+                  value={prompt.value}
                   placeholder="Create customer claims. Categorize them as formal, humorous, neutral, or injurious, and respond to each in a neutral tone."
                   class="p-4 max-h-40 resize-none overflow-auto text-base placeholder:text-neutral-400"
-                  onInput$={(e) => {
+                  onInput$={(e, el) => {
+                    prompt.value = el.value;
+
                     const target = e.target as HTMLTextAreaElement;
                     target.style.height = 'auto';
                     target.style.height = `${target.scrollHeight}px`;
@@ -148,7 +190,9 @@ export default component$(() => {
                           searchOnWeb.value,
                       },
                     )}
-                    onClick$={() => (searchOnWeb.value = !searchOnWeb.value)}
+                    onClick$={() => {
+                      searchOnWeb.value = !searchOnWeb.value;
+                    }}
                   >
                     <LuGlobe class="text-lg" />
                     Search the web
@@ -156,10 +200,11 @@ export default component$(() => {
 
                   <Button
                     look="primary"
-                    onClick$={createDataset}
+                    onClick$={handleAssistant}
+                    disabled={isLoading.value || !prompt.value.trim()}
                     class="h-[30px] w-[40px] p-1"
                   >
-                    <LuEgg class="text-xl" />
+                    <LuEgg class="text-2xl" />
                   </Button>
                 </div>
               </div>

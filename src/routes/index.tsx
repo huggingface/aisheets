@@ -121,7 +121,7 @@ export default component$(() => {
               class="relative w-[700px]"
               onClick$={() => document.getElementById('prompt')?.focus()}
             >
-              <div class="w-full bg-white border border-secondary-foreground rounded-xl pt-2 pb-14 shadow-[0px_4px_6px_rgba(0,0,0,0.1)]">
+              <div class="w-full bg-white border border-secondary-foreground rounded-xl pb-14 shadow-[0px_4px_6px_rgba(0,0,0,0.1)]">
                 <Textarea
                   id="prompt"
                   look="ghost"

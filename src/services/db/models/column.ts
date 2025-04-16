@@ -11,7 +11,7 @@ import sequelize from 'sequelize/lib/sequelize';
 import { db } from '~/services/db';
 import { ColumnCellModel } from '~/services/db/models/cell';
 import type { DatasetModel } from '~/services/db/models/dataset';
-import { ProcessModel } from '~/services/db/models/process';
+import type { ProcessModel } from '~/services/db/models/process';
 
 export class ColumnModel extends Model<
   InferAttributes<ColumnModel>,
@@ -78,7 +78,7 @@ ColumnModel.init(
   },
   {
     sequelize: db,
-    modelName: 'Column',
+    tableName: 'columns',
     defaultScope: {
       attributes: {
         include: [
@@ -95,49 +95,3 @@ ColumnModel.init(
     },
   },
 );
-
-ColumnModel.hasMany(ColumnCellModel, {
-  sourceKey: 'id',
-  foreignKey: 'columnId',
-  as: 'cells',
-});
-
-ColumnCellModel.belongsTo(ColumnModel, {
-  foreignKey: 'columnId',
-  as: 'column',
-});
-
-ColumnModel.hasOne(ProcessModel, {
-  sourceKey: 'id',
-  foreignKey: 'columnId',
-  as: 'process',
-});
-
-export const ProcessColumnModel = db.define('ProcessColumn', {
-  processId: {
-    type: DataTypes.UUID,
-    allowNull: false,
-    references: {
-      model: ProcessModel,
-      key: 'id',
-    },
-  },
-  columnId: {
-    type: DataTypes.UUID,
-    allowNull: false,
-    references: {
-      model: ColumnModel,
-      key: 'id',
-    },
-  },
-});
-
-ProcessModel.belongsToMany(ColumnModel, {
-  through: ProcessColumnModel,
-  as: 'referredColumns',
-  foreignKey: 'processId',
-});
-ColumnModel.belongsToMany(ProcessModel, {
-  through: ProcessColumnModel,
-  foreignKey: 'columnId',
-});

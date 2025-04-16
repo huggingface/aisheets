@@ -18,19 +18,21 @@
     "build.server": "vite build -c adapters/express/vite.config.ts",
     "build.types": "tsc --incremental --noEmit",
     "deploy": "echo 'Run \"npm run qwik add\" to install a server adapter'",
-    "dev": "vite --mode ssr",
+    "dev": "pnpm migrate:up && vite --mode ssr",
     "dev.debug": "node --inspect-brk ./node_modules/vite/bin/vite.js --mode ssr --force",
     "lint": "biome lint . --write ",
     "lint.check": "biome lint .",
     "fmt": "biome format . --write",
     "fmt.check": "biome format .",
-    "preview": "qwik build preview && vite preview --open",
-    "serve": "node server/entry.express",
+    "preview": "pnpm migrate:up --env production && qwik build preview && vite preview --open",
+    "serve": "pnpm migrate:up --env production && node server/entry.express",
     "start": "vite --open --mode ssr",
-    "test": "vitest",
+    "test": "pnpm migrate:up --env test && vitest",
     "test.unit.ui": "vitest --ui",
     "qwik": "qwik",
-    "prepare": "husky"
+    "prepare": "husky",
+    "migrate:up": "sequelize-cli db:migrate",
+    "migrate:down": "sequelize-cli db:migrate:undo:all" 
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
@@ -75,7 +77,8 @@
     "mustache": "^4.2.0",
     "sequelize": "^6.37.5",
     "sqlite3": "^5.1.7",
-    "yaml": "^2.7.0"
+    "yaml": "^2.7.0",
+    "sequelize-cli": "^6.6.2"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

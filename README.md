@@ -66,7 +66,7 @@ OAUTH_CLIENT_ID
 HF_TOKEN=X
 ```
 
-Please note that if you define the `HF_TOKEN`, this variable will take priority over `OAUTH_CLIENT_ID`.
+Please note that if you define the `OAUTH_CLIENT_ID`, this variable will take priority over `HF_TOKEN`.
 
 Development mode uses [Vite's development server](https://vitejs.dev/). The `dev` command will server-side render (SSR) the output during development.
 
@@ -101,3 +101,19 @@ pnpm serve
 ```
 
 Then visit [http://localhost:8080/](http://localhost:8080/)
+
+### DB migrations
+
+Before running a server, the database migrations must be up-to-date. The default `pnpm dev`, `pnpm test`, `pnpm preview`, and `pnpm server` commands already include this step. However, if you want to run migrations manually, you can use the following command:
+
+```
+pnpm migrate:up
+```
+
+If you want to rollback all the migrations, you can use the following command:
+
+```
+pnpm migrate:down
+```
+
+For more information, visit the official [Sequelize documentation on migrations](https://sequelize.org/docs/v6/other-topics/migrations/#running-migrations).

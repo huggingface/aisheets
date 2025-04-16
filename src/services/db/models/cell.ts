@@ -63,6 +63,6 @@ ColumnCellModel.init(
   },
   {
     sequelize: db,
-    modelName: 'Cell',
+    tableName: 'cells',
   },
 );

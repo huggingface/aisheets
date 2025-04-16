@@ -1,13 +1,26 @@
 import { component$ } from '@builder.io/qwik';
+import { cn } from '@qwik-ui/utils';
 import { LuDownload } from '@qwikest/icons/lucide';
 import { Label, Popover, buttonVariants } from '~/components';
+import { TEMPORAL_ID, useDatasetsStore } from '~/state';
 import { CSVDownload } from './csv-download';
 import { ExportToHub } from './export-to-hub';
 
 export const SaveDataset = component$(() => {
+  const { activeDataset } = useDatasetsStore();
+
   return (
     <Popover.Root flip={false} floating="right-start" gutter={14}>
-      <Popover.Trigger class={buttonVariants({ look: 'outline', size: 'sm' })}>
+      <Popover.Trigger
+        class={cn(
+          buttonVariants({ look: 'outline', size: 'sm' }),
+          'disabled:text-neutral-300 disabled:cursor-not-allowed',
+        )}
+        disabled={
+          activeDataset.value.columns.filter((c) => c.id !== TEMPORAL_ID)
+            .length === 0
+        }
+      >
         <Label class="flex items-center gap-2">
           <LuDownload class="w-4 h-4" />
         </Label>

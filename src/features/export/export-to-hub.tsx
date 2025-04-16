@@ -12,7 +12,7 @@ import { LuArrowRightFromLine, LuChevronRight } from '@qwikest/icons/lucide';
 import { Button, Checkbox, Input, Label, buttonVariants } from '~/components';
 import { HFLogo } from '~/components/ui/logo/logo';
 import { useSession } from '~/loaders';
-import { TEMPORAL_ID, useDatasetsStore } from '~/state';
+import { useDatasetsStore } from '~/state';
 import { useExportDataset } from '~/usecases/export-to-hub.usecase';
 
 export const ExportToHub = component$(() => {
@@ -68,12 +68,8 @@ export const ExportToHub = component$(() => {
         <Popover.Trigger
           class={cn(
             buttonVariants({ look: 'ghost', size: 'md' }),
-            'disabled:text-neutral-300 hover:bg-neutral-100 w-full flex justify-start items-center',
+            'hover:bg-neutral-100 w-full flex justify-start items-center',
           )}
-          disabled={
-            activeDataset.value.columns.filter((c) => c.id !== TEMPORAL_ID)
-              .length === 0
-          }
         >
           <div class="flex items-center justify-start gap-4">
             <HFLogo class="w-4 h-4 flex-shrink-0" />

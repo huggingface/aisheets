@@ -81,7 +81,10 @@ export const DatasetName = component$(() => {
           value={state.name}
           onInput$={handleChange}
           onKeyDown$={handleKeyDown}
-          class="text-md font-bold p-0 border-none outline-none leading-none w-fit"
+          class="text-md h-6 font-bold p-0 border-none outline-none leading-none"
+          style={{
+            width: `${state.name.length}ch`,
+          }}
         />
       ) : (
         <h1

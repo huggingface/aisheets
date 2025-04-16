@@ -121,16 +121,21 @@ export default component$(() => {
               class="relative w-[700px]"
               onClick$={() => document.getElementById('prompt')?.focus()}
             >
-              <div class="w-full h-48 min-h-48 max-h-48 bg-white border border-secondary-foreground rounded-xl pt-2 shadow-[0px_4px_6px_rgba(0,0,0,0.1)]">
+              <div class="w-full bg-white border border-secondary-foreground rounded-xl pt-2 pb-14 shadow-[0px_4px_6px_rgba(0,0,0,0.1)]">
                 <Textarea
                   id="prompt"
                   look="ghost"
                   placeholder="Create customer claims. Categorize them as formal, humorous, neutral, or injurious, and respond to each in a neutral tone."
-                  class="p-4 h-32 min-h-32 max-h-32 resize-none overflow-auto text-base placeholder:text-neutral-400"
+                  class="p-4 max-h-40 resize-none overflow-auto text-base placeholder:text-neutral-400"
+                  onInput$={(e) => {
+                    const target = e.target as HTMLTextAreaElement;
+                    target.style.height = 'auto';
+                    target.style.height = `${target.scrollHeight}px`;
+                  }}
                 />
               </div>
               <div
-                class="w-full absolute bottom-2 p-4 flex flex-row items-center justify-between cursor-text"
+                class="w-full absolute bottom-0 p-4 flex flex-row items-center justify-between cursor-text"
                 onClick$={() => document.getElementById('prompt')?.focus()}
               >
                 <div class="flex w-full justify-between items-center h-[30px]">
@@ -152,9 +157,9 @@ export default component$(() => {
                   <Button
                     look="primary"
                     onClick$={createDataset}
-                    class="h-[30px]"
+                    class="h-[30px] w-[40px] p-1"
                   >
-                    <LuEgg class="text-2xl" />
+                    <LuEgg class="text-xl" />
                   </Button>
                 </div>
               </div>

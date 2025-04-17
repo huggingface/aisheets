@@ -65,6 +65,15 @@ export const DEFAULT_MODEL: string =
   process.env.DEFAULT_MODEL ?? 'meta-llama/Llama-3.3-70B-Instruct';
 
 /**
+ * Default configuration for embedding operations
+ */
+export const default_embedding_model = {
+  provider: process.env.EMBEDDING_MODEL_PROVIDER ?? 'hf-inference',
+  model: process.env.EMBEDDING_MODEL ?? 'intfloat/multilingual-e5-large',
+  embedding_dim: Number(process.env.EMBEDDING_DIM) ?? 1024,
+} as const;
+
+/**
  * The directory for vector database storage.
  * Default value: '$DATA_DIR/embeddings.db'
  */

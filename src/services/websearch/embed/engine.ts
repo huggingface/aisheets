@@ -1,7 +1,10 @@
-import { featureExtraction } from '@huggingface/inference';
+import {
+  type InferenceProvider,
+  featureExtraction,
+} from '@huggingface/inference';
 import * as lancedb from '@lancedb/lancedb';
 import * as arrow from 'apache-arrow';
-import { VECTOR_DB_DIR } from '~/config';
+import { VECTOR_DB_DIR, default_embedding_model } from '~/config';
 import type { WebSource } from '~/services/websearch/search-sources';
 import { flattenTree, stringifyMarkdownElement } from '../markdown';
 
@@ -18,7 +21,7 @@ export const configureEmbeddingsIndex = async () => {
     new arrow.Field(
       'embedding',
       new arrow.FixedSizeList(
-        384,
+        default_embedding_model.embedding_dim,
         new arrow.Field('item', new arrow.Float32(), true),
       ),
     ),
@@ -58,8 +61,8 @@ export const embedder = async (
   const results = await featureExtraction({
     inputs: texts,
     accessToken: options.accessToken,
-    model: 'BAAI/bge-small-en-v1.5',
-    provider: 'hf-inference',
+    model: default_embedding_model.model,
+    provider: default_embedding_model.provider as InferenceProvider,
   });
 
   if (!Array.isArray(results)) {

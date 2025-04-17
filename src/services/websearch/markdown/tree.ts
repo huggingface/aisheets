@@ -64,20 +64,6 @@ export function htmlToMarkdownTree(
 }
 
 /**
- * Remove parent references for serialization
- */
-export function removeParents<T extends MarkdownElement>(elem: T): T {
-  if ('children' in elem) {
-    return {
-      ...elem,
-      parent: null,
-      children: (elem as HeaderElement).children.map(removeParents),
-    } as T;
-  }
-  return { ...elem, parent: null } as T;
-}
-
-/**
  * Convert markdown tree to a flat markdown string
  */
 export function markdownTreeToString(tree: HeaderElement): string {

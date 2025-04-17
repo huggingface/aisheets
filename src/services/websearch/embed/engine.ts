@@ -18,7 +18,7 @@ export const configureEmbeddingsIndex = async () => {
     new arrow.Field(
       'embedding',
       new arrow.FixedSizeList(
-        1024,
+        384,
         new arrow.Field('item', new arrow.Float32(), true),
       ),
     ),
@@ -58,7 +58,7 @@ export const embedder = async (
   const results = await featureExtraction({
     inputs: texts,
     accessToken: options.accessToken,
-    model: 'mixedbread-ai/mxbai-embed-large-v1',
+    model: 'BAAI/bge-small-en-v1.5',
     provider: 'hf-inference',
   });
 

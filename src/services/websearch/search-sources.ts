@@ -130,7 +130,7 @@ const searchQueriesToSources = async (
 
   return {
     // Limit the number of sources to 5
-    sources: Array.from(sourcesMap.values()).slice(0, 5),
+    sources: Array.from(sourcesMap.values()).slice(0, 3),
     errors,
   };
 };

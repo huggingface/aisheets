@@ -123,7 +123,7 @@ export const TableBody = component$(() => {
             key={actualRowIndex}
             class="hover:bg-gray-50/50 transition-colors"
           >
-            <td class="px-2 text-center border-[0.5px] border-t-0 bg-neutral-100">
+            <td class="px-2 text-center border-[0.5px] border-t-0 bg-neutral-100 text-primary-600">
               {actualRowIndex + 1}
             </td>
 

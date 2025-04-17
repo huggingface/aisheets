@@ -382,6 +382,9 @@ function extractColumnReferences(
   return references;
 }
 
+/**
+ * Executes the assistant with the provided parameters
+ */
 export const runAutoDataset = async function (
   this: RequestEventBase<QwikCityPlatform>,
   params: AssistantParams,

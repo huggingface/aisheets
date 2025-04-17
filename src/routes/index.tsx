@@ -95,14 +95,14 @@ const runAutoDatasetAction = server$(async function (
   return await runAutoDataset.call(this, {
     instruction,
     searchEnabled,
-    maxSearchQueries: 2,
+    maxSearchQueries: 1,
   });
 });
 
 export default component$(() => {
   const nav = useNavigate();
-  const prompt = useSignal('');
   const searchOnWeb = useSignal(true);
+  const prompt = useSignal('');
   const startingPrompts = [
     'Summaries of popular Motown songs by artist, including lyrics',
     'Top list of recent climate-related disaster with a description of the event and location',
@@ -151,38 +151,43 @@ export default component$(() => {
       <div class="w-full h-full flex flex-col items-center justify-center">
         <div class="flex flex-col items-center justify-center space-y-14">
           <div class="flex flex-col items-center justify-center space-y-4">
-            <h1 class="text-2xl font-semibold text-neutral-700">
-              Design your data in a sheet
-            </h1>
+            <h1 class="text-2xl font-semibold">Design your data in a sheet</h1>
             <h2 class="text-neutral-500 font-medium">From a simple idea</h2>
           </div>
 
           <div class="flex flex-col items-center justify-center space-y-3">
             <div
-              class="relative w-[583px]"
+              class="relative w-[700px]"
               onClick$={() => document.getElementById('prompt')?.focus()}
             >
-              <div class="w-full h-48 min-h-48 max-h-48 bg-white border border-secondary-foreground rounded-lg pt-2 shadow-[0px_4px_6px_rgba(0,0,0,0.1)]">
+              <div class="w-full bg-white border border-secondary-foreground rounded-xl pb-14 shadow-[0px_4px_6px_rgba(0,0,0,0.1)]">
                 <Textarea
                   id="prompt"
                   look="ghost"
                   value={prompt.value}
-                  onInput$={(_, el) => (prompt.value = el.value)}
                   placeholder="Create customer claims. Categorize them as formal, humorous, neutral, or injurious, and respond to each in a neutral tone."
-                  class="px-4 h-32 min-h-32 max-h-32 resize-none overflow-auto text-base rounded-sm text-neutral-700 placeholder:text-neutral-400"
+                  class="p-4 max-h-40 resize-none overflow-auto text-base placeholder:text-neutral-400"
+                  onInput$={(e, el) => {
+                    prompt.value = el.value;
+
+                    const target = e.target as HTMLTextAreaElement;
+                    target.style.height = 'auto';
+                    target.style.height = `${target.scrollHeight}px`;
+                  }}
                 />
               </div>
               <div
-                class="w-full absolute bottom-2 px-4 flex flex-row items-center justify-between cursor-text"
+                class="w-full absolute bottom-0 p-4 flex flex-row items-center justify-between cursor-text"
                 onClick$={() => document.getElementById('prompt')?.focus()}
               >
-                <div class="flex w-full justify-between items-center">
+                <div class="flex w-full justify-between items-center h-[30px]">
                   <Button
                     look="secondary"
                     class={cn(
-                      'flex gap-1 py-2 px-2.5 h-9 text-neutral-700 bg-white hover:bg-primary-50/80 rounded-lg',
+                      'flex px-[10px] py-[8px] gap-[10px] bg-white hover:bg-neutral-100 h-[30px] rounded-[8px]',
                       {
-                        'outline-primary-100 bg-primary-50': searchOnWeb.value,
+                        'border-primary-100 outline-primary-100 bg-primary-50':
+                          searchOnWeb.value,
                       },
                     )}
                     onClick$={() => {
@@ -205,12 +210,12 @@ export default component$(() => {
             </div>
 
             <div class="flex flex-col items-center justify-center space-y-8">
-              <div class="w-[583px] flex flex-col justify-between items-start gap-2">
+              <div class="w-[700px] flex flex-col justify-between items-start gap-2">
                 {startingPrompts.map((prompt) => (
                   <Button
                     key={prompt}
                     look="secondary"
-                    class="flex gap-2 text-xs px-2 rounded-lg outline-neutral-300 bg-neutral-100"
+                    class="flex gap-2 text-xs px-2 rounded-xl bg-transparent hover:bg-neutral-100"
                   >
                     <SecondLogo class="w-4" />
                     {prompt}
@@ -218,10 +223,10 @@ export default component$(() => {
                 ))}
               </div>
 
-              <div class="w-[550px] flex justify-center items-center">
-                <hr class="w-full border-t border-gray-300" />
-                <span class="mx-10 text-gray-400">OR</span>
-                <hr class="w-full border-t border-gray-300" />
+              <div class="w-[697px] flex justify-center items-center">
+                <hr class="w-full border-t" />
+                <span class="mx-10 text-neutral-500">OR</span>
+                <hr class="w-full border-t" />
               </div>
 
               <div class="w-[530px] h-[230px]">

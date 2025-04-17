@@ -70,6 +70,9 @@ export default {
           DEFAULT: 'hsl(228 25% 25%)',  // Same as primary-600
         }
       },
+      borderColor: {
+        DEFAULT: 'hsl(228 25% 90%)', //Neutral 300
+      },
       borderRadius: {
         base: "var(--border-radius)",
         sm: "calc(var(--border-radius) + 0.125rem)",

@@ -144,9 +144,19 @@ export function markdownTreeToString(tree: HeaderElement): string {
  */
 export function flattenTree(elem: MarkdownElement): MarkdownElement[] {
   if ('children' in elem) {
-    // For header elements that have children, include the header itself
-    // and all children (recursively flattened)
-    return [elem, ...elem.children.flatMap(flattenTree)];
+    // For header elements, don't include them directly
+    // Instead, prepend their text to their children's content
+    const headerText =
+      elem.type === MarkdownElementType.Header ? `${elem.content}\n\n` : '';
+
+    // Process children and prepend header text if this is a header
+    return elem.children.flatMap((child) => {
+      const flattenedChildren = flattenTree(child);
+      return flattenedChildren.map((childElem) => ({
+        ...childElem,
+        content: headerText + childElem.content,
+      }));
+    });
   }
 
   // For leaf elements, just return the element itself

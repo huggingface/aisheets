@@ -24,7 +24,7 @@ const MAX_TOTAL_CONTENT_LENGTH = 25000;
 /**
  * Maximum number of concurrent scraping operations
  */
-const MAX_CONCURRENT_SCRAPES = 5;
+const MAX_CONCURRENT_SCRAPES = 10;
 
 // Register cleanup handler
 process.on('exit', () => {

@@ -15,8 +15,8 @@ importers:
         specifier: ^1.0.2
         version: 1.0.2
       '@huggingface/inference':
-        specifier: ^3.5.2
-        version: 3.5.2
+        specifier: ^3.8.1
+        version: 3.8.1
       '@huggingface/transformers':
         specifier: ^3.4.2
         version: 3.4.2
@@ -449,16 +449,23 @@ packages:
     resolution: {integrity: sha512-O1suBM/WKEJ6Ad+Dp7eMtd+C2W6MCL3LTF/EjSKVqG9jTHjjozA/kpcRmd/XJh1ZgtLigx1zMtNeyhXI9B9RWA==}
     engines: {node: '>=18'}
 
-  '@huggingface/inference@3.5.2':
-    resolution: {integrity: sha512-MIB1iZTtTBclIFmRL2fbkoxZTuMjziezx87nUzzsPwCX96c+ciilWV+QQZOjOmBlx1ZrfSuJbhwZ1pylSENZnQ==}
+  '@huggingface/inference@3.8.1':
+    resolution: {integrity: sha512-Kq+EvWAAWOa0oWrVrHZZzRmiqw0edr6UUCM6+ZvvHUDbcokc33aUqr8djsUSf6iNDnpBobdswYAJ+hwGo//i3A==}
     engines: {node: '>=18'}
 
   '@huggingface/jinja@0.3.3':
     resolution: {integrity: sha512-vQQr2JyWvVFba3Lj9es4q9vCl1sAc74fdgnEMoX8qHrXtswap9ge9uO3ONDzQB0cQ0PUyaKY2N6HaVbTBvSXvw==}
     engines: {node: '>=18'}
 
+  '@huggingface/jinja@0.3.4':
+    resolution: {integrity: sha512-kFFQWJiWwvxezKQnvH1X7GjsECcMljFx+UZK9hx6P26aVHwwidJVTB0ptLfRVZQvVkOGHoMmTGvo4nT0X9hHOA==}
+    engines: {node: '>=18'}
+
   '@huggingface/tasks@0.17.4':
     resolution: {integrity: sha512-LES7+OosthFKdqRL0e+bA2d4jfKmiQWuqahsPrv0+EsSZtdHdaZ3nje0f2g5wq4miHX4xWpBLuWJknjdnBwXsA==}
+
+  '@huggingface/tasks@0.18.8':
+    resolution: {integrity: sha512-sgrONypSZDOwUKpvBxfzO/cfKU5lKhErG1souoyE7G7QAH+dQDshMFL8h7phTkbu3GR5+f4koAD8tWk0LSDc3w==}
 
   '@huggingface/transformers@3.4.2':
     resolution: {integrity: sha512-B7K7SCkpqjlfhrV0z18icmnCqgdU2zq+gI3ttBRQ8xl6mIzfxeeKht/vCa8y7pbewY/hJmirKdQClpw0IUaSaw==}
@@ -3828,13 +3835,18 @@ snapshots:
     dependencies:
       '@huggingface/tasks': 0.17.4
 
-  '@huggingface/inference@3.5.2':
+  '@huggingface/inference@3.8.1':
     dependencies:
-      '@huggingface/tasks': 0.17.4
+      '@huggingface/jinja': 0.3.4
+      '@huggingface/tasks': 0.18.8
 
   '@huggingface/jinja@0.3.3': {}
 
+  '@huggingface/jinja@0.3.4': {}
+
   '@huggingface/tasks@0.17.4': {}
+
+  '@huggingface/tasks@0.18.8': {}
 
   '@huggingface/transformers@3.4.2':
     dependencies:

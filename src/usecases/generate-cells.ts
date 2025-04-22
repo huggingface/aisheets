@@ -5,8 +5,10 @@ import {
   getRowCells,
   updateCell,
 } from '~/services/repository/cells';
+import { queryDatasetSources } from '~/services/websearch/embed';
 import type { Cell, Column, Process, Session } from '~/state';
 import { collectExamples } from './collect-examples';
+import { renderInstruction } from './materialize-prompt';
 import {
   runPromptExecution,
   runPromptExecutionStream,
@@ -94,6 +96,8 @@ export const generateCells = async function* ({
           idx: i,
         };
 
+        let queryPrompt = process.prompt;
+
         if (columnsReferences?.length) {
           const rowCells = await getRowCells({
             rowIdx: i,
@@ -102,7 +106,17 @@ export const generateCells = async function* ({
           args.data = Object.fromEntries(
             rowCells.map((cell) => [cell.column!.name, cell.value]),
           );
+
+          queryPrompt = renderInstruction(process.prompt, args.data);
         }
+
+        args.sourcesContext = await queryDatasetSources({
+          dataset: column.dataset,
+          query: queryPrompt,
+          options: {
+            accessToken: session.token,
+          },
+        });
 
         streamRequests.push(args);
       }
@@ -137,6 +151,14 @@ export const generateCells = async function* ({
       return;
     }
 
+    const sourcesContext = await queryDatasetSources({
+      dataset: column.dataset,
+      query: process.prompt,
+      options: {
+        accessToken: session.token,
+      },
+    });
+
     // Sequential execution for fromScratch to accumulate examples
     for (let i = offset; i < limit + offset; i++) {
       if (validatedIdxs?.includes(i)) continue;
@@ -152,6 +174,7 @@ export const generateCells = async function* ({
         modelProvider,
         examples: currentExamples,
         instruction: prompt,
+        sourcesContext,
         timeout,
         data: {},
       };

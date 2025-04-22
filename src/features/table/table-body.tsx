@@ -44,10 +44,29 @@ export const TableBody = component$(() => {
     }
   });
 
+  const debounceStore = useStore({
+    timeout: 0 as number | null,
+  });
+
+  useOnWindow(
+    'scroll',
+    $((event) => {
+      const target = event.target as HTMLElement;
+      if (debounceStore.timeout) {
+        clearTimeout(debounceStore.timeout);
+      }
+
+      debounceStore.timeout = window.setTimeout(() => {
+        scrollTop.value = target.scrollTop - tableBody.value!.offsetTop;
+      }, 30);
+    }),
+  );
+
   const handleDeleteClick$ = $(async (actualRowIndex: number) => {
     document
       .getElementById(`delete-row-${actualRowIndex}-panel`)
       ?.hidePopover();
+
 
     const ok = await server$(deleteRowsCells)(
       firstColumn.value.dataset.id,
@@ -103,11 +122,10 @@ export const TableBody = component$(() => {
       return cell;
     };
 
+    const visibleColumns = columns.value.filter((c) => c.visible);
     data.value = Array.from({ length: rowCount.value }, (_, rowIndex) =>
-      Array.from(
-        { length: columns.value.filter((c) => c.visible).length },
-        (_, colIndex) =>
-          getCell(columns.value.filter((c) => c.visible)[colIndex], rowIndex),
+      Array.from({ length: visibleColumns.length }, (_, colIndex) =>
+        getCell(visibleColumns[colIndex], rowIndex),
       ),
     );
   });
@@ -220,6 +238,7 @@ export const TableBody = component$(() => {
 
 const Loader = component$<{ actualRowIndex: number }>(({ actualRowIndex }) => {
   const { columns, replaceCell } = useColumnsStore();
+  const isLoading = useSignal(false);
 
   const loadColumnsCells = server$(
     async ({
@@ -246,7 +265,11 @@ const Loader = component$<{ actualRowIndex: number }>(({ actualRowIndex }) => {
       return allCells.flat();
     },
   );
+
   useVisibleTask$(async () => {
+    if (isLoading.value) return;
+    isLoading.value = true;
+
     const newCells = await loadColumnsCells({
       columnIds: columns.value
         .filter((column) => column.id !== TEMPORAL_ID)
@@ -258,6 +281,8 @@ const Loader = component$<{ actualRowIndex: number }>(({ actualRowIndex }) => {
     for (const cell of newCells) {
       replaceCell(cell);
     }
+
+    isLoading.value = false;
   });
 
   return <Fragment />;

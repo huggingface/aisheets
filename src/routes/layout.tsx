@@ -17,10 +17,10 @@ export * from '~/loaders';
 export default component$(() => {
   return (
     <ModalsProvider>
-      <div class="flex-row flex max-h-screen">
+      <div class="flex-row flex h-screen">
         <ActiveDatasetProvider>
           <MainSidebar />
-          <main class="min-w-screen h-screen px-6 pt-4 w-full overflow-hidden">
+          <main class="min-w-screen h-screen px-6 pt-4 w-full overflow-y-auto">
             <Slot />
           </main>
         </ActiveDatasetProvider>

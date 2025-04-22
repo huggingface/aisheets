@@ -3,14 +3,14 @@ import { cn } from '@qwik-ui/utils';
 import { type VariantProps, cva } from 'class-variance-authority';
 
 export const buttonVariants = cva(
-  'inline-flex items-center justify-center rounded text-sm font-medium transition-all duration-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring',
+  'inline-flex items-center justify-center rounded text-sm font-normal transition-all duration-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring',
   {
     variants: {
       look: {
         primary:
           'p-4 rounded-2xl h-10 bg-primary text-white w-fit select-none hover:bg-primary-300 active:bg-primary-200 disabled:bg-primary-100 disabled:opacity-100 disabled:pointer-events-none',
         secondary:
-          'p-4 rounded-md h-10 w-fit select-none border border-neutral-400 bg-neutral-100 text-primary-foreground shadow-sm hover:bg-neutral-200 hover:border-neutral-500 active:shadow-base active:press disabled:bg-neutral-100 disabled:text-neutral-300 disabled:border-neutral-200 disabled:opacity-100 disabled:pointer-events-none',
+          'p-4 rounded-md h-10 w-fit select-none border bg-neutral-100 text-primary-foreground shadow-sm hover:bg-neutral-100 active:shadow-base active:press disabled:bg-neutral-100 disabled:text-neutral-400 disabled:border-neutral-200 disabled:opacity-100 disabled:pointer-events-none',
         alert:
           'border-base bg-alert text-alert-foreground shadow-sm hover:bg-alert/90 active:shadow-base active:press',
         outline:

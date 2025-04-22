@@ -1,18 +1,18 @@
-import { $, component$, isDev, useSignal } from '@builder.io/qwik';
-import {
-  Link,
-  type RequestEvent,
-  server$,
-  useNavigate,
-} from '@builder.io/qwik-city';
+import { $, component$, isDev, useSignal, useStore } from '@builder.io/qwik';
+import { type RequestEvent, server$, useNavigate } from '@builder.io/qwik-city';
 import * as hub from '@huggingface/hub';
-import { LuDownload, LuFile, LuPencilLine, LuZap } from '@qwikest/icons/lucide';
-import { Tooltip } from '~/components/ui/tooltip/tooltip';
+import { cn } from '@qwik-ui/utils';
+import { LuEgg, LuGlobe } from '@qwikest/icons/lucide';
+import { Button, Textarea } from '~/components';
+import { SecondLogo } from '~/components/ui/logo/logo';
 
 import { CLIENT_ID, HF_TOKEN, OAUTH_SCOPES } from '~/config';
-import { createDatasetIdByUser } from '~/services';
+import { DragAndDrop } from '~/features/import-from-file/drag-n-drop';
+import { MainSidebarButton } from '~/features/main-sidebar';
+
 import { saveSession } from '~/services/auth/session';
-import { ActiveDatasetProvider, useServerSession } from '~/state';
+import { ActiveDatasetProvider } from '~/state';
+import { runAutoDataset } from '~/usecases/run-autodataset';
 
 export const onGet = async ({
   cookie,
@@ -87,156 +87,153 @@ export const onGet = async ({
   throw Error('Missing HF_TOKEN or OAUTH_CLIENT_ID');
 };
 
-const createDataset = server$(async function (this) {
-  const session = useServerSession(this);
-
-  return await createDatasetIdByUser({
-    createdBy: session.user.username,
+// Server action to run the autodataset action
+const runAutoDatasetAction = server$(async function (
+  instruction: string,
+  searchEnabled: boolean,
+) {
+  return await runAutoDataset.call(this, {
+    instruction,
+    searchEnabled,
+    maxSearchQueries: 1,
   });
 });
 
 export default component$(() => {
-  const isTransitioning = useSignal(false);
   const nav = useNavigate();
+  const searchOnWeb = useSignal(true);
+  const prompt = useSignal('');
+  const startingPrompts = [
+    'Summaries of popular Motown songs by artist, including lyrics',
+    'Top list of recent climate-related disaster with a description of the event and location',
+  ];
 
-  const handleCreateBlankDataset = $(async () => {
-    const datasetId = await createDataset();
+  const isLoading = useSignal(false);
+  const response = useStore<{
+    text?: string;
+    error?: string;
+  }>({});
 
-    nav(`/dataset/${datasetId}`);
-  });
+  const handleAssistant = $(async () => {
+    if (!prompt.value.trim()) {
+      console.warn('Prompt is empty');
+      return;
+    }
 
-  const handleCreateBlankDatasetWithTransition = $(async () => {
-    isTransitioning.value = true;
+    isLoading.value = true;
+    response.text = undefined;
+    response.error = undefined;
 
-    const [datasetId] = await Promise.all([
-      createDataset(),
-      new Promise((resolve) => setTimeout(resolve, 400)),
-    ]);
+    try {
+      const result = await runAutoDatasetAction(
+        prompt.value,
+        searchOnWeb.value,
+      );
 
-    nav(`/dataset/${datasetId}`);
+      if (typeof result === 'string') {
+        response.text = result;
+      } else if ('dataset' in result && result.dataset) {
+        // Navigate to the dataset page
+        await nav(`/dataset/${result.dataset}/`);
+        return;
+      }
+    } catch (error) {
+      console.error('Error running assistant:', error);
+      response.error = error instanceof Error ? error.message : String(error);
+    } finally {
+      isLoading.value = false;
+    }
   });
 
   return (
     <ActiveDatasetProvider>
-      <div class="flex flex-col h-full w-fit overflow-hidden">
-        <div
-          class={`mt-12 w-[800px] transition-opacity duration-200 ${isTransitioning.value ? 'opacity-0' : 'opacity-100'}`}
-        >
-          <h1 class="text-3xl font-bold w-full mb-8">Choose how to start</h1>
+      <MainSidebarButton />
+      <div class="w-full h-full flex flex-col items-center justify-center">
+        <div class="flex flex-col items-center justify-center space-y-14">
+          <div class="flex flex-col items-center justify-center space-y-4">
+            <h1 class="text-2xl font-semibold">Design your data in a sheet</h1>
+            <h2 class="text-neutral-500 font-medium">From a simple idea</h2>
+          </div>
 
-          <div class="flex flex-col gap-0">
-            <Tooltip text="Coming soon!">
-              <div class="w-full text-[#676767] border-t border-b group transition-colors cursor-pointer">
-                <div class="w-full px-6 py-5 flex flex-row items-center gap-3 font-light group-hover:bg-gray-50/50">
-                  <span class="text-sm text-foreground">
-                    Generate content on specific topics.
-                  </span>
-                  <span class="text-[#AAB0C0] text-sm font-light">
-                    Create tweets, blog posts, or emails
-                  </span>
-                </div>
-              </div>
-            </Tooltip>
-
-            <Tooltip text="Coming soon!">
-              <div class="w-full text-[#676767] border-b group transition-colors cursor-pointer">
-                <div class="w-full px-6 py-5 flex flex-row items-center gap-3 font-light group-hover:bg-gray-50/50">
-                  <span class="text-sm text-foreground">
-                    Generate questions and responses.
-                  </span>
-                  <span class="text-[#AAB0C0] text-sm font-light">
-                    Produce reasoning, scientific, or creative writing questions
-                    and responses.
-                  </span>
-                </div>
-              </div>
-            </Tooltip>
-
-            <Tooltip text="Coming soon!">
-              <div class="w-full text-[#676767] border-b group transition-colors cursor-pointer">
-                <div class="w-full px-6 py-5 flex flex-row items-center gap-3 font-light group-hover:bg-gray-50/50">
-                  <span class="text-sm text-foreground">
-                    Generate code problems and solutions.
-                  </span>
-                  <span class="text-[#AAB0C0] text-sm font-light">
-                    Generate coding challenges and solutions.
-                  </span>
-                </div>
-              </div>
-            </Tooltip>
-
+          <div class="flex flex-col items-center justify-center space-y-3">
             <div
-              class="w-full text-[#676767] border-b group transition-colors cursor-pointer"
-              onClick$={handleCreateBlankDataset}
+              class="relative w-[700px]"
+              onClick$={() => document.getElementById('prompt')?.focus()}
             >
-              <div class="w-full px-6 py-5 flex flex-row items-center gap-3 font-light group-hover:bg-gray-50/50">
-                <LuFile class="w-4 h-4 text-foreground" />
-                <span class="text-sm text-foreground">
-                  Create a blank dataset.
-                </span>
-                <span class="text-[#AAB0C0] text-sm font-light">
-                  Build synthetic datasets from scratch. Ideal to experiment
-                  with new models.
-                </span>
+              <div class="w-full bg-white border border-secondary-foreground rounded-xl pb-14 shadow-[0px_4px_6px_rgba(0,0,0,0.1)]">
+                <Textarea
+                  id="prompt"
+                  look="ghost"
+                  value={prompt.value}
+                  placeholder="Create customer claims. Categorize them as formal, humorous, neutral, or injurious, and respond to each in a neutral tone."
+                  class="p-4 max-h-40 resize-none overflow-auto text-base placeholder:text-neutral-400"
+                  onInput$={(e, el) => {
+                    prompt.value = el.value;
+
+                    const target = e.target as HTMLTextAreaElement;
+                    target.style.height = 'auto';
+                    target.style.height = `${target.scrollHeight}px`;
+                  }}
+                />
+              </div>
+              <div
+                class="w-full absolute bottom-0 p-4 flex flex-row items-center justify-between cursor-text"
+                onClick$={() => document.getElementById('prompt')?.focus()}
+              >
+                <div class="flex w-full justify-between items-center h-[30px]">
+                  <Button
+                    look="secondary"
+                    class={cn(
+                      'flex px-[10px] py-[8px] gap-[10px] bg-white hover:bg-neutral-100 h-[30px] rounded-[8px]',
+                      {
+                        'border-primary-100 outline-primary-100 bg-primary-50':
+                          searchOnWeb.value,
+                      },
+                    )}
+                    onClick$={() => {
+                      searchOnWeb.value = !searchOnWeb.value;
+                    }}
+                  >
+                    <LuGlobe class="text-lg" />
+                    Search the web
+                  </Button>
+
+                  <Button
+                    look="primary"
+                    onClick$={handleAssistant}
+                    disabled={isLoading.value || !prompt.value.trim()}
+                  >
+                    <LuEgg class="text-2xl" />
+                  </Button>
+                </div>
               </div>
             </div>
 
-            <Link href="/dataset/create/from-hub" class="w-full">
-              <div class="w-full text-[#676767] border-b group transition-colors cursor-pointer">
-                <div class="w-full px-6 py-5 flex flex-row items-center gap-3 font-light group-hover:bg-gray-50/50">
-                  <LuDownload class="w-4 h-4 text-foreground" />
-                  <span class="text-sm text-foreground">
-                    Import a dataset from Hugging Face.
-                  </span>
-                  <span class="text-[#AAB0C0] text-sm font-light">
-                    Ideal for model evaluation, dataset transformation and
-                    augmentation.
-                  </span>
-                </div>
-              </div>
-            </Link>
-          </div>
-        </div>
-
-        <div
-          class={`mt-16 text-primary-foreground font-light bg-white w-fit transition-all duration-1000 ${isTransitioning.value ? '-translate-y-[350px]' : ''}`}
-        >
-          <table class="border-separate border-spacing-0 text-sm">
-            <thead>
-              <tr class="min-h-8 h-8">
-                <th class="min-w-80 w-80 max-w-80 px-2 text-left border-[0.5px] border-r-0 border-b-0 rounded-tl-sm bg-neutral-100">
-                  <div class="flex items-center justify-between gap-2 w-full">
-                    <div class="flex items-center gap-2 text-wrap w-[80%] font-normal">
-                      <LuZap class="text-primary-foreground" />
-                      Column 1
-                    </div>
-                  </div>
-                </th>
-
-                <th class="min-w-80 w-80 max-w-80 px-2 text-left border-[0.5px] border-r-0 border-b-0 border-t-0 bg-neutral-100 relative">
-                  <div
-                    class={`absolute -top-6 left-[15%] -translate-x-1/2 bg-white shadow-md !rounded-none flex min-w-[240px] border border-[#eee] transition-opacity duration-200 h-[44px] cursor-pointer group ${isTransitioning.value ? 'opacity-0' : 'opacity-100'}`}
-                    onClick$={handleCreateBlankDatasetWithTransition}
+            <div class="flex flex-col items-center justify-center space-y-8">
+              <div class="w-[700px] flex flex-col justify-between items-start gap-2">
+                {startingPrompts.map((prompt) => (
+                  <Button
+                    key={prompt}
+                    look="secondary"
+                    class="flex gap-2 text-xs px-2 rounded-xl bg-transparent hover:bg-neutral-100"
                   >
-                    <div class="flex items-center gap-2 px-4 w-full group-hover:bg-gray-50/50 transition-colors">
-                      <LuPencilLine class="w-4 h-4 text-[#676767]" />
-                      <span class="text-[#999] text-sm font-light">
-                        Start with a prompt
-                      </span>
-                    </div>
-                  </div>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {Array.from({ length: 8 }).map((_, i) => (
-                <tr key={i} class="hover:bg-gray-50/50 transition-colors">
-                  <td class="min-w-80 w-80 max-w-80 p-4 min-h-[100px] h-[100px] border-[0.5px] border-b-0 border-r-0 border-neutral-300" />
-                  <td class="min-w-80 w-80 max-w-80 p-4 min-h-[100px] h-[100px] border-[0.5px] border-b-0 border-r-0 border-neutral-300" />
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                    <SecondLogo class="w-4" />
+                    {prompt}
+                  </Button>
+                ))}
+              </div>
+
+              <div class="w-[697px] flex justify-center items-center">
+                <hr class="w-full border-t" />
+                <span class="mx-10 text-neutral-500">OR</span>
+                <hr class="w-full border-t" />
+              </div>
+
+              <div class="w-[530px] h-[230px]">
+                <DragAndDrop />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </ActiveDatasetProvider>

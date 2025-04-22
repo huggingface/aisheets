@@ -46,7 +46,7 @@ export const DragAndDrop = component$(() => {
       }
 
       const { id } = await response.json();
-      navigate('/dataset/' + id);
+      navigate('/home/dataset/' + id);
     }
   });
 

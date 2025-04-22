@@ -10,15 +10,20 @@ import {
   useVisibleTask$,
 } from '@builder.io/qwik';
 import { server$ } from '@builder.io/qwik-city';
+import { usePopover } from '@qwik-ui/headless';
+import { cn } from '@qwik-ui/utils';
+import { LuTrash } from '@qwikest/icons/lucide';
+import { Button, Popover } from '~/components';
 import { nextTick } from '~/components/hooks/tick';
 import { useExecution } from '~/features/add-column';
 import { TableCell } from '~/features/table/table-cell';
-import { getColumnCells } from '~/services';
+import { deleteRowsCells, getColumnCells } from '~/services';
 import { type Cell, type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
 
 export const TableBody = component$(() => {
-  const { columns, firstColumn } = useColumnsStore();
-  const expandedRows = useSignal<Set<number>>(new Set());
+  const { columns, firstColumn, deleteCellByIdx } = useColumnsStore();
+  const selectedRows = useSignal<number[]>([]);
+  usePopover();
 
   const tableBody = useSignal<HTMLElement>();
   const rowHeight = 100;
@@ -32,16 +37,48 @@ export const TableBody = component$(() => {
   const data = useSignal<Cell[][]>([]);
   const rowCount = useSignal(0);
 
+  const handleSelectRow$ = $((idx: number) => {
+    if (selectedRows.value.includes(idx)) {
+      selectedRows.value = selectedRows.value.filter((row) => row !== idx);
+    } else {
+      selectedRows.value = [...selectedRows.value, idx];
+    }
+  });
+
+  const debounceStore = useStore({
+    timeout: 0 as number | null,
+  });
+
   useOnWindow(
     'scroll',
     $((event) => {
       const target = event.target as HTMLElement;
+      if (debounceStore.timeout) {
+        clearTimeout(debounceStore.timeout);
+      }
 
-      if (!target.classList.contains('scrollable')) return;
-
-      scrollTop.value = target.scrollTop - tableBody.value!.offsetTop;
+      debounceStore.timeout = window.setTimeout(() => {
+        scrollTop.value = target.scrollTop - tableBody.value!.offsetTop;
+      }, 30);
     }),
   );
+
+  const handleDeleteClick$ = $(async (actualRowIndex: number) => {
+    document
+      .getElementById(`delete-row-${actualRowIndex}-panel`)
+      ?.hidePopover();
+
+    const ok = await server$(deleteRowsCells)(
+      firstColumn.value.dataset.id,
+      selectedRows.value,
+    );
+
+    if (ok) {
+      deleteCellByIdx(...selectedRows.value);
+
+      selectedRows.value = [];
+    }
+  });
 
   useVisibleTask$(({ track }) => {
     track(scrollTop);
@@ -85,11 +122,10 @@ export const TableBody = component$(() => {
       return cell;
     };
 
+    const visibleColumns = columns.value.filter((c) => c.visible);
     data.value = Array.from({ length: rowCount.value }, (_, rowIndex) =>
-      Array.from(
-        { length: columns.value.filter((c) => c.visible).length },
-        (_, colIndex) =>
-          getCell(columns.value.filter((c) => c.visible)[colIndex], rowIndex),
+      Array.from({ length: visibleColumns.length }, (_, colIndex) =>
+        getCell(visibleColumns[colIndex], rowIndex),
       ),
     );
   });
@@ -115,11 +151,60 @@ export const TableBody = component$(() => {
             key={actualRowIndex}
             class="hover:bg-gray-50/50 transition-colors"
           >
-            {row.map((cell, j) => {
+            <td
+              class={cn(
+                'px-2 text-center border-[0.5px] border-t-0 bg-neutral-100 select-none',
+                {
+                  'bg-neutral-300': selectedRows.value.includes(actualRowIndex),
+                },
+              )}
+              preventdefault:contextmenu
+              onClick$={(e) => {
+                if (e.button === 2) {
+                  e.preventDefault();
+                  return;
+                }
+                handleSelectRow$(actualRowIndex);
+              }}
+              onContextMenu$={async () => {
+                if (selectedRows.value.length === 0) {
+                  await handleSelectRow$(actualRowIndex);
+                }
+
+                nextTick(() => {
+                  document
+                    .getElementById(`delete-row-${actualRowIndex}-panel`)
+                    ?.showPopover();
+                }, 100);
+              }}
+            >
+              <Popover.Root
+                gutter={20}
+                floating="right"
+                id={`delete-row-${actualRowIndex}`}
+              >
+                <Popover.Trigger class="pointer-events-none">
+                  {actualRowIndex + 1}
+                </Popover.Trigger>
+
+                <Popover.Panel class="p-1" stoppropagation:click>
+                  <Button
+                    look="ghost"
+                    onClick$={() => handleDeleteClick$(actualRowIndex)}
+                    class="w-full hover:bg-neutral-200 hover:border-neutral-500 p-2"
+                  >
+                    <LuTrash class="mr-2" />
+                    Delete
+                  </Button>
+                </Popover.Panel>
+              </Popover.Root>
+            </td>
+
+            {row.map((cell) => {
               return (
                 <Fragment key={`${i}-${cell.column!.id}`}>
                   {cell.column?.id === TEMPORAL_ID ? (
-                    <td class="min-w-80 w-80 max-w-80 px-2 min-h-[100px] h-[100px] border-[0.5px] border-t-0 border-r-0" />
+                    <td class="min-w-80 w-80 max-w-80 px-2 min-h-[100px] h-[100px] border-[0.5px] border-l-0 border-t-0" />
                   ) : (
                     <>
                       <TableCell cell={cell} />
@@ -138,11 +223,6 @@ export const TableBody = component$(() => {
                 </Fragment>
               );
             })}
-
-            {/* td for (add + ) column */}
-            {columns.value.filter((c) => c.id !== TEMPORAL_ID).length >= 1 && (
-              <td class="min-w-80 w-80 max-w-80 min-h-[100px] h-[100px] border-[0.5px] border-t-0 border-r-0" />
-            )}
           </tr>
         );
       })}
@@ -158,6 +238,7 @@ export const TableBody = component$(() => {
 
 const Loader = component$<{ actualRowIndex: number }>(({ actualRowIndex }) => {
   const { columns, replaceCell } = useColumnsStore();
+  const isLoading = useSignal(false);
 
   const loadColumnsCells = server$(
     async ({
@@ -184,7 +265,11 @@ const Loader = component$<{ actualRowIndex: number }>(({ actualRowIndex }) => {
       return allCells.flat();
     },
   );
+
   useVisibleTask$(async () => {
+    if (isLoading.value) return;
+    isLoading.value = true;
+
     const newCells = await loadColumnsCells({
       columnIds: columns.value
         .filter((column) => column.id !== TEMPORAL_ID)
@@ -196,6 +281,8 @@ const Loader = component$<{ actualRowIndex: number }>(({ actualRowIndex }) => {
     for (const cell of newCells) {
       replaceCell(cell);
     }
+
+    isLoading.value = false;
   });
 
   return <Fragment />;
@@ -223,9 +310,7 @@ const ExecutionFormDebounced = component$<{ column?: { id: Column['id'] } }>(
     if (!state.isVisible) return null;
 
     return (
-      <td
-        class={`min-w-[660px] w-[660px] bg-neutral-100 border-[0.5px] border-b-0 border-t-0 ${columnId.value !== TEMPORAL_ID ? 'border-r-0' : ''}`}
-      />
+      <td class="min-w-[660px] w-[660px] border-[0.5px] bg-neutral-100 border-t-0 border-l-0 border-b-0" />
     );
   },
 );

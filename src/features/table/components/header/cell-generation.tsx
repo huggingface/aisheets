@@ -23,7 +23,7 @@ export const CellGeneration = component$<{ column: Column }>(({ column }) => {
   return (
     <Tooltip text="Regenerate">
       <div
-        class="p-1.5 rounded-full hover:bg-neutral-100 cursor-pointer transition-colors"
+        class="p-2 cursor-pointer transition-colors z-10 hover:bg-neutral-100 rounded-full"
         onClick$={() => onRegenerateCells(column)}
         role="button"
         tabIndex={0}
@@ -32,6 +32,8 @@ export const CellGeneration = component$<{ column: Column }>(({ column }) => {
           opacity: !canRegenerate.value ? '0.5' : '1',
           pointerEvents: !canRegenerate.value ? 'none' : 'auto',
         }}
+        preventdefault:click
+        stoppropagation:click
       >
         {canRegenerate.value ? (
           <LuEgg class="text-sm text-neutral" />

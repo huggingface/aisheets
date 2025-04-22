@@ -37,7 +37,7 @@ export const createDatasetTable = async ({
       CREATE SEQUENCE ${sequenceName} START 0 INCREMENT 1 MINVALUE 0;
     
       CREATE TABLE ${tableName} (
-        rowIdx BIGINT PRIMARY KEY DEFAULT nextval('${sequenceName}'),
+        rowIdx BIGINT DEFAULT nextval('${sequenceName}'),
         ${colums2tableDefinition(columns)}
       )`);
   });

@@ -7,6 +7,7 @@ import path from 'node:path';
 import {
   DuckDBBlobValue,
   DuckDBListValue,
+  DuckDBMapValue,
   DuckDBStructValue,
 } from '@duckdb/node-api';
 
@@ -74,7 +75,7 @@ export const listDatasetTableRows = async ({
         return row;
       }
 
-      if (row instanceof DuckDBStructValue) {
+      if (row instanceof DuckDBStructValue || row instanceof DuckDBMapValue) {
         row = row.entries;
         return cleanValues(row);
       }
@@ -90,7 +91,10 @@ export const listDatasetTableRows = async ({
           }
         }
 
-        if (value instanceof DuckDBStructValue) {
+        if (
+          value instanceof DuckDBStructValue ||
+          row instanceof DuckDBMapValue
+        ) {
           value = value.entries;
           cleanValues(value);
           row[key] = value;
@@ -116,9 +120,15 @@ export const listDatasetTableRows = async ({
   });
 };
 
+const FORMATS = {
+  parquet: 'PARQUET',
+  csv: 'CSV',
+};
+
 export const exportDatasetTableRows = async ({
   dataset,
   columns,
+  format,
 }: {
   dataset: {
     id: string;
@@ -128,25 +138,25 @@ export const exportDatasetTableRows = async ({
     id: string;
     name: string;
   }[];
+  format?: 'parquet' | 'csv';
 }): Promise<string> => {
   const tableName = getDatasetTableName(dataset);
   const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'tmp-'));
-  const parquetPath = path.join(tempDir, 'file.parquet');
+  const duckdbFormat = FORMATS[format ?? 'parquet'] || 'PARQUET';
+  const filePath = path.join(tempDir, `file.${duckdbFormat.toLowerCase()}`);
 
   return await connectAndClose(async (db) => {
-    const sourceColumns = columns.map(getColumnName).join(', ');
-
     const selectedColumns = columns
       .map((column) => `${getColumnName(column)} as "${column.name}"`)
       .join(', ');
 
-    const results = await db.run(`
+    await db.run(`
         COPY (
           SELECT ${selectedColumns} 
           FROM ${tableName}
-        ) TO '${parquetPath}' (FORMAT PARQUET)
+        ) TO '${filePath}' (FORMAT ${duckdbFormat})
     `);
 
-    return parquetPath;
+    return filePath;
   });
 };

@@ -1,3 +1,5 @@
+import { join } from 'node:path';
+
 /**
  * The OAuth client ID used for authentication.
  * This value is retrieved from the environment variable `OAUTH_CLIENT_ID`.
@@ -43,3 +45,29 @@ export const INFERENCE_TIMEOUT = 90000;
  * Default value: 5, max. number of concurrent requests 10
  */
 export const NUM_CONCURRENT_REQUESTS = 5;
+
+/**
+ * The Serper API key used for web searches.
+ * This value is retrieved from the environment variable `SERPER_API_KEY`.
+ */
+export const SERPER_API_KEY: string | undefined = process.env.SERPER_API_KEY;
+
+/**
+ * The default model provider for inference operations.
+ * Default value: 'sambanova'
+ */
+export const DEFAULT_MODEL_PROVIDER: string =
+  process.env.DEFAULT_MODEL_PROVIDER ?? 'sambanova';
+
+/**
+ * The default model for inference.
+ * Default value: 'meta-llama/Llama-3.3-70B-Instruct'
+ */
+export const DEFAULT_MODEL: string =
+  process.env.DEFAULT_MODEL ?? 'meta-llama/Llama-3.3-70B-Instruct';
+
+const RUNTIME_ENV = join(DATA_DIR, process.env.NODE_ENV ?? 'development');
+
+export const VECTOR_DB_DIR: string = join(RUNTIME_ENV, 'embeddings');
+export const SQLITE_DB: string = join(RUNTIME_ENV, '.sqlite3');
+export const DUCKDB_DB: string = join(RUNTIME_ENV, 'duckdb');

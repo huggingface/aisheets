@@ -23,15 +23,24 @@ export const upsertColumnValuesFromGenerator = async ({
     const columnName = getColumnName(column);
     const generator = valuesGenerator();
 
-    const insert_values = [];
     for await (const [idx, value] of generator) {
-      insert_values.push(`(${idx}, ${escapeValue(value)})`);
-    }
+      const result = await db.run(`
+        SELECT * FROM ${tableName} WHERE rowIdx = ${idx} LIMIT 1;
+      `);
 
-    return await db.run(`
-      INSERT OR REPLACE INTO ${tableName} (rowIdx, ${columnName}) 
-      VALUES ${insert_values.join(',')}
-    `);
+      if (result.rowCount > 0) {
+        // Update existing row
+        await db.run(`
+          UPDATE ${tableName} SET ${columnName} = ${escapeValue(value)} WHERE rowIdx = ${idx};
+        `);
+      } else {
+        // Insert new row
+        await db.run(`
+        INSERT INTO ${tableName} (rowIdx, ${columnName})
+        VALUES (${idx}, ${escapeValue(value)});
+      `);
+      }
+    }
   });
 };
 

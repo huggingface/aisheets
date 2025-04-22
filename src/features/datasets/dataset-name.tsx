@@ -72,10 +72,8 @@ export const DatasetName = component$(() => {
     }
   });
 
-  const isDefaultName = state.displayName === 'New dataset';
-
   return (
-    <div class="h-[40px] flex items-center w-full">
+    <div class="flex items-center w-fit">
       {state.isEditing ? (
         <Input
           ref={inputRef}
@@ -83,11 +81,14 @@ export const DatasetName = component$(() => {
           value={state.name}
           onInput$={handleChange}
           onKeyDown$={handleKeyDown}
-          class="text-3xl font-bold px-2 my-0 border-none outline-none leading-none"
+          class="text-md h-6 font-bold p-0 border-none outline-none leading-none"
+          style={{
+            width: `${state.name.length}ch`,
+          }}
         />
       ) : (
         <h1
-          class={`text-3xl font-bold truncate leading-none px-2 ${isDefaultName ? 'text-neutral-400' : ''}`}
+          class="text-md font-bold truncate leading-none"
           onClick$={handleEditClick}
         >
           {state.displayName}

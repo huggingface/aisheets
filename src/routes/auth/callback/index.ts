@@ -6,17 +6,23 @@ export const onGet = async ({ cookie, redirect, query, url }: RequestEvent) => {
   const code = query.get('code');
   const stateParam = query.get('state');
 
-  if (!code || !stateParam) throw redirect(303, '/');
+  if (!code || !stateParam) {
+    throw redirect(303, '/');
+  }
 
   const { state: sessionCode, nonce: nonceFromCallback } =
     JSON.parse(stateParam);
 
-  if (!cookie.has(sessionCode)) throw redirect(303, '/');
+  if (!cookie.has(sessionCode)) {
+    throw redirect(303, '/');
+  }
 
   const data = cookie.get(sessionCode)!;
   const { codeVerifier, nonce } = data.json<any>();
 
-  if (nonce !== nonceFromCallback) throw redirect(303, '/');
+  if (nonce !== nonceFromCallback) {
+    throw redirect(303, '/');
+  }
 
   try {
     cookie.delete(sessionCode);

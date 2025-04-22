@@ -1,12 +1,12 @@
 {
-	"css.lint.unknownAtRules": "ignore",
-	"cSpell.words": ["qwik", "Argilla", "qwikest", "tablericons"],
-	"editor.codeActionsOnSave": {
-		"source.fixAll": "explicit",
-		"source.organizeImports.biome": "explicit"
-	},
-	"editor.defaultFormatter": "biomejs.biome",
-	"[jsonc]": {
-		"editor.defaultFormatter": "esbenp.prettier-vscode"
-	}
+  "css.lint.unknownAtRules": "ignore",
+  "cSpell.words": ["Argilla", "Idxs", "qwik", "qwikest", "tablericons"],
+  "editor.codeActionsOnSave": {
+    "source.fixAll": "explicit",
+    "source.organizeImports.biome": "explicit"
+  },
+  "editor.defaultFormatter": "biomejs.biome",
+  "[jsonc]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  }
 }

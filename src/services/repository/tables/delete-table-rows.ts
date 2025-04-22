@@ -22,7 +22,7 @@ export const deleteDatasetTableRows = async ({
 
     deletedRows = result.rowCount;
 
-    for (const rowIdx of rowIdxs) {
+    for (const rowIdx of rowIdxs.sort((a, b) => b - a)) {
       await db.run(`
         UPDATE ${tableName}
         SET rowIdx = rowIdx - 1

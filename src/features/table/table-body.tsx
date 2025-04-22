@@ -75,8 +75,7 @@ export const TableBody = component$(() => {
 
   useTask$(({ track }) => {
     track(columns);
-
-    rowCount.value = Math.max(firstColumn.value.cells.length, 8);
+    track(rowCount);
 
     const getCell = (column: Column, rowIndex: number): Cell => {
       const cell = column.cells[rowIndex];
@@ -121,6 +120,14 @@ export const TableBody = component$(() => {
 
   const dragStartCell = useSignal<Cell>();
 
+  useTask$(({ track }) => {
+    track(() => firstColumn.value.cells.length);
+
+    if (dragStartCell.value || firstColumn.value.process?.isExecuting) return;
+
+    rowCount.value = Math.max(firstColumn.value.cells.length, 8);
+  });
+
   const handleMouseDown$ = $((cell: Cell) => {
     selectedCellsId.value = [cell];
   });
@@ -134,11 +141,25 @@ export const TableBody = component$(() => {
   const handleMouseOver$ = $((cell: Cell) => {
     if (dragStartCell.value) {
       if (dragStartCell.value.column?.id !== cell.column?.id) return;
+      const isDraggingTheFirstColumn = cell.column?.id === firstColumn.value.id;
 
       const startRowIndex = dragStartCell.value.idx;
       const endRowIndex = cell.idx;
       const start = Math.min(startRowIndex, endRowIndex);
       const end = Math.max(startRowIndex, endRowIndex);
+
+      if (end + buffer >= rowCount.value) {
+        if (isDraggingTheFirstColumn) {
+          rowCount.value += 1;
+
+          const scrollable = document.querySelector('.scrollable')!;
+
+          scrollable.scrollTo({
+            top: scrollable.scrollHeight + rowHeight,
+            behavior: 'smooth',
+          });
+        }
+      }
 
       const selectedCells = [];
 

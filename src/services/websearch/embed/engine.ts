@@ -7,6 +7,9 @@ import { flattenTree, stringifyMarkdownElement } from '../markdown';
 
 import { isDev } from '@builder.io/qwik';
 
+const DEFAULT_EMBEDDING_MODEL = 'BAAI/bge-base-en-v1.5';
+const DEFAULT_EMBEDDING_DIMENSION = 768;
+
 export const configureEmbeddingsIndex = async () => {
   // Check if the database is empty
   const db = await lancedb.connect(VECTOR_DB_DIR);
@@ -18,7 +21,7 @@ export const configureEmbeddingsIndex = async () => {
     new arrow.Field(
       'embedding',
       new arrow.FixedSizeList(
-        384,
+        DEFAULT_EMBEDDING_DIMENSION,
         new arrow.Field('item', new arrow.Float32(), true),
       ),
     ),
@@ -58,7 +61,7 @@ export const embedder = async (
   const results = await featureExtraction({
     inputs: texts,
     accessToken: options.accessToken,
-    model: 'BAAI/bge-small-en-v1.5',
+    model: DEFAULT_EMBEDDING_MODEL,
     provider: 'hf-inference',
   });
 

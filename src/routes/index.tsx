@@ -101,7 +101,7 @@ const runAutoDatasetAction = server$(async function (
 
 export default component$(() => {
   const nav = useNavigate();
-  const searchOnWeb = useSignal(true);
+  const searchOnWeb = useSignal(false);
   const prompt = useSignal('');
   const startingPrompts = [
     'Summaries of popular Motown songs by artist, including lyrics',

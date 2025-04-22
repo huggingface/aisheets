@@ -5,6 +5,7 @@ import type { Cell } from '~/state';
 import { ColumnModel, ProcessModel } from '../db/models';
 import { getColumnById, listColumnsByIds } from './columns';
 import { listDatasetTableRows, upsertColumnValues } from './tables';
+import { deleteDatasetTableRows } from './tables/delete-table-rows';
 
 const rowDataToCells = ({
   rowIdx,
@@ -329,6 +330,51 @@ export const updateCell = async (cell: Partial<Cell>): Promise<Cell> => {
     updatedAt: model.updatedAt,
     generating: model.generating,
   };
+};
+
+export const deleteRowsCells = async (
+  datasetId: string,
+  rowIdxs: number[],
+): Promise<boolean> => {
+  rowIdxs = rowIdxs.sort((a, b) => a - b);
+
+  const columns = await ColumnModel.findAll({
+    where: {
+      datasetId,
+    },
+  });
+
+  await ColumnCellModel.destroy({
+    where: {
+      columnId: {
+        [Op.in]: columns.map((column) => column.id),
+      },
+      idx: {
+        [Op.in]: rowIdxs,
+      },
+    },
+  });
+
+  for (const rowIdx in rowIdxs) {
+    await ColumnCellModel.decrement('idx', {
+      by: 1,
+      where: {
+        columnId: {
+          [Op.in]: columns.map((column) => column.id),
+        },
+        idx: { [Op.gt]: rowIdx },
+      },
+    });
+  }
+
+  const deletedRows = await deleteDatasetTableRows({
+    dataset: {
+      id: datasetId,
+    },
+    rowIdxs,
+  });
+
+  return deletedRows === rowIdxs.length;
 };
 
 export const getGeneratedCellsCount = async (

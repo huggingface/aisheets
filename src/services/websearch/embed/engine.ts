@@ -87,22 +87,26 @@ export const indexDatasetSources = async ({
     await Promise.all(
       sources.flatMap(async (source) => {
         if (!source.markdownTree) return [];
+        try {
+          const mdElements = flattenTree(source.markdownTree);
+          const textChunks = mdElements.map(stringifyMarkdownElement);
 
-        const mdElements = flattenTree(source.markdownTree);
-        const textChunks = mdElements.map(stringifyMarkdownElement);
+          const embeddings = await embedder(textChunks, options);
 
-        const embeddings = await embedder(textChunks, options);
+          return textChunks.map((text, index) => {
+            const embedding = embeddings[index];
 
-        return textChunks.map((text, index) => {
-          const embedding = embeddings[index];
-
-          return {
-            text,
-            embedding,
-            source_uri: source.url,
-            dataset_id: dataset.id,
-          };
-        });
+            return {
+              text,
+              embedding,
+              source_uri: source.url,
+              dataset_id: dataset.id,
+            };
+          });
+        } catch (error) {
+          console.error('Error embedding source:', error);
+          return [];
+        }
       }),
     )
   ).flat();
@@ -130,16 +134,33 @@ export const queryDatasetSources = async ({
     source_uri: string;
   }[]
 > => {
-  const embeddings = await embedder([query], options);
+  if (!query) return [];
 
-  const results = await embeddingsIndex
-    .search(embeddings[0], 'vector')
-    .where(`dataset_id = "${dataset.id}"`)
-    .limit(10)
-    .toArray();
+  const filterByDataset = `dataset_id = "${dataset.id}"`;
 
-  return results.map((result) => ({
-    text: result.text,
-    source_uri: result.source_uri,
-  }));
+  const datasetChunks = await embeddingsIndex.countRows(filterByDataset);
+  if (datasetChunks === 0) {
+    console.warn(
+      `No chunks found for dataset ${dataset.id}. Please index the sources first.`,
+    );
+    return [];
+  }
+
+  try {
+    const embeddings = await embedder([query], options);
+
+    const results = await embeddingsIndex
+      .search(embeddings[0], 'vector')
+      .where(filterByDataset)
+      .limit(10)
+      .toArray();
+
+    return results.map((result) => ({
+      text: result.text,
+      source_uri: result.source_uri,
+    }));
+  } catch (error) {
+    console.error('Error querying dataset sources:', error);
+    return [];
+  }
 };

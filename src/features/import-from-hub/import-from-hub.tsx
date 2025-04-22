@@ -49,7 +49,7 @@ export const ImportFromHub = component$(() => {
         repoId: repoId.value!,
         filePath: filePath.value!,
       });
-      nav('/home/dataset/' + id);
+      nav('/dataset/' + id);
     } catch (error) {
       console.error(error);
     } finally {
@@ -386,7 +386,7 @@ const DragAndDrop = component$(() => {
       }
 
       const { id } = await response.json();
-      navigate('/home/dataset/' + id);
+      navigate('/dataset/' + id);
     }
   });
 

@@ -23,13 +23,7 @@ export const upsertColumnValuesFromGenerator = async ({
     const columnName = getColumnName(column);
     const generator = valuesGenerator();
 
-    const insert_values = [];
-    const rowIdxSet = new Set<number>();
-
     for await (const [idx, value] of generator) {
-      insert_values.push(`(${idx}, ${escapeValue(value)})`);
-      rowIdxSet.add(idx);
-
       const result = await db.run(`
         SELECT * FROM ${tableName} WHERE rowIdx = ${idx} LIMIT 1;
       `);

@@ -28,6 +28,8 @@ export const CellSettings = component$<{ column: Column }>(({ column }) => {
       role="button"
       tabIndex={0}
       aria-label="Edit column"
+      preventdefault:click
+      stoppropagation:click
     >
       <LuSettings2 class="text-sm text-neutral" />
       <Slot />

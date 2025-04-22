@@ -31,7 +31,7 @@ export const upsertColumnValuesFromGenerator = async ({
       rowIdxSet.add(idx);
 
       const result = await db.run(`
-        SELECT count(*) FROM ${tableName} WHERE rowIdx = ${idx};
+        SELECT * FROM ${tableName} WHERE rowIdx = ${idx} LIMIT 1;
       `);
 
       if (result.rowCount > 0) {

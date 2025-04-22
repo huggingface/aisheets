@@ -3,6 +3,7 @@ import {
   Fragment,
   component$,
   useComputed$,
+  useOnWindow,
   useSignal,
   useStore,
   useTask$,
@@ -66,7 +67,6 @@ export const TableBody = component$(() => {
     document
       .getElementById(`delete-row-${actualRowIndex}-panel`)
       ?.hidePopover();
-
 
     const ok = await server$(deleteRowsCells)(
       firstColumn.value.dataset.id,

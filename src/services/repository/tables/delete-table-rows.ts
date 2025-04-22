@@ -9,14 +9,18 @@ export const deleteDatasetTableRows = async ({
     id: string;
   };
   rowIdxs: number[];
-}): Promise<void> => {
+}): Promise<number> => {
   const tableName = getDatasetTableName(dataset);
+  let deletedRows = 0;
 
   await connectAndClose(async (db) => {
-    await db.run(`
+    const result = await db.run(`
       DELETE FROM ${tableName}
       WHERE rowIdx IN (${rowIdxs.join(', ')})
+      RETURNING rowIdx;
     `);
+
+    deletedRows = result.rowCount;
 
     for (const rowIdx of rowIdxs) {
       await db.run(`
@@ -26,4 +30,6 @@ export const deleteDatasetTableRows = async ({
       `);
     }
   });
+
+  return deletedRows;
 };

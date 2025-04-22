@@ -344,7 +344,7 @@ export const deleteRowsCells = async (
     },
   });
 
-  const deletedCount = await ColumnCellModel.destroy({
+  await ColumnCellModel.destroy({
     where: {
       columnId: {
         [Op.in]: columns.map((column) => column.id),
@@ -367,14 +367,14 @@ export const deleteRowsCells = async (
     });
   }
 
-  await deleteDatasetTableRows({
+  const deletedRows = await deleteDatasetTableRows({
     dataset: {
       id: datasetId,
     },
     rowIdxs,
   });
 
-  return deletedCount === rowIdxs.length;
+  return deletedRows === rowIdxs.length;
 };
 
 export const getGeneratedCellsCount = async (

@@ -19,7 +19,7 @@ import { nextTick } from '~/components/hooks/tick';
 import { useExecution } from '~/features/add-column';
 import { useGenerateColumn } from '~/features/execution';
 import { TableCell } from '~/features/table/table-cell';
-import { deleteRowsCells, getColumnCells } from '~/services';
+import { deleteRowsCells } from '~/services';
 import { type Cell, type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
 
 export const TableBody = component$(() => {
@@ -173,17 +173,21 @@ export const TableBody = component$(() => {
       const start = Math.min(startRowIndex, endRowIndex);
       const end = Math.max(startRowIndex, endRowIndex);
 
+      if (
+        end + 1 >= firstColumn.value.cells.length &&
+        !isDraggingTheFirstColumn
+      )
+        return;
+
       if (end + buffer >= rowCount.value) {
-        if (isDraggingTheFirstColumn) {
-          rowCount.value += 1;
+        rowCount.value += 1;
 
-          const scrollable = document.querySelector('.scrollable')!;
+        const scrollable = document.querySelector('.scrollable')!;
 
-          scrollable.scrollTo({
-            top: scrollable.scrollHeight + rowHeight,
-            behavior: 'smooth',
-          });
-        }
+        scrollable.scrollTo({
+          top: scrollable.scrollHeight + rowHeight,
+          behavior: 'smooth',
+        });
       }
 
       const selectedCells = [];
@@ -371,57 +375,9 @@ export const TableBody = component$(() => {
   );
 });
 
-const Loader = component$<{ actualRowIndex: number }>(({ actualRowIndex }) => {
-  const { columns, replaceCell } = useColumnsStore();
-  const isLoading = useSignal(false);
-
-  const loadColumnsCells = server$(
-    async ({
-      columnIds,
-      offset,
-      limit,
-    }: {
-      columnIds: string[];
-      offset: number;
-      limit: number;
-    }) => {
-      const allCells = await Promise.all(
-        columnIds.map((columnId) =>
-          getColumnCells({
-            column: {
-              id: columnId,
-            },
-            offset,
-            limit,
-          }),
-        ),
-      );
-
-      return allCells.flat();
-    },
-  );
-
-  useVisibleTask$(async () => {
-    if (isLoading.value) return;
-    isLoading.value = true;
-
-    const newCells = await loadColumnsCells({
-      columnIds: columns.value
-        .filter((column) => column.id !== TEMPORAL_ID)
-        .map((column) => column.id),
-      offset: actualRowIndex,
-      limit: 10,
-    });
-
-    for (const cell of newCells) {
-      replaceCell(cell);
-    }
-
-    isLoading.value = false;
-  });
-
-  return <Fragment />;
-});
+const Loader = component$<{ actualRowIndex: number }>(
+  ({ actualRowIndex }) => {},
+);
 
 const ExecutionFormDebounced = component$<{ column?: { id: Column['id'] } }>(
   ({ column }) => {

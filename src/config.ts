@@ -67,6 +67,15 @@ export const DEFAULT_MODEL_PROVIDER: string =
 export const DEFAULT_MODEL: string =
   process.env.DEFAULT_MODEL ?? 'meta-llama/Llama-3.3-70B-Instruct';
 
+/**
+ * Default configuration for embedding operations
+ */
+export const default_embedding_model = {
+  provider: process.env.EMBEDDING_MODEL_PROVIDER ?? 'hf-inference',
+  model: process.env.EMBEDDING_MODEL ?? 'mixedbread-ai/mxbai-embed-large-v1',
+  embedding_dim: Number(process.env.EMBEDDING_DIM) ?? 1024,
+} as const;
+
 export const GOOGLE_CLIENT_ID: string | undefined =
   process.env.GOOGLE_CLIENT_ID ??
   '905039472434-7khf7dpl6002etvrn1h3ne1g0t2gv5r8.apps.googleusercontent.com';

@@ -173,10 +173,7 @@ export const TableBody = component$(() => {
       const start = Math.min(startRowIndex, endRowIndex);
       const end = Math.max(startRowIndex, endRowIndex);
 
-      if (
-        end + 1 >= firstColumn.value.cells.length &&
-        !isDraggingTheFirstColumn
-      )
+      if (end + 1 > firstColumn.value.cells.length && !isDraggingTheFirstColumn)
         return;
 
       if (end + buffer >= rowCount.value) {

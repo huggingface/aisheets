@@ -1,6 +1,5 @@
 import { $, component$, useStore, useVisibleTask$ } from '@builder.io/qwik';
 import { server$ } from '@builder.io/qwik-city';
-import { cn } from '@qwik-ui/utils';
 import { Input } from '~/components';
 import { useClickOutside } from '~/components/hooks/click/outside';
 import { updateDataset } from '~/services/repository/datasets';
@@ -73,10 +72,8 @@ export const DatasetName = component$(() => {
     }
   });
 
-  const isDefaultName = state.displayName === 'New dataset';
-
   return (
-    <div class="h-[40px] flex items-center w-fit">
+    <div class="flex items-center w-fit">
       {state.isEditing ? (
         <Input
           ref={inputRef}
@@ -84,13 +81,14 @@ export const DatasetName = component$(() => {
           value={state.name}
           onInput$={handleChange}
           onKeyDown$={handleKeyDown}
-          class="text-3xl font-bold px-2 my-0 border-none outline-none leading-none w-fit"
+          class="text-md h-6 font-bold p-0 border-none outline-none leading-none"
+          style={{
+            width: `${state.name.length}ch`,
+          }}
         />
       ) : (
         <h1
-          class={cn('text-3xl font-bold truncate leading-none', {
-            'text-neutral-400': isDefaultName,
-          })}
+          class="text-md font-bold truncate leading-none"
           onClick$={handleEditClick}
         >
           {state.displayName}

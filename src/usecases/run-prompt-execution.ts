@@ -11,6 +11,10 @@ export interface PromptExecutionParams {
   modelName: string;
   modelProvider: string;
   instruction: string;
+  sourcesContext?: {
+    source_uri: string;
+    text: string;
+  }[];
   data?: object;
   examples?: Array<Example>;
   stream?: boolean;
@@ -48,12 +52,14 @@ export const runPromptExecution = async ({
   modelName,
   modelProvider,
   instruction,
+  sourcesContext,
   data,
   examples,
   timeout,
 }: PromptExecutionParams): Promise<PromptExecutionResponse> => {
   const inputPrompt = materializePrompt({
     instruction,
+    sourcesContext,
     data,
     examples,
   });
@@ -92,12 +98,14 @@ export const runPromptExecutionStream = async function* ({
   modelName,
   modelProvider,
   instruction,
+  sourcesContext,
   data,
   examples,
   timeout,
 }: PromptExecutionParams): AsyncGenerator<PromptExecutionResponse> {
   const inputPrompt = materializePrompt({
     instruction,
+    sourcesContext,
     data,
     examples,
   });

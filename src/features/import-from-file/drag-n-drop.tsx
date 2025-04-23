@@ -95,7 +95,7 @@ export const DragAndDrop = component$(() => {
         <span class="text-neutral-500 font-medium">From real-world data</span>
 
         <Button
-          class="flex gap-1 bg-white rounded-[8px]"
+          class="flex gap-1 bg-white rounded-lg hover:bg-neutral-100"
           onClick$={() => document.getElementById('file-select')?.click()}
         >
           <LuFilePlus2 class="text-lg" />

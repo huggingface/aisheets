@@ -218,7 +218,6 @@ export const TableBody = component$(() => {
 
       const limit = latestCellSelected.value?.idx - offset + 1;
 
-      selectedCellsId.value = [];
       dragStartCell.value = undefined;
 
       const selectedCellsHasValue = column.cells.some(
@@ -318,6 +317,14 @@ export const TableBody = component$(() => {
                         onMouseUp$={handleMouseUp$}
                         class={cn({
                           'relative outline outline-1 outline-primary-300':
+                            selectedCellsId.value.some(
+                              (selectedCell) =>
+                                selectedCell.column?.id === cell.column?.id &&
+                                selectedCell.idx === cell.idx,
+                            ),
+                          'bg-primary-100/50':
+                            !dragStartCell.value &&
+                            selectedCellsId.value.length > 1 &&
                             selectedCellsId.value.some(
                               (selectedCell) =>
                                 selectedCell.column?.id === cell.column?.id &&

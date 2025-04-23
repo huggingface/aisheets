@@ -7,7 +7,6 @@ import * as arrow from 'apache-arrow';
 import { VECTOR_DB_DIR, default_embedding_model } from '~/config';
 import type { WebSource } from '~/services/websearch/search-sources';
 import { flattenTree, stringifyMarkdownElement } from '../markdown';
-
 import { isDev } from '@builder.io/qwik';
 
 
@@ -28,14 +27,10 @@ export const configureEmbeddingsIndex = async () => {
     ),
   ]);
 
-  const embeddingsIndex = isDev
-    ? await db.createEmptyTable('embeddings.dev', schema, {
-        mode: 'overwrite',
-      })
-    : await db.createEmptyTable('embeddings', schema, {
-        existOk: true,
-        mode: 'create',
-      });
+  const embeddingsIndex = await db.createEmptyTable('embeddings', schema, {
+    existOk: true,
+    mode: 'create',
+  });
 
   await embeddingsIndex.createIndex('dataset_id', { replace: true });
 

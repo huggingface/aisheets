@@ -1,3 +1,5 @@
+import { join } from 'node:path';
+
 /**
  * The OAuth client ID used for authentication.
  * This value is retrieved from the environment variable `OAUTH_CLIENT_ID`.
@@ -73,9 +75,9 @@ export const default_embedding_model = {
   embedding_dim: Number(process.env.EMBEDDING_DIM) ?? 1024,
 } as const;
 
-/**
- * The directory for vector database storage.
- * Default value: '$DATA_DIR/embeddings.db'
- */
-export const VECTOR_DB_DIR: string =
-  process.env.VECTOR_DB_DIR ?? `${DATA_DIR}/embeddings`;
+
+const RUNTIME_ENV = join(DATA_DIR, process.env.NODE_ENV ?? 'development');
+
+export const VECTOR_DB_DIR: string = join(RUNTIME_ENV, 'embeddings');
+export const SQLITE_DB: string = join(RUNTIME_ENV, '.sqlite3');
+export const DUCKDB_DB: string = join(RUNTIME_ENV, 'duckdb');

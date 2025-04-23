@@ -1,3 +1,4 @@
+import { join } from 'node:path';
 import { isDev } from '@builder.io/qwik';
 
 /**
@@ -66,13 +67,6 @@ export const DEFAULT_MODEL_PROVIDER: string =
 export const DEFAULT_MODEL: string =
   process.env.DEFAULT_MODEL ?? 'meta-llama/Llama-3.3-70B-Instruct';
 
-/**
- * The directory for vector database storage.
- * Default value: '$DATA_DIR/embeddings.db'
- */
-export const VECTOR_DB_DIR: string =
-  process.env.VECTOR_DB_DIR ?? `${DATA_DIR}/embeddings`;
-
 export const GOOGLE_CLIENT_ID: string | undefined =
   process.env.GOOGLE_CLIENT_ID ??
   '905039472434-7khf7dpl6002etvrn1h3ne1g0t2gv5r8.apps.googleusercontent.com';
@@ -82,3 +76,9 @@ export const GOOGLE_REDIRECT_URI: string | undefined =
   (isDev
     ? 'http://localhost:5173/oauth2/google'
     : 'https://huggingfacedg-dataground.hf.space/oauth2/google');
+
+const RUNTIME_ENV = join(DATA_DIR, process.env.NODE_ENV ?? 'development');
+
+export const VECTOR_DB_DIR: string = join(RUNTIME_ENV, 'embeddings');
+export const SQLITE_DB: string = join(RUNTIME_ENV, '.sqlite3');
+export const DUCKDB_DB: string = join(RUNTIME_ENV, 'duckdb');

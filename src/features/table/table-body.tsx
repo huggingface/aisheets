@@ -312,11 +312,11 @@ export const TableBody = component$(() => {
                   {cell.column?.id === TEMPORAL_ID ? (
                     <td class="min-w-80 w-80 max-w-80 px-2 min-h-[100px] h-[100px] border-[0.5px] border-l-0 border-t-0" />
                   ) : (
-                    <>
+                    <td class="relative min-w-80 w-80 max-w-80 cursor-pointer border-[0.5px] border-l-0 border-t-0 break-words align-top group">
                       <div
                         onMouseUp$={handleMouseUp$}
                         class={cn({
-                          'relative outline outline-1 outline-primary-300 mt-[1px]':
+                          'relative outline outline-1 outline-primary-300':
                             selectedCellsId.value.some(
                               (selectedCell) =>
                                 selectedCell.column?.id === cell.column?.id &&
@@ -351,7 +351,7 @@ export const TableBody = component$(() => {
                       {actualRowIndex + 1 === rowCount.value - buffer && (
                         <Loader actualRowIndex={actualRowIndex} />
                       )}
-                    </>
+                    </td>
                   )}
 
                   <ExecutionFormDebounced column={cell.column} />

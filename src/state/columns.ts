@@ -312,6 +312,12 @@ export const useColumnsStore = () => {
         for (const idx of idxs) {
           column.cells = column.cells.filter((c) => c.idx !== idx);
         }
+
+        for (const idx of idxs.sort((a, b) => b - a)) {
+          column.cells = column.cells.map((c) =>
+            c.idx > idx ? { ...c, idx: c.idx - 1 } : c,
+          );
+        }
       }
 
       replaceColumn(columns.value);

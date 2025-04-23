@@ -8,10 +8,6 @@ import type { Session } from '~/state/session';
 export const onGet = async (event: RequestEvent) => {
   const { sharedMap, redirect, url } = event;
 
-  if (url.pathname.startsWith('/dataset')) {
-    throw redirect(303, `/home${url}`);
-  }
-
   if (sharedMap.get('session')) throw redirect(303, '/home');
 
   if (CLIENT_ID) return handleOAuthLogin(event);

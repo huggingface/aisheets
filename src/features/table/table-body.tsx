@@ -41,7 +41,15 @@ export const TableBody = component$(() => {
     if (selectedRows.value.includes(idx)) {
       selectedRows.value = selectedRows.value.filter((row) => row !== idx);
     } else {
-      selectedRows.value = [...selectedRows.value, idx];
+      selectedRows.value = [idx];
+    }
+  });
+
+  const handleSelectTo$ = $((idx: number) => {
+    if (!selectedRows.value.length) return;
+
+    for (let i = selectedRows.value[0] + 1; i <= idx; i++) {
+      selectedRows.value = [...selectedRows.value, i];
     }
   });
 
@@ -149,7 +157,10 @@ export const TableBody = component$(() => {
         return (
           <tr
             key={actualRowIndex}
-            class="hover:bg-gray-50/50 transition-colors"
+            class={cn('hover:bg-gray-50/50 transition-colors', {
+              'bg-gray-50/50 hover:bg-gray-50/50':
+                selectedRows.value.includes(actualRowIndex),
+            })}
           >
             <td
               class={cn(
@@ -160,11 +171,11 @@ export const TableBody = component$(() => {
               )}
               preventdefault:contextmenu
               onClick$={(e) => {
-                if (e.button === 2) {
-                  e.preventDefault();
-                  return;
+                if (e.shiftKey) {
+                  handleSelectTo$(actualRowIndex);
+                } else {
+                  handleSelectRow$(actualRowIndex);
                 }
-                handleSelectRow$(actualRowIndex);
               }}
               onContextMenu$={async () => {
                 if (selectedRows.value.length === 0) {

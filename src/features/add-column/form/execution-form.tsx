@@ -4,7 +4,6 @@ import {
   Resource,
   component$,
   noSerialize,
-  useComputed$,
   useResource$,
   useSignal,
   useTask$,
@@ -44,17 +43,10 @@ interface SidebarProps {
 export const ExecutionForm = component$<SidebarProps>(
   ({ column, onGenerateColumn }) => {
     const { mode, close } = useExecution();
-    const {
-      columns,
-      maxNumberOfRows,
-      removeTemporalColumn,
-      canGenerate,
-      updateColumn,
-    } = useColumnsStore();
+    const { columns, maxNumberOfRows, removeTemporalColumn, updateColumn } =
+      useColumnsStore();
 
     const isOpenModel = useSignal(false);
-
-    const canRegenerate = useSignal(true);
 
     const prompt = useSignal<string>('');
     const columnsReferences = useSignal<string[]>([]);
@@ -72,21 +64,6 @@ export const ExecutionForm = component$<SidebarProps>(
 
     const onSelectedVariables = $((variables: { id: string }[]) => {
       columnsReferences.value = variables.map((v) => v.id);
-    });
-
-    const isTouched = useComputed$(() => {
-      return (
-        prompt.value !== column.process!.prompt ||
-        selectedModel.value?.id !== column.process!.modelName ||
-        selectedProvider.value !== column.process!.modelProvider ||
-        rowsToGenerate.value !== String(column.process!.limit)
-      );
-    });
-
-    useVisibleTask$(async ({ track }) => {
-      track(columns);
-
-      canRegenerate.value = await canGenerate(column);
     });
 
     useTask$(async () => {
@@ -107,7 +84,7 @@ export const ExecutionForm = component$<SidebarProps>(
       // If there's a previously selected model, use that
       if (process.modelName) {
         selectedModel.value = models?.find(
-          (m) => m.id === process.modelName,
+          (m: Model) => m.id === process.modelName,
         ) || {
           id: process.modelName,
           providers: [process.modelProvider!],
@@ -116,7 +93,9 @@ export const ExecutionForm = component$<SidebarProps>(
       }
       // Otherwise pre-select the default model
       else if (models) {
-        const defaultModel = models.find((m) => m.id === DEFAULT_MODEL_ID);
+        const defaultModel = models.find(
+          (m: Model) => m.id === DEFAULT_MODEL_ID,
+        );
         if (defaultModel) {
           selectedModel.value = defaultModel;
           selectedProvider.value = defaultModel.providers[0];
@@ -236,10 +215,7 @@ export const ExecutionForm = component$<SidebarProps>(
                     look="primary"
                     class="w-[45px] h-[45px] rounded-full flex items-center justify-center p-0"
                     onClick$={onGenerate}
-                    disabled={
-                      !column.process?.isExecuting &&
-                      (!canRegenerate.value || !isTouched.value)
-                    }
+                    disabled={column.process?.isExecuting}
                   >
                     {column.process?.isExecuting ? (
                       <LuStopCircle class="w-6 h-6" />
@@ -254,18 +230,6 @@ export const ExecutionForm = component$<SidebarProps>(
                   )}
                 </div>
               </div>
-              {!isTouched.value && (
-                <div class="flex items-center justify-center text-primary-500">
-                  Adjust the prompt/model settings or increase the number of
-                  rows to generate more data.
-                </div>
-              )}
-
-              {!canRegenerate.value && (
-                <div class="flex items-center justify-center text-primary-500">
-                  Some columns referenced in the prompt need to be regenerated.
-                </div>
-              )}
 
               <div class="flex items-center justify-start gap-1">
                 Model

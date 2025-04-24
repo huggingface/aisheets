@@ -21,21 +21,23 @@ import { deleteRowsCells, getColumnCells } from '~/services';
 import { type Cell, type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
 
 export const TableBody = component$(() => {
-  const { columns, firstColumn, deleteCellByIdx } = useColumnsStore();
+  const { columns, firstColumn, deleteCellByIdx, replaceCell } =
+    useColumnsStore();
+
   const selectedRows = useSignal<number[]>([]);
   usePopover();
 
   const tableBody = useSignal<HTMLElement>();
-  const rowHeight = 100;
+  const rowHeight = 150;
   const visibleRowCount = 10;
-  const buffer = 2;
+  const isLoading = useSignal(false);
 
   const scrollTop = useSignal(0);
   const startIndex = useSignal(0);
   const endIndex = useSignal(0);
 
   const data = useSignal<Cell[][]>([]);
-  const rowCount = useSignal(0);
+  const rowCount = useSignal(1000);
 
   const handleSelectRow$ = $((idx: number) => {
     if (selectedRows.value.includes(idx)) {
@@ -58,7 +60,9 @@ export const TableBody = component$(() => {
       }
 
       debounceStore.timeout = window.setTimeout(() => {
-        scrollTop.value = target.scrollTop - tableBody.value!.offsetTop;
+        scrollTop.value = Math.abs(
+          target.scrollTop - tableBody.value!.offsetTop,
+        );
       }, 30);
     }),
   );
@@ -80,25 +84,8 @@ export const TableBody = component$(() => {
     }
   });
 
-  useVisibleTask$(({ track }) => {
-    track(scrollTop);
-    track(data);
-
-    startIndex.value = Math.max(
-      Math.floor(scrollTop.value / rowHeight) - buffer,
-      0,
-    );
-
-    endIndex.value = Math.min(
-      startIndex.value + visibleRowCount + buffer * 2,
-      rowCount.value,
-    );
-  });
-
   useTask$(({ track }) => {
     track(columns);
-
-    rowCount.value = Math.max(firstColumn.value.cells.length, 8);
 
     const getCell = (column: Column, rowIndex: number): Cell => {
       const cell = column.cells[rowIndex];
@@ -128,6 +115,68 @@ export const TableBody = component$(() => {
         getCell(visibleColumns[colIndex], rowIndex),
       ),
     );
+  });
+
+  const loadColumnsCells = server$(
+    async ({
+      columnIds,
+      offset,
+      limit,
+    }: {
+      columnIds: string[];
+      offset: number;
+      limit: number;
+    }) => {
+      const allCells = await Promise.all(
+        columnIds.map((columnId) =>
+          getColumnCells({
+            column: {
+              id: columnId,
+            },
+            offset,
+            limit,
+          }),
+        ),
+      );
+
+      return allCells.flat();
+    },
+  );
+
+  useTask$(async ({ track }) => {
+    track(startIndex);
+
+    if (endIndex.value + visibleRowCount > firstColumn.value.cells.length) {
+      if (isLoading.value) return;
+      isLoading.value = true;
+      try {
+        const newCells = await loadColumnsCells({
+          columnIds: columns.value
+            .filter((column) => column.id !== TEMPORAL_ID)
+            .map((column) => column.id),
+          offset: firstColumn.value.cells.length,
+          limit: visibleRowCount,
+        });
+
+        for (const cell of newCells) {
+          replaceCell(cell);
+        }
+      } finally {
+        isLoading.value = false;
+      }
+    }
+
+    endIndex.value = Math.min(
+      startIndex.value + visibleRowCount + 1,
+      rowCount.value,
+    );
+  });
+
+  useVisibleTask$(({ track }) => {
+    track(scrollTop);
+    track(data);
+
+    startIndex.value = Math.max(Math.floor(scrollTop.value / rowHeight), 0);
   });
 
   const topSpacerHeight = useComputed$(() => startIndex.value * rowHeight);
@@ -213,9 +262,6 @@ export const TableBody = component$(() => {
                         The buffer now is 2, so on cell number 18, we should fetch new rows
                         Remember: we need just the cellId, no needed the value and the error.
                       */}
-                      {actualRowIndex + 1 === rowCount.value - buffer && (
-                        <Loader actualRowIndex={actualRowIndex} />
-                      )}
                     </>
                   )}
 
@@ -234,58 +280,6 @@ export const TableBody = component$(() => {
       )}
     </tbody>
   );
-});
-
-const Loader = component$<{ actualRowIndex: number }>(({ actualRowIndex }) => {
-  const { columns, replaceCell } = useColumnsStore();
-  const isLoading = useSignal(false);
-
-  const loadColumnsCells = server$(
-    async ({
-      columnIds,
-      offset,
-      limit,
-    }: {
-      columnIds: string[];
-      offset: number;
-      limit: number;
-    }) => {
-      const allCells = await Promise.all(
-        columnIds.map((columnId) =>
-          getColumnCells({
-            column: {
-              id: columnId,
-            },
-            offset,
-            limit,
-          }),
-        ),
-      );
-
-      return allCells.flat();
-    },
-  );
-
-  useVisibleTask$(async () => {
-    if (isLoading.value) return;
-    isLoading.value = true;
-
-    const newCells = await loadColumnsCells({
-      columnIds: columns.value
-        .filter((column) => column.id !== TEMPORAL_ID)
-        .map((column) => column.id),
-      offset: actualRowIndex,
-      limit: 10,
-    });
-
-    for (const cell of newCells) {
-      replaceCell(cell);
-    }
-
-    isLoading.value = false;
-  });
-
-  return <Fragment />;
 });
 
 const ExecutionFormDebounced = component$<{ column?: { id: Column['id'] } }>(

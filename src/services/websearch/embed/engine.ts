@@ -24,13 +24,14 @@ export const configureEmbeddingsIndex = async () => {
       ),
     ),
   ]);
-
+  console.log(default_embedding_model.embedding_dim);
   const embeddingsIndex = await db.createEmptyTable('embeddings', schema, {
     existOk: true,
     mode: 'create',
   });
-
+  console.log('creating index');
   await embeddingsIndex.createIndex('dataset_id', { replace: true });
+  console.log(db);
 
   return {
     db,
@@ -50,6 +51,7 @@ export const embedder = async (
     accessToken: string;
   },
 ): Promise<number[][]> => {
+  console.log('embedding texts');
   if (texts.length === 0) return [];
 
   const results = await featureExtraction({
@@ -80,6 +82,7 @@ export const indexDatasetSources = async ({
     accessToken: string;
   };
 }): Promise<number> => {
+  console.log('indexing datasources');
   const indexData = (
     await Promise.all(
       sources.flatMap(async (source) => {

@@ -241,6 +241,35 @@ export const TableBody = component$(() => {
     }
   });
 
+  const getBoundary = (cell: Cell) => {
+    const sel = selectedCellsId.value;
+    if (sel.length === 0) {
+      return { rowMin: -1, rowMax: -1, colMin: -1, colMax: -1 };
+    }
+    const rows = sel.map((c) => c.idx);
+    const rowMin = Math.min(...rows);
+    const rowMax = Math.max(...rows);
+
+    const isColumnSelected = selectedCellsId.value.some(
+      (c) => c.column?.id === cell.column?.id && c.idx === cell.idx,
+    );
+
+    return cn({
+      'border-t-2 border-t-primary-300':
+        selectedCellsId.value.some((c) => c.column?.id === cell.column?.id) &&
+        cell.idx === rowMin,
+      'border-b-2 border-b-primary-300':
+        selectedCellsId.value.some((c) => c.column?.id === cell.column?.id) &&
+        cell.idx === rowMax,
+      'border-l-2 border-l-primary-300': isColumnSelected,
+      'border-r-2 border-r-primary-300': isColumnSelected,
+      'bg-primary-100/50':
+        !dragStartCell.value &&
+        selectedCellsId.value.length > 1 &&
+        isColumnSelected,
+    });
+  };
+
   return (
     <tbody ref={tableBody}>
       {/* Top spacer row to maintain scroll position */}
@@ -312,25 +341,14 @@ export const TableBody = component$(() => {
                   {cell.column?.id === TEMPORAL_ID ? (
                     <td class="min-w-80 w-80 max-w-80 px-2 min-h-[100px] h-[100px] border-[0.5px] border-l-0 border-t-0" />
                   ) : (
-                    <td class="relative min-w-80 w-80 max-w-80 cursor-pointer border-[0.5px] border-l-0 border-t-0 break-words align-top group">
+                    <td
+                      class={cn(
+                        'relative box-border min-w-[326px] w-[326px] max-w-[326px] h-[108px] cursor-pointer break-words align-top border-[0.5px] border-l-0 border-t-0',
+                        getBoundary(cell),
+                      )}
+                    >
                       <div
                         onMouseUp$={handleMouseUp$}
-                        class={cn({
-                          'relative outline outline-1 outline-primary-300':
-                            selectedCellsId.value.some(
-                              (selectedCell) =>
-                                selectedCell.column?.id === cell.column?.id &&
-                                selectedCell.idx === cell.idx,
-                            ),
-                          'bg-primary-100/50':
-                            !dragStartCell.value &&
-                            selectedCellsId.value.length > 1 &&
-                            selectedCellsId.value.some(
-                              (selectedCell) =>
-                                selectedCell.column?.id === cell.column?.id &&
-                                selectedCell.idx === cell.idx,
-                            ),
-                        })}
                         onMouseDown$={() => handleMouseDown$(cell)}
                         onMouseOver$={() => handleMouseOver$(cell)}
                       >

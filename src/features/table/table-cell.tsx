@@ -103,7 +103,7 @@ export const CellContentRenderer = component$<{
     return <pre>{content}</pre>;
   }
 
-  return <p>{content}</p>;
+  return <p class="p-1">{content}</p>;
 });
 
 export const TableCell = component$<{
@@ -362,10 +362,9 @@ export const TableCell = component$<{
 
   return (
     <div
-      class={cn({
+      class={cn('min-h-[100px] h-[100px]', {
         'bg-green-50 border-green-300': cell.validated,
         'border-neutral-300': !cell.validated,
-        'min-h-[100px] h-[100px]': true,
       })}
       onDblClick$={(e) => {
         e.stopPropagation();
@@ -424,7 +423,7 @@ export const TableCell = component$<{
                   <LuThumbsUp class="text-sm" />
                 </Button>
               )}
-              <div class="h-full mt-2 p-4">
+              <div class="h-full p-2">
                 {!contentValue.value && hasBlobContent(cellColumn.value) ? (
                   <div class="flex items-center justify-center h-full">
                     <div class="w-full h-full max-w-[120px] max-h-[80px] bg-gray-200 rounded animate-pulse" />

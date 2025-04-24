@@ -21,11 +21,11 @@ export const SaveDataset = component$(() => {
             .length === 0
         }
       >
-        <Label class="flex items-center gap-2">
+        <Label class="flex items-center">
           <LuDownload class="w-4 h-4" />
         </Label>
       </Popover.Trigger>
-      <Popover.Panel class="w-86 max-h-40 shadow-lg p-0">
+      <Popover.Panel class="w-86 max-h-40 shadow-lg p-1">
         <ExportToHub />
         <hr class="border-t border-slate-200 dark:border-slate-700" />
         <CSVDownload />

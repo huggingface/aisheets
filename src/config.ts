@@ -75,7 +75,6 @@ export const default_embedding_model = {
   embedding_dim: Number(process.env.EMBEDDING_DIM) ?? 1024,
 } as const;
 
-
 const RUNTIME_ENV = join(DATA_DIR, process.env.NODE_ENV ?? 'development');
 
 export const VECTOR_DB_DIR: string = join(RUNTIME_ENV, 'embeddings');

@@ -186,7 +186,7 @@ export const TableBody = component$(() => {
                   document
                     .getElementById(`delete-row-${actualRowIndex}-panel`)
                     ?.showPopover();
-                }, 100);
+                }, 200);
               }}
             >
               <Popover.Root

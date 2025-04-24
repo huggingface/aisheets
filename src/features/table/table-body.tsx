@@ -233,7 +233,7 @@ export const TableBody = component$(() => {
         return;
 
       scrollable.scrollTo({
-        top: scrollable.scrollHeight + rowHeight,
+        top: scrollable.scrollTop + rowHeight * 0.8,
         behavior: 'smooth',
       });
 

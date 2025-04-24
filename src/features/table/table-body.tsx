@@ -224,7 +224,7 @@ export const TableBody = component$(() => {
       dragStartCell.value = undefined;
 
       const selectedCellsHasValue = column.cells.some(
-        (c) => c.idx >= offset && c.idx <= limit + offset,
+        (c) => c.idx >= offset && c.idx <= limit + offset && c.value,
       );
       if (selectedCellsHasValue) return;
 

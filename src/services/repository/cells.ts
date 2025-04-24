@@ -249,7 +249,7 @@ export const getColumnCells = async ({
 
   for (const cellModel of storedCells) {
     const batchIdx = cellModel.idx - (offset || 0);
-    const cell = cells[batchIdx].find(
+    const cell = cells[batchIdx]?.find(
       (c) => c.column?.id === cellModel.columnId,
     );
 

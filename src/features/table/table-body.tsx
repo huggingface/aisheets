@@ -19,11 +19,11 @@ import { nextTick } from '~/components/hooks/tick';
 import { useExecution } from '~/features/add-column';
 import { useGenerateColumn } from '~/features/execution';
 import { TableCell } from '~/features/table/table-cell';
-import { deleteRowsCells, getColumnCells, updateColumn } from '~/services';
+import { deleteRowsCells, getColumnCells } from '~/services';
 import { type Cell, type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
 
 export const TableBody = component$(() => {
-  const { columns, firstColumn, deleteCellByIdx, replaceCell } =
+  const { columns, firstColumn, deleteCellByIdx, replaceCell, updateColumn } =
     useColumnsStore();
   const { onGenerateColumn } = useGenerateColumn();
 
@@ -205,8 +205,6 @@ export const TableBody = component$(() => {
     track(() => firstColumn.value.cells.length);
 
     if (dragStartCell.value || firstColumn.value.process?.isExecuting) return;
-
-    rowCount.value = Math.max(firstColumn.value.cells.length, 8);
   });
 
   const handleMouseDown$ = $((cell: Cell) => {

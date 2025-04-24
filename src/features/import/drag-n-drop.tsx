@@ -95,22 +95,26 @@ export const DragAndDrop = component$(() => {
       >
         <span class="text-neutral-500 font-medium">From real-world data</span>
 
-        <Popover.Root flip={false} floating="right-start" gutter={14}>
+        <Popover.Root flip={false} floating="bottom-start" gutter={14}>
           <Popover.Trigger
             class={cn(
               buttonVariants({ look: 'outline', size: 'sm' }),
               'disabled:text-neutral-300 disabled:cursor-not-allowed',
             )}
           >
-            <LuFilePlus2 class="text-lg" />
+            <LuFilePlus2 class="text-lg mr-2" />
             Drop or click to start with a file
           </Popover.Trigger>
-          <Popover.Panel class="w-86 text-sm shadow-lg p-1">
+          <Popover.Panel class="w-86 text-sm shadow-lg p-2">
             <Link
               href="/dataset/create/from-hub"
-              class="w-full flex items-center justify-start hover:bg-neutral-100 gap-2 p-1"
+              class={cn(
+                'w-full flex items-center justify-between hover:bg-neutral-100 gap-2.5 p-2',
+                buttonVariants({ look: 'ghost' }),
+                'hover:bg-neutral-100',
+              )}
             >
-              <HFLogo class="w-4 h-4 flex-shrink-0" />
+              <HFLogo class="w-[13px] h-[13px] flex-shrink-0" />
               Add from Hugging Face Hub
             </Link>
 
@@ -118,7 +122,7 @@ export const DragAndDrop = component$(() => {
 
             <Button
               look="ghost"
-              class="w-full flex items-center justify-start hover:bg-neutral-100 gap-2 p-1"
+              class="w-full flex items-center justify-start hover:bg-neutral-100 gap-2.5 p-2"
             >
               <GoogleDrive class="w-4 h-4 flex-shrink-0" />
               Add from Google Drive
@@ -128,7 +132,7 @@ export const DragAndDrop = component$(() => {
 
             <Button
               look="ghost"
-              class="w-full flex items-center justify-start hover:bg-neutral-100 gap-2 p-1"
+              class="w-full flex items-center justify-start hover:bg-neutral-100 gap-2.5 p-2"
               onClick$={() => document.getElementById('file-select')?.click()}
             >
               <LuUpload class="w-4 h-4" />

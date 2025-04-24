@@ -7,8 +7,6 @@ import * as arrow from 'apache-arrow';
 import { VECTOR_DB_DIR, default_embedding_model } from '~/config';
 import type { WebSource } from '~/services/websearch/search-sources';
 import { flattenTree, stringifyMarkdownElement } from '../markdown';
-import { isDev } from '@builder.io/qwik';
-
 
 export const configureEmbeddingsIndex = async () => {
   // Check if the database is empty

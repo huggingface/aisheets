@@ -7,7 +7,7 @@ import { Button, Textarea } from '~/components';
 import { SecondLogo } from '~/components/ui/logo/logo';
 
 import { CLIENT_ID, HF_TOKEN, OAUTH_SCOPES } from '~/config';
-import { DragAndDrop } from '~/features/import-from-file/drag-n-drop';
+import { DragAndDrop } from '~/features/import/drag-n-drop';
 import { MainSidebarButton } from '~/features/main-sidebar';
 
 import { saveSession } from '~/services/auth/session';

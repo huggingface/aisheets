@@ -71,8 +71,8 @@ export const DEFAULT_MODEL: string =
  */
 export const default_embedding_model = {
   provider: process.env.EMBEDDING_MODEL_PROVIDER ?? 'hf-inference',
-  model: process.env.EMBEDDING_MODEL ?? 'mixedbread-ai/mxbai-embed-large-v1',
-  embedding_dim: Number(process.env.EMBEDDING_DIM) ?? 1024,
+  model: process.env.EMBEDDING_MODEL ?? 'BAAI/bge-small-en-v1.5',
+  embedding_dim: Number(process.env.EMBEDDING_DIM ?? 384),
 } as const;
 
 const RUNTIME_ENV = join(DATA_DIR, process.env.NODE_ENV ?? 'development');

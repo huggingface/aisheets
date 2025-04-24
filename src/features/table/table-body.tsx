@@ -169,6 +169,8 @@ export const TableBody = component$(() => {
   const handleMouseOver$ = $((cell: Cell) => {
     if (dragStartCell.value) {
       if (dragStartCell.value.column?.id !== cell.column?.id) return;
+      const scrollable = document.querySelector('.scrollable')!;
+
       const isDraggingTheFirstColumn = cell.column?.id === firstColumn.value.id;
 
       const startRowIndex = dragStartCell.value.idx;
@@ -179,15 +181,13 @@ export const TableBody = component$(() => {
       if (end + 1 > firstColumn.value.cells.length && !isDraggingTheFirstColumn)
         return;
 
-      if (end + buffer >= rowCount.value) {
+      scrollable.scrollTo({
+        top: scrollable.scrollHeight + rowHeight,
+        behavior: 'smooth',
+      });
+
+      if (end + buffer >= rowCount.value && isDraggingTheFirstColumn) {
         rowCount.value += 1;
-
-        const scrollable = document.querySelector('.scrollable')!;
-
-        scrollable.scrollTo({
-          top: scrollable.scrollHeight + rowHeight,
-          behavior: 'smooth',
-        });
       }
 
       const selectedCells = [];
@@ -256,14 +256,16 @@ export const TableBody = component$(() => {
     const isColumnSelected = selectedCellsId.value.some(
       (c) => c.column?.id === cell.column?.id && c.idx === cell.idx,
     );
+    const isRowSelected = selectedCellsId.value.some(
+      (c) => c.column?.id === cell.column?.id && cell.idx === rowMin,
+    );
+    const isRowMaxSelected = selectedCellsId.value.some(
+      (c) => c.column?.id === cell.column?.id && cell.idx === rowMax,
+    );
 
     return cn({
-      'border-t-2 border-t-primary-300':
-        selectedCellsId.value.some((c) => c.column?.id === cell.column?.id) &&
-        cell.idx === rowMin,
-      'border-b-2 border-b-primary-300':
-        selectedCellsId.value.some((c) => c.column?.id === cell.column?.id) &&
-        cell.idx === rowMax,
+      'border-t-2 border-t-primary-300': isRowSelected,
+      'border-b-2 border-b-primary-300': isRowMaxSelected,
       'border-l-2 border-l-primary-300': isColumnSelected,
       'border-r-2 border-r-primary-300': isColumnSelected,
       'bg-primary-100/50':
@@ -360,6 +362,7 @@ export const TableBody = component$(() => {
 
                         {latestCellSelected.value?.column?.id ===
                           cell.column?.id &&
+                          latestCellSelected.value.value &&
                           latestCellSelected.value?.idx === cell.idx && (
                             <div class="absolute bottom-1 right-4 w-3 h-3 cursor-crosshair z-10">
                               <Button

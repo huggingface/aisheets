@@ -291,6 +291,7 @@ export const TableBody = component$(() => {
           >
             <td
               class={cn(
+                'sticky left-0 z-[10]',
                 'px-2 text-center border-[0.5px] border-t-0 bg-neutral-100 select-none',
                 {
                   'bg-neutral-300': selectedRows.value.includes(actualRowIndex),

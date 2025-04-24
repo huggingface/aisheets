@@ -63,15 +63,12 @@ export const ExportToHub = component$(() => {
   });
 
   return (
-    <div class="flex flex-col gap-2 md:flex-row md:items-center">
+    <div class="flex flex-col gap-2">
       <Popover.Root gutter={14} flip={false} floating="right-start">
         <Popover.Trigger
-          class={cn(
-            buttonVariants({ look: 'ghost', size: 'md' }),
-            'hover:bg-neutral-100 w-full flex justify-start items-center',
-          )}
+          class={cn('w-full', buttonVariants({ look: 'ghost' }))}
         >
-          <div class="flex items-center justify-start gap-4">
+          <div class="w-full flex items-center justify-start hover:bg-neutral-100 gap-2 p-1">
             <HFLogo class="w-4 h-4 flex-shrink-0" />
             Save to Hugginface Hub
             <LuChevronRight class="w-4 h-4" />

@@ -103,7 +103,7 @@ export const CellContentRenderer = component$<{
     return <pre>{content}</pre>;
   }
 
-  return <p>{content}</p>;
+  return <p class="p-1">{content}</p>;
 });
 
 export const TableCell = component$<{
@@ -287,7 +287,7 @@ export const TableCell = component$<{
     if (
       !newCellValue.value ||
       !isEditableValue(newCellValue.value) ||
-      !(typeof newCellValue.value === 'string')
+      typeof newCellValue.value !== 'string'
     ) {
       modalHeight.value = '320px';
       return;
@@ -361,15 +361,11 @@ export const TableCell = component$<{
   );
 
   return (
-    <td
-      class={cn(
-        'relative min-w-80 w-80 max-w-80 cursor-pointer border-[0.5px] border-l-0 border-t-0 break-words align-top group',
-        {
-          'bg-green-50 border-green-300': cell.validated,
-          'border-neutral-300': !cell.validated,
-          'min-h-[100px] h-[100px]': true,
-        },
-      )}
+    <div
+      class={cn('min-h-[100px] h-[100px]', {
+        'bg-green-50 border-green-300': cell.validated,
+        'border-neutral-300': !cell.validated,
+      })}
       onDblClick$={(e) => {
         e.stopPropagation();
 
@@ -421,13 +417,13 @@ export const TableCell = component$<{
                   )}
                   onClick$={(e) => {
                     e.stopPropagation();
-                    onValidateCell(originalValue.value!, !cell.validated);
+                    onValidateCell(originalValue.value, !cell.validated);
                   }}
                 >
                   <LuThumbsUp class="text-sm" />
                 </Button>
               )}
-              <div class="h-full mt-2 p-4">
+              <div class="h-full p-2">
                 {!contentValue.value && hasBlobContent(cellColumn.value) ? (
                   <div class="flex items-center justify-center h-full">
                     <div class="w-full h-full max-w-[120px] max-h-[80px] bg-gray-200 rounded animate-pulse" />
@@ -503,6 +499,6 @@ export const TableCell = component$<{
           )}
         </div>
       </div>
-    </td>
+    </div>
   );
 });

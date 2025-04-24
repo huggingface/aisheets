@@ -59,35 +59,15 @@ export interface Column {
   numberOfCells?: number;
 }
 
-export const isDirty = (column: Column) => {
+export const isDirty = (column: Column): boolean => {
   if (!column.process) return false;
 
-  if (column.cells.every((c) => c.validated)) return false;
-
-  if (column.cells.some((c) => c.validated)) {
-    const isAnyCellUpdatedAfterProcess = column.cells
-      .filter((c) => c.validated)
-      .some((c) => c.updatedAt > column.process!.updatedAt);
-
-    return isAnyCellUpdatedAfterProcess;
-  }
-
-  return false;
-};
-
-export const canGenerate = (columnId: string, columns: Column[]) => {
-  const refreshedColumn = columns.find((c) => c.id === columnId)!;
-  if (!refreshedColumn) return false;
-  if (!refreshedColumn.process) return false;
-
-  const columnsReferences = refreshedColumn.process!.columnsReferences.map(
-    (id) => columns.find((c) => c.id === id),
+  const { activeDataset } = useDatasetsStore();
+  const columnsReferences = column.process!.columnsReferences.map((id) =>
+    activeDataset.value.columns.find((c: Column) => c.id === id),
   );
 
-  if (
-    !columnsReferences.length &&
-    refreshedColumn.cells.every((c) => !c.validated)
-  ) {
+  if (!columnsReferences.length && column.cells.every((c) => !c.validated)) {
     return true;
   }
 
@@ -260,7 +240,6 @@ export const useColumnsStore = () => {
 
       return firstColumn.value.numberOfCells ?? 0;
     }),
-    canGenerate: $((column: Column) => canGenerate(column.id, columns.value)),
     isDirty: $((column: Column) => isDirty(column)),
     addTemporalColumn: $(async () => {
       if (activeDataset.value.columns.some((c) => c.id === TEMPORAL_ID)) return;

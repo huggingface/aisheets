@@ -6,10 +6,11 @@ import {
   sync$,
   useSignal,
 } from '@builder.io/qwik';
-import { useNavigate } from '@builder.io/qwik-city';
+import { Link, useNavigate } from '@builder.io/qwik-city';
 import { cn } from '@qwik-ui/utils';
-import { LuFilePlus2 } from '@qwikest/icons/lucide';
-import { Button } from '~/components';
+import { LuFilePlus2, LuUpload } from '@qwikest/icons/lucide';
+import { Button, Popover, buttonVariants } from '~/components';
+import { GoogleDrive, HFLogo } from '~/components/ui/logo/logo';
 
 export const DragAndDrop = component$(() => {
   const file = useSignal<NoSerialize<File>>();
@@ -94,13 +95,51 @@ export const DragAndDrop = component$(() => {
       >
         <span class="text-neutral-500 font-medium">From real-world data</span>
 
-        <Button
-          class="flex gap-1 bg-white rounded-lg hover:bg-neutral-100"
-          onClick$={() => document.getElementById('file-select')?.click()}
-        >
-          <LuFilePlus2 class="text-lg" />
-          Drop or click to start with a file
-        </Button>
+        <Popover.Root flip={false} floating="bottom-start" gutter={14}>
+          <Popover.Trigger
+            class={cn(
+              buttonVariants({ look: 'outline', size: 'sm' }),
+              'disabled:text-neutral-300 disabled:cursor-not-allowed',
+            )}
+          >
+            <LuFilePlus2 class="text-lg mr-2" />
+            Drop or click to start with a file
+          </Popover.Trigger>
+          <Popover.Panel class="w-86 text-sm shadow-lg p-2">
+            <Link
+              href="/dataset/create/from-hub"
+              class={cn(
+                'w-full flex items-center justify-between hover:bg-neutral-100 gap-2.5 p-2',
+                buttonVariants({ look: 'ghost' }),
+                'hover:bg-neutral-100',
+              )}
+            >
+              <HFLogo class="w-[13px] h-[13px] flex-shrink-0" />
+              Add from Hugging Face Hub
+            </Link>
+
+            <hr class="border-t border-slate-200 dark:border-slate-700" />
+
+            <Button
+              look="ghost"
+              class="w-full flex items-center justify-start hover:bg-neutral-100 gap-2.5 p-2"
+            >
+              <GoogleDrive class="w-4 h-4 flex-shrink-0" />
+              Add from Google Drive
+            </Button>
+
+            <hr class="border-t border-slate-200 dark:border-slate-700" />
+
+            <Button
+              look="ghost"
+              class="w-full flex items-center justify-start hover:bg-neutral-100 gap-2.5 p-2"
+              onClick$={() => document.getElementById('file-select')?.click()}
+            >
+              <LuUpload class="w-4 h-4" />
+              Upload from computer
+            </Button>
+          </Popover.Panel>
+        </Popover.Root>
 
         {file.value && !uploadErrorMessage.value && (
           <div class="w-fit text-sm text-neutral-50 bg-black opacity-30 rounded-sm p-2 flex items-center justify-between gap-3">

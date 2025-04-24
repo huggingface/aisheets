@@ -38,11 +38,7 @@ export const TableBody = component$(() => {
   const rowCount = useSignal(0);
 
   const handleSelectRow$ = $((idx: number) => {
-    if (selectedRows.value.includes(idx)) {
-      selectedRows.value = selectedRows.value.filter((row) => row !== idx);
-    } else {
-      selectedRows.value = [idx];
-    }
+    selectedRows.value = [idx];
   });
 
   const handleSelectTo$ = $((idx: number) => {
@@ -181,6 +177,8 @@ export const TableBody = component$(() => {
                 if (selectedRows.value.length === 0) {
                   await handleSelectRow$(actualRowIndex);
                 }
+
+                if (!selectedRows.value.includes(actualRowIndex)) return;
 
                 nextTick(() => {
                   document

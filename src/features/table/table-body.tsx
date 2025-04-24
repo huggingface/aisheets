@@ -155,7 +155,7 @@ export const TableBody = component$(() => {
               class={cn(
                 'px-2 text-center border-[0.5px] border-t-0 bg-neutral-100 select-none',
                 {
-                  'bg-neutral-300': selectedRows.value.includes(actualRowIndex),
+                  'bg-neutral-200': selectedRows.value.includes(actualRowIndex),
                 },
               )}
               preventdefault:contextmenu

@@ -319,9 +319,9 @@ export const ExecutionForm = component$<SidebarProps>(
                                   <Select.DisplayValue />
                                 </Select.Trigger>
                                 <Select.Popover class="border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto">
-                                  {models.map((model, idx) => (
+                                  {models.map((model) => (
                                     <Select.Item
-                                      key={idx}
+                                      key={model.id}
                                       class="text-foreground hover:bg-accent"
                                       value={model.id}
                                       onClick$={$(() => {

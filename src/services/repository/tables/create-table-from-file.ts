@@ -76,8 +76,6 @@ export const createDatasetTableFromFile = async (
 
       CREATE TABLE ${tableName} AS (${selectStatement});
 
-      ALTER TABLE ${tableName} ADD PRIMARY KEY (rowIdx);
-      
       SHOW ${tableName};
 
       ${secretDropStatement}

@@ -1,13 +1,11 @@
 import consola from 'consola';
 import { Sequelize } from 'sequelize';
-import { DATA_DIR } from '~/config';
-
-const env = process.env.NODE_ENV || 'development';
+import { SQLITE_DB } from '~/config';
 
 // https://sequelize.org/docs/v6/other-topics/typescript/
 
 export const db = new Sequelize({
-  storage: `${DATA_DIR}/${env}.db`,
+  storage: SQLITE_DB,
   dialect: 'sqlite',
   logging: false,
 });

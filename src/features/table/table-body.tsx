@@ -179,22 +179,27 @@ export const TableBody = component$(() => {
               }}
             >
               <Popover.Root
-                gutter={20}
-                floating="right"
+                gutter={10}
+                floating="top-end"
                 id={`delete-row-${actualRowIndex}`}
               >
                 <Popover.Trigger class="pointer-events-none">
                   {actualRowIndex + 1}
                 </Popover.Trigger>
 
-                <Popover.Panel class="p-1" stoppropagation:click>
+                <Popover.Panel
+                  class="shadow-none p-0 w-fit bg-transparent border-none"
+                  stoppropagation:click
+                >
                   <Button
                     look="ghost"
                     onClick$={() => handleDeleteClick$(actualRowIndex)}
-                    class="w-full hover:bg-neutral-200 hover:border-neutral-500 p-2"
+                    class="w-fit p-1 rounded-md border bg-white"
                   >
-                    <LuTrash class="mr-2" />
-                    Delete
+                    <div class="hover:bg-neutral-100 p-1 rounded-sm flex justify-start items-center">
+                      <LuTrash class="text-neutral mr-1" />
+                      Delete {selectedRows.value.length > 1 ? 'rows' : 'row'}
+                    </div>
                   </Button>
                 </Popover.Panel>
               </Popover.Root>

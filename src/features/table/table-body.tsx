@@ -56,6 +56,9 @@ export const TableBody = component$(() => {
     'scroll',
     $((event) => {
       const target = event.target as HTMLElement;
+
+      if (!target.classList.contains('scrollable')) return;
+
       if (debounceStore.timeout) {
         clearTimeout(debounceStore.timeout);
       }

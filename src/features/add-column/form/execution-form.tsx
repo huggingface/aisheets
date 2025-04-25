@@ -19,11 +19,13 @@ import {
 
 import { Button, Input, Label, Select } from '~/components';
 import { nextTick } from '~/components/hooks/tick';
+
 import {
   TemplateTextArea,
   type Variable,
 } from '~/features/add-column/components/template-textarea';
 import { useExecution } from '~/features/add-column/form/execution';
+import { useServerConfig } from '~/loaders/config';
 import {
   type Column,
   type CreateColumn,
@@ -31,9 +33,6 @@ import {
   useColumnsStore,
 } from '~/state';
 import { type Model, useListModels } from '~/usecases/list-models';
-
-// Define the default model constant
-const DEFAULT_MODEL_ID = 'meta-llama/Llama-3.3-70B-Instruct';
 
 interface SidebarProps {
   column: Column;
@@ -45,6 +44,10 @@ export const ExecutionForm = component$<SidebarProps>(
     const { mode, close } = useExecution();
     const { columns, maxNumberOfRows, removeTemporalColumn, updateColumn } =
       useColumnsStore();
+
+    const serverConfig = useServerConfig();
+
+    const { DEFAULT_MODEL, DEFAULT_MODEL_PROVIDER } = serverConfig.value;
 
     const isOpenModel = useSignal(false);
 
@@ -93,12 +96,13 @@ export const ExecutionForm = component$<SidebarProps>(
       }
       // Otherwise pre-select the default model
       else if (models) {
-        const defaultModel = models.find(
-          (m: Model) => m.id === DEFAULT_MODEL_ID,
-        );
+        const defaultModel = models.find((m: Model) => m.id === DEFAULT_MODEL);
         if (defaultModel) {
           selectedModel.value = defaultModel;
-          selectedProvider.value = defaultModel.providers[0];
+          selectedProvider.value =
+            defaultModel.providers.find(
+              (provider) => provider === DEFAULT_MODEL_PROVIDER,
+            ) || defaultModel.providers[0];
         }
       }
 

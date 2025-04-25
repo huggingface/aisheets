@@ -7,8 +7,6 @@ import * as arrow from 'apache-arrow';
 import { VECTOR_DB_DIR, default_embedding_model } from '~/config';
 import type { WebSource } from '~/services/websearch/search-sources';
 import { flattenTree, stringifyMarkdownElement } from '../markdown';
-import { isDev } from '@builder.io/qwik';
-
 
 export const configureEmbeddingsIndex = async () => {
   // Check if the database is empty
@@ -90,27 +88,54 @@ export const indexDatasetSources = async ({
           const mdElements = flattenTree(source.markdownTree);
           const textChunks = mdElements.map(stringifyMarkdownElement);
 
-          const embeddings = await embedder(textChunks, options);
+          try {
+            const embeddings = await embedder(textChunks, options);
 
-          return textChunks.map((text, index) => {
-            const embedding = embeddings[index];
+            return textChunks
+              .map((text, index) => {
+                const embedding = embeddings[index];
+                if (!embedding) {
+                  console.warn(
+                    `Skipping chunk due to missing embedding for text: ${text.substring(0, 100)}...`,
+                  );
+                  return null;
+                }
 
-            return {
-              text,
-              embedding,
-              source_uri: source.url,
-              dataset_id: dataset.id,
-            };
-          });
+                return {
+                  text,
+                  embedding,
+                  source_uri: source.url,
+                  dataset_id: dataset.id,
+                };
+              })
+              .filter(
+                (
+                  item,
+                ): item is {
+                  text: string;
+                  embedding: number[];
+                  source_uri: string;
+                  dataset_id: string;
+                } => item !== null,
+              );
+          } catch (embeddingError) {
+            console.warn(
+              `Error embedding chunks for source ${source.url}:`,
+              embeddingError,
+            );
+            return [];
+          }
         } catch (error) {
-          console.error('Error embedding source:', error);
+          console.warn(`Error processing source ${source.url}:`, error);
           return [];
         }
       }),
     )
   ).flat();
 
-  await embeddingsIndex.add(indexData);
+  if (indexData.length > 0) {
+    await embeddingsIndex.add(indexData);
+  }
 
   return indexData.length;
 };

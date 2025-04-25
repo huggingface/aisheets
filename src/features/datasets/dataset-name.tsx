@@ -73,7 +73,7 @@ export const DatasetName = component$(() => {
   });
 
   return (
-    <div class="flex items-center w-fit">
+    <div class="w-fit">
       {state.isEditing ? (
         <Input
           ref={inputRef}
@@ -88,7 +88,7 @@ export const DatasetName = component$(() => {
         />
       ) : (
         <h1
-          class="text-md font-bold truncate leading-none"
+          class="text-md font-bold truncate leading-none h-5 mt-1"
           onClick$={handleEditClick}
         >
           {state.displayName}

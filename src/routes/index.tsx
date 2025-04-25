@@ -207,9 +207,9 @@ export default component$(() => {
                   <Button
                     look="secondary"
                     class={cn(
-                      'flex px-[10px] py-[8px] gap-[10px] bg-white hover:bg-neutral-100 h-[30px] rounded-[8px]',
+                      'flex px-[10px] py-[8px] gap-[10px] bg-white text-neutral-600 hover:bg-neutral-100 h-[30px] rounded-[8px]',
                       {
-                        'border-primary-100 outline-primary-100 bg-primary-50':
+                        'border-primary-100 outline-primary-100 bg-primary-50 hover:bg-primary-50 text-primary-500 hover:text-primary-400':
                           searchOnWeb.value,
                       },
                     )}
@@ -223,10 +223,11 @@ export default component$(() => {
 
                   <Button
                     look="primary"
+                    class="w-[30px] h-[30px] rounded-full flex items-center justify-center p-0"
                     onClick$={handleAssistant}
                     disabled={isLoading.value || !prompt.value.trim()}
                   >
-                    <LuEgg class="text-2xl" />
+                    <LuEgg class="text-lg" />
                   </Button>
                 </div>
               </div>

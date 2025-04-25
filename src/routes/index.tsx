@@ -13,6 +13,7 @@ import { MainSidebarButton } from '~/features/main-sidebar';
 
 import { saveSession } from '~/services/auth/session';
 import { ActiveDatasetProvider } from '~/state';
+import { populateDataset } from '~/usecases/populate-dataset';
 import { runAutoDataset } from '~/usecases/run-autodataset';
 
 export const onGet = async ({
@@ -100,6 +101,11 @@ const runAutoDatasetAction = server$(async function (
   });
 });
 
+// Server action to populate the dataset
+const populateDatasetAction = server$(async function (datasetId: string) {
+  return await populateDataset.call(this, datasetId);
+});
+
 export default component$(() => {
   const nav = useNavigate();
   const searchOnWeb = useSignal(false);
@@ -138,6 +144,8 @@ export default component$(() => {
       if (typeof result === 'string') {
         response.text = result;
       } else if ('dataset' in result && result.dataset) {
+        currentStep.value = 'Generating dataset content';
+        await populateDatasetAction(result.dataset);
         currentStep.value = 'Redirecting to dataset';
         await nav(`/dataset/${result.dataset}/`);
         return;

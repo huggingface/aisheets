@@ -4,7 +4,7 @@ import { cn } from '@qwik-ui/utils';
 import { LuEgg, LuGlobe } from '@qwikest/icons/lucide';
 import { Button, Textarea } from '~/components';
 import { SecondLogo } from '~/components/ui/logo/logo';
-import { DragAndDrop } from '~/features/import-from-file/drag-n-drop';
+import { DragAndDrop } from '~/features/import/drag-n-drop';
 import { MainSidebarButton } from '~/features/main-sidebar';
 import { ActiveDatasetProvider } from '~/state';
 import { runAutoDataset } from '~/usecases/run-autodataset';

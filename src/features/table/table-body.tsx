@@ -293,7 +293,7 @@ export const TableBody = component$(() => {
         return (
           <tr
             key={actualRowIndex}
-            class={cn('hover:bg-gray-50/50 transition-colors', {
+            class={cn('hover:bg-gray-50/50 transition-colors group', {
               'bg-gray-50/50 hover:bg-gray-50/50':
                 selectedRows.value.includes(actualRowIndex),
             })}

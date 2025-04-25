@@ -70,8 +70,6 @@ export const useListModels = server$(async function (
       ...MODEL_EXPANDABLE_KEYS.map((key) => ['expand', key]),
     ]).toString();
 
-    consola.log(params);
-
     const response = await fetch(`${url}?${params}`, {
       method: 'GET',
       headers: {

@@ -9,13 +9,17 @@ import { generateCells } from './generate-cells';
 export const populateDataset = async function (
   this: RequestEventBase<QwikCityPlatform>,
   datasetId: string,
+  datasetName: string,
 ): Promise<void> {
   // Get the session directly from the request context
   const session = useServerSession(this);
 
   try {
     // Get the full column objects with processes
-    const columns = await getDatasetColumns({ id: datasetId });
+    const columns = await getDatasetColumns({
+      id: datasetId,
+      name: datasetName,
+    });
 
     // Generate cells for each column synchronously
     for (const column of columns) {

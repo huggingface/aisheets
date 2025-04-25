@@ -102,8 +102,11 @@ const runAutoDatasetAction = server$(async function (
 });
 
 // Server action to populate the dataset
-const populateDatasetAction = server$(async function (datasetId: string) {
-  return await populateDataset.call(this, datasetId);
+const populateDatasetAction = server$(async function (
+  datasetId: string,
+  datasetName: string,
+) {
+  return await populateDataset.call(this, datasetId, datasetName);
 });
 
 export default component$(() => {
@@ -130,8 +133,8 @@ export default component$(() => {
 
     isLoading.value = true;
     currentStep.value = searchOnWeb.value
-      ? 'Creating dataset, searching web sources, visiting URLs'
-      : 'Creating dataset';
+      ? 'Configuring dataset, searching web sources, visiting URLs'
+      : 'Configuring dataset';
     response.text = undefined;
     response.error = undefined;
 
@@ -144,8 +147,8 @@ export default component$(() => {
       if (typeof result === 'string') {
         response.text = result;
       } else if ('dataset' in result && result.dataset) {
-        currentStep.value = 'Generating dataset content';
-        await populateDatasetAction(result.dataset);
+        currentStep.value = `Populating dataset "${result.datasetName}"`;
+        await populateDatasetAction(result.dataset, result.datasetName);
         currentStep.value = 'Redirecting to dataset';
         await nav(`/dataset/${result.dataset}/`);
         return;

@@ -394,6 +394,7 @@ export const runAutoDataset = async function (
       columns: Array<{ name: string; prompt: string }>;
       queries: string[];
       dataset: string;
+      datasetName: string;
       createdColumns: Array<{ name: string; prompt: string }>;
     }
 > {
@@ -451,7 +452,13 @@ export const runAutoDataset = async function (
     );
 
     // Return the columns, queries, and dataset
-    return { columns, queries, dataset: dataset.id, createdColumns };
+    return {
+      columns,
+      queries,
+      dataset: dataset.id,
+      datasetName,
+      createdColumns,
+    };
   } catch (error) {
     console.error('❌ [Assistant] Error in assistant execution:', error);
     return error instanceof Error ? error.message : String(error);

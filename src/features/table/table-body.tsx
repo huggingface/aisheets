@@ -35,6 +35,7 @@ export const TableBody = component$(() => {
   const isLoading = useSignal(false);
 
   const scrollTop = useSignal(0);
+
   const startIndex = useSignal(0);
   const endIndex = useSignal(0);
 
@@ -176,7 +177,7 @@ export const TableBody = component$(() => {
     }
 
     endIndex.value = Math.min(
-      startIndex.value + visibleRowCount + 1,
+      startIndex.value + visibleRowCount,
       rowCount.value,
     );
   });
@@ -215,36 +216,38 @@ export const TableBody = component$(() => {
     dragStartCell.value = cell;
   });
 
-  const handleMouseOver$ = $((cell: Cell) => {
-    if (dragStartCell.value) {
-      if (dragStartCell.value.column?.id !== cell.column?.id) return;
-      const scrollable = document.querySelector('.scrollable')!;
+  const handleMouseOver$ = $((cell: Cell, event: MouseEvent) => {
+    if (!dragStartCell.value) return;
 
-      const isDraggingTheFirstColumn = cell.column?.id === firstColumn.value.id;
+    if (dragStartCell.value.column?.id !== cell.column?.id) return;
+    const scrollable = document.querySelector('.scrollable')!;
 
-      const startRowIndex = dragStartCell.value.idx;
-      const endRowIndex = cell.idx;
-      const start = Math.min(startRowIndex, endRowIndex);
-      const end = Math.max(startRowIndex, endRowIndex);
+    const isDraggingTheFirstColumn = cell.column?.id === firstColumn.value.id;
 
-      if (end + 1 > firstColumn.value.cells.length && !isDraggingTheFirstColumn)
-        return;
+    const startRowIndex = dragStartCell.value.idx;
+    const endRowIndex = cell.idx;
+    const start = Math.min(startRowIndex, endRowIndex);
+    const end = Math.max(startRowIndex, endRowIndex);
 
+    if (end + 1 > firstColumn.value.cells.length && !isDraggingTheFirstColumn) {
+      return;
+    }
+
+    if (event.pageY > window.innerHeight * 0.8) {
       scrollable.scrollTo({
         top: scrollable.scrollTop + rowHeight * 0.5,
         behavior: 'smooth',
       });
-
-      const selectedCells = [];
-
-      for (let i = start; i <= end; i++) {
-        selectedCells.push(
-          data.value[i].find((c) => c.column?.id === cell.column?.id),
-        );
-      }
-
-      selectedCellsId.value = selectedCells.filter((c) => c) as Cell[];
     }
+
+    const selectedCells = [];
+    for (let i = start; i <= end; i++) {
+      selectedCells.push(
+        data.value[i].find((c) => c.column?.id === cell.column?.id),
+      );
+    }
+
+    selectedCellsId.value = selectedCells.filter((c) => c) as Cell[];
   });
 
   const handleMouseUp$ = $(async () => {
@@ -411,7 +414,7 @@ export const TableBody = component$(() => {
                       <div
                         onMouseUp$={handleMouseUp$}
                         onMouseDown$={() => handleMouseDown$(cell)}
-                        onMouseOver$={() => handleMouseOver$(cell)}
+                        onMouseOver$={(event) => handleMouseOver$(cell, event)}
                       >
                         <TableCell cell={cell} />
 

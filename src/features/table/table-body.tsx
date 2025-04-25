@@ -213,8 +213,6 @@ export const TableBody = component$(() => {
 
   const handleMouseDragging$ = $((cell: Cell) => {
     dragStartCell.value = cell;
-
-    selectedCellsId.value = [cell];
   });
 
   const handleMouseOver$ = $((cell: Cell) => {

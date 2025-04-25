@@ -30,7 +30,7 @@ export const TableBody = component$(() => {
   const selectedRows = useSignal<number[]>([]);
 
   const tableBody = useSignal<HTMLElement>();
-  const rowHeight = 150;
+  const rowHeight = 100;
   const visibleRowCount = 10;
   const isLoading = useSignal(false);
 
@@ -233,7 +233,7 @@ export const TableBody = component$(() => {
         return;
 
       scrollable.scrollTo({
-        top: scrollable.scrollTop + rowHeight * 0.8,
+        top: scrollable.scrollTop + rowHeight * 0.5,
         behavior: 'smooth',
       });
 

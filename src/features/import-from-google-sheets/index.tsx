@@ -2,11 +2,11 @@ import { $, component$, useComputed$, useSignal } from '@builder.io/qwik';
 import { useNavigate } from '@builder.io/qwik-city';
 import { LuChevronRightSquare, LuExternalLink } from '@qwikest/icons/lucide';
 import { Button, Label } from '~/components';
-import { userServerConfig } from '~/loaders';
+import { useServerConfig } from '~/loaders';
 import { useImportFromURL } from '~/usecases/import-from-url.usecase';
 
 export const ImportFromGoogleSheets = component$(() => {
-  const config = userServerConfig();
+  const config = useServerConfig();
   const nav = useNavigate();
 
   const url = useSignal('');

@@ -123,6 +123,9 @@ export const DragAndDrop = component$(() => {
             <Button
               look="ghost"
               class="w-full flex items-center justify-start hover:bg-neutral-100 gap-2.5 p-2"
+              onClick$={() => {
+                navigate('/home/dataset/create/from-google-drive');
+              }}
             >
               <GoogleDrive class="w-4 h-4 flex-shrink-0" />
               Add from Google Drive

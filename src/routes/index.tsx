@@ -5,6 +5,7 @@ import { cn } from '@qwik-ui/utils';
 import { LuEgg, LuGlobe } from '@qwikest/icons/lucide';
 import { Button, Textarea } from '~/components';
 import { SecondLogo } from '~/components/ui/logo/logo';
+import { Skeleton } from '~/components/ui/skeleton/skeleton';
 
 import { CLIENT_ID, HF_TOKEN, OAUTH_SCOPES } from '~/config';
 import { DragAndDrop } from '~/features/import/drag-n-drop';
@@ -12,6 +13,7 @@ import { MainSidebarButton } from '~/features/main-sidebar';
 
 import { saveSession } from '~/services/auth/session';
 import { ActiveDatasetProvider } from '~/state';
+import { populateDataset } from '~/usecases/populate-dataset';
 import { runAutoDataset } from '~/usecases/run-autodataset';
 
 export const onGet = async ({
@@ -99,10 +101,19 @@ const runAutoDatasetAction = server$(async function (
   });
 });
 
+// Server action to populate the dataset
+const populateDatasetAction = server$(async function (
+  datasetId: string,
+  datasetName: string,
+) {
+  return await populateDataset.call(this, datasetId, datasetName);
+});
+
 export default component$(() => {
   const nav = useNavigate();
   const searchOnWeb = useSignal(false);
   const prompt = useSignal('');
+  const currentStep = useSignal('');
   const startingPrompts = [
     'Summaries of popular Motown songs by artist, including lyrics',
     'Top list of recent climate-related disaster with a description of the event and location',
@@ -121,6 +132,9 @@ export default component$(() => {
     }
 
     isLoading.value = true;
+    currentStep.value = searchOnWeb.value
+      ? 'Configuring dataset, searching web sources, visiting URLs'
+      : 'Configuring dataset';
     response.text = undefined;
     response.error = undefined;
 
@@ -133,7 +147,9 @@ export default component$(() => {
       if (typeof result === 'string') {
         response.text = result;
       } else if ('dataset' in result && result.dataset) {
-        // Navigate to the dataset page
+        currentStep.value = `Populating dataset "${result.datasetName}"`;
+        await populateDatasetAction(result.dataset, result.datasetName);
+        currentStep.value = 'Redirecting to dataset';
         await nav(`/dataset/${result.dataset}/`);
         return;
       }
@@ -142,6 +158,7 @@ export default component$(() => {
       response.error = error instanceof Error ? error.message : String(error);
     } finally {
       isLoading.value = false;
+      currentStep.value = '';
     }
   });
 
@@ -160,6 +177,12 @@ export default component$(() => {
               class="relative w-[700px]"
               onClick$={() => document.getElementById('prompt')?.focus()}
             >
+              {isLoading.value && currentStep.value && (
+                <div class="px-4 text-sm text-neutral-600 mb-2 flex items-center gap-2">
+                  <Skeleton />
+                  <span>{currentStep.value}</span>
+                </div>
+              )}
               <div class="w-full bg-white border border-secondary-foreground rounded-xl pb-14 shadow-[0px_4px_6px_rgba(0,0,0,0.1)]">
                 <Textarea
                   id="prompt"

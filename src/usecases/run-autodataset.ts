@@ -394,6 +394,7 @@ export const runAutoDataset = async function (
       columns: Array<{ name: string; prompt: string }>;
       queries: string[];
       dataset: string;
+      datasetName: string;
       createdColumns: Array<{ name: string; prompt: string }>;
     }
 > {
@@ -402,19 +403,19 @@ export const runAutoDataset = async function (
 
   // Use the model name from config if none is specified
   const modelName = params.modelName || DEFAULT_MODEL;
-
-  // Use the model provider directly from config
   const modelProvider = params.modelProvider || DEFAULT_MODEL_PROVIDER;
 
-  // Prepare the prompt
-  const promptText = params.searchEnabled
-    ? SEARCH_PROMPT_TEMPLATE.replace(
-        '{instruction}',
-        params.instruction,
-      ).replace('{maxSearchQueries}', params.maxSearchQueries?.toString() || '')
-    : NO_SEARCH_PROMPT_TEMPLATE.replace('{instruction}', params.instruction);
-
   try {
+    const promptText = params.searchEnabled
+      ? SEARCH_PROMPT_TEMPLATE.replace(
+          '{instruction}',
+          params.instruction,
+        ).replace(
+          '{maxSearchQueries}',
+          params.maxSearchQueries?.toString() || '',
+        )
+      : NO_SEARCH_PROMPT_TEMPLATE.replace('{instruction}', params.instruction);
+
     const response = await chatCompletion(
       {
         model: modelName,
@@ -451,7 +452,13 @@ export const runAutoDataset = async function (
     );
 
     // Return the columns, queries, and dataset
-    return { columns, queries, dataset: dataset.id, createdColumns };
+    return {
+      columns,
+      queries,
+      dataset: dataset.id,
+      datasetName,
+      createdColumns,
+    };
   } catch (error) {
     console.error('❌ [Assistant] Error in assistant execution:', error);
     return error instanceof Error ? error.message : String(error);

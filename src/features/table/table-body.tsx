@@ -27,18 +27,62 @@ export const TableBody = component$(() => {
     useColumnsStore();
   const { onGenerateColumn } = useGenerateColumn();
   const selectedRows = useSignal<number[]>([]);
+  const visibleColumns = useComputed$(() =>
+    columns.value.filter((c) => c.visible),
+  );
 
   const tableBody = useSignal<HTMLElement>();
-  const rowHeight = 100;
+  const rowHeight = 108;
   const visibleRowCount = 10;
   const buffer = 2;
 
   const scrollTop = useSignal(0);
   const startIndex = useSignal(0);
   const endIndex = useSignal(0);
-
-  const data = useSignal<Cell[][]>([]);
   const rowCount = useSignal(0);
+  const dragStartCell = useSignal<Cell>();
+
+  useTask$(({ track }) => {
+    track(() => firstColumn.value.cells.length);
+
+    if (dragStartCell.value || firstColumn.value.process?.isExecuting) return;
+
+    rowCount.value = Math.max(firstColumn.value.cells.length, 8);
+  });
+
+  const data = useComputed$(() => {
+    const getCell = (column: Column, rowIndex: number): Cell => {
+      const cell = column.cells[rowIndex];
+
+      if (!cell) {
+        // Temporal cell for skeleton
+        return {
+          id: undefined,
+          value: '',
+          error: '',
+          validated: false,
+          column: {
+            id: column.id,
+          },
+          updatedAt: new Date(),
+          generating: false,
+          idx: rowIndex,
+        };
+      }
+
+      return cell;
+    };
+
+    return Array.from({ length: rowCount.value }, (_, rowIndex) =>
+      Array.from({ length: visibleColumns.value.length }, (_, colIndex) =>
+        getCell(visibleColumns.value[colIndex], rowIndex),
+      ),
+    );
+  });
+
+  const paginated = useComputed$(() =>
+    data.value.slice(startIndex.value, endIndex.value),
+  );
 
   const handleSelectRow$ = $((idx: number) => {
     selectedRows.value = [idx];
@@ -105,40 +149,6 @@ export const TableBody = component$(() => {
     );
   });
 
-  useTask$(({ track }) => {
-    track(columns);
-    track(rowCount);
-
-    const getCell = (column: Column, rowIndex: number): Cell => {
-      const cell = column.cells[rowIndex];
-
-      if (!cell) {
-        // Temporal cell for skeleton
-        return {
-          id: undefined,
-          value: '',
-          error: '',
-          validated: false,
-          column: {
-            id: column.id,
-          },
-          updatedAt: new Date(),
-          generating: false,
-          idx: rowIndex,
-        };
-      }
-
-      return cell;
-    };
-
-    const visibleColumns = columns.value.filter((c) => c.visible);
-    data.value = Array.from({ length: rowCount.value }, (_, rowIndex) =>
-      Array.from({ length: visibleColumns.length }, (_, colIndex) =>
-        getCell(visibleColumns[colIndex], rowIndex),
-      ),
-    );
-  });
-
   const topSpacerHeight = useComputed$(() => startIndex.value * rowHeight);
   const bottomSpacerHeight = useComputed$(() =>
     Math.max(0, (rowCount.value - endIndex.value) * rowHeight),
@@ -148,16 +158,6 @@ export const TableBody = component$(() => {
 
   const latestCellSelected = useComputed$(() => {
     return selectedCellsId.value[selectedCellsId.value.length - 1];
-  });
-
-  const dragStartCell = useSignal<Cell>();
-
-  useTask$(({ track }) => {
-    track(() => firstColumn.value.cells.length);
-
-    if (dragStartCell.value || firstColumn.value.process?.isExecuting) return;
-
-    rowCount.value = Math.max(firstColumn.value.cells.length, 8);
   });
 
   const handleMouseDown$ = $((cell: Cell) => {
@@ -182,13 +182,13 @@ export const TableBody = component$(() => {
       const start = Math.min(startRowIndex, endRowIndex);
       const end = Math.max(startRowIndex, endRowIndex);
 
-      if (end + 1 > firstColumn.value.cells.length && !isDraggingTheFirstColumn)
-        return;
-
       scrollable.scrollTo({
         top: scrollable.scrollHeight + rowHeight,
         behavior: 'smooth',
       });
+
+      if (end + 1 > firstColumn.value.cells.length && !isDraggingTheFirstColumn)
+        return;
 
       if (end + buffer >= rowCount.value && isDraggingTheFirstColumn) {
         rowCount.value += 1;
@@ -288,7 +288,7 @@ export const TableBody = component$(() => {
         </tr>
       )}
 
-      {data.value.slice(startIndex.value, endIndex.value).map((rows, i) => {
+      {paginated.value.map((rows, i) => {
         const actualRowIndex = startIndex.value + i;
         return (
           <tr

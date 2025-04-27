@@ -118,10 +118,10 @@ export const TableBody = component$(() => {
     selectedCellsId.value = [cell];
   });
 
+  const lastMove = useSignal(0);
   const handleMouseOver$ = $((cell: Cell) => {
     if (dragStartCell.value) {
       if (dragStartCell.value.column?.id !== cell.column?.id) return;
-      const scrollable = document.querySelector('.scrollable')!;
 
       const isDraggingTheFirstColumn = cell.column?.id === firstColumn.value.id;
 
@@ -130,16 +130,11 @@ export const TableBody = component$(() => {
       const start = Math.min(startRowIndex, endRowIndex);
       const end = Math.max(startRowIndex, endRowIndex);
 
-      scrollable.scrollTo({
-        top: scrollable.scrollHeight + rowHeight,
-        behavior: 'smooth',
-      });
-
       if (end + 1 > firstColumn.value.cells.length && !isDraggingTheFirstColumn)
         return;
 
       if (end >= rowCount.value - 1 && isDraggingTheFirstColumn) {
-        rowCount.value += 1;
+        rowCount.value += 20;
       }
 
       const selectedCells = [];
@@ -313,6 +308,20 @@ export const TableBody = component$(() => {
                         onMouseUp$={handleMouseUp$}
                         onMouseDown$={() => handleMouseDown$(cell)}
                         onMouseOver$={() => handleMouseOver$(cell)}
+                        onMouseMove$={(e) => {
+                          if (!dragStartCell.value) return;
+                          const currentY = e.clientY;
+                          const scrollable =
+                            document.querySelector('.scrollable')!;
+
+                          if (currentY > lastMove.value) {
+                            scrollable.scrollBy(0, 30);
+                          } else if (currentY < lastMove.value) {
+                            scrollable.scrollBy(0, -30);
+                          }
+
+                          lastMove.value = currentY;
+                        }}
                       >
                         <TableCell cell={cell} />
 

@@ -115,8 +115,8 @@ export default component$(() => {
   const prompt = useSignal('');
   const currentStep = useSignal('');
   const startingPrompts = [
-    'Summaries of popular Motown songs by artist, including lyrics',
-    'Top list of recent climate-related disaster with a description of the event and location',
+    'Motown songs by artist with lyrics, release date, and label',
+    'Recent climate-related disasters with description and location',
   ];
 
   const isLoading = useSignal(false);
@@ -188,7 +188,7 @@ export default component$(() => {
                   id="prompt"
                   look="ghost"
                   value={prompt.value}
-                  placeholder="Create customer claims. Categorize them as formal, humorous, neutral, or injurious, and respond to each in a neutral tone."
+                  placeholder="Create a dataset about recent open source news"
                   class="p-4 max-h-40 resize-none overflow-auto text-base placeholder:text-neutral-400"
                   onInput$={(e, el) => {
                     prompt.value = el.value;

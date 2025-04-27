@@ -234,7 +234,7 @@ export const TableCell = component$<{
     });
   });
 
-  useTask$(({ track }) => {
+  useVisibleTask$(({ track }) => {
     track(isEditing);
     track(() => cell.value);
     const scrollable = document.querySelector('.scrollable');
@@ -281,7 +281,7 @@ export const TableCell = component$<{
     }
   });
 
-  useTask$(({ track }) => {
+  useVisibleTask$(({ track }) => {
     track(() => newCellValue.value);
 
     if (

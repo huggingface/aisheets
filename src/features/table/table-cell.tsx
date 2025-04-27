@@ -103,7 +103,7 @@ export const CellContentRenderer = component$<{
     return <pre>{content}</pre>;
   }
 
-  return <p class="p-1">{content}</p>;
+  return <p>{content}</p>;
 });
 
 export const TableCell = component$<{
@@ -423,7 +423,7 @@ export const TableCell = component$<{
                   <LuThumbsUp class="text-sm" />
                 </Button>
               )}
-              <div class="h-full p-2">
+              <div class="h-full mt-2 p-4">
                 {!contentValue.value && hasBlobContent(cellColumn.value) ? (
                   <div class="flex items-center justify-center h-full">
                     <div class="w-full h-full max-w-[120px] max-h-[80px] bg-gray-200 rounded animate-pulse" />

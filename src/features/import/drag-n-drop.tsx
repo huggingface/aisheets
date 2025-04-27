@@ -22,33 +22,27 @@ export const DragAndDrop = component$(() => {
   const handleUploadFile$ = $(async () => {
     if (!file.value) return;
 
-    const stream = file.value.stream();
-    const reader = stream.getReader();
+    const value = await file.value.arrayBuffer();
     const fileName = `${file.value.name}`;
 
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
+    const response = await fetch('/api/upload', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/octet-stream',
+        'X-Chunk-Size': value.byteLength.toString(),
+        'X-File-Name': encodeURIComponent(fileName),
+      },
+      body: value,
+    });
 
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/octet-stream',
-          'X-Chunk-Size': value.byteLength.toString(),
-          'X-File-Name': encodeURIComponent(fileName),
-        },
-        body: value,
-      });
-
-      if (!response.ok) {
-        uploadErrorMessage.value =
-          'Failed to upload file. Please try again or provide another file.';
-        return;
-      }
-
-      const { id } = await response.json();
-      navigate('/dataset/' + id);
+    if (!response.ok) {
+      uploadErrorMessage.value =
+        'Failed to upload file. Please try again or provide another file.';
+      return;
     }
+
+    const { id } = await response.json();
+    navigate('/dataset/' + id);
   });
 
   return (

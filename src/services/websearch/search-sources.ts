@@ -129,7 +129,7 @@ const searchQueriesToSources = async (
   }
 
   return {
-    sources: Array.from(sourcesMap.values()), //.slice(0, 5),
+    sources: Array.from(sourcesMap.values()).slice(0, 5),
     errors,
   };
 };

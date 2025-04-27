@@ -88,43 +88,45 @@ export const indexDatasetSources = async ({
           const mdElements = flattenTree(source.markdownTree);
           const textChunks = mdElements.map(stringifyMarkdownElement);
 
-          try {
-            const embeddings = await embedder(textChunks, options);
+          // Process chunks in batches of 8
+          const BATCH_SIZE = 8;
+          const sourceData: Array<{
+            text: string;
+            embedding: number[];
+            source_uri: string;
+            dataset_id: string;
+          }> = [];
 
-            return textChunks
-              .map((text, index) => {
+          for (let i = 0; i < textChunks.length; i += BATCH_SIZE) {
+            const batch = textChunks.slice(i, i + BATCH_SIZE);
+            try {
+              const embeddings = await embedder(batch, options);
+
+              batch.forEach((text, index) => {
                 const embedding = embeddings[index];
                 if (!embedding) {
                   console.warn(
-                    `Skipping chunk due to missing embedding for text: ${text.substring(0, 100)}...`,
+                    `Skipping chunk due to missing embedding for text:\n${text}\n---END OF SKIPPED TEXT---`,
                   );
-                  return null;
+                  return;
                 }
 
-                return {
+                sourceData.push({
                   text,
                   embedding,
                   source_uri: source.url,
                   dataset_id: dataset.id,
-                };
-              })
-              .filter(
-                (
-                  item,
-                ): item is {
-                  text: string;
-                  embedding: number[];
-                  source_uri: string;
-                  dataset_id: string;
-                } => item !== null,
+                });
+              });
+            } catch (embeddingError) {
+              console.warn(
+                `Error embedding batch for source ${source.url}:`,
+                embeddingError,
               );
-          } catch (embeddingError) {
-            console.warn(
-              `Error embedding chunks for source ${source.url}:`,
-              embeddingError,
-            );
-            return [];
+            }
           }
+
+          return sourceData;
         } catch (error) {
           console.warn(`Error processing source ${source.url}:`, error);
           return [];

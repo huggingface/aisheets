@@ -44,16 +44,26 @@ export const deleteIndex = async () => {
   await db.dropTable(embeddingsIndex.name);
 };
 
+const getDetailedInstruct = (query: string): string => {
+  return `Instruct: Given a web search query, retrieve relevant passages that answer the query\nQuery: ${query}`;
+};
+
 export const embedder = async (
   texts: string[],
   options: {
     accessToken: string;
+    isQuery?: boolean;
   },
 ): Promise<number[][]> => {
   if (texts.length === 0) return [];
 
+  const processedTexts =
+    options.isQuery && default_embedding_model.is_instruct
+      ? texts.map(getDetailedInstruct)
+      : texts;
+
   const results = await featureExtraction({
-    inputs: texts,
+    inputs: processedTexts,
     accessToken: options.accessToken,
     model: default_embedding_model.model,
     provider: default_embedding_model.provider as InferenceProvider,
@@ -63,7 +73,7 @@ export const embedder = async (
     throw new Error('Invalid response from Hugging Face API');
   }
 
-  return results as number[][]; // TODO: How to control the type of this?
+  return results as number[][];
 };
 
 export const indexDatasetSources = async ({
@@ -173,7 +183,7 @@ export const queryDatasetSources = async ({
   }
 
   try {
-    const embeddings = await embedder([query], options);
+    const embeddings = await embedder([query], { ...options, isQuery: true });
 
     const results = await embeddingsIndex
       .search(embeddings[0], 'vector')

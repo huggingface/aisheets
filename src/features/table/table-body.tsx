@@ -39,6 +39,8 @@ export const TableBody = component$(() => {
   const startIndex = useSignal(0);
   const endIndex = useSignal(0);
 
+  const mouseClicking = useSignal(false);
+
   const data = useSignal<Cell[][]>([]);
   const rowCount = useSignal(1000);
 
@@ -209,7 +211,9 @@ export const TableBody = component$(() => {
   });
 
   const handleMouseDown$ = $((cell: Cell) => {
+    mouseClicking.value = true;
     selectedCellsId.value = [cell];
+    dragStartCell.value = cell;
   });
 
   const handleMouseDragging$ = $((cell: Cell) => {
@@ -218,6 +222,7 @@ export const TableBody = component$(() => {
 
   const handleMouseOver$ = $((cell: Cell, event: MouseEvent) => {
     if (!dragStartCell.value) return;
+    if (!mouseClicking.value) return;
 
     if (dragStartCell.value.column?.id !== cell.column?.id) return;
     const scrollable = document.querySelector('.scrollable')!;
@@ -251,45 +256,47 @@ export const TableBody = component$(() => {
   });
 
   const handleMouseUp$ = $(async () => {
-    if (dragStartCell.value) {
-      const column = columns.value.find(
-        (column) => column.id === dragStartCell.value?.column?.id,
-      );
-      if (!column) return;
-      if (!dragStartCell.value.value) return;
+    if (!mouseClicking.value) return;
+    if (!dragStartCell.value) return;
 
-      let offset = 0;
-      for (const cell of selectedCellsId.value) {
-        offset = cell.idx;
+    mouseClicking.value = false;
+    const column = columns.value.find(
+      (column) => column.id === dragStartCell.value?.column?.id,
+    );
+    if (!column) return;
+    if (!dragStartCell.value.value) return;
 
-        if (!cell.value) {
-          break;
-        }
+    let offset = 0;
+    for (const cell of selectedCellsId.value) {
+      offset = cell.idx;
+
+      if (!cell.value) {
+        break;
       }
-
-      const limit = latestCellSelected.value?.idx - offset + 1;
-
-      dragStartCell.value = undefined;
-
-      const selectedCellsHasValue = column.cells.some(
-        (c) => c.idx >= offset && c.idx <= limit + offset && c.value,
-      );
-      if (selectedCellsHasValue) return;
-
-      column.process!.cancellable = noSerialize(new AbortController());
-      column.process!.isExecuting = true;
-
-      updateColumn(column);
-
-      await onGenerateColumn({
-        ...column,
-        process: {
-          ...column.process!,
-          offset,
-          limit,
-        },
-      });
     }
+
+    const limit = latestCellSelected.value?.idx - offset + 1;
+
+    dragStartCell.value = undefined;
+
+    const selectedCellsHasValue = column.cells.some(
+      (c) => c.idx >= offset && c.idx <= limit + offset && c.value,
+    );
+    if (selectedCellsHasValue) return;
+
+    column.process!.cancellable = noSerialize(new AbortController());
+    column.process!.isExecuting = true;
+
+    updateColumn(column);
+
+    await onGenerateColumn({
+      ...column,
+      process: {
+        ...column.process!,
+        offset,
+        limit,
+      },
+    });
   });
 
   const getBoundary = (cell: Cell) => {

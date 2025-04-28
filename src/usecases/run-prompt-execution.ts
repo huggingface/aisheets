@@ -30,17 +30,28 @@ export interface PromptExecutionResponse {
 
 const MAX_CONCURRENCY = Math.min(NUM_CONCURRENT_REQUESTS, 10);
 
+// Cerebras and Fireworks AI models require do not support use_cache parameter
+const UNSUPPORTED_CACHE_PROVIDERS = ['cerebras', 'fireworks-ai'];
+
 const createApiParams = (
   modelName: string,
   messages: any[],
   modelProvider: string,
   accessToken?: string,
-) => ({
-  model: modelName,
-  messages,
-  provider: modelProvider as InferenceProvider,
-  accessToken,
-});
+) => {
+  const params: any = {
+    model: modelName,
+    messages,
+    provider: modelProvider as InferenceProvider,
+    accessToken,
+  };
+
+  if (!UNSUPPORTED_CACHE_PROVIDERS.includes(modelProvider)) {
+    params.use_cache = true;
+  }
+
+  return params;
+};
 
 const handleError = (e: unknown): string => {
   if (e instanceof Error) return e.message;
@@ -83,9 +94,7 @@ export const runPromptExecution = async ({
         modelProvider,
         accessToken,
       ),
-      {
-        signal: AbortSignal.timeout(timeout ?? INFERENCE_TIMEOUT),
-      },
+      createApiOptions(timeout),
     );
     return { value: response.choices[0].message.content };
   } catch (e) {
@@ -130,9 +139,7 @@ export const runPromptExecutionStream = async function* ({
         modelProvider,
         accessToken,
       ),
-      {
-        signal: AbortSignal.timeout(timeout ?? INFERENCE_TIMEOUT),
-      },
+      createApiOptions(timeout),
     );
 
     for await (const chunk of stream) {
@@ -213,3 +220,11 @@ export const runPromptExecutionStreamBatch = async function* (
     }
   }
 };
+
+function createApiOptions(timeout: number | undefined) {
+  const options: any = {
+    signal: AbortSignal.timeout(timeout ?? INFERENCE_TIMEOUT),
+  };
+
+  return options;
+}

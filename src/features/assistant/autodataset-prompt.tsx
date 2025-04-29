@@ -44,7 +44,7 @@ export const AutoDatasetPrompt = component$(() => {
         response.text = result;
       } else if ('dataset' in result && result.dataset) {
         // Navigate to the dataset page
-        await nav(`/dataset/${result.dataset}/`);
+        await nav(`/home/dataset/${result.dataset}/`);
         return;
       }
     } catch (error) {

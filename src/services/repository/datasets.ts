@@ -112,12 +112,7 @@ export const createDataset = async ({
   }
 };
 
-export const getDatasetById = async (
-  id: string,
-  options?: {
-    cellsByColumn?: number;
-  },
-): Promise<Dataset | null> => {
+export const getDatasetById = async (id: string): Promise<Dataset | null> => {
   const model = await DatasetModel.findByPk(id);
 
   if (!model) return null;
@@ -131,16 +126,13 @@ export const getDatasetById = async (
     columns,
   };
 
-  if (options?.cellsByColumn) {
-    await Promise.all(
-      dataset.columns.map(async (column) => {
-        column.cells = await getColumnCells({
-          column,
-          limit: options?.cellsByColumn,
-        });
-      }),
-    );
-  }
+  await Promise.all(
+    dataset.columns.map(async (column) => {
+      column.cells = await getColumnCells({
+        column,
+      });
+    }),
+  );
 
   return dataset;
 };

@@ -125,7 +125,7 @@ export const createRawColumn = async (column: {
     name: column.name,
     type: column.type,
     kind: column.kind,
-    datasetId: column.dataset!.id,
+    datasetId: column.dataset.id,
   });
 
   return {
@@ -145,7 +145,7 @@ export const createColumn = async (column: CreateColumn): Promise<Column> => {
     name: column.name,
     type: column.type,
     kind: column.kind,
-    datasetId: column.dataset!.id,
+    datasetId: column.dataset.id,
   });
 
   await createDatasetTableColumn({

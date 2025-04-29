@@ -214,12 +214,16 @@ export const ExecutionForm = component$<SidebarProps>(
                   />
                 </div>
                 <div class="absolute bottom-4 flex flex-row items-center justify-end px-6 gap-8 w-full">
+                  {column.process?.isExecuting && (
+                    <div class="ml-3">
+                      <div class="h-6 w-6 animate-spin rounded-full border-2 border-primary-100 border-t-transparent" />
+                    </div>
+                  )}
                   <Button
                     key={column.process?.isExecuting?.toString()}
                     look="primary"
                     class="w-[45px] h-[45px] rounded-full flex items-center justify-center p-0"
                     onClick$={onGenerate}
-                    disabled={column.process?.isExecuting}
                   >
                     {column.process?.isExecuting ? (
                       <LuStopCircle class="w-6 h-6" />
@@ -227,11 +231,6 @@ export const ExecutionForm = component$<SidebarProps>(
                       <LuEgg class="w-6 h-6" />
                     )}
                   </Button>
-                  {column.process?.isExecuting && (
-                    <div class="ml-3">
-                      <div class="h-6 w-6 animate-spin rounded-full border-2 border-primary-100 border-t-transparent" />
-                    </div>
-                  )}
                 </div>
               </div>
 

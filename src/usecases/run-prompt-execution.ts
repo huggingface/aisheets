@@ -3,7 +3,11 @@ import {
   chatCompletion,
   chatCompletionStream,
 } from '@huggingface/inference';
-import { INFERENCE_TIMEOUT, NUM_CONCURRENT_REQUESTS } from '~/config';
+import {
+  INFERENCE_TIMEOUT,
+  NUM_CONCURRENT_REQUESTS,
+  ORG_BILLING,
+} from '~/config';
 import { type Example, materializePrompt } from './materialize-prompt';
 
 export interface PromptExecutionParams {
@@ -83,9 +87,7 @@ export const runPromptExecution = async ({
         modelProvider,
         accessToken,
       ),
-      {
-        signal: AbortSignal.timeout(timeout ?? INFERENCE_TIMEOUT),
-      },
+      createApiOptions(timeout),
     );
     return { value: response.choices[0].message.content };
   } catch (e) {
@@ -130,9 +132,7 @@ export const runPromptExecutionStream = async function* ({
         modelProvider,
         accessToken,
       ),
-      {
-        signal: AbortSignal.timeout(timeout ?? INFERENCE_TIMEOUT),
-      },
+      createApiOptions(timeout),
     );
 
     for await (const chunk of stream) {
@@ -213,3 +213,12 @@ export const runPromptExecutionStreamBatch = async function* (
     }
   }
 };
+function createApiOptions(timeout: number | undefined) {
+  const options: Record<string, any> = {
+    signal: AbortSignal.timeout(timeout ?? INFERENCE_TIMEOUT),
+  };
+
+  if (ORG_BILLING) options.billTo = ORG_BILLING;
+
+  return options;
+}

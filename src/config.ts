@@ -78,6 +78,13 @@ export const default_embedding_model = {
     : true,
 } as const;
 
+/**
+ * If defined, the inference endpoint bill with by applied to the organization billing.
+ *
+ * Users must be part of the organiation in order to run inference calls. Default: undefined
+ */
+export const ORG_BILLING = process.env.ORG_BILLING ?? undefined;
+
 const RUNTIME_ENV = join(DATA_DIR, process.env.NODE_ENV ?? 'development');
 
 export const VECTOR_DB_DIR: string = join(RUNTIME_ENV, 'embeddings');

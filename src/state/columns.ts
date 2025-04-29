@@ -10,8 +10,6 @@ export interface Process {
   modelProvider: string;
   prompt: string;
   columnsReferences: string[];
-  offset: number;
-  limit: number;
   updatedAt: Date;
   isExecuting?: boolean;
   cancellable?: NoSerialize<AbortController>;

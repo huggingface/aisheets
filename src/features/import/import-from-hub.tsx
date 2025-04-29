@@ -46,7 +46,7 @@ export const ImportFromHub = component$(() => {
         repoId: repoId.value!,
         filePath: filePath.value!,
       });
-      nav('/dataset/' + id);
+      nav('/home/dataset/' + id);
     } catch (error) {
       console.error(error);
     } finally {

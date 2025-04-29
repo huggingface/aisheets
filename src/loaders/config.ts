@@ -10,6 +10,9 @@ export const useServerConfig = routeLoader$(async function (
   return {
     CLIENT_ID: config.CLIENT_ID,
     HF_TOKEN: config.HF_TOKEN,
+
+    GOOGLE_CLIENT_ID: config.GOOGLE_CLIENT_ID!,
+    GOOGLE_REDIRECT_URI: config.GOOGLE_REDIRECT_URI!,
     OAUTH_SCOPES: config.OAUTH_SCOPES,
     DATA_DIR: config.DATA_DIR,
     INFERENCE_TIMEOUT: config.INFERENCE_TIMEOUT,

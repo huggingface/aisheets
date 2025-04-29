@@ -4,7 +4,6 @@ import {
   component$,
   noSerialize,
   useComputed$,
-  useOnWindow,
   useSignal,
   useStore,
   useTask$,
@@ -19,7 +18,7 @@ import { nextTick } from '~/components/hooks/tick';
 import { useExecution } from '~/features/add-column';
 import { useGenerateColumn } from '~/features/execution';
 import { TableCell } from '~/features/table/table-cell';
-import { deleteRowsCells, getColumnCells } from '~/services';
+import { deleteRowsCells } from '~/services';
 import { type Cell, type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
 
 export const TableBody = component$(() => {
@@ -27,88 +26,52 @@ export const TableBody = component$(() => {
     useColumnsStore();
   const { onGenerateColumn } = useGenerateColumn();
   const selectedRows = useSignal<number[]>([]);
-
-  const tableBody = useSignal<HTMLElement>();
-  const rowHeight = 100;
-  const visibleRowCount = 10;
-  const buffer = 2;
-
-  const scrollTop = useSignal(0);
-  const startIndex = useSignal(0);
-  const endIndex = useSignal(0);
-
-  const data = useSignal<Cell[][]>([]);
-  const rowCount = useSignal(0);
-
-  const handleSelectRow$ = $((idx: number) => {
-    selectedRows.value = [idx];
-  });
-
-  const handleSelectTo$ = $((idx: number) => {
-    if (!selectedRows.value.length) return;
-
-    for (let i = selectedRows.value[0] + 1; i <= idx; i++) {
-      selectedRows.value = [...selectedRows.value, i];
-    }
-  });
-
-  const debounceStore = useStore({
-    timeout: 0 as number | null,
-  });
-
-  useOnWindow(
-    'scroll',
-    $((event) => {
-      const target = event.target as HTMLElement;
-
-      if (!target.classList.contains('scrollable')) return;
-
-      if (debounceStore.timeout) {
-        clearTimeout(debounceStore.timeout);
-      }
-
-      debounceStore.timeout = window.setTimeout(() => {
-        scrollTop.value = target.scrollTop - tableBody.value!.offsetTop;
-      }, 30);
-    }),
+  const visibleColumns = useComputed$(() =>
+    columns.value.filter((c) => c.visible),
   );
 
-  const handleDeleteClick$ = $(async (actualRowIndex: number) => {
-    document
-      .getElementById(`delete-row-${actualRowIndex}-panel`)
-      ?.hidePopover();
+  const tableBody = useSignal<HTMLElement>();
 
-    const ok = await server$(deleteRowsCells)(
-      firstColumn.value.dataset.id,
-      selectedRows.value,
+  const rowCount = useSignal(0);
+  const dragStartCell = useSignal<Cell>();
+  const lastMove = useSignal(0);
+
+  const draggedColumn = useComputed$(() => {
+    return columns.value.find(
+      (column) => column.id === dragStartCell.value?.column?.id,
     );
+  });
 
-    if (ok) {
-      deleteCellByIdx(...selectedRows.value);
+  const selectedCellsId = useSignal<Cell[]>([]);
 
-      selectedRows.value = [];
-    }
+  const latestCellSelected = useComputed$(() => {
+    return selectedCellsId.value[selectedCellsId.value.length - 1];
   });
 
   useVisibleTask$(({ track }) => {
-    track(scrollTop);
-    track(data);
+    track(latestCellSelected);
+    track(dragStartCell);
 
-    startIndex.value = Math.max(
-      Math.floor(scrollTop.value / rowHeight) - buffer,
-      0,
-    );
+    const rowIdx =
+      latestCellSelected.value?.idx || dragStartCell.value?.idx || 0;
 
-    endIndex.value = Math.min(
-      startIndex.value + visibleRowCount + buffer * 2,
-      rowCount.value,
-    );
+    if (
+      rowIdx + 1 >= rowCount.value &&
+      draggedColumn.value?.id === firstColumn.value.id
+    ) {
+      rowCount.value = Math.min(100, rowCount.value + 20);
+    }
   });
 
   useTask$(({ track }) => {
-    track(columns);
-    track(rowCount);
+    track(() => firstColumn.value.cells.length);
 
+    if (dragStartCell.value || firstColumn.value.process?.isExecuting) return;
+
+    rowCount.value = Math.max(firstColumn.value.cells.length, 10);
+  });
+
+  const data = useComputed$(() => {
     const getCell = (column: Column, rowIndex: number): Cell => {
       const cell = column.cells[rowIndex];
 
@@ -131,121 +94,153 @@ export const TableBody = component$(() => {
       return cell;
     };
 
-    const visibleColumns = columns.value.filter((c) => c.visible);
-    data.value = Array.from({ length: rowCount.value }, (_, rowIndex) =>
-      Array.from({ length: visibleColumns.length }, (_, colIndex) =>
-        getCell(visibleColumns[colIndex], rowIndex),
+    return Array.from({ length: rowCount.value }, (_, rowIndex) =>
+      Array.from({ length: visibleColumns.value.length }, (_, colIndex) =>
+        getCell(visibleColumns.value[colIndex], rowIndex),
       ),
     );
   });
 
-  const topSpacerHeight = useComputed$(() => startIndex.value * rowHeight);
-  const bottomSpacerHeight = useComputed$(() =>
-    Math.max(0, (rowCount.value - endIndex.value) * rowHeight),
-  );
+  const handleDeleteClick$ = $(async (actualRowIndex: number) => {
+    document
+      .getElementById(`delete-row-${actualRowIndex}-panel`)
+      ?.hidePopover();
 
-  const selectedCellsId = useSignal<Cell[]>([]);
+    const ok = await server$(deleteRowsCells)(
+      firstColumn.value.dataset.id,
+      selectedRows.value,
+    );
 
-  const latestCellSelected = useComputed$(() => {
-    return selectedCellsId.value[selectedCellsId.value.length - 1];
-  });
+    if (ok) {
+      deleteCellByIdx(...selectedRows.value);
 
-  const dragStartCell = useSignal<Cell>();
-
-  useTask$(({ track }) => {
-    track(() => firstColumn.value.cells.length);
-
-    if (dragStartCell.value || firstColumn.value.process?.isExecuting) return;
-
-    rowCount.value = Math.max(firstColumn.value.cells.length, 8);
-  });
-
-  const handleMouseDown$ = $((cell: Cell) => {
-    selectedCellsId.value = [cell];
-  });
-
-  const handleMouseDragging$ = $((cell: Cell) => {
-    dragStartCell.value = cell;
-
-    selectedCellsId.value = [cell];
-  });
-
-  const handleMouseOver$ = $((cell: Cell) => {
-    if (dragStartCell.value) {
-      if (dragStartCell.value.column?.id !== cell.column?.id) return;
-      const scrollable = document.querySelector('.scrollable')!;
-
-      const isDraggingTheFirstColumn = cell.column?.id === firstColumn.value.id;
-
-      const startRowIndex = dragStartCell.value.idx;
-      const endRowIndex = cell.idx;
-      const start = Math.min(startRowIndex, endRowIndex);
-      const end = Math.max(startRowIndex, endRowIndex);
-
-      if (end + 1 > firstColumn.value.cells.length && !isDraggingTheFirstColumn)
-        return;
-
-      scrollable.scrollTo({
-        top: scrollable.scrollHeight + rowHeight,
-        behavior: 'smooth',
-      });
-
-      if (end + buffer >= rowCount.value && isDraggingTheFirstColumn) {
-        rowCount.value += 1;
-      }
-
-      const selectedCells = [];
-
-      for (let i = start; i <= end; i++) {
-        selectedCells.push(
-          data.value[i].find((c) => c.column?.id === cell.column?.id),
-        );
-      }
-
-      selectedCellsId.value = selectedCells.filter((c) => c) as Cell[];
+      selectedRows.value = [];
     }
+  });
+
+  const handleSelectRow$ = $((idx: number) => {
+    selectedRows.value = [idx];
+  });
+
+  const handleSelectTo$ = $((idx: number) => {
+    if (!selectedRows.value.length) return;
+
+    for (let i = selectedRows.value[0] + 1; i <= idx; i++) {
+      selectedRows.value = [...selectedRows.value, i];
+    }
+  });
+
+  const handleMouseDown$ = $((cell: Cell, e: MouseEvent) => {
+    dragStartCell.value = cell;
+    selectedCellsId.value = [cell];
+
+    const tableBeginning = window.innerHeight * 0.25;
+    const tableEnding = window.innerHeight * 0.95;
+
+    const currentY = e.clientY;
+    const scrollable = document.querySelector('.scrollable')!;
+
+    if (currentY > tableEnding) {
+      scrollable.scrollBy(0, 60);
+    } else if (currentY < tableBeginning) {
+      scrollable.scrollBy(0, -60);
+    }
+  });
+
+  const handleMouseDragging$ = $((cell: Cell, e: MouseEvent) => {
+    if (e.buttons !== 1 /* Primary button not pressed */) return;
+
+    selectedCellsId.value = [cell];
+  });
+
+  const handleMouseOver$ = $((cell: Cell, e: MouseEvent) => {
+    if (e.buttons !== 1 /* Primary button not pressed */) return;
+
+    if (!dragStartCell.value) return;
+    if (dragStartCell.value.column?.id !== cell.column?.id) return;
+
+    const isDraggingTheFirstColumn = cell.column?.id === firstColumn.value.id;
+
+    const startRowIndex = dragStartCell.value.idx;
+    const endRowIndex = cell.idx;
+    const start = Math.min(startRowIndex, endRowIndex);
+    const end = Math.max(startRowIndex, endRowIndex);
+
+    if (end + 1 > firstColumn.value.cells.length && !isDraggingTheFirstColumn) {
+      return;
+    }
+
+    const selectedCells = [];
+
+    for (let i = start; i <= end; i++) {
+      selectedCells.push(
+        data.value[i].find((c) => c.column?.id === cell.column?.id),
+      );
+    }
+
+    selectedCellsId.value = selectedCells.filter((c) => c) as Cell[];
   });
 
   const handleMouseUp$ = $(async () => {
-    if (dragStartCell.value) {
-      const column = columns.value.find(
-        (column) => column.id === dragStartCell.value?.column?.id,
-      );
-      if (!column) return;
-      if (!dragStartCell.value.value) return;
+    if (!dragStartCell.value) return;
+    if (!draggedColumn.value) return;
+    if (!dragStartCell.value.value) return;
 
-      let offset = 0;
-      for (const cell of selectedCellsId.value) {
-        offset = cell.idx;
+    const column = draggedColumn.value;
 
-        if (!cell.value) {
-          break;
-        }
-      }
+    let offset = 0;
+    for (const cell of selectedCellsId.value) {
+      offset = cell.idx;
 
-      const limit = latestCellSelected.value?.idx - offset + 1;
-
-      dragStartCell.value = undefined;
-
-      const selectedCellsHasValue = column.cells.some(
-        (c) => c.idx >= offset && c.idx <= limit + offset && c.value,
-      );
-      if (selectedCellsHasValue) return;
-
-      column.process!.cancellable = noSerialize(new AbortController());
-      column.process!.isExecuting = true;
-
-      updateColumn(column);
-
-      await onGenerateColumn({
-        ...column,
-        process: {
-          ...column.process!,
-          offset,
-          limit,
-        },
-      });
+      if (!cell.value) break;
     }
+
+    const limit = latestCellSelected.value?.idx - offset + 1;
+
+    dragStartCell.value = undefined;
+
+    const selectedCellsHasValue = column.cells.some(
+      (c) => c.idx >= offset && c.idx <= limit + offset && c.value,
+    );
+    if (selectedCellsHasValue) return;
+
+    column.process!.cancellable = noSerialize(new AbortController());
+    column.process!.isExecuting = true;
+
+    updateColumn(column);
+
+    await onGenerateColumn({
+      ...column,
+      process: {
+        ...column.process!,
+        offset,
+        limit,
+      },
+    });
+  });
+
+  const handleMouseMove$ = $(async (e: MouseEvent) => {
+    if (e.buttons !== 1 /* Primary button not pressed */) return;
+
+    if (!dragStartCell.value) return;
+
+    const tableBeginning = window.innerHeight * 0.25;
+    const tableEnding = window.innerHeight * 0.9;
+
+    const currentY = e.clientY;
+
+    const scrollable = document.querySelector('.scrollable')!;
+
+    const endingScroll = currentY - tableEnding;
+    const beginningScroll = tableBeginning - currentY;
+
+    if (endingScroll > 0 && currentY > lastMove.value) {
+      scrollable.scrollBy(0, 20);
+    } else if (beginningScroll > 0 && currentY < lastMove.value) {
+      scrollable.scrollBy(0, -20);
+    }
+
+    lastMove.value = currentY;
   });
 
   const getBoundary = (cell: Cell) => {
@@ -282,20 +277,14 @@ export const TableBody = component$(() => {
   return (
     <tbody ref={tableBody}>
       {/* Top spacer row to maintain scroll position */}
-      {topSpacerHeight.value > 0 && (
-        <tr style={{ height: `${topSpacerHeight.value}px` }}>
-          <td class="p-0 border-none" colSpan={columns.value.length + 1} />
-        </tr>
-      )}
 
-      {data.value.slice(startIndex.value, endIndex.value).map((rows, i) => {
-        const actualRowIndex = startIndex.value + i;
+      {data.value.map((rows, i) => {
         return (
           <tr
-            key={actualRowIndex}
+            key={rows[0].idx}
             class={cn('hover:bg-gray-50/50 transition-colors group', {
               'bg-gray-50/50 hover:bg-gray-50/50':
-                selectedRows.value.includes(actualRowIndex),
+                selectedRows.value.includes(i),
             })}
           >
             <td
@@ -303,27 +292,27 @@ export const TableBody = component$(() => {
                 'sticky left-0 z-[10]',
                 'px-2 text-center border-[0.5px] border-t-0 bg-neutral-100 select-none',
                 {
-                  'bg-neutral-200': selectedRows.value.includes(actualRowIndex),
+                  'bg-neutral-200': selectedRows.value.includes(i),
                 },
               )}
               preventdefault:contextmenu
               onClick$={(e) => {
                 if (e.shiftKey) {
-                  handleSelectTo$(actualRowIndex);
+                  handleSelectTo$(i);
                 } else {
-                  handleSelectRow$(actualRowIndex);
+                  handleSelectRow$(i);
                 }
               }}
               onContextMenu$={async () => {
                 if (selectedRows.value.length === 0) {
-                  await handleSelectRow$(actualRowIndex);
+                  await handleSelectRow$(i);
                 }
 
-                if (!selectedRows.value.includes(actualRowIndex)) return;
+                if (!selectedRows.value.includes(i)) return;
 
                 nextTick(() => {
                   document
-                    .getElementById(`delete-row-${actualRowIndex}-panel`)
+                    .getElementById(`delete-row-${i}-panel`)
                     ?.showPopover();
                 }, 200);
               }}
@@ -331,10 +320,10 @@ export const TableBody = component$(() => {
               <Popover.Root
                 gutter={10}
                 floating="top-end"
-                id={`delete-row-${actualRowIndex}`}
+                id={`delete-row-${i}`}
               >
                 <Popover.Trigger class="pointer-events-none">
-                  {actualRowIndex + 1}
+                  {i + 1}
                 </Popover.Trigger>
 
                 <Popover.Panel
@@ -343,7 +332,7 @@ export const TableBody = component$(() => {
                 >
                   <Button
                     look="ghost"
-                    onClick$={() => handleDeleteClick$(actualRowIndex)}
+                    onClick$={() => handleDeleteClick$(i)}
                     class="w-fit p-1 rounded-md border bg-white"
                   >
                     <div class="hover:bg-neutral-100 p-1 rounded-sm flex justify-start items-center">
@@ -357,7 +346,7 @@ export const TableBody = component$(() => {
 
             {rows.map((cell) => {
               return (
-                <Fragment key={`${i}-${cell.column!.id}`}>
+                <Fragment key={`${cell.idx}-${cell.column!.id}`}>
                   {cell.column?.id === TEMPORAL_ID ? (
                     <td class="min-w-80 w-80 max-w-80 px-2 min-h-[100px] h-[100px] border-[0.5px] border-l-0 border-t-0" />
                   ) : (
@@ -369,8 +358,9 @@ export const TableBody = component$(() => {
                     >
                       <div
                         onMouseUp$={handleMouseUp$}
-                        onMouseDown$={() => handleMouseDown$(cell)}
-                        onMouseOver$={() => handleMouseOver$(cell)}
+                        onMouseDown$={(e) => handleMouseDown$(cell, e)}
+                        onMouseOver$={(e) => handleMouseOver$(cell, e)}
+                        onMouseMove$={(e) => handleMouseMove$(e)}
                       >
                         <TableCell cell={cell} />
 
@@ -383,21 +373,15 @@ export const TableBody = component$(() => {
                                 size="sm"
                                 look="ghost"
                                 class="cursor-crosshair p-1"
-                                onMouseDown$={() => handleMouseDragging$(cell)}
+                                onMouseDown$={(e) =>
+                                  handleMouseDragging$(cell, e)
+                                }
                               >
                                 <LuDot class="text-5xl text-primary-300" />
                               </Button>
                             </div>
                           )}
                       </div>
-                      {/* When the user scrolls until this cell we should load
-                        If the user has 20 rows, on rowCount - buffer, should be fetch
-                        The buffer now is 2, so on cell number 18, we should fetch new rows
-                        Remember: we need just the cellId, no needed the value and the error.
-                      */}
-                      {actualRowIndex + 1 === rowCount.value - buffer && (
-                        <Loader actualRowIndex={actualRowIndex} />
-                      )}
                     </td>
                   )}
 
@@ -408,66 +392,8 @@ export const TableBody = component$(() => {
           </tr>
         );
       })}
-      {/* Bottom spacer row */}
-      {bottomSpacerHeight.value > 0 && (
-        <tr style={{ height: `${bottomSpacerHeight.value}px` }}>
-          <td class="p-0 border-none" colSpan={columns.value.length + 1} />
-        </tr>
-      )}
     </tbody>
   );
-});
-
-const Loader = component$<{ actualRowIndex: number }>(({ actualRowIndex }) => {
-  const { columns, replaceCell } = useColumnsStore();
-  const isLoading = useSignal(false);
-
-  const loadColumnsCells = server$(
-    async ({
-      columnIds,
-      offset,
-      limit,
-    }: {
-      columnIds: string[];
-      offset: number;
-      limit: number;
-    }) => {
-      const allCells = await Promise.all(
-        columnIds.map((columnId) =>
-          getColumnCells({
-            column: {
-              id: columnId,
-            },
-            offset,
-            limit,
-          }),
-        ),
-      );
-
-      return allCells.flat();
-    },
-  );
-
-  useVisibleTask$(async () => {
-    if (isLoading.value) return;
-    isLoading.value = true;
-
-    const newCells = await loadColumnsCells({
-      columnIds: columns.value
-        .filter((column) => column.id !== TEMPORAL_ID)
-        .map((column) => column.id),
-      offset: actualRowIndex,
-      limit: 10,
-    });
-
-    for (const cell of newCells) {
-      replaceCell(cell);
-    }
-
-    isLoading.value = false;
-  });
-
-  return <Fragment />;
 });
 
 const ExecutionFormDebounced = component$<{ column?: { id: Column['id'] } }>(

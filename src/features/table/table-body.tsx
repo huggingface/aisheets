@@ -7,6 +7,7 @@ import {
   useSignal,
   useStore,
   useTask$,
+  useVisibleTask$,
 } from '@builder.io/qwik';
 import { server$ } from '@builder.io/qwik-city';
 import { cn } from '@qwik-ui/utils';
@@ -30,17 +31,44 @@ export const TableBody = component$(() => {
   );
 
   const tableBody = useSignal<HTMLElement>();
-  const rowHeight = 108;
 
   const rowCount = useSignal(0);
   const dragStartCell = useSignal<Cell>();
+  const lastMove = useSignal(0);
+
+  const draggedColumn = useComputed$(() => {
+    return columns.value.find(
+      (column) => column.id === dragStartCell.value?.column?.id,
+    );
+  });
+
+  const selectedCellsId = useSignal<Cell[]>([]);
+
+  const latestCellSelected = useComputed$(() => {
+    return selectedCellsId.value[selectedCellsId.value.length - 1];
+  });
+
+  useVisibleTask$(({ track }) => {
+    track(latestCellSelected);
+    track(dragStartCell);
+
+    const rowIdx =
+      latestCellSelected.value?.idx || dragStartCell.value?.idx || 0;
+
+    if (
+      rowIdx + 1 >= rowCount.value &&
+      draggedColumn.value?.id === firstColumn.value.id
+    ) {
+      rowCount.value = Math.min(100, rowCount.value + 20);
+    }
+  });
 
   useTask$(({ track }) => {
     track(() => firstColumn.value.cells.length);
 
     if (dragStartCell.value || firstColumn.value.process?.isExecuting) return;
 
-    rowCount.value = Math.max(firstColumn.value.cells.length, 8);
+    rowCount.value = Math.max(firstColumn.value.cells.length, 10);
   });
 
   const data = useComputed$(() => {
@@ -73,18 +101,6 @@ export const TableBody = component$(() => {
     );
   });
 
-  const handleSelectRow$ = $((idx: number) => {
-    selectedRows.value = [idx];
-  });
-
-  const handleSelectTo$ = $((idx: number) => {
-    if (!selectedRows.value.length) return;
-
-    for (let i = selectedRows.value[0] + 1; i <= idx; i++) {
-      selectedRows.value = [...selectedRows.value, i];
-    }
-  });
-
   const handleDeleteClick$ = $(async (actualRowIndex: number) => {
     document
       .getElementById(`delete-row-${actualRowIndex}-panel`)
@@ -102,93 +118,129 @@ export const TableBody = component$(() => {
     }
   });
 
-  const selectedCellsId = useSignal<Cell[]>([]);
-
-  const latestCellSelected = useComputed$(() => {
-    return selectedCellsId.value[selectedCellsId.value.length - 1];
+  const handleSelectRow$ = $((idx: number) => {
+    selectedRows.value = [idx];
   });
 
-  const handleMouseDown$ = $((cell: Cell) => {
-    selectedCellsId.value = [cell];
-  });
+  const handleSelectTo$ = $((idx: number) => {
+    if (!selectedRows.value.length) return;
 
-  const handleMouseDragging$ = $((cell: Cell) => {
-    dragStartCell.value = cell;
-
-    selectedCellsId.value = [cell];
-  });
-
-  const lastMove = useSignal(0);
-  const handleMouseOver$ = $((cell: Cell) => {
-    if (dragStartCell.value) {
-      if (dragStartCell.value.column?.id !== cell.column?.id) return;
-
-      const isDraggingTheFirstColumn = cell.column?.id === firstColumn.value.id;
-
-      const startRowIndex = dragStartCell.value.idx;
-      const endRowIndex = cell.idx;
-      const start = Math.min(startRowIndex, endRowIndex);
-      const end = Math.max(startRowIndex, endRowIndex);
-
-      if (end + 1 > firstColumn.value.cells.length && !isDraggingTheFirstColumn)
-        return;
-
-      if (end >= rowCount.value - 1 && isDraggingTheFirstColumn) {
-        rowCount.value += 20;
-      }
-
-      const selectedCells = [];
-
-      for (let i = start; i <= end; i++) {
-        selectedCells.push(
-          data.value[i].find((c) => c.column?.id === cell.column?.id),
-        );
-      }
-
-      selectedCellsId.value = selectedCells.filter((c) => c) as Cell[];
+    for (let i = selectedRows.value[0] + 1; i <= idx; i++) {
+      selectedRows.value = [...selectedRows.value, i];
     }
+  });
+
+  const handleMouseDown$ = $((cell: Cell, e: MouseEvent) => {
+    dragStartCell.value = cell;
+    selectedCellsId.value = [cell];
+
+    const tableBeginning = window.innerHeight * 0.25;
+    const tableEnding = window.innerHeight * 0.95;
+
+    const currentY = e.clientY;
+    const scrollable = document.querySelector('.scrollable')!;
+
+    if (currentY > tableEnding) {
+      scrollable.scrollBy(0, 60);
+    } else if (currentY < tableBeginning) {
+      scrollable.scrollBy(0, -60);
+    }
+  });
+
+  const handleMouseDragging$ = $((cell: Cell, e: MouseEvent) => {
+    if (e.buttons !== 1 /* Primary button not pressed */) return;
+
+    selectedCellsId.value = [cell];
+  });
+
+  const handleMouseOver$ = $((cell: Cell, e: MouseEvent) => {
+    if (e.buttons !== 1 /* Primary button not pressed */) return;
+
+    if (!dragStartCell.value) return;
+    if (dragStartCell.value.column?.id !== cell.column?.id) return;
+
+    const isDraggingTheFirstColumn = cell.column?.id === firstColumn.value.id;
+
+    const startRowIndex = dragStartCell.value.idx;
+    const endRowIndex = cell.idx;
+    const start = Math.min(startRowIndex, endRowIndex);
+    const end = Math.max(startRowIndex, endRowIndex);
+
+    if (end + 1 > firstColumn.value.cells.length && !isDraggingTheFirstColumn) {
+      return;
+    }
+
+    const selectedCells = [];
+
+    for (let i = start; i <= end; i++) {
+      selectedCells.push(
+        data.value[i].find((c) => c.column?.id === cell.column?.id),
+      );
+    }
+
+    selectedCellsId.value = selectedCells.filter((c) => c) as Cell[];
   });
 
   const handleMouseUp$ = $(async () => {
-    if (dragStartCell.value) {
-      const column = columns.value.find(
-        (column) => column.id === dragStartCell.value?.column?.id,
-      );
-      if (!column) return;
-      if (!dragStartCell.value.value) return;
+    if (!dragStartCell.value) return;
+    if (!draggedColumn.value) return;
+    if (!dragStartCell.value.value) return;
 
-      let offset = 0;
-      for (const cell of selectedCellsId.value) {
-        offset = cell.idx;
+    const column = draggedColumn.value;
 
-        if (!cell.value) {
-          break;
-        }
-      }
+    let offset = 0;
+    for (const cell of selectedCellsId.value) {
+      offset = cell.idx;
 
-      const limit = latestCellSelected.value?.idx - offset + 1;
-
-      dragStartCell.value = undefined;
-
-      const selectedCellsHasValue = column.cells.some(
-        (c) => c.idx >= offset && c.idx <= limit + offset && c.value,
-      );
-      if (selectedCellsHasValue) return;
-
-      column.process!.cancellable = noSerialize(new AbortController());
-      column.process!.isExecuting = true;
-
-      updateColumn(column);
-
-      await onGenerateColumn({
-        ...column,
-        process: {
-          ...column.process!,
-          offset,
-          limit,
-        },
-      });
+      if (!cell.value) break;
     }
+
+    const limit = latestCellSelected.value?.idx - offset + 1;
+
+    dragStartCell.value = undefined;
+
+    const selectedCellsHasValue = column.cells.some(
+      (c) => c.idx >= offset && c.idx <= limit + offset && c.value,
+    );
+    if (selectedCellsHasValue) return;
+
+    column.process!.cancellable = noSerialize(new AbortController());
+    column.process!.isExecuting = true;
+
+    updateColumn(column);
+
+    await onGenerateColumn({
+      ...column,
+      process: {
+        ...column.process!,
+        offset,
+        limit,
+      },
+    });
+  });
+
+  const handleMouseMove$ = $(async (e: MouseEvent) => {
+    if (e.buttons !== 1 /* Primary button not pressed */) return;
+
+    if (!dragStartCell.value) return;
+
+    const tableBeginning = window.innerHeight * 0.25;
+    const tableEnding = window.innerHeight * 0.9;
+
+    const currentY = e.clientY;
+
+    const scrollable = document.querySelector('.scrollable')!;
+
+    const endingScroll = currentY - tableEnding;
+    const beginningScroll = tableBeginning - currentY;
+
+    if (endingScroll > 0 && currentY > lastMove.value) {
+      scrollable.scrollBy(0, 20);
+    } else if (beginningScroll > 0 && currentY < lastMove.value) {
+      scrollable.scrollBy(0, -20);
+    }
+
+    lastMove.value = currentY;
   });
 
   const getBoundary = (cell: Cell) => {
@@ -306,22 +358,9 @@ export const TableBody = component$(() => {
                     >
                       <div
                         onMouseUp$={handleMouseUp$}
-                        onMouseDown$={() => handleMouseDown$(cell)}
-                        onMouseOver$={() => handleMouseOver$(cell)}
-                        onMouseMove$={(e) => {
-                          if (!dragStartCell.value) return;
-                          const currentY = e.clientY;
-                          const scrollable =
-                            document.querySelector('.scrollable')!;
-
-                          if (currentY > lastMove.value) {
-                            scrollable.scrollBy(0, 30);
-                          } else if (currentY < lastMove.value) {
-                            scrollable.scrollBy(0, -30);
-                          }
-
-                          lastMove.value = currentY;
-                        }}
+                        onMouseDown$={(e) => handleMouseDown$(cell, e)}
+                        onMouseOver$={(e) => handleMouseOver$(cell, e)}
+                        onMouseMove$={(e) => handleMouseMove$(e)}
                       >
                         <TableCell cell={cell} />
 
@@ -334,7 +373,9 @@ export const TableBody = component$(() => {
                                 size="sm"
                                 look="ghost"
                                 class="cursor-crosshair p-1"
-                                onMouseDown$={() => handleMouseDragging$(cell)}
+                                onMouseDown$={(e) =>
+                                  handleMouseDragging$(cell, e)
+                                }
                               >
                                 <LuDot class="text-5xl text-primary-300" />
                               </Button>

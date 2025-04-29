@@ -103,7 +103,7 @@ export const CellContentRenderer = component$<{
     return <pre>{content}</pre>;
   }
 
-  return <p class="p-1">{content}</p>;
+  return <p>{content}</p>;
 });
 
 export const TableCell = component$<{
@@ -234,7 +234,7 @@ export const TableCell = component$<{
     });
   });
 
-  useTask$(({ track }) => {
+  useVisibleTask$(({ track }) => {
     track(isEditing);
     track(() => cell.value);
     const scrollable = document.querySelector('.scrollable');
@@ -281,7 +281,7 @@ export const TableCell = component$<{
     }
   });
 
-  useTask$(({ track }) => {
+  useVisibleTask$(({ track }) => {
     track(() => newCellValue.value);
 
     if (
@@ -411,9 +411,12 @@ export const TableCell = component$<{
                   size="sm"
                   class={cn(
                     'absolute z-10 text-base top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity',
-                    cell.validated
-                      ? 'bg-green-50/50 text-green-400 hover:bg-green-100'
-                      : 'hover:bg-gray-100 text-gray-400',
+                    {
+                      'bg-green-50/50 text-green-400 hover:bg-green-100':
+                        cell.validated,
+                      'hover:bg-gray-100 text-gray-400': !cell.validated,
+                      '!opacity-0': !cell.id,
+                    },
                   )}
                   onClick$={(e) => {
                     e.stopPropagation();
@@ -423,7 +426,7 @@ export const TableCell = component$<{
                   <LuThumbsUp class="text-sm" />
                 </Button>
               )}
-              <div class="h-full p-2">
+              <div class="h-full mt-2 p-4">
                 {!contentValue.value && hasBlobContent(cellColumn.value) ? (
                   <div class="flex items-center justify-center h-full">
                     <div class="w-full h-full max-w-[120px] max-h-[80px] bg-gray-200 rounded animate-pulse" />

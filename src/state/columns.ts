@@ -12,6 +12,8 @@ export interface Process {
   columnsReferences: string[];
   updatedAt: Date;
   isExecuting?: boolean;
+  offset?: number;
+  limit?: number;
   cancellable?: NoSerialize<AbortController>;
 }
 

@@ -2,10 +2,8 @@ import { ProcessColumnModel, ProcessModel } from '~/services/db/models';
 import type { Process } from '~/state';
 
 export interface CreateProcess {
-  limit: number;
   modelName: string;
   modelProvider: string;
-  offset: number;
   prompt: string;
   columnsReferences?: string[];
 }
@@ -20,10 +18,8 @@ export const createProcess = async ({
   };
 }): Promise<Process> => {
   const model = await ProcessModel.create({
-    limit: process.limit,
     modelName: process.modelName,
     modelProvider: process.modelProvider,
-    offset: process.offset,
     prompt: process.prompt,
     columnId: column.id,
   });
@@ -39,10 +35,8 @@ export const createProcess = async ({
 
   return {
     id: model.id,
-    limit: model.limit,
     modelName: model.modelName,
     modelProvider: model.modelProvider,
-    offset: model.offset,
     prompt: model.prompt,
     columnsReferences: process?.columnsReferences || [],
     updatedAt: model.updatedAt,
@@ -58,10 +52,8 @@ export const updateProcess = async (process: Process): Promise<Process> => {
 
   model.changed('updatedAt', true);
   model.set({
-    limit: process.limit,
     modelName: process.modelName,
     modelProvider: process.modelProvider,
-    offset: process.offset,
     prompt: process.prompt,
   });
 
@@ -78,10 +70,8 @@ export const updateProcess = async (process: Process): Promise<Process> => {
 
   return {
     id: model.id,
-    limit: model.limit,
     modelName: model.modelName,
     modelProvider: model.modelProvider,
-    offset: model.offset,
     prompt: model.prompt,
     columnsReferences: process.columnsReferences,
     updatedAt: model.updatedAt,

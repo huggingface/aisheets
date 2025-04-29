@@ -1,30 +1,28 @@
-import { Slot, component$ } from '@builder.io/qwik';
-import type { RequestHandler } from '@builder.io/qwik-city';
+import type {
+  RequestEvent,
+  RequestEventBase,
+  RequestHandler,
+} from '@builder.io/qwik-city';
+import { useServerSession } from '~/state/session';
 
-import { ModalsProvider } from '~/components';
-import { MainSidebar } from '~/features/main-sidebar';
-import { ActiveDatasetProvider } from '~/state';
+export const onGet: RequestHandler = async (event: RequestEvent) => {
+  const { cacheControl } = event;
 
-export const onGet: RequestHandler = async ({ cacheControl }) => {
+  checkSession(event);
+
   cacheControl({
     staleWhileRevalidate: 60 * 60 * 24 * 7,
     maxAge: 5,
   });
 };
 
-export * from '~/loaders';
+export const checkSession = (request: RequestEventBase) => {
+  if (!request.url.pathname.startsWith('/home')) return;
 
-export default component$(() => {
-  return (
-    <ModalsProvider>
-      <div class="flex-row flex h-screen">
-        <ActiveDatasetProvider>
-          <MainSidebar />
-          <main class="min-w-screen h-screen px-6 pt-4 w-full overflow-y-auto">
-            <Slot />
-          </main>
-        </ActiveDatasetProvider>
-      </div>
-    </ModalsProvider>
-  );
-});
+  try {
+    useServerSession(request);
+  } catch (error) {
+    console.error('Session not found, redirecting to login');
+    throw (request as RequestEvent).redirect(302, '/');
+  }
+};

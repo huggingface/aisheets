@@ -111,7 +111,7 @@ export const MainSidebar = component$(() => {
                   <Link
                     type="button"
                     key={item.id}
-                    href={`/dataset/${item.id}`}
+                    href={`/home/dataset/${item.id}`}
                     class="block py-2 pl-3 hover:bg-gray-100 rounded text-sm font-light truncate max-w-full"
                   >
                     {item.name}

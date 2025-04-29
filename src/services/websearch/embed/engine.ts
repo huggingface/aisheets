@@ -44,16 +44,26 @@ export const deleteIndex = async () => {
   await db.dropTable(embeddingsIndex.name);
 };
 
+const getDetailedInstruct = (query: string): string => {
+  return `Instruct: Given a web search query, retrieve relevant passages that answer the query\nQuery: ${query}`;
+};
+
 export const embedder = async (
   texts: string[],
   options: {
     accessToken: string;
+    isQuery?: boolean;
   },
 ): Promise<number[][]> => {
   if (texts.length === 0) return [];
 
+  const processedTexts =
+    options.isQuery && default_embedding_model.is_instruct
+      ? texts.map(getDetailedInstruct)
+      : texts;
+
   const results = await featureExtraction({
-    inputs: texts,
+    inputs: processedTexts,
     accessToken: options.accessToken,
     model: default_embedding_model.model,
     provider: default_embedding_model.provider as InferenceProvider,
@@ -63,7 +73,7 @@ export const embedder = async (
     throw new Error('Invalid response from Hugging Face API');
   }
 
-  return results as number[][]; // TODO: How to control the type of this?
+  return results as number[][];
 };
 
 export const indexDatasetSources = async ({
@@ -88,43 +98,45 @@ export const indexDatasetSources = async ({
           const mdElements = flattenTree(source.markdownTree);
           const textChunks = mdElements.map(stringifyMarkdownElement);
 
-          try {
-            const embeddings = await embedder(textChunks, options);
+          // Process chunks in batches of 8
+          const BATCH_SIZE = 8;
+          const sourceData: Array<{
+            text: string;
+            embedding: number[];
+            source_uri: string;
+            dataset_id: string;
+          }> = [];
 
-            return textChunks
-              .map((text, index) => {
+          for (let i = 0; i < textChunks.length; i += BATCH_SIZE) {
+            const batch = textChunks.slice(i, i + BATCH_SIZE);
+            try {
+              const embeddings = await embedder(batch, options);
+
+              batch.forEach((text, index) => {
                 const embedding = embeddings[index];
                 if (!embedding) {
                   console.warn(
-                    `Skipping chunk due to missing embedding for text: ${text.substring(0, 100)}...`,
+                    `Skipping chunk due to missing embedding for text:\n${text}\n---END OF SKIPPED TEXT---`,
                   );
-                  return null;
+                  return;
                 }
 
-                return {
+                sourceData.push({
                   text,
                   embedding,
                   source_uri: source.url,
                   dataset_id: dataset.id,
-                };
-              })
-              .filter(
-                (
-                  item,
-                ): item is {
-                  text: string;
-                  embedding: number[];
-                  source_uri: string;
-                  dataset_id: string;
-                } => item !== null,
+                });
+              });
+            } catch (embeddingError) {
+              console.warn(
+                `Error embedding batch for source ${source.url}:`,
+                embeddingError,
               );
-          } catch (embeddingError) {
-            console.warn(
-              `Error embedding chunks for source ${source.url}:`,
-              embeddingError,
-            );
-            return [];
+            }
           }
+
+          return sourceData;
         } catch (error) {
           console.warn(`Error processing source ${source.url}:`, error);
           return [];
@@ -171,7 +183,7 @@ export const queryDatasetSources = async ({
   }
 
   try {
-    const embeddings = await embedder([query], options);
+    const embeddings = await embedder([query], { ...options, isQuery: true });
 
     const results = await embeddingsIndex
       .search(embeddings[0], 'vector')

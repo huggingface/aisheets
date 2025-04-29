@@ -42,7 +42,7 @@ export const DragAndDrop = component$(() => {
     }
 
     const { id } = await response.json();
-    navigate('/dataset/' + id);
+    navigate('/home/dataset/' + id);
   });
 
   return (
@@ -101,7 +101,7 @@ export const DragAndDrop = component$(() => {
           </Popover.Trigger>
           <Popover.Panel class="w-86 text-sm shadow-lg p-2">
             <Link
-              href="/dataset/create/from-hub"
+              href="/home/dataset/create/from-hub"
               class={cn(
                 'w-full flex items-center justify-between hover:bg-neutral-100 gap-2.5 p-2',
                 buttonVariants({ look: 'ghost' }),
@@ -117,6 +117,9 @@ export const DragAndDrop = component$(() => {
             <Button
               look="ghost"
               class="w-full flex items-center justify-start hover:bg-neutral-100 gap-2.5 p-2"
+              onClick$={() => {
+                navigate('/home/dataset/create/from-google-drive');
+              }}
             >
               <GoogleDrive class="w-4 h-4 flex-shrink-0" />
               Add from Google Drive

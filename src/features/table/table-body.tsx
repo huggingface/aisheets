@@ -126,7 +126,9 @@ export const TableBody = component$(() => {
     if (!selectedRows.value.length) return;
 
     for (let i = selectedRows.value[0] + 1; i <= idx; i++) {
-      selectedRows.value = [...selectedRows.value, i];
+      if (!selectedRows.value.includes(i)) {
+        selectedRows.value = [...selectedRows.value, i];
+      }
     }
   });
 

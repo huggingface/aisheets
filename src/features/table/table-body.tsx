@@ -7,7 +7,6 @@ import {
   useSignal,
   useStore,
   useTask$,
-  useVisibleTask$,
 } from '@builder.io/qwik';
 import { server$ } from '@builder.io/qwik-city';
 import { cn } from '@qwik-ui/utils';
@@ -48,27 +47,12 @@ export const TableBody = component$(() => {
     return selectedCellsId.value[selectedCellsId.value.length - 1];
   });
 
-  useVisibleTask$(({ track }) => {
-    track(latestCellSelected);
-    track(dragStartCell);
-
-    const rowIdx =
-      latestCellSelected.value?.idx || dragStartCell.value?.idx || 0;
-
-    if (
-      rowIdx + 1 >= rowCount.value &&
-      draggedColumn.value?.id === firstColumn.value.id
-    ) {
-      rowCount.value = Math.min(100, rowCount.value + 20);
-    }
-  });
-
   useTask$(({ track }) => {
     track(() => firstColumn.value.cells.length);
 
     if (dragStartCell.value || firstColumn.value.process?.isExecuting) return;
 
-    rowCount.value = Math.max(firstColumn.value.cells.length, 10);
+    rowCount.value = firstColumn.value.cells.length;
   });
 
   const data = useComputed$(() => {

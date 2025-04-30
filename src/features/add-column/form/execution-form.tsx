@@ -224,6 +224,9 @@ export const ExecutionForm = component$<SidebarProps>(
                     look="primary"
                     class="w-[45px] h-[45px] rounded-full flex items-center justify-center p-0"
                     onClick$={onGenerate}
+                    disabled={
+                      column.process?.isExecuting && column.id === TEMPORAL_ID
+                    }
                   >
                     {column.process?.isExecuting ? (
                       <LuStopCircle class="w-6 h-6" />

@@ -82,9 +82,6 @@ export const generateCells = async function* ({
 
         const cell = await getOrCreateCellInDB(column.id, i);
 
-        cell.generating = true;
-        cells.set(i, cell);
-
         const args: PromptExecutionParams = {
           accessToken: session.token,
           modelName,
@@ -103,6 +100,15 @@ export const generateCells = async function* ({
             rowIdx: i,
             columns: columnsReferences,
           });
+
+          if (rowCells?.filter((cell) => cell.value).length === 0) {
+            cell.generating = false;
+            cell.error = 'No input data found';
+            await updateCell(cell);
+            yield { cell };
+            continue;
+          }
+
           args.data = Object.fromEntries(
             rowCells.map((cell) => [cell.column!.name, cell.value]),
           );
@@ -117,6 +123,9 @@ export const generateCells = async function* ({
             accessToken: session.token,
           },
         });
+
+        cell.generating = true;
+        cells.set(i, cell);
 
         streamRequests.push(args);
       }

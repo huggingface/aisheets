@@ -214,11 +214,11 @@ export const ExecutionForm = component$<SidebarProps>(
                   />
                 </div>
                 <div class="absolute bottom-4 flex flex-row items-center justify-end px-6 gap-8 w-full">
-                  {column.process?.isExecuting && (
-                    <div class="ml-3">
-                      <div class="h-6 w-6 animate-spin rounded-full border-2 border-primary-100 border-t-transparent" />
-                    </div>
-                  )}
+                  <div class="flex items-center gap-1">
+                    {column.process?.isExecuting && (
+                      <div class="h-4 w-4 animate-spin rounded-full border-2 border-primary-100 border-t-transparent" />
+                    )}
+                  </div>
                   <Button
                     key={column.process?.isExecuting?.toString()}
                     look="primary"
@@ -229,7 +229,9 @@ export const ExecutionForm = component$<SidebarProps>(
                     }
                   >
                     {column.process?.isExecuting ? (
-                      <LuStopCircle class="w-6 h-6" />
+                      <>
+                        <LuStopCircle class="h-6 w-6" />
+                      </>
                     ) : (
                       <LuEgg class="w-6 h-6" />
                     )}

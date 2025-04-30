@@ -52,7 +52,7 @@ export const listDatasetTableRows = async ({
 
     let statement = `
         SELECT ${selectedColumns} FROM (
-            SELECT ${selectedColumns}
+            SELECT ${selectedColumns}, rowIdx
             FROM ${tableName} 
             ORDER BY rowIdx ASC
         )`;

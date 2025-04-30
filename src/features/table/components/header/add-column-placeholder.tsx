@@ -28,9 +28,9 @@ export const TableAddCellHeaderPlaceHolder = component$(() => {
           lastColumnId.value !== TEMPORAL_ID ? handleNewColumn : undefined
         }
         size="sm"
-        class="ml-6 bg-primary-50 border-primary-100 text-primary-300"
+        class="ml-6 h-[30px] w-[30px] bg-primary-50 border-0 text-primary rounded-full hover:bg-primary-100"
       >
-        <LuPlus />
+        <LuPlus class="w-4 h-4" />
       </Button>
     </th>
   );

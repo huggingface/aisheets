@@ -40,27 +40,23 @@ export const TableCellHeader = component$<{ column: Column }>(({ column }) => {
       class={`min-w-80 w-80 max-w-80 min-h-[50px] h-[50px] px-4 py-2 text-left border-[0.5px] border-l-0 border-t-0 ${classes.value}`}
     >
       <Popover.Root flip={false} gutter={8} floating="bottom-start">
-        <Popover.Trigger class="block text-left w-full">
-          <div class="flex items-center justify-between gap-2 w-full">
-            <div class="flex items-center gap-2 text-wrap w-[82%]">
-              <span
-                class={cn(
-                  buttonVariants({ look: 'ghost' }),
-                  'text-neutral-600',
-                )}
-              >
-                {column.name}
-              </span>
-            </div>
+        <Popover.Trigger class="flex items-center justify-between w-full h-[20px] py-[10px]">
+          <div class="flex flex-col items-start text-wrap w-[82%]">
+            <span
+              class={cn(buttonVariants({ look: 'ghost' }), 'text-neutral-600')}
+            >
+              {column.name}
+            </span>
 
-            <div class="flex items-center gap-1 w-[18%] h-0 pr-0">
-              <CellGeneration column={column} />
-              <CellSettings column={column} />
-            </div>
+            <p class="text-sm text-neutral-500 font-light">
+              {visibleColumnType.value}
+            </p>
           </div>
-          <p class="text-sm text-neutral-500 font-light">
-            {visibleColumnType.value}
-          </p>
+
+          <div class="flex items-center gap-1 w-[18%] h-fit pr-0">
+            <CellGeneration column={column} />
+            <CellSettings column={column} />
+          </div>
         </Popover.Trigger>
         <Popover.Panel>
           <div class="flex flex-col gap-0.5">

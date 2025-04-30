@@ -234,7 +234,7 @@ export const TableCell = component$<{
     });
   });
 
-  useTask$(({ track }) => {
+  useVisibleTask$(({ track }) => {
     track(isEditing);
     track(() => cell.value);
     const scrollable = document.querySelector('.scrollable');
@@ -281,13 +281,13 @@ export const TableCell = component$<{
     }
   });
 
-  useTask$(({ track }) => {
+  useVisibleTask$(({ track }) => {
     track(() => newCellValue.value);
 
     if (
       !newCellValue.value ||
       !isEditableValue(newCellValue.value) ||
-      !(typeof newCellValue.value === 'string')
+      typeof newCellValue.value !== 'string'
     ) {
       modalHeight.value = '320px';
       return;
@@ -361,15 +361,11 @@ export const TableCell = component$<{
   );
 
   return (
-    <td
-      class={cn(
-        'relative min-w-80 w-80 max-w-80 cursor-pointer border-[0.5px] border-l-0 border-t-0 break-words align-top group',
-        {
-          'bg-green-50 border-green-300': cell.validated,
-          'border-neutral-300': !cell.validated,
-          'min-h-[100px] h-[100px]': true,
-        },
-      )}
+    <div
+      class={cn('min-h-[100px] h-[100px]', {
+        'bg-green-50 border-green-300': cell.validated,
+        'border-neutral-300': !cell.validated,
+      })}
       onDblClick$={(e) => {
         e.stopPropagation();
 
@@ -415,13 +411,16 @@ export const TableCell = component$<{
                   size="sm"
                   class={cn(
                     'absolute z-10 text-base top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity',
-                    cell.validated
-                      ? 'bg-green-50/50 text-green-400 hover:bg-green-100'
-                      : 'hover:bg-gray-100 text-gray-400',
+                    {
+                      'bg-green-50/50 text-green-400 hover:bg-green-100':
+                        cell.validated,
+                      'hover:bg-gray-100 text-gray-400': !cell.validated,
+                      '!opacity-0': !cell.id,
+                    },
                   )}
                   onClick$={(e) => {
                     e.stopPropagation();
-                    onValidateCell(originalValue.value!, !cell.validated);
+                    onValidateCell(originalValue.value, !cell.validated);
                   }}
                 >
                   <LuThumbsUp class="text-sm" />
@@ -503,6 +502,6 @@ export const TableCell = component$<{
           )}
         </div>
       </div>
-    </td>
+    </div>
   );
 });

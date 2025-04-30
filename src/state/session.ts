@@ -13,14 +13,13 @@ export interface Session {
 export const useServerSession = (
   request: RequestEventBase<QwikCityPlatform>,
 ): Session => {
-  if (isBrowser)
+  if (isBrowser) {
     throw new Error('useServerSession must be used on the server.');
+  }
 
   const session = request.sharedMap.get('session')!;
 
-  if (!session) {
-    throw (request as any).redirect(302, '/');
-  }
+  if (!session) throw new Error('Session not found.');
 
   return {
     token: session.token,

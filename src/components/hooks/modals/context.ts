@@ -6,9 +6,6 @@ export const modalsContext = createContextId<Signal<State>>('modals.context');
 export const initialState: State = {
   active: null,
   modals: {
-    exportToHub: {
-      status: 'closed',
-    },
     mainSidebar: {
       status: 'closed',
     },

@@ -27,11 +27,15 @@ const { getSerializable: getVirtual, useSerializable: useVirtualScroll } =
         scrollOffset: number;
         range?: { startIndex: number; endIndex: number };
         totalCount: number;
+        estimateSize: number;
+        overscan: number;
+        debug?: boolean;
       }) => {
         const virtualizer = new Virtualizer({
+          debug: state.debug,
           count: state.totalCount,
-          estimateSize: () => 108,
-          overscan: 20,
+          estimateSize: () => state.estimateSize,
+          overscan: state.overscan,
           getScrollElement: () => state.scrollElement.value ?? null,
           scrollToFn: elementScroll,
           observeElementRect: observeElementRect,
@@ -55,14 +59,16 @@ const { getSerializable: getVirtual, useSerializable: useVirtualScroll } =
     ),
   );
 
-const pageSize = 10;
-const buffer = 3;
 export const VirtualScrollContainer = component$(
   ({
     initialData,
     getNextPage,
     itemRenderer,
     scrollElement,
+    estimateSize,
+    overscan,
+    pageSize = 10,
+    buffer = 3,
     debug = false,
   }: {
     initialData: Signal<{
@@ -84,16 +90,22 @@ export const VirtualScrollContainer = component$(
         props: HTMLAttributes<HTMLElement>,
       ) => any
     >;
+    estimateSize: number;
+    overscan: number;
+    pageSize: number;
+    buffer: number;
     scrollElement: Signal<HTMLElement | undefined>;
     debug?: boolean;
   }) => {
     const loadedData = useSignal<any[]>([]);
     const loadingData = useSignal(false);
     const virtualState = useVirtualScroll({
+      debug,
       scrollElement,
       scrollOffset: 0,
-      range: { startIndex: 0, endIndex: pageSize + buffer },
       totalCount: initialData.value.totalCount,
+      estimateSize,
+      overscan,
     });
     useTask$(({ track }) => {
       track(() => initialData.value);
@@ -103,6 +115,7 @@ export const VirtualScrollContainer = component$(
     });
     useTask$(async ({ track }) => {
       track(() => virtualState.state.range);
+
       const indexToFetch = (virtualState.state.range?.endIndex ?? 0) + buffer;
       if (
         isBrowser &&
@@ -115,7 +128,7 @@ export const VirtualScrollContainer = component$(
         // Do this in a hanging promise rather than await so that we don't block the state from updating further
         getNextPage({ rangeStart }).then((rows) => {
           // NOTE: this is not smart about putting the new values in the right place of the array.
-          // This will cause problems when scrolling aroung quickly.
+          // This will cause problems when scrolling around quickly.
           loadedData.value.splice(
             rows.startIndex ?? 0,
             0,
@@ -135,19 +148,26 @@ export const VirtualScrollContainer = component$(
       }
     });
 
+    const visibleRows = useSignal<VirtualItem[]>([]);
+
+    useVisibleTask$(({ track }) => {
+      track(() => virtualState.state.range);
+      if (!virtualState.value) return;
+
+      visibleRows.value = virtualState.value.getVirtualItems();
+    });
+
     return (
       <Fragment>
-        {virtualState.value
-          ?.getVirtualItems()
-          .map((item: VirtualItem, index) => {
-            return itemRenderer(item, loadedData.value[item.index], {
-              key: item.key.toString(),
-              style: {
-                height: `${item.size}px`,
-                transform: `translateY(${item.start - index * item.size}px)`,
-              },
-            });
-          })}
+        {visibleRows.value.map((item: VirtualItem, index) => {
+          return itemRenderer(item, loadedData.value[item.index], {
+            key: item.key.toString(),
+            style: {
+              height: `${item.size}px`,
+              transform: `translateY(${item.start - index * item.size}px)`,
+            },
+          });
+        })}
         {debug ? (
           <div class="fixed z-30 right-0 px-10 bg-white">
             <p>Total count: {initialData.value.totalCount}</p>

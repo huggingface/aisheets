@@ -40,7 +40,6 @@ export const TableBody = component$(() => {
     totalCount: 0,
   });
 
-  const tableBody = useSignal<HTMLElement>();
   const scrollElement = useSignal<HTMLElement>();
   const dragStartCell = useSignal<Cell>();
   const lastMove = useSignal(0);
@@ -95,12 +94,11 @@ export const TableBody = component$(() => {
     const tableEnding = window.innerHeight * 0.95;
 
     const currentY = e.clientY;
-    const scrollable = document.querySelector('.scrollable')!;
 
     if (currentY > tableEnding) {
-      scrollable.scrollBy(0, 60);
+      scrollElement.value?.scrollBy(0, 60);
     } else if (currentY < tableBeginning) {
-      scrollable.scrollBy(0, -60);
+      scrollElement.value?.scrollBy(0, -60);
     }
   });
 
@@ -444,15 +442,17 @@ export const TableBody = component$(() => {
   });
 
   useVisibleTask$(() => {
-    scrollElement.value = tableBody.value?.closest(
-      '.scrollable',
-    ) as HTMLElement;
+    scrollElement.value = document.querySelector('.scrollable') as HTMLElement;
   });
 
   return (
-    <tbody ref={tableBody}>
+    <tbody>
       <VirtualScrollContainer
         debug
+        buffer={3}
+        estimateSize={108}
+        overscan={30}
+        pageSize={10}
         initialData={data}
         getNextPage={getPage}
         itemRenderer={itemRenderer}

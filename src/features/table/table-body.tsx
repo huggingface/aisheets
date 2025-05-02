@@ -448,7 +448,6 @@ export const TableBody = component$(() => {
   return (
     <tbody>
       <VirtualScrollContainer
-        debug
         buffer={3}
         estimateSize={108}
         overscan={30}

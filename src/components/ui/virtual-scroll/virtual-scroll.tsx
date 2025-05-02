@@ -141,7 +141,7 @@ export const VirtualScrollContainer = component$(
           ?.getVirtualItems()
           .map((item: VirtualItem, index) => {
             return itemRenderer(item, loadedData.value[item.index], {
-              key: item.key,
+              key: item.key.toString(),
               style: {
                 height: `${item.size}px`,
                 transform: `translateY(${item.start - index * item.size}px)`,

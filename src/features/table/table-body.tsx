@@ -284,14 +284,14 @@ export const TableBody = component$(() => {
       loadedData: Cell[],
       props: HTMLAttributes<HTMLElement>,
     ) => {
-      const getBoundary = (cell: Cell): string => {
+      const getBoundary = (cell: Cell) => {
         const sel = selectedCellsId.value;
         if (
           sel.length === 0 ||
           columns.value.find((c) => c.id === cell.column?.id)?.kind === 'static'
-        ) {
-          return { rowMin: -1, rowMax: -1, colMin: -1, colMax: -1 };
-        }
+        )
+          return;
+
         const rows = sel.map((c) => c.idx);
         const rowMin = Math.min(...rows);
         const rowMax = Math.max(...rows);

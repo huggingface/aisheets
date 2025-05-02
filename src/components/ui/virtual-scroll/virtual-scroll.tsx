@@ -75,7 +75,7 @@ export const VirtualScrollContainer = component$(
         rangeStart,
       }: {
         rangeStart: number;
-      }) => Promise<{ startIndex: number; array: any[]; totalCount: number }>
+      }) => Promise<{ startIndex: number; elements: any; totalCount: number }>
     >;
     itemRenderer: QRL<
       (
@@ -119,7 +119,7 @@ export const VirtualScrollContainer = component$(
           loadedData.value.splice(
             rows.startIndex ?? 0,
             0,
-            ...(rows.array ?? []),
+            ...(rows.elements ?? []),
           );
           loadingData.value = false;
         });

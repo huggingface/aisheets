@@ -69,7 +69,7 @@ export const makeSerializable = <State extends {}, Serializing extends object>(
     /**
      * A hook that gets the serializable value. Whenever state updates, it will behave as if the serializable value has updates.
      * If possible, previously created versions of the serializable value will be used.
-     * The returned value may be undefined if you try to access it from accross a `$` boundery.
+     * The returned value may be undefined if you try to access it from across a `$` boundary.
      * In those cases, getSerializable should be used instead.
      **/
     useSerializable,

@@ -67,7 +67,7 @@ export const generateCells = async function* ({
 
   const validatedIdxs = validatedCells?.map((cell) => cell.idx);
 
-  if (!limit) limit = await getGeneratedColumnSize(column);
+  if (!limit) limit = await getGeneratedColumnSize(column.id);
   if (!offset) offset = 0;
 
   try {

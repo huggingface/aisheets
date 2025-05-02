@@ -320,7 +320,6 @@ export const TableBody = component$(() => {
 
       return (
         <tr
-          key={item.index}
           class={cn('hover:bg-gray-50/50 transition-colors group', {
             'bg-gray-50/50 hover:bg-gray-50/50': selectedRows.value.includes(
               item.index,

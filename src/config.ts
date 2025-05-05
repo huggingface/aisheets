@@ -68,6 +68,36 @@ export const DEFAULT_MODEL: string =
   process.env.DEFAULT_MODEL ?? 'meta-llama/Llama-3.3-70B-Instruct';
 
 /**
+ * List of model IDs that should be excluded from the model list.
+ * This value is retrieved from the environment variable `EXCLUDED_MODELS` as a comma-separated string.
+ * If not set, defaults to a predefined list of models.
+ */
+export const EXCLUDED_MODELS: string[] = process.env.EXCLUDED_MODELS?.split(
+  ',',
+).map((m) => m.trim()) ?? [
+  'HuggingFaceM4/idefics-9b-instruct',
+  'meta-llama/Llama-2-70b-hf',
+  'SakanaAI/TinySwallow-1.5B',
+  'databricks/dbrx-instruct',
+  'codellama/CodeLlama-7b-hf',
+  'bigcode/starcoder2-15b',
+  'deepseek-ai/deepseek-llm-67b-chat',
+  'EleutherAI/gpt-neox-20b',
+  'meta-llama/Llama-2-13b-chat-hf',
+  'microsoft/DialoGPT-medium',
+  'agentica-org/DeepScaleR-1.5B-Preview',
+  'google/gemma-7b',
+  'mistralai/Mixtral-8x7B-v0.1',
+  'distilbert/distilgpt2',
+  'mistralai/Pixtral-12B-2409',
+  'google/gemma-2-9b-it',
+  'bigcode/starcoder',
+  'openai-community/gpt2',
+  'meta-llama/Llama-2-7b-chat-hf',
+  'meta-llama/Llama-3.2-1B',
+];
+
+/**
  * Default configuration for embedding operations
  */
 export const default_embedding_model = {
@@ -94,3 +124,4 @@ const RUNTIME_ENV = join(DATA_DIR, process.env.NODE_ENV ?? 'development');
 export const VECTOR_DB_DIR: string = join(RUNTIME_ENV, 'embeddings');
 export const SQLITE_DB: string = join(RUNTIME_ENV, '.sqlite3');
 export const DUCKDB_DB: string = join(RUNTIME_ENV, 'duckdb');
+

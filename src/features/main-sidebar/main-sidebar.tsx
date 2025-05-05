@@ -2,6 +2,7 @@ import { $, component$, useSignal, useTask$ } from '@builder.io/qwik';
 import { Link } from '@builder.io/qwik-city';
 import { cn } from '@qwik-ui/utils';
 import { LuPanelLeft } from '@qwikest/icons/lucide';
+import { isToday } from 'date-fns';
 import { useModals } from '~/components/hooks';
 import { useClickOutside } from '~/components/hooks/click/outside';
 import { MainLogo } from '~/components/ui/logo/logo';
@@ -62,6 +63,17 @@ export const MainSidebar = component$(() => {
     }
   });
 
+  // Debug: print all datasets
+  console.log('All datasets:', datasets.value);
+
+  // Split datasets into "today" and "previous"
+  const todayDatasets = datasets.value.filter(
+    (d) => d.createdAt && isToday(new Date(d.createdAt)),
+  );
+  const previousDatasets = datasets.value.filter(
+    (d) => !d.createdAt || !isToday(new Date(d.createdAt)),
+  );
+
   return (
     <div
       ref={ref}
@@ -100,21 +112,46 @@ export const MainSidebar = component$(() => {
       </div>
 
       <div class="flex-1 flex flex-col overflow-y-auto">
-        <p class="text-muted-foreground px-4 text-sm font-semibold mb-4">
-          Today
-        </p>
-        <div class="block space-y-3 px-4">
-          {datasets.value.map((item) => (
-            <Link
-              type="button"
-              key={item.id}
-              href={`/home/dataset/${item.id}`}
-              class="block py-2 pl-3 hover:bg-gray-100 rounded text-sm font-light truncate max-w-full"
-            >
-              {item.name}
-            </Link>
-          ))}
-        </div>
+        {/* Today Section (only if there are datasets) */}
+        {todayDatasets.length > 0 && (
+          <div>
+            <p class="text-muted-foreground px-4 text-sm font-semibold mb-4">
+              Today
+            </p>
+            <div class="block space-y-3 px-4">
+              {todayDatasets.map((item) => (
+                <Link
+                  type="button"
+                  key={item.id}
+                  href={`/home/dataset/${item.id}`}
+                  class="block py-2 pl-3 hover:bg-gray-100 rounded text-sm font-light truncate max-w-full"
+                >
+                  {item.name}
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+        {/* Previous Section (only if there are datasets) */}
+        {previousDatasets.length > 0 && (
+          <div class="mt-8">
+            <p class="text-muted-foreground px-4 text-sm font-semibold mb-4">
+              Previous
+            </p>
+            <div class="block space-y-3 px-4">
+              {previousDatasets.map((item) => (
+                <Link
+                  type="button"
+                  key={item.id}
+                  href={`/home/dataset/${item.id}`}
+                  class="block py-2 pl-3 hover:bg-gray-100 rounded text-sm font-light truncate max-w-full"
+                >
+                  {item.name}
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

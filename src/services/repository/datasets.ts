@@ -35,6 +35,8 @@ export const getUserDatasets = async (user: {
     name: dataset.name,
     createdBy: dataset.createdBy,
     columns: [],
+    createdAt: dataset.createdAt,
+    updatedAt: dataset.updatedAt,
   }));
 
   return datasets;
@@ -79,6 +81,8 @@ export const importDatasetFromFile = async (
       name: model.name,
       createdBy: model.createdBy,
       columns,
+      createdAt: model.createdAt,
+      updatedAt: model.updatedAt,
     };
   } catch (error) {
     console.error('Error importing dataset from file:', error);
@@ -104,6 +108,8 @@ export const createDataset = async ({
       name: model.name,
       createdBy: model.createdBy,
       columns: [],
+      createdAt: model.createdAt,
+      updatedAt: model.updatedAt,
     };
   } catch (error) {
     console.error('Error creating dataset:', error);
@@ -124,6 +130,8 @@ export const getDatasetById = async (id: string): Promise<Dataset | null> => {
     name: model.name,
     createdBy: model.createdBy,
     columns,
+    createdAt: model.createdAt,
+    updatedAt: model.updatedAt,
   };
 
   await Promise.all(

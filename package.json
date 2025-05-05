@@ -74,6 +74,7 @@
     "@lancedb/lancedb": "^0.18.2",
     "apache-arrow": "^19.0.1",
     "consola": "^3.4.0",
+    "date-fns": "^4.1.0",
     "express": "4.20.0",
     "marked": "^15.0.7",
     "mustache": "^4.2.0",

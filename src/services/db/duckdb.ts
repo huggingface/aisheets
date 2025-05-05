@@ -1,6 +1,7 @@
 import { type DuckDBConnection, DuckDBInstance } from '@duckdb/node-api';
+import { DUCKDB_DB } from '~/config';
 
-const duckDB = await DuckDBInstance.create(':memory:', {
+const duckDB = await DuckDBInstance.create(DUCKDB_DB, {
   threads: '10',
 });
 
@@ -15,7 +16,8 @@ export const connectAndClose = async <T>(
 ): Promise<T> => {
   const db = await dbConnect();
   try {
-    return await func(db);
+    const result = await func(db);
+    return result;
   } catch (error) {
     console.error(error);
     throw error;
@@ -23,3 +25,12 @@ export const connectAndClose = async <T>(
     db.close();
   }
 };
+
+await connectAndClose(async (db) => {
+  // Install plugins and extensions
+
+  await db.run(`
+    INSTALL gsheets FROM community;
+    LOAD gsheets;
+  `);
+});

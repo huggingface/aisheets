@@ -115,6 +115,21 @@ describe('create-table-from-file', () => {
     });
   });
 
+  it('should create a table from a google sheet', async () => {
+    const ds = await DatasetModel.create({
+      name: 'test-dataset',
+      createdBy: 'test',
+    });
+
+    const createdColumns = await createDatasetTableFromFile({
+      dataset: ds,
+      file: 'https://docs.google.com/spreadsheets/d/1RN-4tNyOL66FDnrRtnH7-Uwq2ZepEnj2a32RoKU5tkA/edit?gid=0#gid=0',
+    });
+
+    expect(createdColumns).toBeDefined();
+    expect(createdColumns.length).toBe(2);
+  });
+
   it('should raise an error if the file does not exist', async () => {
     await expect(
       createDatasetTableFromFile({

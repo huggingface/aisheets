@@ -1,3 +1,6 @@
+import { join } from 'node:path';
+import { isDev } from '@builder.io/qwik';
+
 /**
  * The OAuth client ID used for authentication.
  * This value is retrieved from the environment variable `OAUTH_CLIENT_ID`.
@@ -45,6 +48,26 @@ export const INFERENCE_TIMEOUT = 90000;
 export const NUM_CONCURRENT_REQUESTS = 5;
 
 /**
+ * The Serper API key used for web searches.
+ * This value is retrieved from the environment variable `SERPER_API_KEY`.
+ */
+export const SERPER_API_KEY: string | undefined = process.env.SERPER_API_KEY;
+
+/**
+ * The default model provider for inference operations.
+ * Default value: 'sambanova'
+ */
+export const DEFAULT_MODEL_PROVIDER: string =
+  process.env.DEFAULT_MODEL_PROVIDER ?? 'sambanova';
+
+/**
+ * The default model for inference.
+ * Default value: 'meta-llama/Llama-3.3-70B-Instruct'
+ */
+export const DEFAULT_MODEL: string =
+  process.env.DEFAULT_MODEL ?? 'meta-llama/Llama-3.3-70B-Instruct';
+
+/**
  * List of model IDs that should be excluded from the model list.
  * This value is retrieved from the environment variable `EXCLUDED_MODELS` as a comma-separated string.
  * If not set, defaults to a predefined list of models.
@@ -73,3 +96,32 @@ export const EXCLUDED_MODELS: string[] = process.env.EXCLUDED_MODELS?.split(
   'meta-llama/Llama-2-7b-chat-hf',
   'meta-llama/Llama-3.2-1B',
 ];
+
+/**
+ * Default configuration for embedding operations
+ */
+export const default_embedding_model = {
+  provider: process.env.EMBEDDING_MODEL_PROVIDER ?? 'sambanova',
+  model: process.env.EMBEDDING_MODEL ?? 'intfloat/e5-mistral-7b-instruct',
+  embedding_dim: Number(process.env.EMBEDDING_DIM ?? 4096),
+  is_instruct: process.env.EMBEDDING_IS_INSTRUCT
+    ? process.env.EMBEDDING_IS_INSTRUCT === 'true'
+    : true,
+} as const;
+
+export const GOOGLE_CLIENT_ID: string | undefined =
+  process.env.GOOGLE_CLIENT_ID ??
+  '905039472434-7khf7dpl6002etvrn1h3ne1g0t2gv5r8.apps.googleusercontent.com';
+
+export const GOOGLE_REDIRECT_URI: string | undefined =
+  process.env.GOOGLE_REDIRECT_URI ??
+  (isDev
+    ? 'http://localhost:5173/oauth2/google'
+    : 'https://huggingfacedg-dataground.hf.space/oauth2/google');
+
+const RUNTIME_ENV = join(DATA_DIR, process.env.NODE_ENV ?? 'development');
+
+export const VECTOR_DB_DIR: string = join(RUNTIME_ENV, 'embeddings');
+export const SQLITE_DB: string = join(RUNTIME_ENV, '.sqlite3');
+export const DUCKDB_DB: string = join(RUNTIME_ENV, 'duckdb');
+

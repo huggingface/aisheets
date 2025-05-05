@@ -23,11 +23,13 @@ export const CellSettings = component$<{ column: Column }>(({ column }) => {
 
   return (
     <div
-      class="py-1 px-1.5 cursor-pointer flex flex-row gap-1 items-center"
+      class="p-2 cursor-pointer flex flex-row gap-1 items-center hover:bg-neutral-100 rounded-full"
       onClick$={editCell}
       role="button"
       tabIndex={0}
       aria-label="Edit column"
+      preventdefault:click
+      stoppropagation:click
     >
       <LuSettings2 class="text-sm text-neutral" />
       <Slot />

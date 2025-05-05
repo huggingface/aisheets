@@ -7,6 +7,10 @@ export interface Example {
 
 export interface MaterializePromptParams {
   instruction: string;
+  sourcesContext?: {
+    source_uri: string;
+    text: string;
+  }[];
   data?: object;
   examples?: Example[];
   renderInstruction?: boolean;
@@ -14,17 +18,28 @@ export interface MaterializePromptParams {
 
 export function materializePrompt({
   instruction,
+  sourcesContext,
   data,
   examples,
   renderInstruction = true,
 }: MaterializePromptParams): string {
   return data && Object.keys(data).length > 0
-    ? materializePromptFromData(instruction, data, examples, renderInstruction)
-    : materializePromptFromScratch(instruction, examples);
+    ? materializePromptFromData(
+        instruction,
+        data,
+        sourcesContext,
+        examples,
+        renderInstruction,
+      )
+    : materializePromptFromScratch(instruction, sourcesContext, examples);
 }
 
 function materializePromptFromScratch(
   instruction: string,
+  sourcesContext?: {
+    source_uri: string;
+    text: string;
+  }[],
   examples?: Example[],
 ): string {
   const outputExamples = examples?.map((ex) => ex.output);
@@ -52,6 +67,15 @@ Ensure your output differs meaningfully from the existing data points in topic, 
 # User Instruction
 {{instruction}}
 
+{{#hasSourcesContext}}
+# Dataset Source Context
+The following are the dataset sources that might be relevant to the user instruction. Use them to cross-check your output and ensure diversity with respect to the existing dataset.
+## Dataset Source Context
+{{#sourcesContext}}
+- {{source_uri}}: {{text}}
+{{/sourcesContext}}
+{{/hasSourcesContext}}
+
 {{#hasExamples}}
 # Current dataset
 Read carefully these data points to avoid repeating them and ensure diversity across the whole dataset. Data points are prior outputs to avoid mimicking. Treat them as exclusion criteria.
@@ -70,6 +94,8 @@ Generate **only** the output requested in the user instruction. No additional in
       instruction,
       examples: outputExamples,
       hasExamples: outputExamples && outputExamples.length > 0,
+      hasSourcesContext: sourcesContext && sourcesContext.length > 0,
+      sourcesContext: sourcesContext,
     },
     undefined,
     { escape: escapeValues },
@@ -79,6 +105,10 @@ Generate **only** the output requested in the user instruction. No additional in
 function materializePromptFromData(
   instruction: string,
   data: object,
+  sourcesContext?: {
+    source_uri: string;
+    text: string;
+  }[],
   examples?: Example[],
   renderInstruction = true,
 ): string {
@@ -112,6 +142,15 @@ The following are correct, accurate example outputs with respect to the user ins
 # User instruction
 {{instruction}}
 
+{{#hasSourcesContext}}
+# Dataset Source Context
+The following are the dataset sources that might be relevant to the user instruction. Use them to cross-check your output and ensure diversity with respect to the existing dataset.
+## Dataset Source Context
+{{#sourcesContext}}
+- {{source_uri}}: {{text}}
+{{/sourcesContext}}
+{{/hasSourcesContext}}
+
 # Output
     `,
     {
@@ -122,9 +161,20 @@ The following are correct, accurate example outputs with respect to the user ins
         : instruction,
       hasExamples: examples && examples.length > 0,
       formattedExamples,
+      hasSourcesContext: sourcesContext && sourcesContext.length > 0,
+      sourcesContext: sourcesContext,
     },
   );
 }
+
+export const renderInstruction = (
+  instruction: string,
+  data: object,
+): string => {
+  return mustache.render(instruction, data, undefined, {
+    escape: escapeValues,
+  });
+};
 
 const escapeValues = (value: any): string => {
   if (typeof value === 'object' || Array.isArray(value)) {

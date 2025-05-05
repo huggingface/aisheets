@@ -12,11 +12,11 @@ importers:
         specifier: 1.2.0-alpha.13
         version: 1.2.0-alpha.13
       '@huggingface/hub':
-        specifier: ^1.0.2
-        version: 1.0.2
+        specifier: ^1.1.2
+        version: 1.1.2
       '@huggingface/inference':
-        specifier: ^3.9.1
-        version: 3.9.1
+        specifier: ^3.12.0
+        version: 3.12.0
       '@huggingface/transformers':
         specifier: ^3.4.2
         version: 3.4.2
@@ -415,8 +415,8 @@ packages:
     peerDependencies:
       eslint: ^6.0.0 || ^7.0.0 || >=8.0.0
 
-  '@eslint-community/eslint-utils@4.5.0':
-    resolution: {integrity: sha512-RoV8Xs9eNwiDvhv7M+xcL4PWyRyIXRY/FLp3buU4h1EYfdF7unWUy3dOjPqb3C7rMUewIcqwW850PgS8h1o1yg==}
+  '@eslint-community/eslint-utils@4.7.0':
+    resolution: {integrity: sha512-dyybb3AcajC7uha6CvhdVRJqaKyn7w2YKqKyAN37NKYgZT36w+iRb0Dymmc5qEJ549c/S31cMMSFd75bteCpCw==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     peerDependencies:
       eslint: ^6.0.0 || ^7.0.0 || >=8.0.0
@@ -445,27 +445,27 @@ packages:
   '@gar/promisify@1.1.3':
     resolution: {integrity: sha512-k2Ty1JcVojjJFwrg/ThKi2ujJ7XNLYaFGNB/bWT9wGR+oSMJHMa5w+CUq6p/pVrKeNNgA7pCqEcjSnHVoqJQFw==}
 
-  '@huggingface/hub@1.0.2':
-    resolution: {integrity: sha512-O1suBM/WKEJ6Ad+Dp7eMtd+C2W6MCL3LTF/EjSKVqG9jTHjjozA/kpcRmd/XJh1ZgtLigx1zMtNeyhXI9B9RWA==}
+  '@huggingface/hub@1.1.2':
+    resolution: {integrity: sha512-Jf4GhvVj9ABDw4Itb3BV1T7f22iewuZva476qTicQ4kOTbosuUuFDhsVH7ZH6rVNgg20Ll9kaNBF5CXjySIT+w==}
     engines: {node: '>=18'}
 
-  '@huggingface/inference@3.9.1':
-    resolution: {integrity: sha512-qbZ9dwgWpoGxYsxH3SvuHbYgelGhCg9RyZsWwYAas10ejWMdphEt7kObqs0OXEqe+ProlAUH24NnbURfH3vswg==}
+  '@huggingface/inference@3.12.0':
+    resolution: {integrity: sha512-z2EGuzWwzHfiikZkzKS8J1vLdTxMnIfGEmL5SX8PI18pg0GS7fovbBvIul6TD8FiLBQ2aurdN6ci1z8PnUtv/A==}
     engines: {node: '>=18'}
 
   '@huggingface/jinja@0.3.3':
     resolution: {integrity: sha512-vQQr2JyWvVFba3Lj9es4q9vCl1sAc74fdgnEMoX8qHrXtswap9ge9uO3ONDzQB0cQ0PUyaKY2N6HaVbTBvSXvw==}
     engines: {node: '>=18'}
 
-  '@huggingface/jinja@0.3.4':
-    resolution: {integrity: sha512-kFFQWJiWwvxezKQnvH1X7GjsECcMljFx+UZK9hx6P26aVHwwidJVTB0ptLfRVZQvVkOGHoMmTGvo4nT0X9hHOA==}
+  '@huggingface/jinja@0.4.1':
+    resolution: {integrity: sha512-3WXbMFaPkk03LRCM0z0sylmn8ddDm4ubjU7X+Hg4M2GOuMklwoGAFXp9V2keq7vltoB/c7McE5aHUVVddAewsw==}
     engines: {node: '>=18'}
 
-  '@huggingface/tasks@0.17.4':
-    resolution: {integrity: sha512-LES7+OosthFKdqRL0e+bA2d4jfKmiQWuqahsPrv0+EsSZtdHdaZ3nje0f2g5wq4miHX4xWpBLuWJknjdnBwXsA==}
+  '@huggingface/tasks@0.18.12':
+    resolution: {integrity: sha512-hUEYhXJzJCUhLSBNglW+Sji5fuzMnpBimp3kbdcGor+MaN9xb+qrcLnMC7X8aOcZaZdCErwYYIqz2oSP2EM4Bg==}
 
-  '@huggingface/tasks@0.18.10':
-    resolution: {integrity: sha512-/atyLLdUvZh+34jYEzmV26vLQel1qcoglCOuH5bP3cr8WAGMZh9aE/ZWWMwMD2PRgr7/9Nlm18UOKprYEKNhaQ==}
+  '@huggingface/tasks@0.19.1':
+    resolution: {integrity: sha512-cocq5+jkmh8+qIvWDCyC9nkf7qCpmBRrJL/WPWhfIMXWEv2dMYMY62ylFv+dq/vRwpe+/5h0WlnZGOSIa+3OJg==}
 
   '@huggingface/transformers@3.4.2':
     resolution: {integrity: sha512-B7K7SCkpqjlfhrV0z18icmnCqgdU2zq+gI3ttBRQ8xl6mIzfxeeKht/vCa8y7pbewY/hJmirKdQClpw0IUaSaw==}
@@ -3794,7 +3794,7 @@ snapshots:
       eslint: 8.57.0
       eslint-visitor-keys: 3.4.3
 
-  '@eslint-community/eslint-utils@4.5.0(eslint@8.57.0)':
+  '@eslint-community/eslint-utils@4.7.0(eslint@8.57.0)':
     dependencies:
       eslint: 8.57.0
       eslint-visitor-keys: 3.4.3
@@ -3831,22 +3831,22 @@ snapshots:
   '@gar/promisify@1.1.3':
     optional: true
 
-  '@huggingface/hub@1.0.2':
+  '@huggingface/hub@1.1.2':
     dependencies:
-      '@huggingface/tasks': 0.17.4
+      '@huggingface/tasks': 0.18.12
 
-  '@huggingface/inference@3.9.1':
+  '@huggingface/inference@3.12.0':
     dependencies:
-      '@huggingface/jinja': 0.3.4
-      '@huggingface/tasks': 0.18.10
+      '@huggingface/jinja': 0.4.1
+      '@huggingface/tasks': 0.19.1
 
   '@huggingface/jinja@0.3.3': {}
 
-  '@huggingface/jinja@0.3.4': {}
+  '@huggingface/jinja@0.4.1': {}
 
-  '@huggingface/tasks@0.17.4': {}
+  '@huggingface/tasks@0.18.12': {}
 
-  '@huggingface/tasks@0.18.10': {}
+  '@huggingface/tasks@0.19.1': {}
 
   '@huggingface/transformers@3.4.2':
     dependencies:
@@ -5118,7 +5118,7 @@ snapshots:
 
   eslint@8.57.0:
     dependencies:
-      '@eslint-community/eslint-utils': 4.5.0(eslint@8.57.0)
+      '@eslint-community/eslint-utils': 4.7.0(eslint@8.57.0)
       '@eslint-community/regexpp': 4.12.1
       '@eslint/eslintrc': 2.1.4
       '@eslint/js': 8.57.0

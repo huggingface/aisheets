@@ -3,7 +3,11 @@ import {
   chatCompletion,
   chatCompletionStream,
 } from '@huggingface/inference';
-import { INFERENCE_TIMEOUT, NUM_CONCURRENT_REQUESTS } from '~/config';
+import {
+  INFERENCE_TIMEOUT,
+  NUM_CONCURRENT_REQUESTS,
+  ORG_BILLING,
+} from '~/config';
 import { type Example, materializePrompt } from './materialize-prompt';
 
 export interface PromptExecutionParams {
@@ -63,6 +67,13 @@ export const runPromptExecution = async ({
     data,
     examples,
   });
+  const args = createApiParams(
+    modelName,
+    [{ role: 'user', content: inputPrompt }],
+    modelProvider,
+    accessToken,
+  );
+  const options = createApiOptions(timeout);
 
   console.log('\n🔷 Prompt Execution 🔷');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
@@ -76,17 +87,7 @@ export const runPromptExecution = async ({
   console.log('🔷 End Prompt 🔷\n');
 
   try {
-    const response = await chatCompletion(
-      createApiParams(
-        modelName,
-        [{ role: 'user', content: inputPrompt }],
-        modelProvider,
-        accessToken,
-      ),
-      {
-        signal: AbortSignal.timeout(timeout ?? INFERENCE_TIMEOUT),
-      },
-    );
+    const response = await chatCompletion(args, options);
     return { value: response.choices[0].message.content };
   } catch (e) {
     return { error: handleError(e) };
@@ -109,6 +110,13 @@ export const runPromptExecutionStream = async function* ({
     data,
     examples,
   });
+  const args = createApiParams(
+    modelName,
+    [{ role: 'user', content: inputPrompt }],
+    modelProvider,
+    accessToken,
+  );
+  const options = createApiOptions(timeout);
 
   console.log('\n🔷 Prompt Stream 🔷');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
@@ -123,17 +131,7 @@ export const runPromptExecutionStream = async function* ({
 
   try {
     let accumulated = '';
-    const stream = chatCompletionStream(
-      createApiParams(
-        modelName,
-        [{ role: 'user', content: inputPrompt }],
-        modelProvider,
-        accessToken,
-      ),
-      {
-        signal: AbortSignal.timeout(timeout ?? INFERENCE_TIMEOUT),
-      },
-    );
+    const stream = chatCompletionStream(args, options);
 
     for await (const chunk of stream) {
       if (chunk.choices?.[0]?.delta?.content) {
@@ -213,3 +211,12 @@ export const runPromptExecutionStreamBatch = async function* (
     }
   }
 };
+function createApiOptions(timeout: number | undefined) {
+  const options: Record<string, any> = {
+    signal: AbortSignal.timeout(timeout ?? INFERENCE_TIMEOUT),
+  };
+
+  if (ORG_BILLING) options.billTo = ORG_BILLING;
+
+  return options;
+}

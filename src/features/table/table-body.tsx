@@ -333,7 +333,7 @@ export const TableBody = component$(() => {
           <td
             class={cn(
               'sticky left-0 z-[10]',
-              'px-2 text-center border-[0.5px] border-t-0 bg-neutral-100 select-none',
+              'px-2 text-center border bg-neutral-100 select-none',
               {
                 'bg-neutral-200': selectedRows.value.includes(item.index),
               },
@@ -391,11 +391,15 @@ export const TableBody = component$(() => {
             return (
               <Fragment key={`${cell.idx}-${cell.column!.id}`}>
                 {cell.column?.id === TEMPORAL_ID ? (
-                  <td class="min-w-80 w-80 max-w-80 px-2 min-h-[100px] h-[100px] border-[0.5px] border-l-0 border-t-0" />
+                  <td class="min-w-80 w-80 max-w-80 px-2 min-h-[100px] h-[100px] border" />
                 ) : (
                   <td
                     class={cn(
-                      'relative box-border min-w-[326px] w-[326px] max-w-[326px] h-[108px] cursor-pointer break-words align-top border-[0.5px] border-l-0 border-t-0',
+                      'relative box-border min-w-[326px] w-[326px] max-w-[326px] h-[108px] cursor-pointer break-words align-top border',
+                      {
+                        'bg-green-50 border-green-300': cell.validated,
+                        'border-neutral-300': !cell.validated,
+                      },
                       getBoundary(cell),
                     )}
                   >
@@ -403,7 +407,7 @@ export const TableBody = component$(() => {
                       onMouseUp$={handleMouseUp$}
                       onMouseDown$={(e) => handleMouseDown$(cell, e)}
                       onMouseOver$={(e) => handleMouseOver$(cell, e)}
-                      onMouseMove$={(e) => handleMouseMove$(e)}
+                      onMouseMove$={handleMouseMove$}
                     >
                       <TableCell cell={cell} />
 
@@ -491,7 +495,7 @@ const ExecutionFormDebounced = component$<{ column?: { id: Column['id'] } }>(
     if (!state.isVisible) return null;
 
     return (
-      <td class="min-w-[660px] w-[660px] border-[0.5px] bg-neutral-100 border-t-0 border-l-0 border-b-0" />
+      <td class="min-w-[660px] w-[660px] border bg-neutral-100 border-t-0 border-l-0 border-b-0" />
     );
   },
 );

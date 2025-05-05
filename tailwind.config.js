@@ -85,7 +85,7 @@ export default {
       },
       borderWidth: {
         base: "var(--border-width)",
-        DEFAULT: "calc(var(--border-width) + 1px)",
+        DEFAULT: "calc(var(--border-width) + 0.25px)",
         2: "calc(var(--border-width) + 2px)",
         4: "calc(var(--border-width) + 4px)",
         8: "calc(var(--border-width) + 8px)",

@@ -184,7 +184,7 @@ export const ExecutionForm = component$<SidebarProps>(
     });
 
     return (
-      <th class="z-20 min-w-[660px] w-[660px] bg-neutral-100 font-normal border-[0.5px] border-l-0 text-left">
+      <th class="z-20 min-w-[660px] w-[660px] bg-neutral-100 font-normal border text-left">
         <div class="flex justify-end items-center px-1">
           <Button
             look="ghost"

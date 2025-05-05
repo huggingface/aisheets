@@ -60,11 +60,13 @@ export const TableBody = component$(() => {
       return cell;
     };
 
+    const visibleColumns = columns.value.filter((column) => column.visible);
+
     return Array.from(
       { length: firstColumn.value.cells.length },
       (_, rowIndex) =>
-        Array.from({ length: columns.value.length }, (_, colIndex) =>
-          getCell(columns.value[colIndex], rowIndex),
+        Array.from({ length: visibleColumns.length }, (_, colIndex) =>
+          getCell(visibleColumns[colIndex], rowIndex),
         ),
     );
   });
@@ -323,7 +325,7 @@ export const TableBody = component$(() => {
 
       return (
         <tr
-          class={cn('hover:bg-gray-50/50 transition-colors', {
+          class={cn('transition-colors', {
             'bg-gray-50/50 hover:bg-gray-50/50': selectedRows.value.includes(
               item.index,
             ),

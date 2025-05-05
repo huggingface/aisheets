@@ -5,7 +5,7 @@ export const Username = component$(() => {
   const session = useSession();
 
   return (
-    <div class="bg-ring text-white rounded-full w-8 h-8 flex items-center justify-center">
+    <div class="bg-neutral-600 text-white rounded-full w-8 h-8 flex items-center justify-center">
       {session.value.user.username.slice(0, 2).toUpperCase()}
     </div>
   );

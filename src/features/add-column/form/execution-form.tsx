@@ -195,7 +195,7 @@ export const ExecutionForm = component$<SidebarProps>(
         class="z-20 min-w-[660px] w-[660px] bg-neutral-100 font-normal border text-left"
         ref={executionFormRef}
       >
-        <div class="flex justify-end items-center px-1">
+        <div class="flex justify-end items-center p-1">
           <Button
             look="ghost"
             class={`${columns.value.filter((c) => c.id !== TEMPORAL_ID).length >= 1 ? 'visible' : 'invisible'} p-1.5 rounded-full hover:bg-neutral-200 cursor-pointer transition-colors`}
@@ -231,16 +231,16 @@ export const ExecutionForm = component$<SidebarProps>(
                   <Button
                     key={column.process?.isExecuting?.toString()}
                     look="primary"
-                    class="w-[45px] h-[45px] rounded-full flex items-center justify-center p-0"
+                    class="w-[30px] h-[30px] rounded-full flex items-center justify-center p-0"
                     onClick$={onGenerate}
                     disabled={
                       column.process?.isExecuting && column.id === TEMPORAL_ID
                     }
                   >
                     {column.process?.isExecuting ? (
-                      <LuStopCircle class="h-6 w-6" />
+                      <LuStopCircle class="text-lg" />
                     ) : (
-                      <LuEgg class="w-6 h-6" />
+                      <LuEgg class="text-lg" />
                     )}
                   </Button>
                 </div>

@@ -35,7 +35,7 @@ export const TableHeader = component$(() => {
               <Fragment key={column.id}>
                 <th
                   key={column.id}
-                  class="min-w-80 w-80 max-w-80 h-[30px] border bg-neutral-100 text-primary-600"
+                  class="min-w-80 w-80 max-w-80 h-[30px] border bg-neutral-100 text-primary-600 font-normal"
                 >
                   {indexToAlphanumeric(i + 1)}
                 </th>

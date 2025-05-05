@@ -1,6 +1,5 @@
-import { component$, useTask$ } from '@builder.io/qwik';
-import { type DocumentHead, useLocation } from '@builder.io/qwik-city';
-import { useActiveModal } from '~/components';
+import { component$ } from '@builder.io/qwik';
+import type { DocumentHead } from '@builder.io/qwik-city';
 import { DatasetName } from '~/features/datasets';
 import { SaveDataset } from '~/features/export';
 import { MainSidebarButton } from '~/features/main-sidebar';
@@ -9,17 +8,6 @@ import { Table } from '~/features/table';
 import { Username } from '~/features/user/username';
 
 export default component$(() => {
-  const location = useLocation();
-  const { close } = useActiveModal();
-
-  useTask$(({ track }) => {
-    track(() => location.isNavigating);
-
-    if (location.isNavigating) {
-      close();
-    }
-  });
-
   return (
     <div class="flex flex-col h-full w-full">
       <div class="sticky">

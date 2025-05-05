@@ -362,7 +362,7 @@ export const TableCell = component$<{
 
   return (
     <div
-      class={cn('min-h-[100px] h-[100px]', {
+      class={cn('min-h-[100px] h-[100px] group', {
         'bg-green-50 border-green-300': cell.validated,
         'border-neutral-300': !cell.validated,
       })}

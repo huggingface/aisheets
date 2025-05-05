@@ -6,7 +6,13 @@ import { useServerSession } from '~/state';
 import { INFERENCE_PROVIDERS } from '@huggingface/inference';
 
 // This list helps to exclude providers that are not supported by the endpoint
-const UNSUPPORTED_PROVIDERS = ['openai', 'featherless-ai', 'groq', 'nscale'];
+const UNSUPPORTED_PROVIDERS = [
+  'openai',
+  'featherless-ai',
+  'groq',
+  'nscale',
+  'ovhcloud',
+];
 
 const MODEL_EXPANDABLE_KEYS = [
   'author',

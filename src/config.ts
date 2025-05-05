@@ -119,6 +119,14 @@ export const GOOGLE_REDIRECT_URI: string | undefined =
     ? 'http://localhost:5173/oauth2/google'
     : 'https://huggingfacedg-dataground.hf.space/oauth2/google');
 
+/**
+ * If defined, the inference endpoint bill with by applied to the organization billing.
+ *
+ * Users must be part of the organiation in order to run inference calls. Default: undefined
+ */
+export const ORG_BILLING = process.env.ORG_BILLING ?? undefined;
+
+
 const RUNTIME_ENV = join(DATA_DIR, process.env.NODE_ENV ?? 'development');
 
 export const VECTOR_DB_DIR: string = join(RUNTIME_ENV, 'embeddings');

@@ -2,6 +2,25 @@ import { type RequestEventLoader, routeLoader$ } from '@builder.io/qwik-city';
 import * as config from '~/config';
 import { useServerSession } from '~/state';
 
+/**
+ * All config variables that are needed on the client side.
+ * This is used to pass the config variables to the client.
+ */
+export const useClientConfig = routeLoader$(async function (
+  this: RequestEventLoader,
+) {
+  useServerSession(this);
+
+  return {
+    DEFAULT_MODEL: config.DEFAULT_MODEL,
+    DEFAULT_MODEL_PROVIDER: config.DEFAULT_MODEL_PROVIDER,
+  };
+});
+
+/**
+ * All config variables that are needed on the server side.
+ *
+ */
 export const useServerConfig = routeLoader$(async function (
   this: RequestEventLoader,
 ) {
@@ -18,7 +37,5 @@ export const useServerConfig = routeLoader$(async function (
     INFERENCE_TIMEOUT: config.INFERENCE_TIMEOUT,
     NUM_CONCURRENT_REQUESTS: config.NUM_CONCURRENT_REQUESTS,
     SERPER_API_KEY: config.SERPER_API_KEY,
-    DEFAULT_MODEL: config.DEFAULT_MODEL,
-    DEFAULT_MODEL_PROVIDER: config.DEFAULT_MODEL_PROVIDER,
   };
 });

@@ -4,6 +4,7 @@ import {
   Resource,
   component$,
   noSerialize,
+  useContext,
   useResource$,
   useSignal,
   useTask$,
@@ -25,7 +26,7 @@ import {
   type Variable,
 } from '~/features/add-column/components/template-textarea';
 import { useExecution } from '~/features/add-column/form/execution';
-import { useServerConfig } from '~/loaders/config';
+import { configContext } from '~/routes/home/layout';
 import {
   type Column,
   type CreateColumn,
@@ -45,9 +46,7 @@ export const ExecutionForm = component$<SidebarProps>(
     const { columns, maxNumberOfRows, removeTemporalColumn, updateColumn } =
       useColumnsStore();
 
-    const serverConfig = useServerConfig();
-
-    const { DEFAULT_MODEL, DEFAULT_MODEL_PROVIDER } = serverConfig.value;
+    const { DEFAULT_MODEL, DEFAULT_MODEL_PROVIDER } = useContext(configContext);
 
     const isOpenModel = useSignal(false);
 

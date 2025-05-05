@@ -100,9 +100,9 @@ export const useListModels = server$(async function (
         .map((provider: any) => provider.provider);
 
       if (
-        availableProviders.length > 0 
-        && !EXCLUDED_MODELS.includes(model.id)
-        && model.tags?.includes('conversational')
+        availableProviders.length > 0 &&
+        !EXCLUDED_MODELS.includes(model.id) &&
+        model.tags?.includes('conversational')
       ) {
         let sizeInB = 0;
         if (model.safetensors) {

@@ -124,4 +124,3 @@ const RUNTIME_ENV = join(DATA_DIR, process.env.NODE_ENV ?? 'development');
 export const VECTOR_DB_DIR: string = join(RUNTIME_ENV, 'embeddings');
 export const SQLITE_DB: string = join(RUNTIME_ENV, '.sqlite3');
 export const DUCKDB_DB: string = join(RUNTIME_ENV, 'duckdb');
-

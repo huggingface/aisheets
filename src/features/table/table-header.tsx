@@ -105,6 +105,8 @@ const ExecutionHeaderDebounced = component$<{ column: Column }>(
 
     if (!state.isVisible) return null;
 
-    return <th class="min-w-[660px] w-[660px] bg-neutral-100 border" />;
+    return (
+      <th class="min-w-[660px] w-[660px] h-[30px] bg-neutral-100 border" />
+    );
   },
 );

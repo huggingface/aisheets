@@ -42,6 +42,7 @@ interface SidebarProps {
 
 export const ExecutionForm = component$<SidebarProps>(
   ({ column, onGenerateColumn }) => {
+    const executionFormRef = useSignal<HTMLElement>();
     const { mode, close } = useExecution();
     const { columns, maxNumberOfRows, removeTemporalColumn, updateColumn } =
       useColumnsStore();
@@ -139,6 +140,13 @@ export const ExecutionForm = component$<SidebarProps>(
       });
     });
 
+    useVisibleTask$(() => {
+      executionFormRef.value?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+      });
+    });
+
     const onGenerate = $(async () => {
       if (column.process?.cancellable) {
         column.process.cancellable.abort();
@@ -183,7 +191,10 @@ export const ExecutionForm = component$<SidebarProps>(
     });
 
     return (
-      <th class="z-20 min-w-[660px] w-[660px] bg-neutral-100 font-normal border text-left">
+      <th
+        class="z-20 min-w-[660px] w-[660px] bg-neutral-100 font-normal border text-left"
+        ref={executionFormRef}
+      >
         <div class="flex justify-end items-center px-1">
           <Button
             look="ghost"

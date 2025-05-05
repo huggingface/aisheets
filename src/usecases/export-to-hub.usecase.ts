@@ -15,8 +15,8 @@ import {
   type Process,
   useServerSession,
 } from '~/state';
+import { materializePrompt } from '../services/inference/materialize-prompt';
 import { collectExamples } from './collect-examples';
-import { materializePrompt } from './materialize-prompt';
 
 export interface ExportDatasetParams {
   dataset: Dataset;

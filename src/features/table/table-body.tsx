@@ -126,7 +126,9 @@ export const TableBody = component$(() => {
     if (!selectedRows.value.length) return;
 
     for (let i = selectedRows.value[0] + 1; i <= idx; i++) {
-      selectedRows.value = [...selectedRows.value, i];
+      if (!selectedRows.value.includes(i)) {
+        selectedRows.value = [...selectedRows.value, i];
+      }
     }
   });
 
@@ -245,7 +247,10 @@ export const TableBody = component$(() => {
 
   const getBoundary = (cell: Cell) => {
     const sel = selectedCellsId.value;
-    if (sel.length === 0) {
+    if (
+      sel.length === 0 ||
+      columns.value.find((c) => c.id === cell.column?.id)?.kind === 'static'
+    ) {
       return { rowMin: -1, rowMax: -1, colMin: -1, colMax: -1 };
     }
     const rows = sel.map((c) => c.idx);
@@ -369,16 +374,20 @@ export const TableBody = component$(() => {
                           latestCellSelected.value.value &&
                           latestCellSelected.value?.idx === cell.idx && (
                             <div class="absolute bottom-1 right-4 w-3 h-3 cursor-crosshair z-10">
-                              <Button
-                                size="sm"
-                                look="ghost"
-                                class="cursor-crosshair p-1"
-                                onMouseDown$={(e) =>
-                                  handleMouseDragging$(cell, e)
-                                }
-                              >
-                                <LuDot class="text-5xl text-primary-300" />
-                              </Button>
+                              {columns.value.find(
+                                (c) => c.id === cell.column?.id,
+                              )?.kind !== 'static' && (
+                                <Button
+                                  size="sm"
+                                  look="ghost"
+                                  class="cursor-crosshair p-1"
+                                  onMouseDown$={(e) =>
+                                    handleMouseDragging$(cell, e)
+                                  }
+                                >
+                                  <LuDot class="text-5xl text-primary-300" />
+                                </Button>
+                              )}
                             </div>
                           )}
                       </div>

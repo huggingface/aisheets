@@ -72,7 +72,7 @@ export default component$(() => {
         currentStep.value = `Populating dataset "${result.datasetName}"`;
         await populateDatasetAction(result.dataset, result.datasetName);
         currentStep.value = 'Redirecting to dataset';
-        await nav(`/dataset/${result.dataset}/`);
+        await nav(`/home/dataset/${result.dataset}/`);
         return;
       }
     } catch (error) {

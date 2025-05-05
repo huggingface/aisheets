@@ -52,13 +52,18 @@ export const listDatasetTableRows = async ({
 
     let statement = `
         SELECT ${selectedColumns} FROM (
-            SELECT ${selectedColumns}
+            SELECT ${selectedColumns}, rowIdx
             FROM ${tableName} 
             ORDER BY rowIdx ASC
         )`;
 
-    if (limit) statement += ` LIMIT ${limit}`;
-    if (offset) statement += ` OFFSET ${offset}`;
+    if (limit && offset) {
+      statement += ` WHERE rowIdx >= ${offset} AND rowIdx < ${limit + offset}`;
+    } else if (limit && !offset) {
+      statement += ` WHERE rowIdx < ${limit}`;
+    } else if (offset && !limit) {
+      statement += ` WHERE rowIdx >= ${offset}`;
+    }
 
     const results = await db.run(statement);
 

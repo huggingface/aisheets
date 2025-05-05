@@ -12,7 +12,6 @@ import { createColumn } from '../services/repository/columns';
 import { createDataset } from '../services/repository/datasets';
 import { createProcess } from '../services/repository/processes';
 import { useServerSession } from '../state/session';
-import { generateCells } from './generate-cells';
 
 export interface AssistantParams {
   accessToken?: string;
@@ -294,28 +293,6 @@ async function createWebSources(
 }
 
 /**
- * Generates cells for all columns in the dataset
- */
-async function generateDatasetCells(columns: Column[], session: Session) {
-  for (const column of columns) {
-    if (!column.process) continue;
-
-    const hasReferences = column.process.columnsReferences?.length > 0;
-
-    for await (const _ of generateCells({
-      column,
-      process: column.process,
-      session,
-      limit: column.process.limit,
-      offset: column.process.offset,
-      parallel: hasReferences,
-    })) {
-      // TODO: add abort signal?
-    }
-  }
-}
-
-/**
  * Creates a dataset with the suggested columns from the assistant
  */
 async function createAutoDataset(
@@ -339,15 +316,6 @@ async function createAutoDataset(
   if (queries && queries.length > 0) {
     await createWebSources(dataset, queries, session);
   }
-
-  // Step 3: Start cell generation in the background
-  Promise.resolve().then(async () => {
-    try {
-      await generateDatasetCells(createdColumns, session);
-    } catch (error) {
-      console.error('❌ Error generating cells:', error);
-    }
-  });
 
   return {
     dataset,

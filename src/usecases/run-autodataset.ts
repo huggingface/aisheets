@@ -1,17 +1,17 @@
 import type { RequestEventBase } from '@builder.io/qwik-city';
-import { type InferenceProvider, chatCompletion } from '@huggingface/inference';
+import { chatCompletion } from '@huggingface/inference';
+import { DEFAULT_MODEL, DEFAULT_MODEL_PROVIDER } from '~/config';
 import {
-  DEFAULT_MODEL,
-  DEFAULT_MODEL_PROVIDER,
-  INFERENCE_TIMEOUT,
-} from '~/config';
+  normalizeChatCompletionArgs,
+  normalizeOptions,
+} from '~/services/inference/run-prompt-execution';
+import { createColumn } from '~/services/repository/columns';
+import { createDataset } from '~/services/repository/datasets';
+import { createProcess } from '~/services/repository/processes';
 import { createSourcesFromWebQueries } from '~/services/websearch/search-sources';
 import type { Column, Session } from '~/state';
 import type { ColumnKind } from '~/state/columns';
-import { createColumn } from '../services/repository/columns';
-import { createDataset } from '../services/repository/datasets';
-import { createProcess } from '../services/repository/processes';
-import { useServerSession } from '../state/session';
+import { useServerSession } from '~/state/session';
 
 export interface AssistantParams {
   accessToken?: string;
@@ -385,15 +385,13 @@ export const runAutoDataset = async function (
       : NO_SEARCH_PROMPT_TEMPLATE.replace('{instruction}', params.instruction);
 
     const response = await chatCompletion(
-      {
-        model: modelName,
+      normalizeChatCompletionArgs({
         messages: [{ role: 'user', content: promptText }],
-        provider: modelProvider as InferenceProvider,
+        modelName,
+        modelProvider,
         accessToken: session.token,
-      },
-      {
-        signal: AbortSignal.timeout(params.timeout ?? INFERENCE_TIMEOUT),
-      },
+      }),
+      normalizeOptions(params.timeout),
     );
 
     const responseText = response.choices[0].message.content || '';

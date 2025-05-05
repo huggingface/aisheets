@@ -126,7 +126,6 @@ export const GOOGLE_REDIRECT_URI: string | undefined =
  */
 export const ORG_BILLING = process.env.ORG_BILLING ?? undefined;
 
-
 const RUNTIME_ENV = join(DATA_DIR, process.env.NODE_ENV ?? 'development');
 
 export const VECTOR_DB_DIR: string = join(RUNTIME_ENV, 'embeddings');

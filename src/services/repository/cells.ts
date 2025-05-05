@@ -183,17 +183,19 @@ export const getValidatedColumnCells = async ({
 
   if (models.length === 0) return [];
 
+  const offset = models[0].idx;
+
   const rows = await listDatasetTableRows({
     dataset: dbColumn.dataset,
     columns: [column],
-    offset: models[0].idx,
-    limit: models[models.length - 1].idx - models[0].idx + 1,
+    offset,
+    limit: models[models.length - 1].idx - offset + 1,
   });
 
   const cells = models.map((model) => ({
     id: model.id,
     idx: model.idx,
-    value: rows[model.idx][column.id],
+    value: rows[model.idx - offset][column.id],
     error: model.error,
     validated: model.validated,
     column: {
@@ -238,7 +240,7 @@ export const getColumnCells = async ({
       columnId: column.id,
       idx: {
         [Op.gte]: offset || 0,
-        [Op.lt]: (offset || 0) + (limit || 0),
+        [Op.lt]: (offset || 0) + (limit || rows.length),
       },
     },
     order: [
@@ -336,7 +338,7 @@ export const deleteRowsCells = async (
   datasetId: string,
   rowIdxs: number[],
 ): Promise<boolean> => {
-  rowIdxs = rowIdxs.sort((a, b) => a - b);
+  rowIdxs = rowIdxs.sort((a, b) => b - a);
 
   const columns = await ColumnModel.findAll({
     where: {
@@ -355,7 +357,7 @@ export const deleteRowsCells = async (
     },
   });
 
-  for (const rowIdx in rowIdxs) {
+  for (const rowIdx of rowIdxs) {
     await ColumnCellModel.decrement('idx', {
       by: 1,
       where: {

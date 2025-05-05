@@ -61,8 +61,9 @@ const { getSerializable: getVirtual, useSerializable: useVirtualScroll } =
 
 export const VirtualScrollContainer = component$(
   ({
-    initialData,
-    getNextPage,
+    totalCount,
+    data,
+    loadNextPage,
     itemRenderer,
     scrollElement,
     estimateSize,
@@ -71,17 +72,14 @@ export const VirtualScrollContainer = component$(
     buffer = 3,
     debug = false,
   }: {
-    initialData: Signal<{
-      startIndex: number;
-      elements: any;
-      totalCount: number;
-    }>;
-    getNextPage: QRL<
+    totalCount: number;
+    data: Signal<unknown[]>;
+    loadNextPage: QRL<
       ({
         rangeStart,
       }: {
         rangeStart: number;
-      }) => Promise<{ startIndex: number; elements: any; totalCount: number }>
+      }) => Promise<void>
     >;
     itemRenderer: QRL<
       (
@@ -97,43 +95,42 @@ export const VirtualScrollContainer = component$(
     scrollElement: Signal<HTMLElement | undefined>;
     debug?: boolean;
   }) => {
-    const loadedData = useSignal<any[]>([]);
     const loadingData = useSignal(false);
     const virtualState = useVirtualScroll({
       debug,
       scrollElement,
       scrollOffset: 0,
-      totalCount: initialData.value.totalCount,
+      totalCount,
       estimateSize,
       overscan,
     });
-    useTask$(({ track }) => {
-      track(() => initialData.value);
-      if (initialData.value.elements.length > loadedData.value.length) {
-        loadedData.value = initialData.value.elements;
-      }
-    });
+    // useTask$(({ track }) => {
+    //   track(() => initialData.value);
+    //   if (initialData.value.elements.length > loadedData.value.length) {
+    //     loadedData.value = initialData.value.elements;
+    //   }
+    // });
     useTask$(async ({ track }) => {
       track(() => virtualState.state.range);
 
       const indexToFetch = (virtualState.state.range?.endIndex ?? 0) + buffer;
       if (
         isBrowser &&
-        indexToFetch < initialData.value.totalCount &&
-        indexToFetch > loadedData.value.length &&
+        indexToFetch < totalCount &&
+        indexToFetch > data.value.length &&
         !loadingData.value
       ) {
         const rangeStart = Math.floor(indexToFetch / pageSize) * pageSize;
         loadingData.value = true;
         // Do this in a hanging promise rather than await so that we don't block the state from updating further
-        getNextPage({ rangeStart }).then((rows) => {
+        loadNextPage({ rangeStart }).then(() => {
           // NOTE: this is not smart about putting the new values in the right place of the array.
           // This will cause problems when scrolling around quickly.
-          loadedData.value.splice(
-            rows.startIndex ?? 0,
-            0,
-            ...(rows.elements ?? []),
-          );
+          // loadedData.value.splice(
+          //   rows.startIndex ?? 0,
+          //   0,
+          //   ...(rows.elements ?? []),
+          // );
           loadingData.value = false;
         });
       }
@@ -149,7 +146,6 @@ export const VirtualScrollContainer = component$(
     });
 
     const visibleRows = useSignal<VirtualItem[]>([]);
-
     useVisibleTask$(({ track }) => {
       track(() => virtualState.state.range);
       if (!virtualState.value) return;
@@ -160,7 +156,7 @@ export const VirtualScrollContainer = component$(
     return (
       <Fragment>
         {visibleRows.value.map((item: VirtualItem, index) => {
-          return itemRenderer(item, loadedData.value[item.index], {
+          return itemRenderer(item, data.value[item.index], {
             key: item.key.toString(),
             style: {
               height: `${item.size}px`,
@@ -170,7 +166,7 @@ export const VirtualScrollContainer = component$(
         })}
         {debug ? (
           <div class="fixed z-30 right-0 px-10 bg-white">
-            <p>Total count: {initialData.value.totalCount}</p>
+            <p>Total count: {totalCount}</p>
             <p>Loading?: {loadingData.value ? 'yes' : 'no'}</p>
             <p>
               visible range: {virtualState.state.range?.startIndex}-

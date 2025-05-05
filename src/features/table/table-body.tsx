@@ -25,21 +25,49 @@ import { deleteRowsCells, getColumnCells } from '~/services';
 import { type Cell, type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
 
 export const TableBody = component$(() => {
-  const { columns, firstColumn, updateColumn, deleteCellByIdx } =
-    useColumnsStore();
+  const pageSize = 10;
+
+  const {
+    columns,
+    firstColumn,
+    replaceColumns,
+    updateColumn,
+    deleteCellByIdx,
+  } = useColumnsStore();
   const { onGenerateColumn } = useGenerateColumn();
   const selectedRows = useSignal<number[]>([]);
 
-  const data = useSignal<{
-    startIndex: number;
-    elements: Cell[][];
-    totalCount: number;
-  }>({
-    startIndex: 0,
-    elements: [],
-    totalCount: 0,
-  });
+  const data = useComputed$(() => {
+    const getCell = (column: Column, rowIndex: number): Cell => {
+      const cell = column.cells[rowIndex];
 
+      if (!cell) {
+        // Temporal cell for skeleton
+        return {
+          id: undefined,
+          value: '',
+          error: '',
+          validated: false,
+          column: {
+            id: column.id,
+          },
+          updatedAt: new Date(),
+          generating: false,
+          idx: rowIndex,
+        };
+      }
+
+      return cell;
+    };
+
+    return Array.from(
+      { length: firstColumn.value.cells.length },
+      (_, rowIndex) =>
+        Array.from({ length: columns.value.length }, (_, colIndex) =>
+          getCell(columns.value[colIndex], rowIndex),
+        ),
+    );
+  });
   const scrollElement = useSignal<HTMLElement>();
   const dragStartCell = useSignal<Cell>();
   const lastMove = useSignal(0);
@@ -129,7 +157,7 @@ export const TableBody = component$(() => {
 
     for (let i = start; i <= end; i++) {
       selectedCells.push(
-        data.value.elements[i].find((c) => c.column?.id === cell.column?.id),
+        data.value[i].find((c) => c.column?.id === cell.column?.id),
       );
     }
 
@@ -196,7 +224,7 @@ export const TableBody = component$(() => {
     lastMove.value = currentY;
   });
 
-  const getRow = server$(
+  const getCells = server$(
     async ({
       columnIds,
       offset,
@@ -218,61 +246,38 @@ export const TableBody = component$(() => {
         ),
       );
 
-      const cells = Array.from({ length: limit }, (_, rowIndex) =>
-        columnIds.map((columnId, colIndex) => {
-          const cell = allCells[colIndex][rowIndex];
-
-          if (!cell) {
-            return {
-              id: undefined,
-              value: '',
-              error: '',
-              validated: false,
-              column: {
-                id: columnId,
-              },
-              updatedAt: new Date(),
-              generating: false,
-              idx: offset + rowIndex,
-            };
-          }
-
-          return {
-            ...cell,
-            column: columns.value.find((c) => c.id === columnIds[colIndex]),
-          };
-        }),
-      );
-
-      return cells;
+      return allCells;
     },
   );
 
-  const getPage = $(
+  const loadPage = $(
     async ({
       rangeStart,
     }: {
       rangeStart: number;
     }) => {
-      const cells = await getRow({
+      const cells = await getCells({
         columnIds: columns.value
           .filter((column) => column.id !== TEMPORAL_ID)
           .map((column) => column.id),
         offset: rangeStart,
-        limit: 10,
+        limit: pageSize,
       });
 
-      data.value = {
-        startIndex: rangeStart,
-        elements: [...data.value.elements, ...cells],
-        totalCount: 1000,
-      };
+      for (const cell of cells.flat()) {
+        const column = columns.value.find((c) => c.id === cell.column?.id);
+        if (!column) return;
 
-      return {
-        startIndex: rangeStart,
-        elements: cells,
-        totalCount: 1000,
-      };
+        if (column.cells.some((c) => c.idx === cell.idx)) {
+          column.cells = [
+            ...column.cells.map((c) => (c.idx === cell.idx ? cell : c)),
+          ];
+        } else {
+          column.cells.push(cell);
+        }
+      }
+
+      replaceColumns(columns.value);
     },
   );
 
@@ -436,7 +441,7 @@ export const TableBody = component$(() => {
   );
 
   useTask$(async () => {
-    await getPage({
+    await loadPage({
       rangeStart: 0,
     });
   });
@@ -448,12 +453,13 @@ export const TableBody = component$(() => {
   return (
     <tbody>
       <VirtualScrollContainer
+        totalCount={1000}
         buffer={3}
         estimateSize={108}
         overscan={30}
-        pageSize={10}
-        initialData={data}
-        getNextPage={getPage}
+        pageSize={pageSize}
+        data={data}
+        loadNextPage={loadPage}
         itemRenderer={itemRenderer}
         scrollElement={scrollElement}
       />

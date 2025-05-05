@@ -440,8 +440,8 @@ export const TableBody = component$(() => {
     },
   );
 
-  useTask$(async () => {
-    await loadPage({
+  useTask$(() => {
+    loadPage({
       rangeStart: 0,
     });
   });
@@ -449,6 +449,8 @@ export const TableBody = component$(() => {
   useVisibleTask$(() => {
     scrollElement.value = document.querySelector('.scrollable') as HTMLElement;
   });
+
+  if (!scrollElement.value) return null;
 
   return (
     <tbody>

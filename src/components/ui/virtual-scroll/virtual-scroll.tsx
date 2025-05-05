@@ -95,6 +95,10 @@ export const VirtualScrollContainer = component$(
     scrollElement: Signal<HTMLElement | undefined>;
     debug?: boolean;
   }) => {
+    if (!scrollElement.value) {
+      throw new Error('scrollElement is required');
+    }
+
     const loadingData = useSignal(false);
     const virtualState = useVirtualScroll({
       debug,
@@ -104,13 +108,8 @@ export const VirtualScrollContainer = component$(
       estimateSize,
       overscan,
     });
-    // useTask$(({ track }) => {
-    //   track(() => initialData.value);
-    //   if (initialData.value.elements.length > loadedData.value.length) {
-    //     loadedData.value = initialData.value.elements;
-    //   }
-    // });
-    useTask$(async ({ track }) => {
+
+    useTask$(({ track }) => {
       track(() => virtualState.state.range);
 
       const indexToFetch = (virtualState.state.range?.endIndex ?? 0) + buffer;
@@ -124,13 +123,6 @@ export const VirtualScrollContainer = component$(
         loadingData.value = true;
         // Do this in a hanging promise rather than await so that we don't block the state from updating further
         loadNextPage({ rangeStart }).then(() => {
-          // NOTE: this is not smart about putting the new values in the right place of the array.
-          // This will cause problems when scrolling around quickly.
-          // loadedData.value.splice(
-          //   rows.startIndex ?? 0,
-          //   0,
-          //   ...(rows.elements ?? []),
-          // );
           loadingData.value = false;
         });
       }
@@ -138,7 +130,6 @@ export const VirtualScrollContainer = component$(
 
     useVisibleTask$(({ track }) => {
       track(scrollElement);
-      if (!scrollElement.value) return;
 
       if (!virtualState.value) {
         getVirtual(virtualState);

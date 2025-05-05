@@ -27,7 +27,7 @@ export const createDatasetTable = async ({
 
   const tableName = getDatasetTableName(dataset);
 
-  const numberOfRows = 500;
+  const numberOfRows = 1000;
 
   const insertValues = Array.from({ length: numberOfRows }, (_, i) => {
     return `(${i})`;

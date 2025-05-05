@@ -67,6 +67,13 @@ export const runPromptExecution = async ({
     data,
     examples,
   });
+  const args = createApiParams(
+    modelName,
+    [{ role: 'user', content: inputPrompt }],
+    modelProvider,
+    accessToken,
+  );
+  const options = createApiOptions(timeout);
 
   console.log('\n🔷 Prompt Execution 🔷');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
@@ -80,15 +87,7 @@ export const runPromptExecution = async ({
   console.log('🔷 End Prompt 🔷\n');
 
   try {
-    const response = await chatCompletion(
-      createApiParams(
-        modelName,
-        [{ role: 'user', content: inputPrompt }],
-        modelProvider,
-        accessToken,
-      ),
-      createApiOptions(timeout),
-    );
+    const response = await chatCompletion(args, options);
     return { value: response.choices[0].message.content };
   } catch (e) {
     return { error: handleError(e) };
@@ -111,6 +110,13 @@ export const runPromptExecutionStream = async function* ({
     data,
     examples,
   });
+  const args = createApiParams(
+    modelName,
+    [{ role: 'user', content: inputPrompt }],
+    modelProvider,
+    accessToken,
+  );
+  const options = createApiOptions(timeout);
 
   console.log('\n🔷 Prompt Stream 🔷');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
@@ -125,15 +131,7 @@ export const runPromptExecutionStream = async function* ({
 
   try {
     let accumulated = '';
-    const stream = chatCompletionStream(
-      createApiParams(
-        modelName,
-        [{ role: 'user', content: inputPrompt }],
-        modelProvider,
-        accessToken,
-      ),
-      createApiOptions(timeout),
-    );
+    const stream = chatCompletionStream(args, options);
 
     for await (const chunk of stream) {
       if (chunk.choices?.[0]?.delta?.content) {

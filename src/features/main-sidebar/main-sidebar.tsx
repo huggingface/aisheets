@@ -63,10 +63,6 @@ export const MainSidebar = component$(() => {
     }
   });
 
-  // Debug: print all datasets
-  console.log('All datasets:', datasets.value);
-
-  // Split datasets into "today" and "previous"
   const todayDatasets = datasets.value.filter(
     (d) => d.createdAt && isToday(new Date(d.createdAt)),
   );
@@ -112,7 +108,6 @@ export const MainSidebar = component$(() => {
       </div>
 
       <div class="flex-1 flex flex-col overflow-y-auto">
-        {/* Today Section (only if there are datasets) */}
         {todayDatasets.length > 0 && (
           <div>
             <p class="text-muted-foreground px-4 text-sm font-semibold mb-4">
@@ -132,7 +127,6 @@ export const MainSidebar = component$(() => {
             </div>
           </div>
         )}
-        {/* Previous Section (only if there are datasets) */}
         {previousDatasets.length > 0 && (
           <div class="mt-8">
             <p class="text-muted-foreground px-4 text-sm font-semibold mb-4">

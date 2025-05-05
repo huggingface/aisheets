@@ -1,10 +1,11 @@
-import {
-  type InferenceProvider,
-  featureExtraction,
-} from '@huggingface/inference';
+import { featureExtraction } from '@huggingface/inference';
 import * as lancedb from '@lancedb/lancedb';
 import * as arrow from 'apache-arrow';
 import { VECTOR_DB_DIR, default_embedding_model } from '~/config';
+import {
+  normalizeFeatureExtractionArgs,
+  normalizeOptions,
+} from '~/services/inference/run-prompt-execution';
 import type { WebSource } from '~/services/websearch/search-sources';
 import { flattenTree, stringifyMarkdownElement } from '../markdown';
 
@@ -62,12 +63,15 @@ export const embedder = async (
       ? texts.map(getDetailedInstruct)
       : texts;
 
-  const results = await featureExtraction({
-    inputs: processedTexts,
-    accessToken: options.accessToken,
-    model: default_embedding_model.model,
-    provider: default_embedding_model.provider as InferenceProvider,
-  });
+  const results = await featureExtraction(
+    normalizeFeatureExtractionArgs({
+      inputs: processedTexts,
+      accessToken: options.accessToken,
+      modelName: default_embedding_model.model,
+      modelProvider: default_embedding_model.provider,
+    }),
+    normalizeOptions(),
+  );
 
   if (!Array.isArray(results)) {
     throw new Error('Invalid response from Hugging Face API');

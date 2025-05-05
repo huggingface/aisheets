@@ -1,9 +1,12 @@
 import {
   type InferenceProvider,
+  type Options,
   chatCompletion,
   chatCompletionStream,
 } from '@huggingface/inference';
+
 import {
+  HF_TOKEN,
   INFERENCE_TIMEOUT,
   NUM_CONCURRENT_REQUESTS,
   ORG_BILLING,
@@ -34,18 +37,6 @@ export interface PromptExecutionResponse {
 
 const MAX_CONCURRENCY = Math.min(NUM_CONCURRENT_REQUESTS, 10);
 
-const createApiParams = (
-  modelName: string,
-  messages: any[],
-  modelProvider: string,
-  accessToken?: string,
-) => ({
-  model: modelName,
-  messages,
-  provider: modelProvider as InferenceProvider,
-  accessToken,
-});
-
 const handleError = (e: unknown): string => {
   if (e instanceof Error) return e.message;
   return JSON.stringify(e);
@@ -67,13 +58,13 @@ export const runPromptExecution = async ({
     data,
     examples,
   });
-  const args = createApiParams(
+  const args = normalizeChatCompletionArgs({
+    messages: [{ role: 'user', content: inputPrompt }],
     modelName,
-    [{ role: 'user', content: inputPrompt }],
     modelProvider,
     accessToken,
-  );
-  const options = createApiOptions(timeout);
+  });
+  const options = normalizeOptions(timeout);
 
   console.log('\n🔷 Prompt Execution 🔷');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
@@ -110,13 +101,13 @@ export const runPromptExecutionStream = async function* ({
     data,
     examples,
   });
-  const args = createApiParams(
-    modelName,
-    [{ role: 'user', content: inputPrompt }],
+  const args = normalizeChatCompletionArgs({
+    messages: [{ role: 'user', content: inputPrompt }],
     modelProvider,
+    modelName,
     accessToken,
-  );
-  const options = createApiOptions(timeout);
+  });
+  const options = normalizeOptions(timeout);
 
   console.log('\n🔷 Prompt Stream 🔷');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
@@ -211,7 +202,42 @@ export const runPromptExecutionStreamBatch = async function* (
     }
   }
 };
-function createApiOptions(timeout: number | undefined) {
+
+export const normalizeFeatureExtractionArgs = ({
+  inputs,
+  modelName,
+  modelProvider,
+  accessToken,
+}: {
+  inputs: string[];
+  modelName: string;
+  modelProvider: string;
+  accessToken?: string;
+}) => ({
+  inputs,
+  model: modelName,
+  provider: modelProvider as InferenceProvider,
+  accessToken: HF_TOKEN ?? accessToken,
+});
+
+export const normalizeChatCompletionArgs = ({
+  messages,
+  modelName,
+  modelProvider,
+  accessToken,
+}: {
+  messages: any[];
+  modelName: string;
+  modelProvider: string;
+  accessToken?: string;
+}) => ({
+  messages,
+  model: modelName,
+  provider: modelProvider as InferenceProvider,
+  accessToken: HF_TOKEN ?? accessToken,
+});
+
+export const normalizeOptions = (timeout?: number | undefined): Options => {
   const options: Record<string, any> = {
     signal: AbortSignal.timeout(timeout ?? INFERENCE_TIMEOUT),
   };
@@ -219,4 +245,4 @@ function createApiOptions(timeout: number | undefined) {
   if (ORG_BILLING) options.billTo = ORG_BILLING;
 
   return options;
-}
+};

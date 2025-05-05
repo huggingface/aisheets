@@ -70,7 +70,6 @@ export const MainSidebar = component$(() => {
           isOpenMainSidebar.value,
       })}
     >
-      {/* Top content */}
       <div>
         <div
           class={cn('flex items-center justify-between px-2 mt-5 w-0', {
@@ -100,7 +99,6 @@ export const MainSidebar = component$(() => {
         </div>
       </div>
 
-      {/* Scrollable list fills the rest */}
       <div class="flex-1 flex flex-col overflow-y-auto">
         <p class="text-muted-foreground px-4 text-sm font-semibold mb-4">
           Today

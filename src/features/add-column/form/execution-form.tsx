@@ -141,7 +141,9 @@ export const ExecutionForm = component$<SidebarProps>(
     });
 
     useVisibleTask$(() => {
-      executionFormRef.value?.scrollIntoView({
+      if (!executionFormRef.value) return;
+
+      executionFormRef.value.scrollIntoView({
         behavior: 'smooth',
         block: 'center',
       });
@@ -385,6 +387,4 @@ export const ExecutionForm = component$<SidebarProps>(
   },
 );
 
-export const hasBlobContent = (column: Column): boolean => {
-  return column.type.includes('BLOB');
-};
+export const hasBlobContent = (column: Column): boolean => {};

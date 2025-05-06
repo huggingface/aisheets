@@ -109,6 +109,18 @@ export const default_embedding_model = {
     : true,
 } as const;
 
+/**
+ *
+ * This constant defines the maximum number of characters allowed in the context of the examples prompt.
+ * If the examples context exceeds this limit, it will be truncated.
+ *
+ * This is important for performance and to avoid exceeding the token limit of the model.
+ *
+ * Default value: 2048
+ */
+export const EXAMPLES_PROMPT_CONTEXT_SIZE: number =
+  Number(process.env.EXAMPLES_PROMPT_CONTEXT_SIZE ?? '2048') || 2048;
+
 export const GOOGLE_CLIENT_ID: string | undefined =
   process.env.GOOGLE_CLIENT_ID ??
   '905039472434-7khf7dpl6002etvrn1h3ne1g0t2gv5r8.apps.googleusercontent.com';

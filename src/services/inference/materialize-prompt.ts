@@ -209,8 +209,13 @@ const formatExamples = (
   if (!examples || examples.length === 0) return '';
 
   return mustache
-    .render(template, { examples }, undefined, {
-      escape: escapeValues,
-    })
+    .render(
+      template,
+      { examples: examples.sort(() => Math.random() - 0.5) },
+      undefined,
+      {
+        escape: escapeValues,
+      },
+    )
     .slice(0, EXAMPLES_PROMPT_CONTEXT_SIZE);
 };

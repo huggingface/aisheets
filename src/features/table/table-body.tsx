@@ -325,9 +325,12 @@ export const TableBody = component$(() => {
 
       return (
         <tr
-          class={cn('transition-colors', {
+          class={cn({
             'bg-gray-50/50 hover:bg-gray-50/50': selectedRows.value.includes(
               item.index,
+            ),
+            '!transform-none': selectedCellsId.value.some(
+              (c) => c.idx === item.index,
             ),
           })}
           {...props}
@@ -397,7 +400,7 @@ export const TableBody = component$(() => {
                 ) : (
                   <td
                     class={cn(
-                      'relative box-border min-w-[326px] w-[326px] max-w-[326px] h-[108px] cursor-pointer break-words align-top border hover:bg-gray-50/50',
+                      'relative transition-colors box-border min-w-[326px] w-[326px] max-w-[326px] h-[108px] cursor-pointer break-words align-top border hover:bg-gray-50/50',
                       {
                         'bg-green-50 border-green-300': cell.validated,
                         'border-neutral-300': !cell.validated,

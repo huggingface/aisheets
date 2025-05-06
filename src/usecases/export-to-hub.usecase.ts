@@ -16,7 +16,7 @@ import {
   useServerSession,
 } from '~/state';
 import { materializePrompt } from '../services/inference/materialize-prompt';
-import { collectExamples } from './collect-examples';
+import { collectValidatedExamples } from './collect-examples';
 
 export interface ExportDatasetParams {
   dataset: Dataset;
@@ -121,8 +121,7 @@ async function generateDatasetConfig(
         ),
     );
 
-    const examples = await collectExamples({
-      column,
+    const examples = await collectValidatedExamples({
       validatedCells: validatedCells.filter(
         (cell): cell is Cell => cell !== null,
       ),

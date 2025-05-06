@@ -1,8 +1,10 @@
 import mustache from 'mustache';
+import { EXAMPLES_PROMPT_CONTEXT_SIZE } from '~/config';
 
 export interface Example {
   output: string;
-  inputs: Record<string, string>;
+  inputs: Record<string, string> | string;
+  validated: boolean;
 }
 
 export interface MaterializePromptParams {
@@ -42,7 +44,16 @@ function materializePromptFromScratch(
   }[],
   examples?: Example[],
 ): string {
-  const outputExamples = examples?.map((ex) => ex.output);
+  const hasExamples = examples && examples.length > 0;
+
+  const formattedExamples = formatExamples(
+    examples,
+    `
+{{#examples}}
+- {{output}}
+{{/examples}}
+`,
+  );
 
   return mustache.render(
     `
@@ -78,13 +89,13 @@ The following are the dataset sources that might be relevant to the user instruc
 
 {{#hasExamples}}
 # Current dataset
-Read carefully these data points to avoid repeating them and ensure diversity across the whole dataset. Data points are prior outputs to avoid mimicking. Treat them as exclusion criteria.
-## Data points
-{{#examples}}
-- {{.}}
-{{/examples}}
-{{/hasExamples}}
 
+Read carefully these data points to avoid repeating them and ensure diversity across the whole dataset. Data points are prior outputs to avoid mimicking. Treat them as exclusion criteria.
+
+## Data points
+{{formattedExamples}}
+
+{{/hasExamples}}
 # Output Format
 Generate **only** the output requested in the user instruction. No additional introductions, explanations, or labels.
 
@@ -92,8 +103,8 @@ Generate **only** the output requested in the user instruction. No additional in
 `,
     {
       instruction,
-      examples: outputExamples,
-      hasExamples: outputExamples && outputExamples.length > 0,
+      formattedExamples: formattedExamples,
+      hasExamples,
       hasSourcesContext: sourcesContext && sourcesContext.length > 0,
       sourcesContext: sourcesContext,
     },
@@ -112,20 +123,28 @@ function materializePromptFromData(
   examples?: Example[],
   renderInstruction = true,
 ): string {
-  const formattedExamples = examples
-    ?.map((example) => {
-      const inputsText = Object.entries(example.inputs)
-        .map(([col, val]) => `${col}: ${val}`)
-        .join('\n');
+  const hasExamples = examples && examples.length > 0;
 
-      return `## Example
+  const formattedExamples = formatExamples(
+    examples?.map((example) => ({
+      ...example,
+      inputs: Object.entries(example.inputs)
+        .map(([col, val]) => `${col}: ${val}`)
+        .join('\n'),
+    })),
+    `
+{{#examples}}
+## Example
+
 **Input**:
-${inputsText}
+{{inputs}}
 
 **Output**:
-${example.output}`;
-    })
-    .join('\n\n');
+{{output}}
+  
+{{/examples}}
+`,
+  );
 
   return mustache.render(
     `
@@ -137,8 +156,8 @@ You are a rigorous, intelligent data-processing engine. Generate only the reques
 The following are correct, accurate example outputs with respect to the user instruction:
 
 {{{formattedExamples}}}
-{{/hasExamples}}
 
+{{/hasExamples}}
 # User instruction
 {{instruction}}
 
@@ -159,7 +178,7 @@ The following are the dataset sources that might be relevant to the user instruc
             escape: escapeValues,
           })
         : instruction,
-      hasExamples: examples && examples.length > 0,
+      hasExamples,
       formattedExamples,
       hasSourcesContext: sourcesContext && sourcesContext.length > 0,
       sourcesContext: sourcesContext,
@@ -182,4 +201,30 @@ const escapeValues = (value: any): string => {
   }
 
   return value;
+};
+
+const formatExamples = (
+  examples: Example[] | undefined,
+  template: string,
+): string => {
+  if (!examples || examples.length === 0) return '';
+
+  const validatedExamples = examples.filter((example) => example.validated);
+  const nonValidatedExamples = examples.filter((example) => !example.validated);
+
+  const examplesText = mustache.render(
+    template,
+    {
+      examples: [
+        ...validatedExamples,
+        ...nonValidatedExamples.sort(() => Math.random() - 0.5),
+      ],
+    },
+    undefined,
+    {
+      escape: escapeValues,
+    },
+  );
+
+  return examplesText.slice(0, EXAMPLES_PROMPT_CONTEXT_SIZE);
 };

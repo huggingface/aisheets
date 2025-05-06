@@ -211,7 +211,7 @@ export const useColumnsStore = () => {
     return activeDataset.value.columns;
   });
 
-  const replaceColumn = $((replaced: Column[]) => {
+  const replaceColumns = $((replaced: Column[]) => {
     activeDataset.value = {
       ...activeDataset.value,
       columns: [...replaced],
@@ -223,6 +223,7 @@ export const useColumnsStore = () => {
   return {
     columns,
     firstColumn,
+    replaceColumns,
     maxNumberOfRows: $((column: Column, columnsReferences: string[]) => {
       const dataset = activeDataset.value;
 
@@ -246,19 +247,19 @@ export const useColumnsStore = () => {
 
       const newTemporalColumn = await createPlaceholderColumn();
 
-      replaceColumn([...columns.value, newTemporalColumn]);
+      replaceColumns([...columns.value, newTemporalColumn]);
     }),
     removeTemporalColumn: $(() => {
-      replaceColumn(columns.value.filter((c) => c.id !== TEMPORAL_ID));
+      replaceColumns(columns.value.filter((c) => c.id !== TEMPORAL_ID));
     }),
     addColumn: $((newbie: Column) => {
-      replaceColumn([
+      replaceColumns([
         ...columns.value.filter((c) => c.id !== TEMPORAL_ID),
         newbie,
       ]);
     }),
     updateColumn: $((updated: Column) => {
-      replaceColumn(
+      replaceColumns(
         columns.value.map((c) =>
           c.id === updated.id
             ? {
@@ -270,7 +271,7 @@ export const useColumnsStore = () => {
       );
     }),
     deleteColumn: $((deleted: Column) => {
-      replaceColumn(columns.value.filter((c) => c.id !== deleted.id));
+      replaceColumns(columns.value.filter((c) => c.id !== deleted.id));
     }),
     replaceCell: $((cell: Cell) => {
       const column = columns.value.find((c) => c.id === cell.column?.id);
@@ -284,7 +285,7 @@ export const useColumnsStore = () => {
         column.cells.push(cell);
       }
 
-      replaceColumn(columns.value);
+      replaceColumns(columns.value);
     }),
     deleteCellByIdx: $((...idxs: number[]) => {
       for (const column of columns.value) {
@@ -299,7 +300,7 @@ export const useColumnsStore = () => {
         }
       }
 
-      replaceColumn(columns.value);
+      replaceColumns(columns.value);
     }),
   };
 };

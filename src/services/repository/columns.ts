@@ -198,7 +198,7 @@ export const updateColumnPartially = async (
 };
 
 export const getGeneratedColumnSize = async (
-  column: Column,
+  columnId: string,
 ): Promise<number> => {
-  return await getGeneratedCellsCount({ columnId: column.id });
+  return await getGeneratedCellsCount({ columnId });
 };

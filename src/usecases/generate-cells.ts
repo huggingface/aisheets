@@ -68,7 +68,7 @@ export const generateCells = async function* ({
 
   const validatedIdxs = validatedCells?.map((cell) => cell.idx);
 
-  if (!limit) limit = await getGeneratedColumnSize(column);
+  if (!limit) limit = await getGeneratedColumnSize(column.id);
   if (!offset) offset = 0;
 
   try {
@@ -82,9 +82,6 @@ export const generateCells = async function* ({
         if (validatedIdxs?.includes(i)) continue;
 
         const cell = await getOrCreateCellInDB(column.id, i);
-
-        cell.generating = true;
-        cells.set(i, cell);
 
         const args: PromptExecutionParams = {
           accessToken: session.token,
@@ -104,6 +101,15 @@ export const generateCells = async function* ({
             rowIdx: i,
             columns: columnsReferences,
           });
+
+          if (rowCells?.filter((cell) => cell.value).length === 0) {
+            cell.generating = false;
+            cell.error = 'No input data found';
+            await updateCell(cell);
+            yield { cell };
+            continue;
+          }
+
           args.data = Object.fromEntries(
             rowCells.map((cell) => [cell.column!.name, cell.value]),
           );
@@ -118,6 +124,9 @@ export const generateCells = async function* ({
             accessToken: session.token,
           },
         });
+
+        cell.generating = true;
+        cells.set(i, cell);
 
         streamRequests.push(args);
       }

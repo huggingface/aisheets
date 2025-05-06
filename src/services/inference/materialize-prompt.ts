@@ -4,6 +4,7 @@ import { EXAMPLES_PROMPT_CONTEXT_SIZE } from '~/config';
 export interface Example {
   output: string;
   inputs: Record<string, string> | string;
+  validated: boolean;
 }
 
 export interface MaterializePromptParams {
@@ -126,10 +127,10 @@ function materializePromptFromData(
 
   const formattedExamples = formatExamples(
     examples?.map((example) => ({
+      ...example,
       inputs: Object.entries(example.inputs)
         .map(([col, val]) => `${col}: ${val}`)
         .join('\n'),
-      output: example.output,
     })),
     `
 {{#examples}}
@@ -208,10 +209,18 @@ const formatExamples = (
 ): string => {
   if (!examples || examples.length === 0) return '';
 
+  const validatedExamples = examples.filter((example) => example.validated);
+  const nonValidatedExamples = examples.filter((example) => !example.validated);
+
   return mustache
     .render(
       template,
-      { examples: examples.sort(() => Math.random() - 0.5) },
+      {
+        examples: [
+          ...validatedExamples,
+          ...nonValidatedExamples.sort(() => Math.random() - 0.5),
+        ],
+      },
       undefined,
       {
         escape: escapeValues,

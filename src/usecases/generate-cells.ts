@@ -175,6 +175,7 @@ export const generateCells = async function* ({
       .filter((cell) => cell.value)
       .map((cell) => ({
         output: cell.value,
+        validated: cell.validated,
         inputs: {},
       }));
 
@@ -220,6 +221,7 @@ export const generateCells = async function* ({
 
         existingCells.push({
           output: cell.value,
+          validated: false,
           inputs: {},
         });
       }

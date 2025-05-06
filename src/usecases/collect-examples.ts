@@ -11,9 +11,7 @@ export async function collectValidatedExamples({
   validatedCells,
   columnsReferences,
 }: CollectExamplesParams): Promise<Example[]> {
-  const hasReferredColumns = columnsReferences && columnsReferences.length > 0;
-
-  if (!hasReferredColumns || !validatedCells) return [];
+  if (!validatedCells) return [];
 
   // Build examples array
   const examples = Promise.all(
@@ -22,7 +20,7 @@ export async function collectValidatedExamples({
       .map(async (cell) => {
         const rowCells = await getRowCells({
           rowIdx: cell.idx,
-          columns: columnsReferences,
+          columns: columnsReferences || [],
         });
 
         const inputs = Object.fromEntries(
@@ -33,7 +31,7 @@ export async function collectValidatedExamples({
             .map((cell) => [cell.column!.name, cell.value]),
         );
 
-        return { output: cell.value, inputs };
+        return { output: cell.value, inputs, validated: true };
       }),
   );
 

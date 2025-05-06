@@ -42,6 +42,7 @@ interface SidebarProps {
 
 export const ExecutionForm = component$<SidebarProps>(
   ({ column, onGenerateColumn }) => {
+    const executionFormRef = useSignal<HTMLElement>();
     const { mode, close } = useExecution();
     const { columns, maxNumberOfRows, removeTemporalColumn, updateColumn } =
       useColumnsStore();
@@ -138,6 +139,15 @@ export const ExecutionForm = component$<SidebarProps>(
       });
     });
 
+    useVisibleTask$(() => {
+      if (!executionFormRef.value) return;
+
+      executionFormRef.value.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+      });
+    });
+
     const onGenerate = $(async () => {
       if (column.process?.cancellable) {
         column.process.cancellable.abort();
@@ -182,8 +192,11 @@ export const ExecutionForm = component$<SidebarProps>(
     });
 
     return (
-      <th class="z-20 min-w-[660px] w-[660px] bg-neutral-100 font-normal border-[0.5px] border-l-0 text-left">
-        <div class="flex justify-end items-center px-1">
+      <th
+        class="z-20 min-w-[660px] w-[660px] bg-neutral-100 font-normal border text-left"
+        ref={executionFormRef}
+      >
+        <div class="flex justify-end items-center p-1 h-[30px]">
           <Button
             look="ghost"
             class={`${columns.value.filter((c) => c.id !== TEMPORAL_ID).length >= 1 ? 'visible' : 'invisible'} p-1.5 rounded-full hover:bg-neutral-200 cursor-pointer transition-colors`}
@@ -219,16 +232,16 @@ export const ExecutionForm = component$<SidebarProps>(
                   <Button
                     key={column.process?.isExecuting?.toString()}
                     look="primary"
-                    class="w-[45px] h-[45px] rounded-full flex items-center justify-center p-0"
+                    class="w-[30px] h-[30px] rounded-full flex items-center justify-center p-0"
                     onClick$={onGenerate}
                     disabled={
                       column.process?.isExecuting && column.id === TEMPORAL_ID
                     }
                   >
                     {column.process?.isExecuting ? (
-                      <LuStopCircle class="h-6 w-6" />
+                      <LuStopCircle class="text-lg" />
                     ) : (
-                      <LuEgg class="w-6 h-6" />
+                      <LuEgg class="text-lg" />
                     )}
                   </Button>
                 </div>
@@ -373,6 +386,4 @@ export const ExecutionForm = component$<SidebarProps>(
   },
 );
 
-export const hasBlobContent = (column: Column): boolean => {
-  return column.type.includes('BLOB');
-};
+export const hasBlobContent = (column: Column): boolean => {};

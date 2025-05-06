@@ -1,5 +1,13 @@
 import { getGeneratedColumnSize, updateProcess } from '~/services';
 import {
+  type PromptExecutionParams,
+  runPromptExecution,
+  runPromptExecutionStream,
+  runPromptExecutionStreamBatch,
+} from '~/services/inference/run-prompt-execution';
+
+import { renderInstruction } from '~/services/inference/materialize-prompt';
+import {
   createCell,
   getColumnCellByIdx,
   getRowCells,
@@ -8,13 +16,6 @@ import {
 import { queryDatasetSources } from '~/services/websearch/embed';
 import type { Cell, Column, Process, Session } from '~/state';
 import { collectExamples } from './collect-examples';
-import { renderInstruction } from './materialize-prompt';
-import {
-  runPromptExecution,
-  runPromptExecutionStream,
-  runPromptExecutionStreamBatch,
-} from './run-prompt-execution';
-import type { PromptExecutionParams } from './run-prompt-execution';
 
 export interface GenerateCellsParams {
   column: Column;
@@ -67,7 +68,7 @@ export const generateCells = async function* ({
 
   const validatedIdxs = validatedCells?.map((cell) => cell.idx);
 
-  if (!limit) limit = await getGeneratedColumnSize(column);
+  if (!limit) limit = await getGeneratedColumnSize(column.id);
   if (!offset) offset = 0;
 
   try {
@@ -81,9 +82,6 @@ export const generateCells = async function* ({
         if (validatedIdxs?.includes(i)) continue;
 
         const cell = await getOrCreateCellInDB(column.id, i);
-
-        cell.generating = true;
-        cells.set(i, cell);
 
         const args: PromptExecutionParams = {
           accessToken: session.token,
@@ -103,6 +101,15 @@ export const generateCells = async function* ({
             rowIdx: i,
             columns: columnsReferences,
           });
+
+          if (rowCells?.filter((cell) => cell.value).length === 0) {
+            cell.generating = false;
+            cell.error = 'No input data found';
+            await updateCell(cell);
+            yield { cell };
+            continue;
+          }
+
           args.data = Object.fromEntries(
             rowCells.map((cell) => [cell.column!.name, cell.value]),
           );
@@ -117,6 +124,9 @@ export const generateCells = async function* ({
             accessToken: session.token,
           },
         });
+
+        cell.generating = true;
+        cells.set(i, cell);
 
         streamRequests.push(args);
       }

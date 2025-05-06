@@ -1,6 +1,15 @@
 {
   "css.lint.unknownAtRules": "ignore",
-  "cSpell.words": ["Argilla", "Idxs", "qwik", "qwikest", "tablericons"],
+  "cSpell.words": [
+    "Argilla",
+    "Idxs",
+    "overscan",
+    "preventdefault",
+    "qwik",
+    "qwikest",
+    "stoppropagation",
+    "tablericons"
+  ],
   "editor.codeActionsOnSave": {
     "source.fixAll": "explicit",
     "source.organizeImports.biome": "explicit"

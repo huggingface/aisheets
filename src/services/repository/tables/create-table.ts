@@ -1,9 +1,5 @@
 import { connectAndClose } from '~/services/db/duckdb';
-import {
-  getColumnName,
-  getDatasetRowSequenceName,
-  getDatasetTableName,
-} from './utils';
+import { getColumnName, getDatasetTableName } from './utils';
 
 const colums2tableDefinition = (
   columns: { id: string; name: string; type: string }[],
@@ -30,15 +26,22 @@ export const createDatasetTable = async ({
   }
 
   const tableName = getDatasetTableName(dataset);
-  const sequenceName = getDatasetRowSequenceName(dataset);
+
+  const numberOfRows = 1000;
+
+  const insertValues = Array.from({ length: numberOfRows }, (_, i) => {
+    return `(${i})`;
+  }).join(', ');
 
   await connectAndClose(async (db) => {
     await db.run(`
-      CREATE SEQUENCE ${sequenceName} START 0 INCREMENT 1 MINVALUE 0;
-    
       CREATE TABLE ${tableName} (
-        rowIdx BIGINT DEFAULT nextval('${sequenceName}'),
+        rowIdx BIGINT,
         ${colums2tableDefinition(columns)}
-      )`);
+      );
+
+      INSERT INTO ${tableName} (rowIdx)
+      VALUES ${insertValues};
+    `);
   });
 };

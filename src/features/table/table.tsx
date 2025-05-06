@@ -12,7 +12,7 @@ export const Table = component$(() => {
       </div>
 
       <div class="overflow-auto max-h-full scrollable -mr-6 rounded-tl-sm">
-        <table class="text-sm border-separate border-spacing-0">
+        <table class="text-sm border-separate border-spacing-0 mr-2">
           <TableHeader />
           <TableBody />
         </table>

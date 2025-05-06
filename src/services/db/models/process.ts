@@ -20,8 +20,6 @@ export class ProcessModel extends Model<
   declare prompt: string;
   declare modelName: string;
   declare modelProvider: string;
-  declare offset: number;
-  declare limit: number;
   declare columnId: ForeignKey<ColumnModel['id']>;
 
   declare referredColumns: NonAttribute<ColumnModel[]>; // This is a virtual attribute
@@ -51,14 +49,6 @@ ProcessModel.init(
     },
     prompt: {
       type: DataTypes.STRING,
-      allowNull: false,
-    },
-    offset: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-    },
-    limit: {
-      type: DataTypes.INTEGER,
       allowNull: false,
     },
     columnId: {

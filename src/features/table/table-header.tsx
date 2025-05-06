@@ -25,7 +25,7 @@ export const TableHeader = component$(() => {
     <thead class="sticky top-0 bg-white z-20">
       <tr>
         <th
-          class="sticky left-0 z-[10] min-w-1 w-1 max-w-1 min-h-[50px] h-[50px] px-4 py-2 border-[0.5px] rounded-tl-sm bg-neutral-100"
+          class="sticky left-0 z-[10] min-w-1 w-1 max-w-1 min-h-[50px] h-[50px] px-4 py-2 border rounded-tl-sm bg-neutral-100"
           rowSpan={2}
         />
 
@@ -35,7 +35,7 @@ export const TableHeader = component$(() => {
               <Fragment key={column.id}>
                 <th
                   key={column.id}
-                  class="min-w-80 w-80 max-w-80 h-[30px] border-[0.5px] border-l-0 bg-neutral-100 text-primary-600"
+                  class="min-w-80 w-80 max-w-80 h-[30px] border bg-neutral-100 text-primary-600 font-normal"
                 >
                   {indexToAlphanumeric(i + 1)}
                 </th>
@@ -106,7 +106,7 @@ const ExecutionHeaderDebounced = component$<{ column: Column }>(
     if (!state.isVisible) return null;
 
     return (
-      <th class="min-w-[660px] w-[660px] bg-neutral-100 border-[0.5px] border-l-0" />
+      <th class="min-w-[660px] w-[660px] h-[30px] bg-neutral-100 border" />
     );
   },
 );

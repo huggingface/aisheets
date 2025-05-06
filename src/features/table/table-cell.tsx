@@ -362,10 +362,7 @@ export const TableCell = component$<{
 
   return (
     <div
-      class={cn('min-h-[100px] h-[100px]', {
-        'bg-green-50 border-green-300': cell.validated,
-        'border-neutral-300': !cell.validated,
-      })}
+      class="min-h-[100px] h-[100px] group"
       onDblClick$={(e) => {
         e.stopPropagation();
 
@@ -445,7 +442,7 @@ export const TableCell = component$<{
           {isEditing.value && (
             <>
               {/* Backdrop */}
-              <div class="fixed inset-0 bg-neutral-700/40 z-30" />
+              <div class="fixed inset-0 bg-neutral-700/40 z-40" />
 
               <div
                 class="fixed z-40 bg-white border border-neutral-500 shadow-sm"

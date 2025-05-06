@@ -386,4 +386,6 @@ export const ExecutionForm = component$<SidebarProps>(
   },
 );
 
-export const hasBlobContent = (column: Column): boolean => {};
+export const hasBlobContent = (column: Column): boolean => {
+  return column.type.includes('BLOB');
+};

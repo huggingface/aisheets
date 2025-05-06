@@ -31,7 +31,12 @@ export const configureEmbeddingsIndex = async () => {
     mode: 'create',
   });
 
+  // Create both vector and FTS indices
   await embeddingsIndex.createIndex('dataset_id', { replace: true });
+  await embeddingsIndex.createIndex('text', {
+    config: lancedb.Index.fts(),
+    replace: true,
+  });
 
   return {
     db,
@@ -105,7 +110,7 @@ export const indexDatasetSources = async ({
             .filter((text) => text.length > 200); // Skip chunks with 200 or fewer characters
 
           // Process chunks in batches of 8
-          const BATCH_SIZE = 8;
+          const BATCH_SIZE = 32;
           const sourceData: Array<{
             text: string;
             embedding: number[];
@@ -162,6 +167,7 @@ export const queryDatasetSources = async ({
   dataset,
   query,
   options,
+  useHybridSearch = true,
 }: {
   dataset: {
     id: string;
@@ -170,10 +176,12 @@ export const queryDatasetSources = async ({
   options: {
     accessToken: string;
   };
+  useHybridSearch?: boolean;
 }): Promise<
   {
     text: string;
     source_uri: string;
+    score?: number;
   }[]
 > => {
   if (!query) return [];
@@ -191,13 +199,34 @@ export const queryDatasetSources = async ({
   try {
     const embeddings = await embedder([query], { ...options, isQuery: true });
 
+    if (useHybridSearch) {
+      // Perform hybrid search with reranking
+      const results = await embeddingsIndex
+        .query()
+        .where(filterByDataset)
+        .fullTextSearch(query)
+        .nearestTo(embeddings[0])
+        .rerank(await lancedb.rerankers.RRFReranker.create())
+        .limit(10)
+        .toArray();
+
+      return results.map(
+        (result: { text: string; source_uri: string; score?: number }) => ({
+          text: result.text,
+          source_uri: result.source_uri,
+          score: result.score,
+        }),
+      );
+    }
+
+    // Fall back to vector search only
     const results = await embeddingsIndex
       .search(embeddings[0], 'vector')
       .where(filterByDataset)
       .limit(10)
       .toArray();
 
-    return results.map((result) => ({
+    return results.map((result: { text: string; source_uri: string }) => ({
       text: result.text,
       source_uri: result.source_uri,
     }));

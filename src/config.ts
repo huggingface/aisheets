@@ -116,10 +116,14 @@ export const default_embedding_model = {
  *
  * This is important for performance and to avoid exceeding the token limit of the model.
  *
- * Default value: 2048
+ * Default value: 8192
  */
+const DEFAULT_EXAMPLES_PROMPT_CONTEXT_SIZE = 8192;
 export const EXAMPLES_PROMPT_CONTEXT_SIZE: number =
-  Number(process.env.EXAMPLES_PROMPT_CONTEXT_SIZE ?? '2048') || 2048;
+  Number(
+    process.env.EXAMPLES_PROMPT_CONTEXT_SIZE ??
+      DEFAULT_EXAMPLES_PROMPT_CONTEXT_SIZE,
+  ) || DEFAULT_EXAMPLES_PROMPT_CONTEXT_SIZE;
 
 export const GOOGLE_CLIENT_ID: string | undefined =
   process.env.GOOGLE_CLIENT_ID ??

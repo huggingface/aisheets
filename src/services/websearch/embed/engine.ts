@@ -100,7 +100,9 @@ export const indexDatasetSources = async ({
         if (!source.markdownTree) return [];
         try {
           const mdElements = flattenTree(source.markdownTree);
-          const textChunks = mdElements.map(stringifyMarkdownElement);
+          const textChunks = mdElements
+            .map(stringifyMarkdownElement)
+            .filter((text) => text.length > 200); // Skip chunks with 200 or fewer characters
 
           // Process chunks in batches of 8
           const BATCH_SIZE = 8;

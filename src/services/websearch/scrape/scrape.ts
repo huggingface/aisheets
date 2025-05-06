@@ -14,7 +14,7 @@ const logger = consola.withTag('scrape');
 /**
  * Default maximum number of characters per element
  */
-const DEFAULT_MAX_CHARS_PER_ELEMENT = 1000;
+const DEFAULT_MAX_CHARS_PER_ELEMENT = 5000;
 
 /**
  * Maximum total characters for a page

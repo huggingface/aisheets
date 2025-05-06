@@ -1,5 +1,7 @@
 import type {
+  BlockQuoteElement,
   HeaderElement,
+  ListItemElement,
   MarkdownElement,
   SerializedHTMLElement,
 } from '../types';
@@ -79,15 +81,15 @@ export function markdownTreeToString(tree: HeaderElement): string {
       case MarkdownElementType.Paragraph:
         return `${element.content}\n\n`;
       case MarkdownElementType.UnorderedListItem: {
-        const listItem = element as unknown as { depth: number };
+        const listItem = element as ListItemElement;
         return `${'  '.repeat(listItem.depth - 1)}- ${element.content}\n`;
       }
       case MarkdownElementType.OrderedListItem: {
-        const listItem = element as unknown as { depth: number };
+        const listItem = element as ListItemElement;
         return `${'  '.repeat(listItem.depth - 1)}1. ${element.content}\n`;
       }
       case MarkdownElementType.BlockQuote: {
-        const blockQuote = element as unknown as { depth: number };
+        const blockQuote = element as BlockQuoteElement;
         return `${'> '.repeat(blockQuote.depth)}${element.content.replace(/\n/g, '\n' + '> '.repeat(blockQuote.depth))}\n\n`;
       }
       case MarkdownElementType.CodeBlock:
@@ -136,7 +138,7 @@ export function flattenTree(elem: MarkdownElement): MarkdownElement[] {
       elem.type === MarkdownElementType.Header ? `${elem.content}\n\n` : '';
 
     // Process children and prepend header text if this is a header
-    return elem.children.flatMap((child) => {
+    return (elem as HeaderElement).children.flatMap((child) => {
       const flattenedChildren = flattenTree(child);
       return flattenedChildren.map((childElem) => ({
         ...childElem,

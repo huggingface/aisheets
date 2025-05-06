@@ -1,6 +1,6 @@
+import type { Example } from '~/services/inference/materialize-prompt';
 import { getRowCells } from '~/services/repository/cells';
 import type { Cell, Column } from '~/state';
-import type { Example } from './materialize-prompt';
 
 export interface CollectExamplesParams {
   column: Column;

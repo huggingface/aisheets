@@ -31,8 +31,8 @@ export const populateDataset = async function (
         column,
         process: column.process,
         session,
-        limit: column.process.limit,
-        offset: column.process.offset,
+        offset: 0,
+        limit: 5,
         parallel: hasReferences,
       })) {
         // We don't need to do anything with the yielded cells

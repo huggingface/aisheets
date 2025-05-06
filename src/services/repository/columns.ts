@@ -27,10 +27,8 @@ export const modelToColumn = (model: ColumnModel): Column => {
       columnsReferences: (model.process?.referredColumns ?? []).map(
         (columnRef) => columnRef.id,
       ),
-      limit: model.process?.limit ?? 0,
       modelName: model.process?.modelName ?? '',
       modelProvider: model.process?.modelProvider ?? '',
-      offset: model.process?.offset ?? 0,
       prompt: model.process?.prompt ?? '',
       updatedAt: model.process?.updatedAt,
     },

@@ -1,5 +1,13 @@
 import { getGeneratedColumnSize, updateProcess } from '~/services';
 import {
+  type PromptExecutionParams,
+  runPromptExecution,
+  runPromptExecutionStream,
+  runPromptExecutionStreamBatch,
+} from '~/services/inference/run-prompt-execution';
+
+import { renderInstruction } from '~/services/inference/materialize-prompt';
+import {
   createCell,
   getColumnCellByIdx,
   getRowCells,
@@ -8,13 +16,6 @@ import {
 import { queryDatasetSources } from '~/services/websearch/embed';
 import type { Cell, Column, Process, Session } from '~/state';
 import { collectExamples } from './collect-examples';
-import { renderInstruction } from './materialize-prompt';
-import {
-  runPromptExecution,
-  runPromptExecutionStream,
-  runPromptExecutionStreamBatch,
-} from './run-prompt-execution';
-import type { PromptExecutionParams } from './run-prompt-execution';
 
 export interface GenerateCellsParams {
   column: Column;

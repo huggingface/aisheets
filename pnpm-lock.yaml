@@ -15,8 +15,8 @@ importers:
         specifier: ^1.1.2
         version: 1.1.2
       '@huggingface/inference':
-        specifier: ^3.12.0
-        version: 3.12.0
+        specifier: ^3.12.1
+        version: 3.12.1
       '@huggingface/transformers':
         specifier: ^3.4.2
         version: 3.4.2
@@ -452,8 +452,8 @@ packages:
     resolution: {integrity: sha512-Jf4GhvVj9ABDw4Itb3BV1T7f22iewuZva476qTicQ4kOTbosuUuFDhsVH7ZH6rVNgg20Ll9kaNBF5CXjySIT+w==}
     engines: {node: '>=18'}
 
-  '@huggingface/inference@3.12.0':
-    resolution: {integrity: sha512-z2EGuzWwzHfiikZkzKS8J1vLdTxMnIfGEmL5SX8PI18pg0GS7fovbBvIul6TD8FiLBQ2aurdN6ci1z8PnUtv/A==}
+  '@huggingface/inference@3.12.1':
+    resolution: {integrity: sha512-gRnRHZkVAb7mzmPnLcFrttA17yZdUiz+xLqk19FBwCsCjBBlcDCXVIrZ3RW1DdZq297PB6m6t995600sDq3T6g==}
     engines: {node: '>=18'}
 
   '@huggingface/jinja@0.3.3':
@@ -467,8 +467,8 @@ packages:
   '@huggingface/tasks@0.18.12':
     resolution: {integrity: sha512-hUEYhXJzJCUhLSBNglW+Sji5fuzMnpBimp3kbdcGor+MaN9xb+qrcLnMC7X8aOcZaZdCErwYYIqz2oSP2EM4Bg==}
 
-  '@huggingface/tasks@0.19.1':
-    resolution: {integrity: sha512-cocq5+jkmh8+qIvWDCyC9nkf7qCpmBRrJL/WPWhfIMXWEv2dMYMY62ylFv+dq/vRwpe+/5h0WlnZGOSIa+3OJg==}
+  '@huggingface/tasks@0.19.2':
+    resolution: {integrity: sha512-j51UqsUlJtbfa/npGnbbeH2tduORPiXY4ru0WGVu83jX1TVROtJ+JKfYtpHhiL+Uw1Z8Ni3na/ZncQulYZ/H/A==}
 
   '@huggingface/transformers@3.4.2':
     resolution: {integrity: sha512-B7K7SCkpqjlfhrV0z18icmnCqgdU2zq+gI3ttBRQ8xl6mIzfxeeKht/vCa8y7pbewY/hJmirKdQClpw0IUaSaw==}
@@ -3841,10 +3841,10 @@ snapshots:
     dependencies:
       '@huggingface/tasks': 0.18.12
 
-  '@huggingface/inference@3.12.0':
+  '@huggingface/inference@3.12.1':
     dependencies:
       '@huggingface/jinja': 0.4.1
-      '@huggingface/tasks': 0.19.1
+      '@huggingface/tasks': 0.19.2
 
   '@huggingface/jinja@0.3.3': {}
 
@@ -3852,7 +3852,7 @@ snapshots:
 
   '@huggingface/tasks@0.18.12': {}
 
-  '@huggingface/tasks@0.19.1': {}
+  '@huggingface/tasks@0.19.2': {}
 
   '@huggingface/transformers@3.4.2':
     dependencies:

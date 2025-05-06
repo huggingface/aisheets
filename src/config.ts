@@ -101,12 +101,12 @@ export const EXCLUDED_MODELS: string[] = process.env.EXCLUDED_MODELS?.split(
  * Default configuration for embedding operations
  */
 export const default_embedding_model = {
-  provider: process.env.EMBEDDING_MODEL_PROVIDER ?? 'sambanova',
-  model: process.env.EMBEDDING_MODEL ?? 'intfloat/e5-mistral-7b-instruct',
-  embedding_dim: Number(process.env.EMBEDDING_DIM ?? 4096),
+  provider: process.env.EMBEDDING_MODEL_PROVIDER ?? 'hf-inference',
+  model: process.env.EMBEDDING_MODEL ?? 'BAAI/bge-base-en-v1.5',
+  embedding_dim: Number(process.env.EMBEDDING_DIM ?? 768),
   is_instruct: process.env.EMBEDDING_IS_INSTRUCT
     ? process.env.EMBEDDING_IS_INSTRUCT === 'true'
-    : true,
+    : false,
 } as const;
 
 export const GOOGLE_CLIENT_ID: string | undefined =
@@ -126,6 +126,14 @@ export const GOOGLE_REDIRECT_URI: string | undefined =
  */
 export const ORG_BILLING = process.env.ORG_BILLING ?? undefined;
 
+/**
+ * List of blocked domains or URL fragments for web search.
+ * This value is retrieved from the environment variable `BLOCKED_URLS` as a comma-separated string.
+ * If not set, defaults to blocking YouTube and Twitter.
+ */
+export const BLOCKED_URLS: string[] = process.env.BLOCKED_URLS?.split(',').map(
+  (u) => u.trim(),
+) ?? ['youtube.com', 'twitter.com'];
 
 const RUNTIME_ENV = join(DATA_DIR, process.env.NODE_ENV ?? 'development');
 

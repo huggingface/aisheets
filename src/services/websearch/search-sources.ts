@@ -36,6 +36,21 @@ export interface Source {
   }>;
 }
 
+// Utility function to add blocklist to search query
+function addBlockListToQuery(query: string, blockList: string[]): string {
+  if (!blockList.length) return query;
+  const blockFilters = blockList.map((domain) => `-site:${domain}`).join(' ');
+  return `${query} ${blockFilters}`;
+}
+
+// Utility function to filter results by blocklist
+function filterByBlockList<T extends { url: string }>(results: T[]): T[] {
+  return results.filter(
+    (result) =>
+      !config.BLOCKED_URLS.some((blocked) => result.url.includes(blocked)),
+  );
+}
+
 export async function createSourcesFromWebQueries({
   dataset,
   queries,
@@ -100,7 +115,9 @@ const searchQueriesToSources = async (
 
   for (const query of queries) {
     try {
-      const webSearch = await serper.search(query);
+      // Add blocklist to the query string
+      const queryWithBlock = addBlockListToQuery(query, config.BLOCKED_URLS);
+      const webSearch = await serper.search(queryWithBlock);
 
       for (const result of webSearch) {
         if (!result.link) continue;
@@ -128,8 +145,9 @@ const searchQueriesToSources = async (
     }
   }
 
+  // Filter results by blocklist for extra safety
   return {
-    sources: Array.from(sourcesMap.values()).slice(0, 5),
+    sources: filterByBlockList(Array.from(sourcesMap.values())).slice(0, 5),
     errors,
   };
 };

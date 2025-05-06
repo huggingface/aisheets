@@ -109,8 +109,7 @@ export const indexDatasetSources = async ({
             .map(stringifyMarkdownElement)
             .filter((text) => text.length > 200); // Skip chunks with 200 or fewer characters
 
-          // Process chunks in batches of 8
-          const BATCH_SIZE = 32;
+          const BATCH_SIZE = 128;
           const sourceData: Array<{
             text: string;
             embedding: number[];

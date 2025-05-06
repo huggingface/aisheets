@@ -3,7 +3,7 @@ import { server$, useNavigate } from '@builder.io/qwik-city';
 import { cn } from '@qwik-ui/utils';
 import { LuEgg, LuGlobe } from '@qwikest/icons/lucide';
 import { Button, Textarea } from '~/components';
-import { SecondLogo } from '~/components/ui/logo/logo';
+import { MainLogo, SecondLogo } from '~/components/ui/logo/logo';
 import { Skeleton } from '~/components/ui/skeleton/skeleton';
 import { DragAndDrop } from '~/features/import/drag-n-drop';
 import { MainSidebarButton } from '~/features/main-sidebar';
@@ -90,6 +90,7 @@ export default component$(() => {
       <div class="w-full h-full flex flex-col items-center justify-center">
         <div class="flex flex-col items-center justify-center space-y-14">
           <div class="flex flex-col items-center justify-center space-y-4">
+            <MainLogo class="w-[70px] h-[70px]" />
             <h1 class="text-2xl font-semibold">Design your data in a sheet</h1>
             <h2 class="text-neutral-500 font-medium">From a simple idea</h2>
           </div>

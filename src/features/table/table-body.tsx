@@ -334,7 +334,7 @@ export const TableBody = component$(() => {
         >
           <td
             class={cn(
-              'sticky left-0 z-50',
+              'sticky left-0 z-30',
               'px-2 text-center border bg-neutral-100 select-none',
               {
                 'bg-neutral-200': selectedRows.value.includes(item.index),
@@ -397,7 +397,7 @@ export const TableBody = component$(() => {
                 ) : (
                   <td
                     class={cn(
-                      'relative box-border min-w-[326px] w-[326px] max-w-[326px] h-[108px] cursor-pointer break-words align-top border',
+                      'relative box-border min-w-[326px] w-[326px] max-w-[326px] h-[108px] cursor-pointer break-words align-top border hover:bg-gray-50/50',
                       {
                         'bg-green-50 border-green-300': cell.validated,
                         'border-neutral-300': !cell.validated,

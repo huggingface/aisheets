@@ -15,7 +15,7 @@ import {
 } from '~/services/repository/cells';
 import { queryDatasetSources } from '~/services/websearch/embed';
 import type { Cell, Column, Process, Session } from '~/state';
-import { collectExamples } from './collect-examples';
+import { collectValidatedExamples } from './collect-examples';
 
 export interface GenerateCellsParams {
   column: Column;
@@ -59,13 +59,6 @@ export const generateCells = async function* ({
   // Track all our generated cells to use as examples
   const generatedCells: Cell[] = [];
 
-  // Get initial examples from validated cells
-  let currentExamples = await collectExamples({
-    column,
-    validatedCells,
-    columnsReferences,
-  });
-
   const validatedIdxs = validatedCells?.map((cell) => cell.idx);
 
   if (!limit) limit = await getGeneratedColumnSize(column.id);
@@ -76,6 +69,12 @@ export const generateCells = async function* ({
     if (parallel && columnsReferences?.length > 0) {
       const streamRequests: PromptExecutionParams[] = [];
       const cells = new Map<number, Cell>();
+
+      // Get initial examples from validated cells
+      const currentExamples = await collectValidatedExamples({
+        validatedCells,
+        columnsReferences,
+      });
 
       // Create all cells and requests in order
       for (let i = offset; i < limit + offset; i++) {
@@ -170,6 +169,16 @@ export const generateCells = async function* ({
     });
 
     // Sequential execution for fromScratch to accumulate examples
+
+    // Get all existing cells in the column to achieve diversity
+    const existingCells = column.cells
+      .filter((cell) => cell.value)
+      .map((cell) => ({
+        output: cell.value,
+        validated: cell.validated,
+        inputs: {},
+      }));
+
     for (let i = offset; i < limit + offset; i++) {
       if (validatedIdxs?.includes(i)) continue;
 
@@ -182,7 +191,7 @@ export const generateCells = async function* ({
         accessToken: session.token,
         modelName,
         modelProvider,
-        examples: currentExamples,
+        examples: existingCells,
         instruction: prompt,
         sourcesContext,
         timeout,
@@ -209,10 +218,11 @@ export const generateCells = async function* ({
       if (cell.value && !cell.error) {
         generatedCells.push(cell);
         // Recollect examples using ALL validated and generated cells
-        currentExamples = await collectExamples({
-          column,
-          validatedCells: [...validatedCells, ...generatedCells],
-          columnsReferences,
+
+        existingCells.push({
+          output: cell.value,
+          validated: false,
+          inputs: {},
         });
       }
     }

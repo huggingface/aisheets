@@ -28,6 +28,7 @@ describe.runIf(accessToken)(
       const examples = ['example1', 'example2'].map((output) => ({
         output,
         inputs: { 'Column 1': 'some input' },
+        validated: false,
       }));
 
       const result = await runPromptExecution({

@@ -212,19 +212,19 @@ const formatExamples = (
   const validatedExamples = examples.filter((example) => example.validated);
   const nonValidatedExamples = examples.filter((example) => !example.validated);
 
-  return mustache
-    .render(
-      template,
-      {
-        examples: [
-          ...validatedExamples,
-          ...nonValidatedExamples.sort(() => Math.random() - 0.5),
-        ],
-      },
-      undefined,
-      {
-        escape: escapeValues,
-      },
-    )
-    .slice(0, EXAMPLES_PROMPT_CONTEXT_SIZE);
+  const examplesText = mustache.render(
+    template,
+    {
+      examples: [
+        ...validatedExamples,
+        ...nonValidatedExamples.sort(() => Math.random() - 0.5),
+      ],
+    },
+    undefined,
+    {
+      escape: escapeValues,
+    },
+  );
+
+  return examplesText.slice(0, EXAMPLES_PROMPT_CONTEXT_SIZE);
 };

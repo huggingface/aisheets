@@ -16,24 +16,33 @@ export async function collectValidatedExamples({
   // Build examples array
   const examples = Promise.all(
     validatedCells
-      .filter((cell): cell is Cell => Boolean(cell.value))
-      .map(async (cell) => {
-        const rowCells = await getRowCells({
-          rowIdx: cell.idx,
-          columns: columnsReferences || [],
-        });
-
-        const inputs = Object.fromEntries(
-          rowCells
-            .filter((cell): cell is typeof cell & { value: string } =>
-              Boolean(cell.column?.name && cell.value),
-            )
-            .map((cell) => [cell.column!.name, cell.value]),
-        );
-
-        return { output: cell.value, inputs, validated: true };
-      }),
+      .filter((cell) => Boolean(cell.value))
+      .map((cell) => cell2example(cell, columnsReferences)),
   );
 
   return examples;
 }
+
+const cell2example = async (
+  cell: Cell,
+  columnsReferences?: string[],
+): Promise<Example> => {
+  const rowCells = await getRowCells({
+    rowIdx: cell.idx,
+    columns: columnsReferences || [],
+  });
+
+  const inputs = Object.fromEntries(
+    rowCells
+      .filter((cell): cell is typeof cell & { value: string } =>
+        Boolean(cell.column?.name && cell.value),
+      )
+      .map((cell) => [cell.column!.name, cell.value]),
+  );
+
+  return {
+    output: cell.value,
+    inputs,
+    validated: true,
+  };
+};

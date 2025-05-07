@@ -200,8 +200,8 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
         class="p-4 w-full h-80 min-h-80 max-h-80 resize-none overflow-auto text-base rounded-sm pb-16 placeholder:text-neutral-500"
         placeholder={
           props.variables.value[0]
-            ? `Translate into French:\n\n{{${props.variables.value[0].name}}}`
-            : ''
+            ? `Translate into French: {{${props.variables.value[0].name}}}`
+            : 'Generate a fictional short bio of a scientist with a focus on their area of expertise'
         }
         onInput$={(event) =>
           handleTextInput(event.target as HTMLTextAreaElement)
@@ -226,6 +226,7 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
             left: '8px',
             top: `${referenceVariables.cursor.position}px`,
           }}
+          disabled={!props['bind:value'].value.trim()}
         >
           <LuBraces class="text-neutral" />
         </Select.Trigger>

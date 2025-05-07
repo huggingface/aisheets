@@ -225,7 +225,9 @@ export const ExecutionForm = component$<SidebarProps>(
                     class="w-[30px] h-[30px] rounded-full flex items-center justify-center p-0"
                     onClick$={onGenerate}
                     disabled={
-                      column.process?.isExecuting && column.id === TEMPORAL_ID
+                      (column.process?.isExecuting &&
+                        column.id === TEMPORAL_ID) ||
+                      !prompt.value.trim()
                     }
                   >
                     {column.process?.isExecuting ? (

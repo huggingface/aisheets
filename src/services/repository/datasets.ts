@@ -2,7 +2,11 @@ import { DatasetModel } from '~/services/db/models';
 import type { Dataset } from '~/state';
 import { getColumnCells } from './cells';
 import { getDatasetColumns } from './columns';
-import { createDatasetTable, createDatasetTableFromFile } from './tables';
+import {
+  createDatasetTable,
+  createDatasetTableFromFile,
+  getTableSize,
+} from './tables';
 
 interface CreateDatasetParams {
   name: string;
@@ -125,6 +129,13 @@ export const getDatasetById = async (id: string): Promise<Dataset | null> => {
 
   const columns = await getDatasetColumns(model);
 
+  const tableSize = await getTableSize({
+    dataset: {
+      id: model.id,
+      name: model.name,
+    },
+  });
+
   const dataset = {
     id: model.id,
     name: model.name,
@@ -132,6 +143,7 @@ export const getDatasetById = async (id: string): Promise<Dataset | null> => {
     columns,
     createdAt: model.createdAt,
     updatedAt: model.updatedAt,
+    size: tableSize,
   };
 
   await Promise.all(

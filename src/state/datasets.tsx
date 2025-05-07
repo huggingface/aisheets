@@ -17,6 +17,7 @@ export interface Dataset {
   columns: Column[];
   createdAt?: Date;
   updatedAt?: Date;
+  size?: number;
 }
 
 const datasetsContext = createContextId<Signal<Dataset>>('datasets.context');

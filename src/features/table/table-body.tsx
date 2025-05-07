@@ -22,11 +22,18 @@ import { useExecution } from '~/features/add-column';
 import { useGenerateColumn } from '~/features/execution';
 import { TableCell } from '~/features/table/table-cell';
 import { deleteRowsCells, getColumnCells } from '~/services';
-import { type Cell, type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
+import {
+  type Cell,
+  type Column,
+  TEMPORAL_ID,
+  useColumnsStore,
+  useDatasetsStore,
+} from '~/state';
 
 export const TableBody = component$(() => {
   const pageSize = 10;
 
+  const { activeDataset } = useDatasetsStore();
   const {
     columns,
     firstColumn,
@@ -34,6 +41,7 @@ export const TableBody = component$(() => {
     updateColumn,
     deleteCellByIdx,
   } = useColumnsStore();
+
   const { onGenerateColumn } = useGenerateColumn();
   const selectedRows = useSignal<number[]>([]);
 
@@ -79,6 +87,10 @@ export const TableBody = component$(() => {
     return columns.value.find(
       (column) => column.id === dragStartCell.value?.column?.id,
     );
+  });
+
+  const datasetSize = useComputed$(() => {
+    return activeDataset.value.size || 0;
   });
 
   const latestCellSelected = useComputed$(() => {
@@ -464,7 +476,7 @@ export const TableBody = component$(() => {
   return (
     <tbody>
       <VirtualScrollContainer
-        totalCount={1000}
+        totalCount={datasetSize.value}
         buffer={3}
         estimateSize={108}
         overscan={30}

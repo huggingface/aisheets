@@ -17,6 +17,7 @@ export const useAddColumnUseCase = () =>
       throw new Error('Process is required to create a column');
 
     const session = useServerSession(this);
+
     const column = await createColumn({
       name: newColum.name,
       type: newColum.type,
@@ -38,12 +39,14 @@ export const useAddColumnUseCase = () =>
       },
     };
 
+    const { limit, offset } = newColum.process;
+
     for await (const { cell } of generateCells({
       column,
       process: column.process!,
       session,
-      limit: column.process!.limit!,
-      offset: column.process!.offset,
+      limit,
+      offset,
       parallel: column.process!.columnsReferences?.length > 0,
     })) {
       this.signal.onabort = () => {

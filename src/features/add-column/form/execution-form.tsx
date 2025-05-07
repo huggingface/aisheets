@@ -19,7 +19,6 @@ import {
 } from '@qwikest/icons/lucide';
 
 import { Button, Input, Label, Select } from '~/components';
-import { nextTick } from '~/components/hooks/tick';
 
 import {
   TemplateTextArea,
@@ -58,7 +57,7 @@ export const ExecutionForm = component$<SidebarProps>(
     const selectedModel = useSignal<Model>();
     const selectedProvider = useSignal<string>();
     const inputModelId = useSignal<string | undefined>();
-    const rowsToGenerate = useSignal('');
+
     const maxRows = useSignal<number>(0);
 
     const loadModels = useResource$(async () => {
@@ -107,24 +106,15 @@ export const ExecutionForm = component$<SidebarProps>(
       }
 
       inputModelId.value = process.modelName;
-
-      rowsToGenerate.value = '1';
     });
 
     useVisibleTask$(async ({ track }) => {
       const newValue = track(columnsReferences);
 
       maxRows.value = await maxNumberOfRows(column, newValue);
-
-      if (Number(rowsToGenerate.value) > maxRows.value) {
-        nextTick(() => {
-          rowsToGenerate.value = String(maxRows.value);
-        });
-      }
     });
 
     useVisibleTask$(({ track }) => {
-      track(rowsToGenerate);
       track(selectedModel);
       track(selectedProvider);
       track(prompt);
@@ -175,7 +165,7 @@ export const ExecutionForm = component$<SidebarProps>(
             prompt: prompt.value,
             columnsReferences: columnsReferences.value,
             offset: 0,
-            limit: Number(rowsToGenerate.value),
+            limit: 1,
           },
         };
 

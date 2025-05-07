@@ -17,12 +17,14 @@ export const useEditColumnUseCase = () =>
       column,
     });
 
+    const { limit, offset } = column.process;
+
     for await (const { cell } of generateCells({
       column,
-      process: column.process!,
       session,
-      limit: column.process!.limit!,
-      offset: column.process!.offset,
+      process: column.process,
+      limit,
+      offset,
       validatedCells,
       parallel: column.process!.columnsReferences?.length > 0,
     })) {

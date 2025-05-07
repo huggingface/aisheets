@@ -3,14 +3,6 @@ name: Run tests and build
 on: [push]    
   
 jobs:
-  test:
-    runs-on: ubuntu-latest
-
-    steps:
-      - run: echo "Relase?? ${IS_RELEASE}"
-        env:
-          IS_RELEASE: ${{ startsWith(github.ref, 'refs/tags/v') }}
-
   build:
     runs-on: ubuntu-latest
 

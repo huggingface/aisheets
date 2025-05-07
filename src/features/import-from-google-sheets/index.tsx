@@ -79,6 +79,8 @@ export const ImportFromGoogleSheets = component$(() => {
         secretToken: googleSheetsToken.value,
       });
       nav(`/home/dataset/${dataset.id}`);
+    } catch (error) {
+      console.error('Error importing dataset:', error);
     } finally {
       isImporting.value = false;
     }

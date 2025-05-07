@@ -197,7 +197,12 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
       <Textarea
         ref={textarea}
         look="ghost"
-        class="p-4 w-full h-80 min-h-80 max-h-80 resize-none overflow-auto text-base rounded-sm pb-16"
+        class="p-4 w-full h-80 min-h-80 max-h-80 resize-none overflow-auto text-base rounded-sm pb-16 placeholder:text-neutral-500"
+        placeholder={
+          props.variables.value[0]
+            ? `Translate into French:\n\n{{${props.variables.value[0].name}}}`
+            : ''
+        }
         onInput$={(event) =>
           handleTextInput(event.target as HTMLTextAreaElement)
         }

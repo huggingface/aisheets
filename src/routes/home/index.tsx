@@ -114,7 +114,7 @@ export default component$(() => {
                   look="ghost"
                   value={prompt.value}
                   placeholder="Endangered plants and their habitats"
-                  class="p-4 max-h-40 resize-none overflow-auto text-base placeholder:text-neutral-400"
+                  class="p-4 max-h-40 resize-none overflow-auto text-base placeholder:text-neutral-500"
                   onInput$={(e, el) => {
                     prompt.value = el.value;
 

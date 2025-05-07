@@ -22,7 +22,7 @@ export const connectAndClose = async <T>(
     console.error(error);
     throw error;
   } finally {
-    db.close();
+    db.disconnectSync();
   }
 };
 

@@ -4,6 +4,7 @@ import {
   component$,
   noSerialize,
   sync$,
+  useContext,
   useSignal,
 } from '@builder.io/qwik';
 import { Link, useNavigate } from '@builder.io/qwik-city';
@@ -11,8 +12,11 @@ import { cn } from '@qwik-ui/utils';
 import { LuFilePlus2, LuUpload } from '@qwikest/icons/lucide';
 import { Button, Popover, buttonVariants } from '~/components';
 import { GoogleDrive, HFLogo } from '~/components/ui/logo/logo';
+import { configContext } from '~/routes/home/layout';
 
 export const DragAndDrop = component$(() => {
+  const { isGoogleAuthEnabled } = useContext(configContext);
+
   const file = useSignal<NoSerialize<File>>();
   const isDragging = useSignal(false);
   const navigate = useNavigate();
@@ -112,18 +116,21 @@ export const DragAndDrop = component$(() => {
               Add from Hugging Face Hub
             </Link>
 
-            <hr class="border-t border-slate-200 dark:border-slate-700" />
-
-            <Button
-              look="ghost"
-              class="w-full flex items-center justify-start hover:bg-neutral-100 gap-2.5 p-2"
-              onClick$={() => {
-                navigate('/home/dataset/create/from-google-drive');
-              }}
-            >
-              <GoogleDrive class="w-4 h-4 flex-shrink-0" />
-              Add from Google Drive
-            </Button>
+            {isGoogleAuthEnabled && (
+              <>
+                <hr class="border-t border-slate-200 dark:border-slate-700" />
+                <Button
+                  look="ghost"
+                  class="w-full flex items-center justify-start hover:bg-neutral-100 gap-2.5 p-2"
+                  onClick$={() => {
+                    navigate('/home/dataset/create/from-google-drive');
+                  }}
+                >
+                  <GoogleDrive class="w-4 h-4 flex-shrink-0" />
+                  Add from Google Drive
+                </Button>
+              </>
+            )}
 
             <hr class="border-t border-slate-200 dark:border-slate-700" />
 

@@ -8,12 +8,19 @@ import { useServerSession } from '~/state';
  */
 export const useClientConfig = routeLoader$(async function (
   this: RequestEventLoader,
-) {
+): Promise<{
+  DEFAULT_MODEL: string;
+  DEFAULT_MODEL_PROVIDER: string;
+  isGoogleAuthEnabled: boolean;
+}> {
   useServerSession(this);
 
   return {
     DEFAULT_MODEL: config.DEFAULT_MODEL,
     DEFAULT_MODEL_PROVIDER: config.DEFAULT_MODEL_PROVIDER,
+    isGoogleAuthEnabled: Boolean(
+      config.GOOGLE_CLIENT_ID && config.GOOGLE_REDIRECT_URI,
+    ),
   };
 });
 

@@ -1,5 +1,4 @@
 import { join } from 'node:path';
-import { isDev } from '@builder.io/qwik';
 
 /**
  * The OAuth client ID used for authentication.
@@ -126,14 +125,10 @@ export const EXAMPLES_PROMPT_CONTEXT_SIZE: number =
   ) || DEFAULT_EXAMPLES_PROMPT_CONTEXT_SIZE;
 
 export const GOOGLE_CLIENT_ID: string | undefined =
-  process.env.GOOGLE_CLIENT_ID ??
-  '905039472434-7khf7dpl6002etvrn1h3ne1g0t2gv5r8.apps.googleusercontent.com';
+  process.env.GOOGLE_CLIENT_ID;
 
 export const GOOGLE_REDIRECT_URI: string | undefined =
-  process.env.GOOGLE_REDIRECT_URI ??
-  (isDev
-    ? 'http://localhost:5173/oauth2/google'
-    : 'https://huggingfacedg-dataground.hf.space/oauth2/google');
+  process.env.GOOGLE_REDIRECT_URI;
 
 /**
  * If defined, the inference endpoint bill with by applied to the organization billing.

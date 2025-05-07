@@ -226,7 +226,6 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
             left: '8px',
             top: `${referenceVariables.cursor.position}px`,
           }}
-          disabled={!props['bind:value'].value.trim()}
         >
           <LuBraces class="text-neutral" />
         </Select.Trigger>

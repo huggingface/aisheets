@@ -145,7 +145,6 @@ const searchQueriesToSources = async (
     }
   }
 
-  // Filter results by blocklist for extra safety
   return {
     sources: filterByBlockList(Array.from(sourcesMap.values())).slice(0, 5),
     errors,

@@ -3,7 +3,7 @@ import { server$, useNavigate } from '@builder.io/qwik-city';
 import { cn } from '@qwik-ui/utils';
 import { LuEgg, LuGlobe } from '@qwikest/icons/lucide';
 import { Button, Textarea } from '~/components';
-import { MainLogo, SecondLogo } from '~/components/ui/logo/logo';
+import { MainLogo } from '~/components/ui/logo/logo';
 import { Skeleton } from '~/components/ui/skeleton/skeleton';
 import { DragAndDrop } from '~/features/import/drag-n-drop';
 import { MainSidebarButton } from '~/features/main-sidebar';
@@ -97,7 +97,7 @@ export default component$(() => {
             <h2 class="text-neutral-500 font-medium">From a simple idea</h2>
           </div>
 
-          <div class="flex flex-col items-center justify-center space-y-3">
+          <div class="flex flex-col items-center justify-center space-y-8">
             <div
               class="relative w-[700px]"
               onClick$={() => document.getElementById('prompt')?.focus()}
@@ -113,7 +113,7 @@ export default component$(() => {
                   id="prompt"
                   look="ghost"
                   value={prompt.value}
-                  placeholder="Create a dataset about recent open source news"
+                  placeholder="Endangered plants and their habitats"
                   class="p-4 max-h-40 resize-none overflow-auto text-base placeholder:text-neutral-400"
                   onInput$={(e, el) => {
                     prompt.value = el.value;
@@ -159,7 +159,7 @@ export default component$(() => {
             </div>
 
             <div class="flex flex-col items-center justify-center space-y-8">
-              <div class="w-[700px] flex flex-col justify-between items-start gap-2">
+              {/* <div class="w-[700px] flex flex-col justify-between items-start gap-2">
                 {startingPrompts.map((prompt) => (
                   <Button
                     key={prompt}
@@ -170,7 +170,7 @@ export default component$(() => {
                     {prompt}
                   </Button>
                 ))}
-              </div>
+              </div> */}
 
               <div class="w-[697px] flex justify-center items-center">
                 <hr class="w-full border-t" />

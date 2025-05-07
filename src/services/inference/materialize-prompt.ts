@@ -73,15 +73,15 @@ You are a rigorous text-generation engine. Generate only the requested output fo
 - Avoid adjacent terminology (e.g., if examples use "neural networks," avoid "machine learning models").
 
 ## Dataset-Aware Cross-Checking and Diversity
-Ensure your output differs meaningfully from the existing data points in topic, content, tone, and structure, depending on the user instruction.
+Ensure your output differs meaningfully from the existing data points in topic, content, tone, and structure, depending on the user instruction. 
 
 # User Instruction
 {{instruction}}
 
 {{#hasSourcesContext}}
-# Dataset Source Context
-The following are the dataset sources that might be relevant to the user instruction. Use them to cross-check your output and ensure diversity with respect to the existing dataset.
-## Dataset Source Context
+# Sources
+Use the web sources below to accurately follow the user instruction. If the information is available in the source, you MUST NOT make up the requested information but instead extract and/or process the provided sources to ensure a truthful and accurate response. If the user instruction is about real-world facts or knowledge and can't be accurately fulfilled with the available sources, you should output with something like information not found in the sources.
+## Source extract
 {{#sourcesContext}}
 - {{source_uri}}: {{text}}
 {{/sourcesContext}}
@@ -162,9 +162,9 @@ The following are correct, accurate example outputs with respect to the user ins
 {{instruction}}
 
 {{#hasSourcesContext}}
-# Dataset Source Context
-The following are the dataset sources that might be relevant to the user instruction. Use them to cross-check your output and ensure diversity with respect to the existing dataset.
-## Dataset Source Context
+# Sources
+Use the web sources below to accurately follow the user instruction. If the information is available in the source, you MUST NOT make up the requested information but instead extract and/or process the provided sources to ensure a truthful and accurate response. If the user instruction is about real-world facts or knowledge and can't be accurately fulfilled with the available sources, you should output with something like information not found in the sources.
+## Source extract
 {{#sourcesContext}}
 - {{source_uri}}: {{text}}
 {{/sourcesContext}}

@@ -51,7 +51,7 @@ export const deleteIndex = async () => {
 };
 
 const getDetailedInstruct = (query: string): string => {
-  return `Instruct: Given a web search query, retrieve relevant passages that answer the query\nQuery: ${query}`;
+  return `Represent this sentence for searching relevant passages: ${query}`;
 };
 
 export const embedder = async (
@@ -109,7 +109,7 @@ export const indexDatasetSources = async ({
             .map(stringifyMarkdownElement)
             .filter((text) => text.length > 200); // Skip chunks with 200 or fewer characters
 
-          const BATCH_SIZE = 128;
+          const BATCH_SIZE = 64;
           const sourceData: Array<{
             text: string;
             embedding: number[];

@@ -156,7 +156,7 @@ const searchQueriesToSources = async (
   }
 
   return {
-    sources: filterByBlockList(Array.from(sourcesMap.values())).slice(0, 5),
+    sources: filterByBlockList(Array.from(sourcesMap.values())),
     errors,
   };
 };

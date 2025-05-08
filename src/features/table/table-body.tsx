@@ -465,9 +465,9 @@ export const TableBody = component$(() => {
     <tbody>
       <VirtualScrollContainer
         totalCount={1000}
-        buffer={3}
+        buffer={10}
         estimateSize={108}
-        overscan={30}
+        overscan={50}
         pageSize={pageSize}
         data={data}
         loadNextPage={loadPage}

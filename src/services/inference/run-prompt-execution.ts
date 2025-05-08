@@ -66,16 +66,7 @@ export const runPromptExecution = async ({
   });
   const options = normalizeOptions(timeout);
 
-  console.log('\n🔷 Prompt Execution 🔷');
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('Model:', modelName);
-  console.log('Provider:', modelProvider);
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('Prompt:');
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log(inputPrompt);
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('🔷 End Prompt 🔷\n');
+  // printPrompt(modelName, modelProvider, inputPrompt);
 
   try {
     const response = await chatCompletion(args, options);
@@ -109,16 +100,7 @@ export const runPromptExecutionStream = async function* ({
   });
   const options = normalizeOptions(timeout);
 
-  console.log('\n🔷 Prompt Stream 🔷');
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('Model:', modelName);
-  console.log('Provider:', modelProvider);
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('Prompt:');
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log(inputPrompt);
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('🔷 End Prompt 🔷\n');
+  // printPrompt(modelName, modelProvider, inputPrompt);
 
   try {
     let accumulated = '';
@@ -246,3 +228,20 @@ export const normalizeOptions = (timeout?: number | undefined): Options => {
 
   return options;
 };
+
+function printPrompt(
+  modelName: string,
+  modelProvider: string,
+  inputPrompt: string,
+) {
+  console.log('\n🔷 Prompt 🔷');
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('Model:', modelName);
+  console.log('Provider:', modelProvider);
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('Prompt:');
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log(inputPrompt);
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('🔷 End Prompt 🔷\n');
+}

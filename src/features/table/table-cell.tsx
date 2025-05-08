@@ -442,10 +442,10 @@ export const TableCell = component$<{
           {isEditing.value && (
             <>
               {/* Backdrop */}
-              <div class="fixed inset-0 bg-neutral-700/40 z-40" />
+              <div class="fixed inset-0 bg-neutral-700/40 z-50" />
 
               <div
-                class="fixed z-40 bg-white border border-neutral-500 shadow-sm"
+                class="fixed z-[100] bg-white border border-neutral-500 shadow-sm"
                 style={{
                   left: '50%',
                   top: '50%',

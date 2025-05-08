@@ -3,6 +3,8 @@ import { scrapeUrlsBatch } from './scrape';
 import { SerperSearch } from './search';
 import type { HeaderElement } from './types';
 
+import { trackTime } from './utils/track-time';
+
 import * as config from '~/config';
 
 export interface WebSource {
@@ -71,21 +73,29 @@ export async function createSourcesFromWebQueries({
   if (!queries || queries.length === 0) throw new Error('No queries provided');
   if (!dataset || !dataset.id) throw new Error('No dataset provided');
 
-  const { sources: webSources, errors } = await searchQueriesToSources(queries);
+  const { sources: webSources, errors } = await trackTime(() => {
+    console.log('Time for searchQueriesToSources');
+    return searchQueriesToSources(queries);
+  });
 
-  const scrappedUrls = await scrapeUrlsBatch(
-    webSources.map((source) => source.url),
-  );
+  const scrappedUrls = await trackTime(() => {
+    console.log('Time for scrapeUrlsBatch');
+    return scrapeUrlsBatch(webSources.map((source) => source.url));
+  });
 
   for (const source of webSources) {
     const scrapped = scrappedUrls.get(source.url);
     if (scrapped) source.markdownTree = scrapped.markdownTree;
   }
 
-  const indexSize = await indexDatasetSources({
-    dataset,
-    sources: webSources,
-    options,
+  const indexSize = await trackTime(() => {
+    console.log('Time for indexDatasetSources');
+
+    return indexDatasetSources({
+      dataset,
+      sources: webSources,
+      options,
+    });
   });
 
   if (indexSize === 0) {
@@ -117,7 +127,7 @@ const searchQueriesToSources = async (
     try {
       // Add blocklist to the query string
       const queryWithBlock = addBlockListToQuery(query, config.BLOCKED_URLS);
-      const webSearch = await serper.search(queryWithBlock);
+      const webSearch = await serper.search(`${queryWithBlock} -filetype:pdf`);
 
       for (const result of webSearch) {
         if (!result.link) continue;

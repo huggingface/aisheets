@@ -66,7 +66,7 @@ export const runPromptExecution = async ({
   });
   const options = normalizeOptions(timeout);
 
-  // printPrompt(modelName, modelProvider, inputPrompt);
+  showPromptInfo(modelName, modelProvider, inputPrompt);
 
   try {
     const response = await chatCompletion(args, options);
@@ -100,7 +100,7 @@ export const runPromptExecutionStream = async function* ({
   });
   const options = normalizeOptions(timeout);
 
-  // printPrompt(modelName, modelProvider, inputPrompt);
+  showPromptInfo(modelName, modelProvider, inputPrompt);
 
   try {
     let accumulated = '';
@@ -229,7 +229,7 @@ export const normalizeOptions = (timeout?: number | undefined): Options => {
   return options;
 };
 
-function printPrompt(
+function showPromptInfo(
   modelName: string,
   modelProvider: string,
   inputPrompt: string,

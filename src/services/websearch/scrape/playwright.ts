@@ -101,7 +101,7 @@ export async function withPage<T>(
   try {
     const response = await page.goto(url, {
       waitUntil: 'domcontentloaded',
-      timeout: 10000,
+      timeout: 15000,
     });
 
     return await fn(page, response);

@@ -207,7 +207,7 @@ export const ExecutionForm = component$<SidebarProps>(
           <div class="absolute h-full w-full flex flex-col">
             <div class="flex flex-col gap-4 px-8 bg-neutral-100">
               <div class="relative">
-                <div class="h-96 min-h-96 max-h-96 bg-white border border-secondary-foreground rounded-sm">
+                <div class="h-48 min-h-48 max-h-48 bg-white border border-secondary-foreground rounded-sm">
                   <TemplateTextArea
                     bind:value={prompt}
                     variables={variables}

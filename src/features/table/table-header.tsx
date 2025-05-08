@@ -22,7 +22,7 @@ export const TableHeader = component$(() => {
   });
 
   return (
-    <thead class="sticky top-0 bg-white z-20">
+    <thead class="sticky top-0 bg-white z-50">
       <tr>
         <th
           class="sticky left-0 z-[10] min-w-1 w-1 max-w-1 min-h-[50px] h-[50px] px-4 py-2 border rounded-tl-sm bg-neutral-100"

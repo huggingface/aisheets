@@ -19,7 +19,7 @@ const runAutoDatasetAction = server$(async function (
   return await runAutoDataset.call(this, {
     instruction,
     searchEnabled,
-    maxSearchQueries: 1,
+    maxSearchQueries: 2,
   });
 });
 

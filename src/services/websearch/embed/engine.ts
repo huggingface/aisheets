@@ -1,7 +1,7 @@
 import { featureExtraction } from '@huggingface/inference';
 import * as lancedb from '@lancedb/lancedb';
 import * as arrow from 'apache-arrow';
-import { VECTOR_DB_DIR, default_embedding_model } from '~/config';
+import { DEFAULT_EMBEDDING_MODEL, VECTOR_DB_DIR } from '~/config';
 import {
   normalizeFeatureExtractionArgs,
   normalizeOptions,
@@ -20,7 +20,7 @@ export const configureEmbeddingsIndex = async () => {
     new arrow.Field(
       'embedding',
       new arrow.FixedSizeList(
-        default_embedding_model.embedding_dim,
+        DEFAULT_EMBEDDING_MODEL.embeddingDim,
         new arrow.Field('item', new arrow.Float32(), true),
       ),
     ),
@@ -64,24 +64,24 @@ export const embedder = async (
   if (texts.length === 0) return [];
 
   const processedTexts =
-    options.isQuery && default_embedding_model.is_instruct
+    options.isQuery && DEFAULT_EMBEDDING_MODEL.isInstruct
       ? texts.map(getDetailedInstruct)
       : texts;
 
   const args = normalizeFeatureExtractionArgs({
     inputs: processedTexts,
     accessToken: options.accessToken,
-    modelName: default_embedding_model.model,
-    modelProvider: default_embedding_model.provider,
+    modelName: DEFAULT_EMBEDDING_MODEL.model,
+    modelProvider: DEFAULT_EMBEDDING_MODEL.provider,
   });
 
   const results = await featureExtraction(
     normalizeFeatureExtractionArgs({
       inputs: processedTexts,
       accessToken: options.accessToken,
-      modelName: default_embedding_model.model,
-      modelProvider: default_embedding_model.provider,
-      endpointUrl: default_embedding_model.endpointUrl,
+      modelName: DEFAULT_EMBEDDING_MODEL.model,
+      modelProvider: DEFAULT_EMBEDDING_MODEL.provider,
+      endpointUrl: DEFAULT_EMBEDDING_MODEL.endpointUrl,
     }),
     normalizeOptions(),
   );

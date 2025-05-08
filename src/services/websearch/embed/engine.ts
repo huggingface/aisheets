@@ -68,7 +68,6 @@ export const embedder = async (
       ? texts.map(getDetailedInstruct)
       : texts;
 
-  const timeout = 3000;
   const results = await featureExtraction(
     normalizeFeatureExtractionArgs({
       inputs: processedTexts,
@@ -76,7 +75,7 @@ export const embedder = async (
       modelName: default_embedding_model.model,
       modelProvider: default_embedding_model.provider,
     }),
-    normalizeOptions(timeout),
+    normalizeOptions(),
   );
 
   if (!Array.isArray(results)) {
@@ -100,76 +99,67 @@ export const indexDatasetSources = async ({
     accessToken: string;
   };
 }): Promise<number> => {
-  const chunkedSources = sources
-    .map((source) => {
-      if (!source.markdownTree) return { source, chunks: [] };
+  const indexData = (
+    await Promise.all(
+      sources.flatMap(async (source) => {
+        if (!source.markdownTree) return [];
+        try {
+          const mdElements = flattenTree(source.markdownTree);
+          const textChunks = mdElements
+            .map(stringifyMarkdownElement)
+            .filter((text) => text.length > 200); // Skip chunks with 200 or fewer characters
 
-      const mdElements = flattenTree(source.markdownTree);
-      const chunks = mdElements
-        .map(stringifyMarkdownElement)
-        .filter((text) => text.length > 200); // Skip chunks with 200 or fewer characters
+          const BATCH_SIZE = 64;
+          const sourceData: Array<{
+            text: string;
+            embedding: number[];
+            source_uri: string;
+            dataset_id: string;
+          }> = [];
 
-      return { source, chunks };
-    })
-    .filter(({ chunks }) => chunks.length > 0);
+          for (let i = 0; i < textChunks.length; i += BATCH_SIZE) {
+            const batch = textChunks.slice(i, i + BATCH_SIZE);
+            try {
+              const embeddings = await embedder(batch, options);
 
-  let rows: Record<string, any>[] = chunkedSources
-    .flatMap(({ source, chunks }) => {
-      return chunks.map((text) => ({
-        text,
-        source_uri: source.url,
-        dataset_id: dataset.id,
-      }));
-    })
-    .sort(() => Math.random() - 0.5) // Randomize the order of rows
-    .slice(0, 30); // Limit to 30 rows;
+              batch.forEach((text, index) => {
+                const embedding = embeddings[index];
+                if (!embedding) {
+                  console.warn(
+                    `Skipping chunk due to missing embedding for text:\n${text}\n---END OF SKIPPED TEXT---`,
+                  );
+                  return;
+                }
 
-  const processEmbeddingsBatch = async (
-    batch: Record<string, any>[],
-    batchIdx: number,
-  ): Promise<Record<string, any>[]> => {
-    console.log(
-      `Processing batch ${batchIdx} with ${batch.length} rows for dataset ${dataset.name}`,
-    );
-    const texts = batch.map((row) => row.text);
+                sourceData.push({
+                  text,
+                  embedding,
+                  source_uri: source.url,
+                  dataset_id: dataset.id,
+                });
+              });
+            } catch (embeddingError) {
+              console.warn(
+                `Error embedding batch for source ${source.url}:`,
+                embeddingError,
+              );
+            }
+          }
 
-    try {
-      const embeddings = await embedder(texts, options);
-
-      batch.forEach((text, index) => {
-        const embedding = embeddings[index];
-        if (!embedding) {
-          console.warn(
-            `Skipping chunk due to missing embedding for text:\n${text}\n---END OF SKIPPED TEXT---`,
-          );
-          return;
+          return sourceData;
+        } catch (error) {
+          console.warn(`Error processing source ${source.url}:`, error);
+          return [];
         }
+      }),
+    )
+  ).flat();
 
-        batch[index].embedding = embedding;
-      });
-
-      return batch.filter((row) => row.embedding);
-    } catch (embeddingError) {
-      console.warn(
-        `Error embedding batch ${batchIdx} for dataset ${dataset.name}:`,
-        embeddingError,
-      );
-      return [];
-    }
-  };
-
-  const chunkSize = 2;
-  const rowsWithEmbeddings = [];
-  for (let i = 0; i < rows.length; i += chunkSize) {
-    const batch = rows.slice(i, i + chunkSize);
-    const processedBatch = await processEmbeddingsBatch(batch, i / chunkSize);
-    rowsWithEmbeddings.push(...processedBatch);
+  if (indexData.length > 0) {
+    await embeddingsIndex.add(indexData);
   }
 
-  rows = rowsWithEmbeddings;
-
-  if (rows.length > 0) await embeddingsIndex.add(rows);
-  return rows.length;
+  return indexData.length;
 };
 
 export const queryDatasetSources = async ({

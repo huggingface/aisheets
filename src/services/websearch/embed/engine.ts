@@ -68,13 +68,6 @@ export const embedder = async (
       ? texts.map(getDetailedInstruct)
       : texts;
 
-  const args = normalizeFeatureExtractionArgs({
-    inputs: processedTexts,
-    accessToken: options.accessToken,
-    modelName: DEFAULT_EMBEDDING_MODEL.model,
-    modelProvider: DEFAULT_EMBEDDING_MODEL.provider,
-  });
-
   const results = await featureExtraction(
     normalizeFeatureExtractionArgs({
       inputs: processedTexts,

@@ -102,6 +102,7 @@ export const EXCLUDED_MODELS: string[] = process.env.EXCLUDED_MODELS?.split(
 export const default_embedding_model = {
   provider: process.env.EMBEDDING_MODEL_PROVIDER ?? 'hf-inference',
   model: process.env.EMBEDDING_MODEL ?? 'mixedbread-ai/mxbai-embed-large-v1',
+  endpointUrl: process.env.EMBEDDING_ENDPOINT_URL,
   embedding_dim: Number(process.env.EMBEDDING_DIM ?? 1024),
   is_instruct: process.env.EMBEDDING_IS_INSTRUCT
     ? process.env.EMBEDDING_IS_INSTRUCT === 'true'

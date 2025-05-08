@@ -68,15 +68,22 @@ export const embedder = async (
       ? texts.map(getDetailedInstruct)
       : texts;
 
-  const timeout = 3000;
+  const args = normalizeFeatureExtractionArgs({
+    inputs: processedTexts,
+    accessToken: options.accessToken,
+    modelName: default_embedding_model.model,
+    modelProvider: default_embedding_model.provider,
+  });
+
   const results = await featureExtraction(
     normalizeFeatureExtractionArgs({
       inputs: processedTexts,
       accessToken: options.accessToken,
       modelName: default_embedding_model.model,
       modelProvider: default_embedding_model.provider,
+      endpointUrl: default_embedding_model.endpointUrl,
     }),
-    normalizeOptions(timeout),
+    normalizeOptions(),
   );
 
   if (!Array.isArray(results)) {
@@ -113,16 +120,15 @@ export const indexDatasetSources = async ({
     })
     .filter(({ chunks }) => chunks.length > 0);
 
-  let rows: Record<string, any>[] = chunkedSources
-    .flatMap(({ source, chunks }) => {
+  let rows: Record<string, any>[] = chunkedSources.flatMap(
+    ({ source, chunks }) => {
       return chunks.map((text) => ({
         text,
         source_uri: source.url,
         dataset_id: dataset.id,
       }));
-    })
-    .sort(() => Math.random() - 0.5) // Randomize the order of rows
-    .slice(0, 30); // Limit to 30 rows;
+    },
+  );
 
   const processEmbeddingsBatch = async (
     batch: Record<string, any>[],
@@ -159,14 +165,15 @@ export const indexDatasetSources = async ({
   };
 
   const chunkSize = 2;
-  const rowsWithEmbeddings = [];
+  const promises = [];
+
   for (let i = 0; i < rows.length; i += chunkSize) {
     const batch = rows.slice(i, i + chunkSize);
-    const processedBatch = await processEmbeddingsBatch(batch, i / chunkSize);
-    rowsWithEmbeddings.push(...processedBatch);
+    promises.push(processEmbeddingsBatch(batch, i / chunkSize));
   }
 
-  rows = rowsWithEmbeddings;
+  rows = await Promise.all(promises);
+  rows = rows.flat();
 
   if (rows.length > 0) await embeddingsIndex.add(rows);
   return rows.length;

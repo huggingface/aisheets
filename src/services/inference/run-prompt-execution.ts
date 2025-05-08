@@ -1,4 +1,5 @@
 import {
+  type FeatureExtractionArgs,
   type InferenceProvider,
   type Options,
   chatCompletion,
@@ -190,17 +191,30 @@ export const normalizeFeatureExtractionArgs = ({
   modelName,
   modelProvider,
   accessToken,
+  endpointUrl,
 }: {
   inputs: string[];
   modelName: string;
   modelProvider: string;
   accessToken?: string;
-}) => ({
-  inputs,
-  model: modelName,
-  provider: modelProvider as InferenceProvider,
-  accessToken: HF_TOKEN ?? accessToken,
-});
+  endpointUrl?: string;
+}): FeatureExtractionArgs => {
+  const args: FeatureExtractionArgs = {
+    inputs,
+    accessToken: HF_TOKEN ?? accessToken,
+    // We must review the chunk strategy to avoid truncating the input
+    truncate: true, // Otherwise, it will raise an error (see https://github.com/huggingface/text-embeddings-inference/issues/356)
+  };
+
+  if (endpointUrl) {
+    args.endpointUrl = endpointUrl;
+  } else {
+    args.model = modelName;
+    args.provider = modelProvider as InferenceProvider;
+  }
+
+  return args;
+};
 
 export const normalizeChatCompletionArgs = ({
   messages,

@@ -28,6 +28,7 @@ export const getUserDatasets = async (user: {
 }): Promise<Dataset[]> => {
   const model = await DatasetModel.findAll({
     where: { createdBy: user.username },
+    order: [['createdAt', 'DESC']],
   });
 
   const datasets = model.map((dataset) => ({

@@ -166,14 +166,20 @@ export const indexDatasetSources = async ({
 
   const chunkSize = 2;
   const promises = [];
-
   for (let i = 0; i < rows.length; i += chunkSize) {
     const batch = rows.slice(i, i + chunkSize);
     promises.push(processEmbeddingsBatch(batch, i / chunkSize));
   }
 
-  rows = await Promise.all(promises);
-  rows = rows.flat();
+  const rowsWithEmbeddings = [];
+  const parallelRequests = 10; // Number of parallel requests
+  for (let i = 0; i < promises.length; i += parallelRequests) {
+    const batchPromises = promises.slice(i, i + parallelRequests);
+    const batchResults = await Promise.all(batchPromises);
+
+    rowsWithEmbeddings.push(...batchResults.flat());
+  }
+  rows = rowsWithEmbeddings;
 
   if (rows.length > 0) await embeddingsIndex.add(rows);
   return rows.length;

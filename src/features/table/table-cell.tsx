@@ -423,7 +423,7 @@ export const TableCell = component$<{
                   }}
                 >
                   <Tooltip
-                    text="Keep this content as an example. The system will use your feedback to regenerate related cells."
+                    text="Mark this cell as correct. When you click regenerate 🥚, it will be used to improve other cells."
                     class="break-words w-48 text-left"
                   >
                     <LuThumbsUp class="text-sm" />

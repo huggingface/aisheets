@@ -23,7 +23,7 @@ export interface PromptExecutionParams {
     source_uri: string;
     text: string;
   }[];
-  data?: object;
+  data: Record<string, any>;
   examples?: Array<Example>;
   stream?: boolean;
   timeout?: number;

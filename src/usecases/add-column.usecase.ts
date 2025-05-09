@@ -47,7 +47,6 @@ export const useAddColumnUseCase = () =>
       session,
       limit,
       offset,
-      parallel: column.process!.columnsReferences?.length > 0,
     })) {
       this.signal.onabort = () => {
         cell.generating = false;

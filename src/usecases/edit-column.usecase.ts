@@ -26,7 +26,6 @@ export const useEditColumnUseCase = () =>
       limit,
       offset,
       validatedCells,
-      parallel: column.process!.columnsReferences?.length > 0,
     })) {
       this.signal.onabort = async () => {
         cell.generating = false;

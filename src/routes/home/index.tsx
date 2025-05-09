@@ -169,6 +169,7 @@ export default component$(() => {
               >
                 <div class="flex w-full justify-between items-center h-[30px]">
                   <Button
+                    type="button"
                     look="secondary"
                     class={cn(
                       'flex px-[10px] py-[8px] gap-[10px] bg-white text-neutral-600 hover:bg-neutral-100 h-[30px] rounded-[8px]',

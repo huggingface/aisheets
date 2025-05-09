@@ -5,6 +5,7 @@ export interface CreateProcess {
   modelName: string;
   modelProvider: string;
   prompt: string;
+  searchEnabled: boolean;
   columnsReferences?: string[];
 }
 
@@ -21,6 +22,7 @@ export const createProcess = async ({
     modelName: process.modelName,
     modelProvider: process.modelProvider,
     prompt: process.prompt,
+    searchEnabled: process.searchEnabled,
     columnId: column.id,
   });
 
@@ -38,6 +40,7 @@ export const createProcess = async ({
     modelName: model.modelName,
     modelProvider: model.modelProvider,
     prompt: model.prompt,
+    searchEnabled: model.searchEnabled,
     columnsReferences: process?.columnsReferences || [],
     updatedAt: model.updatedAt,
   };
@@ -55,6 +58,7 @@ export const updateProcess = async (process: Process): Promise<Process> => {
     modelName: process.modelName,
     modelProvider: process.modelProvider,
     prompt: process.prompt,
+    searchEnabled: process.searchEnabled,
   });
 
   await model.save();
@@ -73,6 +77,7 @@ export const updateProcess = async (process: Process): Promise<Process> => {
     modelName: model.modelName,
     modelProvider: model.modelProvider,
     prompt: model.prompt,
+    searchEnabled: model.searchEnabled,
     columnsReferences: process.columnsReferences,
     updatedAt: model.updatedAt,
   };

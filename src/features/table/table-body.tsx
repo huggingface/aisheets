@@ -139,6 +139,22 @@ export const TableBody = component$(() => {
     selectedCellsId.value = [cell];
   });
 
+  const firstColumnsWithValue = useComputed$(() => {
+    return firstColumn.value.cells.filter((c) => !!c.value || !!c.error);
+  });
+
+  useVisibleTask$(() => {
+    if (firstColumnsWithValue.value.length > 5) return;
+
+    const cell =
+      firstColumnsWithValue.value[firstColumnsWithValue.value.length - 1];
+
+    if (!cell.id) return;
+
+    dragStartCell.value = cell;
+    selectedCellsId.value = [cell];
+  });
+
   const handleMouseOver$ = $((cell: Cell, e: MouseEvent) => {
     if (e.buttons !== 1 /* Primary button not pressed */) return;
 
@@ -152,7 +168,7 @@ export const TableBody = component$(() => {
     const start = Math.min(startRowIndex, endRowIndex);
     const end = Math.max(startRowIndex, endRowIndex);
 
-    if (end + 1 > firstColumn.value.cells.length && !isDraggingTheFirstColumn) {
+    if (end > firstColumnsWithValue.value.length && !isDraggingTheFirstColumn) {
       return;
     }
 
@@ -283,22 +299,6 @@ export const TableBody = component$(() => {
       replaceColumns(columns.value);
     },
   );
-
-  const firstColumnsWithValue = useComputed$(() => {
-    return firstColumn.value.cells.filter((c) => !!c.value || !!c.error);
-  });
-
-  useVisibleTask$(() => {
-    if (firstColumnsWithValue.value.length > 5) return;
-
-    const cell =
-      firstColumnsWithValue.value[firstColumnsWithValue.value.length - 1];
-
-    if (!cell.id) return;
-
-    dragStartCell.value = cell;
-    selectedCellsId.value = [cell];
-  });
 
   const itemRenderer = $(
     (

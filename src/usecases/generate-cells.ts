@@ -195,6 +195,7 @@ async function* generateCellsFromScratch({
       for await (const response of runPromptExecutionStream(args)) {
         cell.value = response.value;
         cell.error = response.error;
+
         yield { cell };
       }
     } else {
@@ -205,6 +206,7 @@ async function* generateCellsFromScratch({
 
     cell.generating = false;
     await updateCell(cell);
+
     yield { cell };
 
     // Add this newly generated cell to our collection if it's valid
@@ -330,7 +332,8 @@ async function* generateCellsFromColumnsReferences({
     if (response.done || !cell.value) {
       cell.generating = false;
       await updateCell(cell);
-      yield { cell };
     }
+
+    yield { cell };
   }
 }

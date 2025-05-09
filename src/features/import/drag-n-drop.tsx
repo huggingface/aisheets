@@ -21,13 +21,24 @@ export const DragAndDrop = component$(() => {
   const isDragging = useSignal(false);
   const navigate = useNavigate();
 
+  const allowedExtensions = ['csv', 'tsv', 'xlsx', 'xls'];
+
   const uploadErrorMessage = useSignal<string | null>(null);
 
   const handleUploadFile$ = $(async () => {
+    uploadErrorMessage.value = null;
+
     if (!file.value) return;
 
+    const fileName = file.value.name;
+    const fileExtension = file.value.name.split('.').pop();
+
+    if (!fileExtension || !allowedExtensions.includes(fileExtension)) {
+      uploadErrorMessage.value = `Invalid file type. Supported types: ${allowedExtensions.join(', ')}`;
+      return;
+    }
+
     const value = await file.value.arrayBuffer();
-    const fileName = `${file.value.name}`;
 
     const response = await fetch('/api/upload', {
       method: 'POST',
@@ -75,9 +86,11 @@ export const DragAndDrop = component$(() => {
       <input
         type="file"
         id="file-select"
+        accept={allowedExtensions.map((ext) => `.${ext}`).join(',')}
         class="hidden"
         onChange$={(e: Event) => {
           const input = e.target as HTMLInputElement;
+
           if (input.files?.length) {
             file.value = noSerialize(input.files[0]);
 

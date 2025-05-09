@@ -60,6 +60,15 @@ export const MainSidebar = component$(() => {
       );
     } else {
       datasets.value.push(activeDataset.value);
+
+      datasets.value = datasets.value.sort((a, b) => {
+        if (a.createdAt && b.createdAt) {
+          return (
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
+        }
+        return 0;
+      });
     }
   });
 

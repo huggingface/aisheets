@@ -8,8 +8,9 @@ export const useEditColumnUseCase = () =>
     this: RequestEventBase<QwikCityPlatform>,
     column: Column,
   ): AsyncGenerator<{ column?: Column; cell?: Cell }> {
-    if (!column.process)
+    if (!column.process) {
       throw new Error('Process is required to create a column');
+    }
 
     const session = useServerSession(this);
 
@@ -26,7 +27,6 @@ export const useEditColumnUseCase = () =>
       limit,
       offset,
       validatedCells,
-      parallel: column.process!.columnsReferences?.length > 0,
     })) {
       this.signal.onabort = async () => {
         cell.generating = false;

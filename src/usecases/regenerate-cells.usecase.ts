@@ -20,7 +20,6 @@ export const useRegenerateCellsUseCase = () =>
       process: column.process,
       session,
       validatedCells,
-      parallel: Boolean(column.process.columnsReferences?.length),
     })) {
       yield cell;
     }

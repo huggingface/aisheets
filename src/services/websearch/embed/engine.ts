@@ -1,7 +1,7 @@
 import { featureExtraction } from '@huggingface/inference';
 import * as lancedb from '@lancedb/lancedb';
 import * as arrow from 'apache-arrow';
-import { VECTOR_DB_DIR, default_embedding_model } from '~/config';
+import { DEFAULT_EMBEDDING_MODEL, VECTOR_DB_DIR } from '~/config';
 import {
   normalizeFeatureExtractionArgs,
   normalizeOptions,
@@ -20,7 +20,7 @@ export const configureEmbeddingsIndex = async () => {
     new arrow.Field(
       'embedding',
       new arrow.FixedSizeList(
-        default_embedding_model.embedding_dim,
+        DEFAULT_EMBEDDING_MODEL.embeddingDim,
         new arrow.Field('item', new arrow.Float32(), true),
       ),
     ),
@@ -64,7 +64,7 @@ export const embedder = async (
   if (texts.length === 0) return [];
 
   const processedTexts =
-    options.isQuery && default_embedding_model.is_instruct
+    options.isQuery && DEFAULT_EMBEDDING_MODEL.isInstruct
       ? texts.map(getDetailedInstruct)
       : texts;
 
@@ -72,8 +72,9 @@ export const embedder = async (
     normalizeFeatureExtractionArgs({
       inputs: processedTexts,
       accessToken: options.accessToken,
-      modelName: default_embedding_model.model,
-      modelProvider: default_embedding_model.provider,
+      modelName: DEFAULT_EMBEDDING_MODEL.model,
+      modelProvider: DEFAULT_EMBEDDING_MODEL.provider,
+      endpointUrl: DEFAULT_EMBEDDING_MODEL.endpointUrl,
     }),
     normalizeOptions(),
   );
@@ -99,67 +100,82 @@ export const indexDatasetSources = async ({
     accessToken: string;
   };
 }): Promise<number> => {
-  const indexData = (
-    await Promise.all(
-      sources.flatMap(async (source) => {
-        if (!source.markdownTree) return [];
-        try {
-          const mdElements = flattenTree(source.markdownTree);
-          const textChunks = mdElements
-            .map(stringifyMarkdownElement)
-            .filter((text) => text.length > 200); // Skip chunks with 200 or fewer characters
+  const chunkedSources = sources
+    .map((source) => {
+      if (!source.markdownTree) return { source, chunks: [] };
 
-          const BATCH_SIZE = 64;
-          const sourceData: Array<{
-            text: string;
-            embedding: number[];
-            source_uri: string;
-            dataset_id: string;
-          }> = [];
+      const mdElements = flattenTree(source.markdownTree);
+      const chunks = mdElements
+        .map(stringifyMarkdownElement)
+        .filter((text) => text.length > 200); // Skip chunks with 200 or fewer characters
 
-          for (let i = 0; i < textChunks.length; i += BATCH_SIZE) {
-            const batch = textChunks.slice(i, i + BATCH_SIZE);
-            try {
-              const embeddings = await embedder(batch, options);
+      return { source, chunks };
+    })
+    .filter(({ chunks }) => chunks.length > 0);
 
-              batch.forEach((text, index) => {
-                const embedding = embeddings[index];
-                if (!embedding) {
-                  console.warn(
-                    `Skipping chunk due to missing embedding for text:\n${text}\n---END OF SKIPPED TEXT---`,
-                  );
-                  return;
-                }
+  let rows: Record<string, any>[] = chunkedSources.flatMap(
+    ({ source, chunks }) => {
+      return chunks.map((text) => ({
+        text,
+        source_uri: source.url,
+        dataset_id: dataset.id,
+      }));
+    },
+  );
 
-                sourceData.push({
-                  text,
-                  embedding,
-                  source_uri: source.url,
-                  dataset_id: dataset.id,
-                });
-              });
-            } catch (embeddingError) {
-              console.warn(
-                `Error embedding batch for source ${source.url}:`,
-                embeddingError,
-              );
-            }
-          }
+  const processEmbeddingsBatch = async (
+    batch: Record<string, any>[],
+    batchIdx: number,
+  ): Promise<Record<string, any>[]> => {
+    console.log(
+      `Processing batch ${batchIdx} with ${batch.length} rows for dataset ${dataset.name}`,
+    );
+    const texts = batch.map((row) => row.text);
 
-          return sourceData;
-        } catch (error) {
-          console.warn(`Error processing source ${source.url}:`, error);
-          return [];
+    try {
+      const embeddings = await embedder(texts, options);
+
+      batch.forEach((text, index) => {
+        const embedding = embeddings[index];
+        if (!embedding) {
+          console.warn(
+            `Skipping chunk due to missing embedding for text:\n${text}\n---END OF SKIPPED TEXT---`,
+          );
+          return;
         }
-      }),
-    )
-  ).flat();
 
-  if (indexData.length > 0) {
-    await embeddingsIndex.add(indexData);
+        batch[index].embedding = embedding;
+      });
+
+      return batch.filter((row) => row.embedding);
+    } catch (embeddingError) {
+      console.warn(
+        `Error embedding batch ${batchIdx} for dataset ${dataset.name}:`,
+        embeddingError,
+      );
+      return [];
+    }
+  };
+
+  const chunkSize = 2;
+  const promises = [];
+  for (let i = 0; i < rows.length; i += chunkSize) {
+    const batch = rows.slice(i, i + chunkSize);
+    promises.push(() => processEmbeddingsBatch(batch, i / chunkSize));
   }
 
-  return indexData.length;
+  const rowsWithEmbeddings = [];
+  const parallelRequests = 12; // Number of parallel requests
+  for (let i = 0; i < promises.length; i += parallelRequests) {
+    const batchPromises = promises.slice(i, i + parallelRequests);
+    const batchResults = await Promise.all(batchPromises.map((fn) => fn()));
+
+    rowsWithEmbeddings.push(...batchResults.flat());
+  }
+  rows = rowsWithEmbeddings;
+
+  if (rows.length > 0) await embeddingsIndex.add(rows);
+  return rows.length;
 };
 
 export const queryDatasetSources = async ({

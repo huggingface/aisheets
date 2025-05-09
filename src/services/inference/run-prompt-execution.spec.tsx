@@ -17,6 +17,7 @@ describe.runIf(accessToken)(
         modelName: testModelName,
         modelProvider: 'hf-inference',
         instruction: testPrompt,
+        data: {},
       });
 
       expect(result.error).toBeUndefined();
@@ -37,6 +38,7 @@ describe.runIf(accessToken)(
         modelProvider: 'hf-inference',
         instruction: testPrompt,
         examples,
+        data: {},
       });
 
       expect(result.error).toBeUndefined();
@@ -77,6 +79,7 @@ describe.runIf(accessToken)(
         modelName: testModelName,
         modelProvider: 'hf-inference',
         instruction: testPrompt,
+        data: {},
       })) {
         updates.push(response);
       }

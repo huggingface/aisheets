@@ -1,8 +1,7 @@
 import { ColumnModel } from '~/services/db/models/column';
 import { ProcessModel } from '~/services/db/models/process';
 import type { Column, ColumnKind, CreateColumn } from '~/state';
-
-import { getGeneratedCellsCount } from './cells';
+import { getGeneratedCellsCount, getMaxCellIdxByColumnId } from './cells';
 import { createProcess, updateProcess } from './processes';
 import { countDatasetTableRows, createDatasetTableColumn } from './tables';
 
@@ -30,6 +29,7 @@ export const modelToColumn = (model: ColumnModel): Column => {
       modelName: model.process?.modelName ?? '',
       modelProvider: model.process?.modelProvider ?? '',
       prompt: model.process?.prompt ?? '',
+      searchEnabled: model.process?.searchEnabled,
       updatedAt: model.process?.updatedAt,
     },
     cells: [], // TODO: Cells should be loaded separately and this attribute should be removed
@@ -201,4 +201,10 @@ export const getGeneratedColumnSize = async (
   columnId: string,
 ): Promise<number> => {
   return await getGeneratedCellsCount({ columnId });
+};
+
+export const getMaxRowIdxByColumnId = async (
+  columnId: string,
+): Promise<number> => {
+  return await getMaxCellIdxByColumnId(columnId);
 };

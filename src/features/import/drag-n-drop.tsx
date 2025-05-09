@@ -120,12 +120,10 @@ export const DragAndDrop = component$(() => {
             <Link
               href="/home/dataset/create/from-hub"
               class={cn(
-                'w-full flex items-center justify-between hover:bg-neutral-100 gap-2.5 p-2',
-                buttonVariants({ look: 'ghost' }),
-                'hover:bg-neutral-100',
+                'w-full flex items-center justify-start hover:bg-neutral-100 gap-2.5 p-2',
               )}
             >
-              <HFLogo class="w-[13px] h-[13px] flex-shrink-0" />
+              <HFLogo class="items-left w-4 h-4 flex-shrink-0" />
               Add from Hugging Face Hub
             </Link>
 
@@ -152,8 +150,8 @@ export const DragAndDrop = component$(() => {
               class="w-full flex items-center justify-start hover:bg-neutral-100 gap-2.5 p-2"
               onClick$={() => document.getElementById('file-select')?.click()}
             >
-              <LuUpload class="w-4 h-4" />
-              Upload from computer
+              <LuUpload class="w-4 h-4 flex-shrink-0" />
+              Upload from computer ({allowedExtensions.join(', ')})
             </Button>
           </Popover.Panel>
         </Popover.Root>

@@ -198,6 +198,7 @@ export const useColumnsStore = () => {
         offset: 0,
         limit: 5,
         prompt: '',
+        searchEnabled: false,
         columnsReferences: [],
         updatedAt: new Date(),
       },

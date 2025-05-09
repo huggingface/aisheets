@@ -66,7 +66,8 @@ export const generateCells = async function* ({
   updateOnly = false,
   timeout,
 }: GenerateCellsParams) {
-  const { columnsReferences, modelName, modelProvider, prompt } = process;
+  const { columnsReferences, modelName, modelProvider, prompt, searchEnabled } =
+    process;
 
   if (!limit) limit = (await getMaxRowIdxByColumnId(column.id)) + 1;
   if (!offset) offset = 0;
@@ -79,6 +80,7 @@ export const generateCells = async function* ({
         modelName,
         modelProvider,
         validatedCells,
+        searchEnabled,
         offset,
         limit,
         stream,
@@ -93,6 +95,7 @@ export const generateCells = async function* ({
         modelName,
         modelProvider,
         validatedCells,
+        searchEnabled,
         columnsReferences,
         offset,
         limit,
@@ -129,6 +132,7 @@ async function* generateCellsFromScratch({
   modelName,
   modelProvider,
   validatedCells,
+  searchEnabled,
   offset,
   limit,
   stream,
@@ -141,6 +145,7 @@ async function* generateCellsFromScratch({
   modelName: string;
   modelProvider: string;
   validatedCells: Cell[];
+  searchEnabled: boolean;
   offset: number;
   limit: number;
   stream: boolean;
@@ -148,13 +153,15 @@ async function* generateCellsFromScratch({
   timeout: number | undefined;
   session: Session;
 }) {
-  const sourcesContext = await queryDatasetSources({
-    dataset: column.dataset,
-    query: prompt,
-    options: {
-      accessToken: session.token,
-    },
-  });
+  const sourcesContext = searchEnabled
+    ? await queryDatasetSources({
+        dataset: column.dataset,
+        query: prompt,
+        options: {
+          accessToken: session.token,
+        },
+      })
+    : undefined;
 
   // Sequential execution for fromScratch to accumulate examples
   // Get all existing cells in the column to achieve diversity
@@ -225,6 +232,7 @@ async function* generateCellsFromColumnsReferences({
   modelProvider,
   columnsReferences,
   validatedCells,
+  searchEnabled,
   offset,
   limit,
   updateOnly,
@@ -236,7 +244,8 @@ async function* generateCellsFromColumnsReferences({
   modelName: string;
   modelProvider: string;
   columnsReferences: string[];
-  validatedCells?: Cell[];
+  validatedCells: Cell[];
+  searchEnabled: boolean;
   offset: number;
   limit: number;
   updateOnly: boolean;
@@ -293,13 +302,15 @@ async function* generateCellsFromColumnsReferences({
       rowCells.map((cell) => [cell.column!.name, cell.value]),
     );
 
-    args.sourcesContext = await queryDatasetSources({
-      dataset: column.dataset,
-      query: renderInstruction(prompt, args.data),
-      options: {
-        accessToken: session.token,
-      },
-    });
+    if (searchEnabled) {
+      args.sourcesContext = await queryDatasetSources({
+        dataset: column.dataset,
+        query: renderInstruction(prompt, args.data),
+        options: {
+          accessToken: session.token,
+        },
+      });
+    }
 
     cell.generating = true;
     cells.set(i, cell);

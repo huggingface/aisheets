@@ -10,9 +10,11 @@ import {
   useTask$,
   useVisibleTask$,
 } from '@builder.io/qwik';
+import { cn } from '@qwik-ui/utils';
 import {
   LuCheck,
   LuEgg,
+  LuGlobe,
   LuSettings,
   LuStopCircle,
   LuX,
@@ -53,6 +55,7 @@ export const ExecutionForm = component$<SidebarProps>(
     const prompt = useSignal<string>('');
     const columnsReferences = useSignal<string[]>([]);
     const variables = useSignal<Variable[]>([]);
+    const searchOnWeb = useSignal(false);
 
     const selectedModel = useSignal<Model>();
     const selectedProvider = useSignal<string>();
@@ -82,6 +85,7 @@ export const ExecutionForm = component$<SidebarProps>(
       if (!process) return;
 
       prompt.value = process.prompt;
+      searchOnWeb.value = process.searchEnabled || false;
 
       // If there's a previously selected model, use that
       if (process.modelName) {
@@ -164,6 +168,8 @@ export const ExecutionForm = component$<SidebarProps>(
             modelProvider,
             prompt: prompt.value,
             columnsReferences: columnsReferences.value,
+            searchEnabled: searchOnWeb.value,
+
             offset: 0,
             limit: 1,
           },
@@ -215,7 +221,23 @@ export const ExecutionForm = component$<SidebarProps>(
                   />
                 </div>
 
-                <div class="absolute bottom-4 flex flex-row items-center justify-end px-6 gap-8 w-full">
+                <div class="w-full absolute bottom-0 p-4 flex flex-row items-center justify-between cursor-text">
+                  <Button
+                    look="secondary"
+                    class={cn(
+                      'flex px-[10px] py-[8px] gap-[10px] bg-white text-neutral-600 hover:bg-neutral-100 h-[30px] rounded-[8px]',
+                      {
+                        'border-primary-100 outline-primary-100 bg-primary-50 hover:bg-primary-50 text-primary-500 hover:text-primary-400':
+                          searchOnWeb.value,
+                      },
+                    )}
+                    onClick$={() => {
+                      searchOnWeb.value = !searchOnWeb.value;
+                    }}
+                  >
+                    <LuGlobe class="text-lg" />
+                    Search the web
+                  </Button>
                   {column.process?.isExecuting && (
                     <div class="h-4 w-4 animate-spin rounded-full border-2 border-primary-100 border-t-transparent" />
                   )}

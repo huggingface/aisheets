@@ -188,7 +188,7 @@ Use the web sources below to accurately follow the user instruction. If the info
 
 export const renderInstruction = (
   instruction: string,
-  data: object,
+  data: Record<string, any>,
 ): string => {
   return mustache.render(instruction, data, undefined, {
     escape: escapeValues,

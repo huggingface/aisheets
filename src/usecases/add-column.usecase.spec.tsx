@@ -32,6 +32,7 @@ test('should AddDynamicColumnSidebar does not call onCreateColumn initially', as
       modelProvider: 'hf-inference',
       offset: 0,
       prompt: 'prompt',
+      searchEnabled: false,
       updatedAt: new Date(),
     },
     cells: [],
@@ -68,6 +69,7 @@ test('should save 10 cells', async (t) => {
       modelProvider: 'hf-inference',
       offset: 0,
       prompt: 'prompt',
+      searchEnabled: false,
     },
   };
 

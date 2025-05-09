@@ -19,6 +19,7 @@ export class ProcessModel extends Model<
   declare id: CreationOptional<string>;
   declare prompt: string;
   declare modelName: string;
+  declare searchEnabled: boolean;
   declare modelProvider: string;
   declare columnId: ForeignKey<ColumnModel['id']>;
 
@@ -50,6 +51,10 @@ ProcessModel.init(
     prompt: {
       type: DataTypes.STRING,
       allowNull: false,
+    },
+    searchEnabled: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
     },
     columnId: {
       type: DataTypes.UUID,

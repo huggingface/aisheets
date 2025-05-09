@@ -17,6 +17,7 @@ import { LuTrash } from '@qwikest/icons/lucide';
 import type { VirtualItem } from '@tanstack/virtual-core';
 import { Button, Popover } from '~/components';
 import { nextTick } from '~/components/hooks/tick';
+import { Tooltip } from '~/components/ui/tooltip/tooltip';
 import { VirtualScrollContainer } from '~/components/ui/virtual-scroll/virtual-scroll';
 import { useExecution } from '~/features/add-column';
 import { useGenerateColumn } from '~/features/execution';
@@ -283,6 +284,22 @@ export const TableBody = component$(() => {
     },
   );
 
+  const firstColumnsWithValue = useComputed$(() => {
+    return firstColumn.value.cells.filter((c) => !!c.value || !!c.error);
+  });
+
+  useVisibleTask$(() => {
+    if (firstColumnsWithValue.value.length > 5) return;
+
+    const cell =
+      firstColumnsWithValue.value[firstColumnsWithValue.value.length - 1];
+
+    if (!cell.id) return;
+
+    dragStartCell.value = cell;
+    selectedCellsId.value = [cell];
+  });
+
   const itemRenderer = $(
     (
       item: VirtualItem,
@@ -429,7 +446,13 @@ export const TableBody = component$(() => {
                                   handleMouseDragging$(cell, e)
                                 }
                               >
-                                <LuDot class="text-5xl text-primary-300" />
+                                <Tooltip
+                                  text="Drag and fill to expand column"
+                                  gutter={1}
+                                  floating="right-start"
+                                >
+                                  <LuDot class="text-5xl text-primary-300" />
+                                </Tooltip>
                               </Button>
                             )}
                           </div>

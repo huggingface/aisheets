@@ -6,7 +6,7 @@ import { CellGeneration } from '~/features/table/components/header/cell-generati
 import { CellSettings } from '~/features/table/components/header/cell-settings';
 import { ColumnNameEdition } from '~/features/table/components/header/column-name-edition';
 import { HideColumn } from '~/features/table/components/header/hide-column';
-import type { Column } from '~/state';
+import { type Column, TEMPORAL_ID } from '~/state';
 
 export const TableCellHeader = component$<{ column: Column }>(({ column }) => {
   const { columnId } = useExecution();
@@ -37,7 +37,12 @@ export const TableCellHeader = component$<{ column: Column }>(({ column }) => {
   return (
     <th
       id={column.id}
-      class={`min-w-80 w-80 max-w-80 min-h-[50px] h-[50px] px-4 py-2 text-left border ${classes.value}`}
+      class={cn(
+        `min-w-80 w-80 max-w-80 min-h-[50px] h-[50px] px-4 py-2 text-left border ${classes.value}`,
+        {
+          'border-r-0': column.id === TEMPORAL_ID,
+        },
+      )}
     >
       <Popover.Root flip={false} gutter={8} floating="bottom-start">
         <Popover.Trigger class="flex items-center justify-between w-full h-[20px] py-[10px]">

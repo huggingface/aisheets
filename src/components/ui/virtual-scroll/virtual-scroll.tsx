@@ -40,6 +40,11 @@ const { getSerializable: getVirtual, useSerializable: useVirtualScroll } =
           scrollToFn: elementScroll,
           observeElementRect: observeElementRect,
           observeElementOffset: observeElementOffset,
+          measureElement:
+            typeof window !== 'undefined' &&
+            navigator.userAgent.indexOf('Firefox') === -1
+              ? (element) => element?.getBoundingClientRect().height
+              : undefined,
           onChange: (ev) => {
             ev._willUpdate();
             // On first render, if we don't have this check, it will update state twice in one cycle, causing an error.
@@ -146,12 +151,15 @@ export const VirtualScrollContainer = component$(
 
     return (
       <Fragment>
-        {visibleRows.value.map((item: VirtualItem, index) => {
+        {visibleRows.value.map((item: VirtualItem) => {
           return itemRenderer(item, data.value[item.index], {
             key: item.key.toString(),
+            ref: (node) => virtualState.value?.measureElement(node),
             style: {
-              height: `${item.size}px`,
-              transform: `translateY(${item.start - index * item.size}px)`,
+              display: 'flex',
+              position: 'absolute',
+              top: `${item.start}px`,
+              width: '100%',
             },
           });
         })}

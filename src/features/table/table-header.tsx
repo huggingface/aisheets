@@ -1,4 +1,5 @@
 import { $, Fragment, component$, useStore, useTask$ } from '@builder.io/qwik';
+import { cn } from '@qwik-ui/utils';
 import { nextTick } from '~/components/hooks/tick';
 import { ExecutionForm, useExecution } from '~/features/add-column';
 import { useGenerateColumn } from '~/features/execution';
@@ -25,7 +26,7 @@ export const TableHeader = component$(() => {
     <thead class="sticky top-0 bg-white z-50">
       <tr>
         <th
-          class="sticky left-0 z-[10] min-w-1 w-1 max-w-1 min-h-[50px] h-[50px] px-4 py-2 border rounded-tl-sm bg-neutral-100"
+          class="sticky left-0 z-[10] min-w-10 w-10 min-h-[50px] h-[50px] px-4 py-2 border rounded-tl-sm bg-neutral-100"
           rowSpan={2}
         />
 
@@ -35,7 +36,12 @@ export const TableHeader = component$(() => {
               <Fragment key={column.id}>
                 <th
                   key={column.id}
-                  class="min-w-80 w-80 max-w-80 h-[30px] border bg-neutral-100 text-primary-600 font-normal"
+                  class={cn(
+                    'min-w-[326px] w-[326px] max-w-[326px] h-[30px] border bg-neutral-100 text-primary-600 font-normal',
+                    {
+                      'border-r-0': column.id === TEMPORAL_ID,
+                    },
+                  )}
                 >
                   {indexToAlphanumeric(i + 1)}
                 </th>

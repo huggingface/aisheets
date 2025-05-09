@@ -316,7 +316,7 @@ export const TableBody = component$(() => {
           'border-b-2 border-b-primary-300': isRowMaxSelected,
           'border-l-2 border-l-primary-300': isColumnSelected,
           'border-r-2 border-r-primary-300': isColumnSelected,
-          'bg-primary-100/50':
+          'bg-primary-100/50 hover:bg-primary-100/50':
             !dragStartCell.value &&
             selectedCellsId.value.length > 1 &&
             isColumnSelected,
@@ -329,16 +329,14 @@ export const TableBody = component$(() => {
             'bg-gray-50/50 hover:bg-gray-50/50': selectedRows.value.includes(
               item.index,
             ),
-            '!transform-none': selectedCellsId.value.some(
-              (c) => c.idx === item.index,
-            ),
           })}
+          data-index={item.index}
           {...props}
         >
           <td
             class={cn(
-              'sticky left-0 z-30',
-              'px-2 text-center border bg-neutral-100 select-none',
+              'sticky left-0 z-30 w-10 text-sm',
+              'px-1 text-center border bg-neutral-100 select-none',
               {
                 'bg-neutral-200': selectedRows.value.includes(item.index),
               },
@@ -396,7 +394,7 @@ export const TableBody = component$(() => {
             return (
               <Fragment key={`${cell.idx}-${cell.column!.id}`}>
                 {cell.column?.id === TEMPORAL_ID ? (
-                  <td class="min-w-80 w-80 max-w-80 px-2 min-h-[100px] h-[100px] border" />
+                  <td class="relative min-w-[326px] w-[326px] max-w-[326px] h-[108px] border" />
                 ) : (
                   <td
                     class={cn(
@@ -462,12 +460,17 @@ export const TableBody = component$(() => {
   if (!scrollElement.value) return null;
 
   return (
-    <tbody>
+    <tbody
+      class="grid relative"
+      style={{
+        height: `${1000 * 108}px`,
+      }}
+    >
       <VirtualScrollContainer
         totalCount={1000}
-        buffer={10}
+        buffer={3}
         estimateSize={108}
-        overscan={50}
+        overscan={30}
         pageSize={pageSize}
         data={data}
         loadNextPage={loadPage}

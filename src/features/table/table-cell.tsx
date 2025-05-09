@@ -10,6 +10,7 @@ import { cn } from '@qwik-ui/utils';
 import { LuThumbsUp } from '@qwikest/icons/lucide';
 import { Button, Skeleton, Textarea } from '~/components';
 import { useClickOutside } from '~/components/hooks/click/outside';
+import { Tooltip } from '~/components/ui/tooltip/tooltip';
 import { getColumnCellById } from '~/services';
 import { type Cell, type Column, useColumnsStore } from '~/state';
 import { useValidateCellUseCase } from '~/usecases/validate-cell.usecase';
@@ -420,7 +421,12 @@ export const TableCell = component$<{
                     onValidateCell(originalValue.value, !cell.validated);
                   }}
                 >
-                  <LuThumbsUp class="text-sm" />
+                  <Tooltip
+                    text="Keep this content as an example. The system will use your feedback to regenerate related cells."
+                    class="break-words w-48 text-left"
+                  >
+                    <LuThumbsUp class="text-sm" />
+                  </Tooltip>
                 </Button>
               )}
               <div class="h-full mt-2 p-4">

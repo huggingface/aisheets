@@ -408,12 +408,13 @@ export const TableCell = component$<{
                   hover={false}
                   size="sm"
                   class={cn(
-                    'absolute z-10 text-base top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity',
+                    'absolute z-10 text-base top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity visible',
                     {
                       'bg-green-50/50 text-green-400 hover:bg-green-100':
                         cell.validated,
                       'hover:bg-gray-100 text-gray-400': !cell.validated,
                       '!opacity-0': !cell.id,
+                      hidden: !cell.value,
                     },
                   )}
                   onClick$={(e) => {

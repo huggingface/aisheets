@@ -21,13 +21,24 @@ export const DragAndDrop = component$(() => {
   const isDragging = useSignal(false);
   const navigate = useNavigate();
 
+  const allowedExtensions = ['csv', 'tsv', 'xlsx', 'xls'];
+
   const uploadErrorMessage = useSignal<string | null>(null);
 
   const handleUploadFile$ = $(async () => {
+    uploadErrorMessage.value = null;
+
     if (!file.value) return;
 
+    const fileName = file.value.name;
+    const fileExtension = file.value.name.split('.').pop();
+
+    if (!fileExtension || !allowedExtensions.includes(fileExtension)) {
+      uploadErrorMessage.value = `Invalid file type. Supported types: ${allowedExtensions.join(', ')}`;
+      return;
+    }
+
     const value = await file.value.arrayBuffer();
-    const fileName = `${file.value.name}`;
 
     const response = await fetch('/api/upload', {
       method: 'POST',
@@ -75,9 +86,11 @@ export const DragAndDrop = component$(() => {
       <input
         type="file"
         id="file-select"
+        accept={allowedExtensions.map((ext) => `.${ext}`).join(',')}
         class="hidden"
         onChange$={(e: Event) => {
           const input = e.target as HTMLInputElement;
+
           if (input.files?.length) {
             file.value = noSerialize(input.files[0]);
 
@@ -107,12 +120,10 @@ export const DragAndDrop = component$(() => {
             <Link
               href="/home/dataset/create/from-hub"
               class={cn(
-                'w-full flex items-center justify-between hover:bg-neutral-100 gap-2.5 p-2',
-                buttonVariants({ look: 'ghost' }),
-                'hover:bg-neutral-100',
+                'w-full flex items-center justify-start hover:bg-neutral-100 gap-2.5 p-2',
               )}
             >
-              <HFLogo class="w-[13px] h-[13px] flex-shrink-0" />
+              <HFLogo class="items-left w-4 h-4 flex-shrink-0" />
               Add from Hugging Face Hub
             </Link>
 
@@ -139,8 +150,8 @@ export const DragAndDrop = component$(() => {
               class="w-full flex items-center justify-start hover:bg-neutral-100 gap-2.5 p-2"
               onClick$={() => document.getElementById('file-select')?.click()}
             >
-              <LuUpload class="w-4 h-4" />
-              Upload from computer
+              <LuUpload class="w-4 h-4 flex-shrink-0" />
+              Upload from computer ({allowedExtensions.join(', ')})
             </Button>
           </Popover.Panel>
         </Popover.Root>

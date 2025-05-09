@@ -161,14 +161,14 @@ export const indexDatasetSources = async ({
   const promises = [];
   for (let i = 0; i < rows.length; i += chunkSize) {
     const batch = rows.slice(i, i + chunkSize);
-    promises.push(processEmbeddingsBatch(batch, i / chunkSize));
+    promises.push(() => processEmbeddingsBatch(batch, i / chunkSize));
   }
 
   const rowsWithEmbeddings = [];
-  const parallelRequests = 10; // Number of parallel requests
+  const parallelRequests = 12; // Number of parallel requests
   for (let i = 0; i < promises.length; i += parallelRequests) {
     const batchPromises = promises.slice(i, i + parallelRequests);
-    const batchResults = await Promise.all(batchPromises);
+    const batchResults = await Promise.all(batchPromises.map((fn) => fn()));
 
     rowsWithEmbeddings.push(...batchResults.flat());
   }

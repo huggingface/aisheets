@@ -20,7 +20,6 @@ export const useRegenerateCellsUseCase = () =>
       process: column.process,
       session,
       validatedCells,
-      updateOnly: true,
     })) {
       yield cell;
     }

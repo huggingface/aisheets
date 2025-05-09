@@ -5,16 +5,19 @@ import { type Dataset, useDatasetsStore } from '~/state/datasets';
 export type ColumnKind = 'static' | 'dynamic';
 
 export interface Process {
+  // Persisted data
   id?: string;
+  prompt: string;
   modelName: string;
   modelProvider: string;
-  prompt: string;
   columnsReferences: string[];
   updatedAt: Date;
+  searchEnabled: boolean;
+  // Non persisted data
   isExecuting?: boolean;
+  cancellable?: NoSerialize<AbortController>;
   offset?: number;
   limit?: number;
-  cancellable?: NoSerialize<AbortController>;
 }
 
 export interface CreateColumn {
@@ -26,6 +29,7 @@ export interface CreateColumn {
     modelName: string;
     modelProvider: string;
     prompt: string;
+    searchEnabled: boolean;
     columnsReferences: string[];
     offset: number;
     limit: number;

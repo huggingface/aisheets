@@ -1,8 +1,7 @@
 import { ColumnModel } from '~/services/db/models/column';
 import { ProcessModel } from '~/services/db/models/process';
 import type { Column, ColumnKind, CreateColumn } from '~/state';
-
-import { getGeneratedCellsCount } from './cells';
+import { getGeneratedCellsCount, getMaxCellIdxByColumnId } from './cells';
 import { createProcess, updateProcess } from './processes';
 import { countDatasetTableRows, createDatasetTableColumn } from './tables';
 
@@ -201,4 +200,10 @@ export const getGeneratedColumnSize = async (
   columnId: string,
 ): Promise<number> => {
   return await getGeneratedCellsCount({ columnId });
+};
+
+export const getMaxRowIdxByColumnId = async (
+  columnId: string,
+): Promise<number> => {
+  return await getMaxCellIdxByColumnId(columnId);
 };

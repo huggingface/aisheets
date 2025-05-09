@@ -1,4 +1,4 @@
-import { getGeneratedColumnSize, updateProcess } from '~/services';
+import { getMaxRowIdxByColumnId, updateProcess } from '~/services';
 import {
   type PromptExecutionParams,
   runPromptExecution,
@@ -61,7 +61,7 @@ export const generateCells = async function* ({
 
   const validatedIdxs = validatedCells?.map((cell) => cell.idx);
 
-  if (!limit) limit = await getGeneratedColumnSize(column.id);
+  if (!limit) limit = (await getMaxRowIdxByColumnId(column.id)) + 1;
   if (!offset) offset = 0;
 
   try {

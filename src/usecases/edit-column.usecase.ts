@@ -8,8 +8,9 @@ export const useEditColumnUseCase = () =>
     this: RequestEventBase<QwikCityPlatform>,
     column: Column,
   ): AsyncGenerator<{ column?: Column; cell?: Cell }> {
-    if (!column.process)
+    if (!column.process) {
       throw new Error('Process is required to create a column');
+    }
 
     const session = useServerSession(this);
 

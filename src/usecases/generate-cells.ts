@@ -24,22 +24,36 @@ export interface GenerateCellsParams {
   offset?: number;
   validatedCells?: Cell[];
   stream?: boolean;
+  updateOnly?: boolean;
   timeout?: number;
 }
 
 /**
- * Generates cells for a given column, process, and session.
- * This function is an async generator that yields generated cells.
+ * Generates cells for a given column based on the provided parameters.
+ * This function supports two modes of generation:
+ * - From scratch, using a prompt and optionally streaming results.
+ * - Using column references to generate cells based on existing data.
  *
  * @param {GenerateCellsParams} params - The parameters for generating cells.
  * @param {Column} params.column - The column for which cells are being generated.
- * @param {Process} params.process - The process containing model and prompt information.
- * @param {Session} params.session - The session containing the access token.
- * @param {number} params.limit - The number of cells to generate.
- * @param {number} params.offset - The starting index for cell generation.
- * @param {Cell[]} [params.validatedCells] - The cells that have already been validated.
+ * @param {Process} params.process - The process containing metadata such as model and prompt.
+ * @param {Session} params.session - The session containing authentication details.
+ * @param {number} [params.limit] - The maximum number of cells to generate.
+ * @param {number} [params.offset] - The starting index for cell generation.
+ * @param {Cell[]} [params.validatedCells] - A list of validated cells to use as examples.
+ * @param {boolean} [params.stream=true] - Whether to stream the generation results.
+ * @param {boolean} [params.updateOnly=false] - Whether to only update existing cells.
+ * @param {number} [params.timeout] - The timeout for the generation process in milliseconds.
  *
- * @yields {Promise<{ cell: Cell }>} - An object containing the generated cell.
+ * @yields {Object} - An object containing the generated or updated cell.
+ * @yields {Cell} yield.cell - The cell being generated or updated.
+ *
+ * @throws {Error} - Throws an error if the generation process fails.
+ *
+ * @remarks
+ * - If no column references are provided, cells are generated from scratch using the prompt.
+ * - If column references are provided, cells are generated based on the referenced columns.
+ * - The function ensures that the process's `updatedAt` timestamp is updated after execution.
  */
 export const generateCells = async function* ({
   column,
@@ -49,6 +63,7 @@ export const generateCells = async function* ({
   offset,
   validatedCells = [],
   stream = true,
+  updateOnly = false,
   timeout,
 }: GenerateCellsParams) {
   const { columnsReferences, modelName, modelProvider, prompt } = process;
@@ -60,28 +75,30 @@ export const generateCells = async function* ({
     if (!columnsReferences?.length) {
       yield* generateCellsFromScratch({
         column,
-        session,
-        offset,
-        limit,
-        validatedCells,
+        prompt,
         modelName,
         modelProvider,
-        prompt,
-        timeout,
+        validatedCells,
+        offset,
+        limit,
         stream,
+        updateOnly,
+        timeout,
+        session,
       });
     } else {
       yield* generateCellsFromColumnsReferences({
         column,
-        session,
-        offset,
-        limit,
-        validatedCells,
+        prompt,
         modelName,
         modelProvider,
-        prompt,
-        timeout,
+        validatedCells,
         columnsReferences,
+        offset,
+        limit,
+        updateOnly,
+        timeout,
+        session,
       });
     }
   } finally {
@@ -115,6 +132,7 @@ async function* generateCellsFromScratch({
   offset,
   limit,
   stream,
+  updateOnly,
   timeout,
   session,
 }: {
@@ -126,6 +144,7 @@ async function* generateCellsFromScratch({
   offset: number;
   limit: number;
   stream: boolean;
+  updateOnly: boolean;
   timeout: number | undefined;
   session: Session;
 }) {
@@ -152,8 +171,11 @@ async function* generateCellsFromScratch({
   for (let i = offset; i < limit + offset; i++) {
     if (validatedIdxs?.includes(i)) continue;
 
-    const data = {};
-    const cell = await getOrCreateCellInDB(column.id, i);
+    const cell = await (updateOnly
+      ? getColumnCellByIdx({ idx: i, columnId: column.id })
+      : getOrCreateCellInDB(column.id, i));
+
+    if (!cell) continue;
 
     cell.generating = true;
     yield { cell };
@@ -166,7 +188,7 @@ async function* generateCellsFromScratch({
       instruction: prompt,
       sourcesContext,
       timeout,
-      data,
+      data: {},
     };
 
     if (stream) {
@@ -205,7 +227,7 @@ async function* generateCellsFromColumnsReferences({
   validatedCells,
   offset,
   limit,
-
+  updateOnly,
   timeout,
   session,
 }: {
@@ -217,7 +239,7 @@ async function* generateCellsFromColumnsReferences({
   validatedCells?: Cell[];
   offset: number;
   limit: number;
-
+  updateOnly: boolean;
   timeout: number | undefined;
   session: Session;
 }) {
@@ -235,7 +257,11 @@ async function* generateCellsFromColumnsReferences({
   for (let i = offset; i < limit + offset; i++) {
     if (validatedIdxs?.includes(i)) continue;
 
-    const cell = await getOrCreateCellInDB(column.id, i);
+    const cell = await (updateOnly
+      ? getColumnCellByIdx({ idx: i, columnId: column.id })
+      : getOrCreateCellInDB(column.id, i));
+
+    if (!cell) continue;
 
     const args: PromptExecutionParams = {
       accessToken: session.token,

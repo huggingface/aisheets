@@ -111,21 +111,6 @@ export const generateCells = async function* ({
   }
 };
 
-const getOrCreateCellInDB = async (
-  columnId: string,
-  idx: number,
-): Promise<Cell> => {
-  let cell = await getColumnCellByIdx({ idx, columnId });
-
-  if (!cell?.id) {
-    cell = await createCell({
-      cell: { idx },
-      columnId,
-    });
-  }
-
-  return cell;
-};
 async function* generateCellsFromScratch({
   column,
   prompt,
@@ -202,6 +187,7 @@ async function* generateCellsFromScratch({
       for await (const response of runPromptExecutionStream(args)) {
         cell.value = response.value;
         cell.error = response.error;
+
         yield { cell };
       }
     } else {
@@ -212,6 +198,7 @@ async function* generateCellsFromScratch({
 
     cell.generating = false;
     await updateCell(cell);
+
     yield { cell };
 
     // Add this newly generated cell to our collection if it's valid
@@ -225,6 +212,7 @@ async function* generateCellsFromScratch({
     }
   }
 }
+
 async function* generateCellsFromColumnsReferences({
   column,
   prompt,
@@ -341,7 +329,24 @@ async function* generateCellsFromColumnsReferences({
     if (response.done || !cell.value) {
       cell.generating = false;
       await updateCell(cell);
-      yield { cell };
     }
+
+    yield { cell };
   }
 }
+
+const getOrCreateCellInDB = async (
+  columnId: string,
+  idx: number,
+): Promise<Cell> => {
+  let cell = await getColumnCellByIdx({ idx, columnId });
+
+  if (!cell?.id) {
+    cell = await createCell({
+      cell: { idx },
+      columnId,
+    });
+  }
+
+  return cell;
+};

@@ -186,25 +186,15 @@ export const TableBody = component$(() => {
   const handleMouseUp$ = $(async () => {
     if (!dragStartCell.value) return;
     if (!draggedColumn.value) return;
-    if (!dragStartCell.value.value) return;
+
+    if (selectedCellsId.value.length === 1) return;
 
     const column = draggedColumn.value;
 
-    let offset = 0;
-    for (const cell of selectedCellsId.value) {
-      offset = cell.idx;
-
-      if (!cell.value) break;
-    }
-
+    const offset = selectedCellsId.value[0].idx;
     const limit = latestCellSelected.value?.idx - offset + 1;
 
     dragStartCell.value = undefined;
-
-    const selectedCellsHasValue = column.cells.some(
-      (c) => c.idx >= offset && c.idx <= limit + offset && c.value,
-    );
-    if (selectedCellsHasValue) return;
 
     column.process!.cancellable = noSerialize(new AbortController());
     column.process!.isExecuting = true;
@@ -434,7 +424,7 @@ export const TableBody = component$(() => {
 
                       {latestCellSelected.value?.column?.id ===
                         cell.column?.id &&
-                        latestCellSelected.value.value &&
+                        latestCellSelected.value &&
                         latestCellSelected.value?.idx === cell.idx && (
                           <div class="absolute bottom-1 right-4 w-3 h-3 cursor-crosshair z-10">
                             {columns.value.find((c) => c.id === cell.column?.id)

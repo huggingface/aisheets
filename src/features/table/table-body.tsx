@@ -352,7 +352,7 @@ export const TableBody = component$(() => {
         >
           <td
             class={cn(
-              'sticky left-0 z-30 w-10 text-sm flex justify-center items-center',
+              'sticky left-0 z-30 w-10 text-sm',
               'px-1 text-center border bg-neutral-100 select-none',
               {
                 'bg-neutral-200': selectedRows.value.includes(item.index),
@@ -415,10 +415,11 @@ export const TableBody = component$(() => {
                 ) : (
                   <td
                     class={cn(
-                      'relative transition-colors box-border min-w-[326px] w-[326px] max-w-[326px] h-[108px] cursor-pointer break-words align-top border hover:bg-gray-50/50',
+                      'relative transition-colors box-border min-w-[326px] w-[326px] max-w-[326px] h-[108px] cursor-pointer break-words align-top border',
                       {
                         'bg-green-50 border-green-300': cell.validated,
-                        'border-neutral-300': !cell.validated,
+                        'border-neutral-300 hover:bg-gray-50/50':
+                          !cell.validated,
                       },
                       getBoundary(cell),
                     )}
@@ -447,7 +448,7 @@ export const TableBody = component$(() => {
                                 }
                               >
                                 <Tooltip
-                                  text="Drag and fill to expand column"
+                                  text="Drag down to fill cells"
                                   gutter={1}
                                   floating="right-start"
                                 >

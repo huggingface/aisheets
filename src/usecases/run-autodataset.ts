@@ -214,6 +214,7 @@ async function createDatasetWithColumns(
   modelName: string = DEFAULT_MODEL,
   modelProvider: string = DEFAULT_MODEL_PROVIDER,
   datasetName = 'New Dataset',
+  searchEnabled = false,
 ) {
   // Create the dataset
   const dataset = await createDataset({
@@ -249,6 +250,7 @@ async function createDatasetWithColumns(
         modelName,
         modelProvider,
         prompt: column.prompt,
+        searchEnabled,
         columnsReferences: columnReferences.map((ref) => {
           const refIndex = columnNames.indexOf(ref);
           return createdColumns[refIndex].id;
@@ -299,6 +301,7 @@ async function createAutoDataset(
   modelName: string = DEFAULT_MODEL,
   modelProvider: string = DEFAULT_MODEL_PROVIDER,
   datasetName = 'New Dataset',
+  searchEnabled = false,
   queries?: string[],
 ) {
   // Step 1: Create dataset and columns
@@ -308,6 +311,7 @@ async function createAutoDataset(
     modelName,
     modelProvider,
     datasetName,
+    searchEnabled,
   );
 
   // Step 2: Create web sources if queries are provided
@@ -412,6 +416,7 @@ export const runAutoDataset = async function (
       modelName,
       modelProvider,
       datasetName,
+      params.searchEnabled,
       params.searchEnabled ? queries : undefined,
     );
 

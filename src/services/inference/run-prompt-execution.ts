@@ -1,4 +1,5 @@
 import {
+  type FeatureExtractionArgs,
   type InferenceProvider,
   type Options,
   chatCompletion,
@@ -22,7 +23,7 @@ export interface PromptExecutionParams {
     source_uri: string;
     text: string;
   }[];
-  data?: object;
+  data: Record<string, any>;
   examples?: Array<Example>;
   stream?: boolean;
   timeout?: number;
@@ -66,16 +67,7 @@ export const runPromptExecution = async ({
   });
   const options = normalizeOptions(timeout);
 
-  console.log('\n🔷 Prompt Execution 🔷');
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('Model:', modelName);
-  console.log('Provider:', modelProvider);
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('Prompt:');
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log(inputPrompt);
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('🔷 End Prompt 🔷\n');
+  showPromptInfo(modelName, modelProvider, inputPrompt);
 
   try {
     const response = await chatCompletion(args, options);
@@ -109,16 +101,7 @@ export const runPromptExecutionStream = async function* ({
   });
   const options = normalizeOptions(timeout);
 
-  console.log('\n🔷 Prompt Stream 🔷');
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('Model:', modelName);
-  console.log('Provider:', modelProvider);
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('Prompt:');
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log(inputPrompt);
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('🔷 End Prompt 🔷\n');
+  showPromptInfo(modelName, modelProvider, inputPrompt);
 
   try {
     let accumulated = '';
@@ -208,17 +191,30 @@ export const normalizeFeatureExtractionArgs = ({
   modelName,
   modelProvider,
   accessToken,
+  endpointUrl,
 }: {
   inputs: string[];
   modelName: string;
   modelProvider: string;
   accessToken?: string;
-}) => ({
-  inputs,
-  model: modelName,
-  provider: modelProvider as InferenceProvider,
-  accessToken: HF_TOKEN ?? accessToken,
-});
+  endpointUrl?: string;
+}): FeatureExtractionArgs => {
+  const args: FeatureExtractionArgs = {
+    inputs,
+    accessToken: HF_TOKEN ?? accessToken,
+    // We must review the chunk strategy to avoid truncating the input
+    truncate: true, // Otherwise, it will raise an error (see https://github.com/huggingface/text-embeddings-inference/issues/356)
+  };
+
+  if (endpointUrl) {
+    args.endpointUrl = endpointUrl;
+  } else {
+    args.model = modelName;
+    args.provider = modelProvider as InferenceProvider;
+  }
+
+  return args;
+};
 
 export const normalizeChatCompletionArgs = ({
   messages,
@@ -246,3 +242,20 @@ export const normalizeOptions = (timeout?: number | undefined): Options => {
 
   return options;
 };
+
+function showPromptInfo(
+  modelName: string,
+  modelProvider: string,
+  inputPrompt: string,
+) {
+  console.log('\n🔷 Prompt 🔷');
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('Model:', modelName);
+  console.log('Provider:', modelProvider);
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('Prompt:');
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log(inputPrompt);
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('🔷 End Prompt 🔷\n');
+}

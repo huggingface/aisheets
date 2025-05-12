@@ -387,6 +387,14 @@ export const getGeneratedCellsCount = async (
   });
 };
 
+export const getMaxCellIdxByColumnId = async (
+  columnId: string,
+): Promise<number> => {
+  return ColumnCellModel.max('idx', {
+    where: { columnId },
+  });
+};
+
 export const getCellRegenerationDecision = async (cell: {
   id: string;
 }): Promise<{

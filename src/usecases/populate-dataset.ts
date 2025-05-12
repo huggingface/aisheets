@@ -25,15 +25,12 @@ export const populateDataset = async function (
     for (const column of columns) {
       if (!column.process) continue;
 
-      const hasReferences = column.process.columnsReferences?.length > 0;
-
       for await (const _ of generateCells({
         column,
         process: column.process,
         session,
         offset: 0,
         limit: 5,
-        parallel: hasReferences,
       })) {
         // We don't need to do anything with the yielded cells
       }

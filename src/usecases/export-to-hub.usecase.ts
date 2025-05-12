@@ -145,6 +145,7 @@ async function generateDatasetConfig(
       modelProvider: column.process.modelProvider,
       userPrompt: column.process.prompt,
       prompt,
+      searchEnabled: column.process.searchEnabled,
       columnsReferences: column.process.columnsReferences?.map((colId) => {
         const refColumn = dataset.columns.find((c) => c.id === colId);
         return refColumn?.name || colId;

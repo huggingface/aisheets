@@ -467,10 +467,7 @@ export const TableCell = component$<{
                         }
                       }}
                     >
-                      <Tooltip
-                        text="View sources used to generate this cell"
-                        class="break-words w-48 text-left"
-                      >
+                      <Tooltip text="View sources" class="text-left">
                         <LuGlobe class="text-sm" />
                       </Tooltip>
                     </Button>

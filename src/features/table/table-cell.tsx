@@ -28,9 +28,6 @@ import {
 } from './components/cell-media-renderer';
 import { processMediaContent } from './utils/binary-content';
 
-// TEMP: Frontend snippet display limit for testing. Adjust as needed!
-const FRONTEND_SNIPPET_DISPLAY_LIMIT = 100;
-
 const loadCell = server$(async (cellId: string) => {
   const persistedCell = await getColumnCellById(cellId);
   if (!persistedCell) return;
@@ -403,6 +400,14 @@ export const TableCell = component$<{
     showSourcesModal.value = false;
   });
 
+  useVisibleTask$(() => {
+    const handler = () => {
+      showSourcesModal.value = false;
+    };
+    window.addEventListener('closeAllSourcesModals', handler);
+    return () => window.removeEventListener('closeAllSourcesModals', handler);
+  });
+
   return (
     <div
       class="min-h-[100px] h-[100px] group"
@@ -446,7 +451,6 @@ export const TableCell = component$<{
             <>
               {!isStatic.value && (
                 <>
-                  {/* Globe button on the left */}
                   <div class="absolute z-10 top-0 left-0 flex gap-1">
                     <Button
                       look="ghost"
@@ -463,6 +467,9 @@ export const TableCell = component$<{
                       onClick$={(e) => {
                         e.stopPropagation();
                         if (cell.sources?.length) {
+                          window.dispatchEvent(
+                            new CustomEvent('closeAllSourcesModals'),
+                          );
                           showSourcesModal.value = true;
                         }
                       }}
@@ -472,7 +479,6 @@ export const TableCell = component$<{
                       </Tooltip>
                     </Button>
                   </div>
-                  {/* Thumbs up button on the right */}
                   <div class="absolute z-10 top-0 right-0 flex gap-1">
                     <Button
                       look="ghost"
@@ -581,16 +587,21 @@ export const TableCell = component$<{
       </div>
       {showSourcesModal.value && (
         <div
-          class="fixed top-0 right-0 h-full w-[400px] z-[100] bg-white border-l border-neutral-300 shadow-lg flex flex-col"
+          class="fixed top-0 right-0 h-full w-[400px] z-[100] bg-white border-l border-neutral-300 shadow-lg flex flex-col sources-side-modal"
           style={{ minHeight: '100vh' }}
           onClick$={(e) => e.stopPropagation()}
+          window:onCloseSourcesModal$={() => {
+            showSourcesModal.value = false;
+          }}
         >
           <div class="flex justify-between items-center p-4 border-b border-neutral-200">
             <span class="font-semibold text-lg text-neutral-700">Sources</span>
             <Button
               look="ghost"
               class="p-1.5 rounded-full hover:bg-neutral-200 cursor-pointer"
-              onClick$={closeSourcesModal}
+              onClick$={() => {
+                showSourcesModal.value = false;
+              }}
               aria-label="Close"
             >
               <LuX class="text-lg text-neutral" />

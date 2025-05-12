@@ -352,7 +352,7 @@ export const TableBody = component$(() => {
         >
           <td
             class={cn(
-              'sticky left-0 z-30 w-10 text-sm',
+              'sticky left-0 z-30 w-10 text-sm flex justify-center items-center',
               'px-1 text-center border bg-neutral-100 select-none',
               {
                 'bg-neutral-200': selectedRows.value.includes(item.index),

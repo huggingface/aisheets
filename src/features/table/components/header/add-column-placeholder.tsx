@@ -22,13 +22,13 @@ export const TableAddCellHeaderPlaceHolder = component$(() => {
     () => columns.value[columns.value.length - 1].id,
   );
 
-  const handleNewColumn = $(async () => {
+  const handleNewColumn = $(async (prompt: string) => {
     if (lastColumnId.value === TEMPORAL_ID) return;
 
     await addTemporalColumn();
 
     nextTick(() => {
-      open(TEMPORAL_ID, 'add');
+      open(TEMPORAL_ID, 'add', prompt);
     });
   });
 
@@ -70,13 +70,25 @@ export const TableAddCellHeaderPlaceHolder = component$(() => {
           }}
         >
           <div class="flex flex-col">
-            <ActionButton label="Translate" action={handleNewColumn} />
+            <ActionButton
+              label="Translate"
+              onClick$={() => handleNewColumn('Translate')}
+            />
             <hr class="border-t border-slate-200 dark:border-slate-700" />
-            <ActionButton label="Extract keywords from" />
+            <ActionButton
+              label="Extract keywords from"
+              onClick$={() => handleNewColumn('Extract keywords from')}
+            />
             <hr class="border-t border-slate-200 dark:border-slate-700" />
-            <ActionButton label="Summarize" />
+            <ActionButton
+              label="Summarize"
+              onClick$={() => handleNewColumn('Summarize')}
+            />
             <hr class="border-t border-slate-200 dark:border-slate-700" />
-            <ActionButton label="Do anything with" />
+            <ActionButton
+              label="Do anything with"
+              onClick$={() => handleNewColumn('Do anything with')}
+            />
           </div>
         </Popover.Panel>
       </Popover.Root>
@@ -86,13 +98,13 @@ export const TableAddCellHeaderPlaceHolder = component$(() => {
 
 export const ActionButton = component$<{
   label: string;
-  action?: QRL<(event: PointerEvent, element: HTMLButtonElement) => any>;
-}>(({ label, action }) => {
+  onClick$: QRL<(event: PointerEvent, element: HTMLButtonElement) => any>;
+}>(({ label, onClick$ }) => {
   return (
     <Button
       look="ghost"
       class="flex items-center justify-start w-full h-[30px] gap-1 hover:bg-neutral-100 p-1 rounded-none first:rounded-tl-md first:rounded-tr-md last:rounded-bl-md last:rounded-br-md"
-      onClick$={action}
+      onClick$={onClick$}
     >
       <span>{label}</span>
       <span class="text-neutral-500">{'{{Colum}}'}</span>

@@ -14,6 +14,7 @@ import { TEMPORAL_ID, useColumnsStore } from '~/state';
 
 export type Execution = {
   columnId?: string;
+  prompt?: string;
   mode?: 'add' | 'edit';
 };
 
@@ -46,13 +47,21 @@ export const useExecution = () => {
 
   const columnId = useComputed$(() => context.value.columnId);
   const mode = useComputed$(() => context.value.mode);
+  const initialPrompt = useComputed$(() => context.value.prompt);
 
   return {
     columnId,
     mode,
-    open: $((columnId: Execution['columnId'], mode: 'add' | 'edit') => {
-      context.value = { columnId, mode };
-    }),
+    initialPrompt,
+    open: $(
+      (
+        columnId: Execution['columnId'],
+        mode: Execution['mode'],
+        prompt?: string,
+      ) => {
+        context.value = { columnId, mode, prompt };
+      },
+    ),
     close: $(() => {
       context.value = {};
     }),

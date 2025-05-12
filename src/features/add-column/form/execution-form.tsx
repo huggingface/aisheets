@@ -44,7 +44,7 @@ interface SidebarProps {
 export const ExecutionForm = component$<SidebarProps>(
   ({ column, onGenerateColumn }) => {
     const executionFormRef = useSignal<HTMLElement>();
-    const { mode, close } = useExecution();
+    const { initialPrompt, mode, close } = useExecution();
     const { columns, maxNumberOfRows, removeTemporalColumn, updateColumn } =
       useColumnsStore();
 
@@ -69,6 +69,13 @@ export const ExecutionForm = component$<SidebarProps>(
 
     const onSelectedVariables = $((variables: { id: string }[]) => {
       columnsReferences.value = variables.map((v) => v.id);
+    });
+
+    useVisibleTask$(({ track }) => {
+      track(initialPrompt);
+      if (initialPrompt.value) {
+        prompt.value = initialPrompt.value;
+      }
     });
 
     useTask$(async () => {

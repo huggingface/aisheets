@@ -13,6 +13,7 @@ import {
   updateCell,
 } from '~/services/repository/cells';
 import { queryDatasetSources } from '~/services/websearch/embed';
+import { createSourcesFromWebQueries } from '~/services/websearch/search-sources';
 import type { Cell, Column, Process, Session } from '~/state';
 import { collectValidatedExamples } from './collect-examples';
 
@@ -126,15 +127,38 @@ async function* generateCellsFromScratch({
 }) {
   const { modelName, modelProvider, prompt, searchEnabled } = process;
 
-  const sourcesContext = searchEnabled
-    ? await queryDatasetSources({
+  let sourcesContext = undefined;
+  if (searchEnabled) {
+    // TODO:
+    // 1. Build web search query from prompt
+    const queries = await buildWebSearchQueries({
+      prompt,
+      column,
+      options: {
+        accessToken: session.token,
+      },
+    });
+
+    // 2. Index web search results into the embbedding store
+    if (queries.length > 0) {
+      await createSourcesFromWebQueries({
         dataset: column.dataset,
-        query: prompt,
+        queries,
         options: {
           accessToken: session.token,
         },
-      })
-    : undefined;
+      });
+    }
+
+    // 3. Search for relevant results
+    sourcesContext = await queryDatasetSources({
+      dataset: column.dataset,
+      query: prompt,
+      options: {
+        accessToken: session.token,
+      },
+    });
+  }
 
   // Sequential execution for fromScratch to accumulate examples
   // Get all existing cells in the column to achieve diversity
@@ -333,3 +357,15 @@ const getOrCreateCellInDB = async (
 
   return cell;
 };
+
+function buildWebSearchQueries({
+  prompt,
+  column,
+  options,
+}: {
+  prompt: string;
+  column: Column;
+  options: { accessToken: string };
+}): Promise<string[]> {
+  return Promise.resolve([]);
+}

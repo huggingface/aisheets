@@ -276,23 +276,6 @@ async function createDatasetWithColumns(
 }
 
 /**
- * Creates web sources for the dataset based on search queries
- */
-async function createWebSources(
-  dataset: { id: string; name: string },
-  queries: string[],
-  session: Session,
-) {
-  await createSourcesFromWebQueries({
-    dataset,
-    queries,
-    options: {
-      accessToken: session.token,
-    },
-  });
-}
-
-/**
  * Creates a dataset with the suggested columns from the assistant
  */
 async function createAutoDataset(
@@ -316,7 +299,13 @@ async function createAutoDataset(
 
   // Step 2: Create web sources if queries are provided
   if (queries && queries.length > 0) {
-    await createWebSources(dataset, queries, session);
+    await createSourcesFromWebQueries({
+      dataset,
+      queries,
+      options: {
+        accessToken: session.token,
+      },
+    });
   }
 
   return {

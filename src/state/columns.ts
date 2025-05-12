@@ -46,6 +46,7 @@ export type Cell = {
   validated: boolean;
   value?: any;
   error?: string;
+  sourceUrls?: string[];
   column?: {
     id: string;
   };

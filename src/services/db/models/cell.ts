@@ -21,6 +21,7 @@ export class ColumnCellModel extends Model<
   declare error?: string;
   declare generating: CreationOptional<boolean>;
   declare validated: CreationOptional<boolean>;
+  declare sourceUrls?: CreationOptional<string[]>;
 
   declare columnId: ForeignKey<ColumnModel['id']>;
   declare column?: NonAttribute<ColumnModel>;
@@ -59,6 +60,10 @@ ColumnCellModel.init(
     generating: {
       type: DataTypes.BOOLEAN,
       defaultValue: false,
+    },
+    sourceUrls: {
+      type: DataTypes.JSON,
+      allowNull: true,
     },
   },
   {

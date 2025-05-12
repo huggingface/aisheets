@@ -43,6 +43,7 @@ const mergeCellWithModel = ({
   cell.validated = model.validated;
   cell.updatedAt = model.updatedAt;
   cell.generating = model.generating;
+  cell.sourceUrls = model.sourceUrls;
 
   return cell;
 };
@@ -281,6 +282,7 @@ export const createCell = async ({
     ...cell,
     generating: false,
     columnId,
+    sourceUrls: cell.sourceUrls,
   });
 
   return {
@@ -294,6 +296,7 @@ export const createCell = async ({
     },
     updatedAt: model.updatedAt,
     generating: model.generating,
+    sourceUrls: model.sourceUrls,
   };
 };
 
@@ -331,6 +334,7 @@ export const updateCell = async (cell: Partial<Cell>): Promise<Cell> => {
     },
     updatedAt: model.updatedAt,
     generating: model.generating,
+    sourceUrls: model.sourceUrls,
   };
 };
 

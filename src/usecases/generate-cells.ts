@@ -1,5 +1,6 @@
 import { getMaxRowIdxByColumnId, updateProcess } from '~/services';
 import { renderInstruction } from '~/services/inference/materialize-prompt';
+import type { MaterializePromptParams } from '~/services/inference/materialize-prompt';
 import {
   type PromptExecutionParams,
   runPromptExecution,
@@ -136,6 +137,11 @@ async function* generateCellsFromScratch({
       })
     : undefined;
 
+  // Extract unique source URLs if available
+  const sourceUrls = sourcesContext
+    ? [...new Set(sourcesContext.map((source) => source.source_uri))]
+    : undefined;
+
   // Sequential execution for fromScratch to accumulate examples
   // Get all existing cells in the column to achieve diversity
   const existingCellsExamples = column.cells
@@ -158,6 +164,7 @@ async function* generateCellsFromScratch({
     if (!cell) continue;
 
     cell.generating = true;
+    cell.sourceUrls = sourceUrls; // Add source URLs to cell
     yield { cell };
 
     const args = {
@@ -273,17 +280,25 @@ async function* generateCellsFromColumnsReferences({
       idx: i,
     };
 
+    let sourcesContext: MaterializePromptParams['sourcesContext'];
     if (searchEnabled) {
-      args.sourcesContext = await queryDatasetSources({
+      sourcesContext = await queryDatasetSources({
         dataset: column.dataset,
         query: renderInstruction(prompt, args.data),
         options: {
           accessToken: session.token,
         },
       });
+      args.sourcesContext = sourcesContext;
     }
 
+    // Extract unique source URLs if available
+    const sourceUrls = sourcesContext
+      ? [...new Set(sourcesContext.map((source) => source.source_uri))]
+      : undefined;
+
     cell.generating = true;
+    cell.sourceUrls = sourceUrls; // Add source URLs to cell
     cells.set(i, cell);
 
     streamRequests.push(args);

@@ -7,7 +7,7 @@ import {
 } from '@builder.io/qwik';
 import { server$ } from '@builder.io/qwik-city';
 import { cn } from '@qwik-ui/utils';
-import { LuThumbsUp } from '@qwikest/icons/lucide';
+import { LuGlobe, LuThumbsUp } from '@qwikest/icons/lucide';
 import { Button, Skeleton, Textarea } from '~/components';
 import { useClickOutside } from '~/components/hooks/click/outside';
 import { Tooltip } from '~/components/ui/tooltip/tooltip';
@@ -126,6 +126,7 @@ export const TableCell = component$<{
   const editCellValueInput = useSignal<HTMLElement>();
   const contentRef = useSignal<HTMLElement>();
   const modalHeight = useSignal('200px');
+  const showSourcesModal = useSignal(false);
 
   // Track viewport visibility
   useVisibleTask$(({ track }) => {
@@ -361,6 +362,18 @@ export const TableCell = component$<{
     }),
   );
 
+  const onShowSources = $((e: Event) => {
+    e.stopPropagation();
+    if (cell.sourceUrls?.length) {
+      showSourcesModal.value = true;
+    }
+  });
+
+  const closeSourcesModal = $((e?: Event) => {
+    if (e) e.stopPropagation();
+    showSourcesModal.value = false;
+  });
+
   return (
     <div
       class="min-h-[100px] h-[100px] group"
@@ -403,32 +416,57 @@ export const TableCell = component$<{
           ) : (
             <>
               {!isStatic.value && (
-                <Button
-                  look="ghost"
-                  hover={false}
-                  size="sm"
-                  class={cn(
-                    'absolute z-10 text-base top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity visible',
-                    {
-                      'bg-green-50/50 text-green-400 hover:bg-green-100':
-                        cell.validated,
-                      'hover:bg-gray-100 text-gray-400': !cell.validated,
-                      '!opacity-0': !cell.id,
-                      hidden: !cell.value,
-                    },
+                <div class="absolute z-10 top-0 right-0 flex gap-1">
+                  {(cell.sourceUrls?.length ?? 0) > 0 && (
+                    <Button
+                      look="ghost"
+                      hover={false}
+                      size="sm"
+                      class={cn(
+                        'opacity-0 group-hover:opacity-100 transition-opacity visible',
+                        {
+                          'hover:bg-gray-100 text-gray-400': true,
+                          '!opacity-0': !cell.id,
+                          hidden: !cell.value,
+                        },
+                      )}
+                      onClick$={onShowSources}
+                    >
+                      <Tooltip
+                        text="View sources used to generate this cell"
+                        class="break-words w-48 text-left"
+                      >
+                        <LuGlobe class="text-sm" />
+                      </Tooltip>
+                    </Button>
                   )}
-                  onClick$={(e) => {
-                    e.stopPropagation();
-                    onValidateCell(originalValue.value, !cell.validated);
-                  }}
-                >
-                  <Tooltip
-                    text="Mark this cell as correct. When you click regenerate 🥚, it will be used to improve other cells."
-                    class="break-words w-48 text-left"
+                  <Button
+                    look="ghost"
+                    hover={false}
+                    size="sm"
+                    class={cn(
+                      'opacity-0 group-hover:opacity-100 transition-opacity visible',
+                      {
+                        'bg-green-50/50 text-green-400 hover:bg-green-100':
+                          cell.validated,
+                        'hover:bg-gray-100 text-gray-400': !cell.validated,
+                        '!opacity-0': !cell.id,
+                        hidden: !cell.value,
+                      },
+                    )}
+                    onClick$={(e) => {
+                      e.stopPropagation();
+                      onValidateCell(originalValue.value, !cell.validated);
+                    }}
                   >
-                    <LuThumbsUp class="text-sm" />
-                  </Tooltip>
-                </Button>
+                    <Tooltip
+                      text="Mark this cell as correct. When you click regenerate 🥚, it will be used to improve other cells."
+                      class="break-words w-48 text-left"
+                    >
+                      <LuThumbsUp class="text-sm" />
+                    </Tooltip>
+                  </Button>
+                </div>
               )}
               <div class="h-full mt-2 p-4">
                 {!contentValue.value && hasBlobContent(cellColumn.value) ? (
@@ -506,6 +544,46 @@ export const TableCell = component$<{
           )}
         </div>
       </div>
+
+      {showSourcesModal.value && (
+        <>
+          {/* Backdrop */}
+          <div
+            class="fixed inset-0 bg-neutral-700/40 z-50"
+            onClick$={closeSourcesModal}
+          />
+          <div
+            class="fixed z-[100] bg-white border border-neutral-500 shadow-sm p-6 rounded"
+            style={{
+              left: '50%',
+              top: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: '400px',
+              minHeight: '120px',
+              borderWidth: '1px',
+            }}
+            onClick$={(e) => e.stopPropagation()}
+          >
+            <div class="flex justify-between items-center mb-4">
+              <span class="font-semibold text-lg">Sources</span>
+              <Button look="ghost" size="sm" onClick$={closeSourcesModal}>
+                Close
+              </Button>
+            </div>
+            <ul class="space-y-2">
+              {cell.sourceUrls?.map((url, i) => (
+                <li
+                  key={i}
+                  class="truncate text-blue-600 underline cursor-pointer"
+                  onClick$={() => window.open(url, '_blank')}
+                >
+                  {url}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </>
+      )}
     </div>
   );
 });

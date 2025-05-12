@@ -129,7 +129,6 @@ async function* generateCellsFromScratch({
 
   let sourcesContext = undefined;
   if (searchEnabled) {
-    // TODO:
     // 1. Build web search query from prompt
     const queries = await buildWebSearchQueries({
       prompt,
@@ -298,9 +297,31 @@ async function* generateCellsFromColumnsReferences({
     };
 
     if (searchEnabled) {
+      const renderedInstruction = renderInstruction(prompt, args.data);
+
+      const queries = await buildWebSearchQueries({
+        prompt: renderedInstruction,
+        column,
+        options: {
+          accessToken: session.token,
+        },
+      });
+
+      if (queries.length > 0) {
+        // 2. Index web search results into the embbedding store
+        await createSourcesFromWebQueries({
+          dataset: column.dataset,
+          queries,
+          options: {
+            accessToken: session.token,
+          },
+        });
+      }
+
+      // 3. Search for relevant results
       args.sourcesContext = await queryDatasetSources({
         dataset: column.dataset,
-        query: renderInstruction(prompt, args.data),
+        query: renderedInstruction,
         options: {
           accessToken: session.token,
         },

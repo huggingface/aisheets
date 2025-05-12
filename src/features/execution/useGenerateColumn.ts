@@ -98,8 +98,8 @@ export const useGenerateColumn = () => {
       persistedColumn.process!.cancellable!.signal,
       persistedColumn,
     );
-    const pendingCells = new Map<number, Cell>();
 
+    const pendingCells = new Map<number, Cell>();
     for await (const { column, cell } of response) {
       if (column) {
         updateColumn(column);

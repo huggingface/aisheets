@@ -41,7 +41,7 @@ export const TableAddCellHeaderPlaceHolder = component$(() => {
   return (
     <th
       id={lastColumnId.value}
-      class={cn('visible pr-2', {
+      class={cn('visible w-20 flex justify-center items-center', {
         hidden: lastColumnId.value === TEMPORAL_ID,
       })}
     >
@@ -53,17 +53,23 @@ export const TableAddCellHeaderPlaceHolder = component$(() => {
           ref={ref}
           class={cn(
             buttonVariants({ look: 'ghost' }),
-            'ml-6 w-[30px] h-[30px] bg-transparent text-primary rounded-full hover:bg-primary-100  flex items-center justify-center p-0',
+            'w-[30px] h-[30px] bg-transparent text-primary rounded-full hover:bg-primary-100  flex items-center justify-center p-0',
           )}
         >
           <LuPlus class="text-lg" />
         </Popover.Trigger>
 
-        <Popover.Panel stoppropagation:click class="shadow-none w-fit p-2">
+        <Popover.Panel
+          stoppropagation:click
+          class="shadow-lg w-fit min-w-[230px] p-1"
+        >
           <div class="flex flex-col gap-1">
-            <ActionButton label="Translate" />
+            <ActionButton label="Translate" action={handleNewColumn} />
+            <hr class="border-t border-slate-200 dark:border-slate-700" />
             <ActionButton label="Extract keywords from" />
+            <hr class="border-t border-slate-200 dark:border-slate-700" />
             <ActionButton label="Summarize" />
+            <hr class="border-t border-slate-200 dark:border-slate-700" />
             <ActionButton label="Do anything with" />
           </div>
         </Popover.Panel>
@@ -82,7 +88,7 @@ export const ActionButton = component$<{
       class="flex items-center justify-start w-full h-[30px] gap-1 hover:bg-neutral-100 p-1"
       onClick$={action}
     >
-      <span class="font-bold">{label}</span>
+      <span>{label}</span>
       <span class="text-neutral-500">{'{{Colum}}'}</span>
     </Button>
   );

@@ -151,6 +151,8 @@ export const exportDatasetTableRows = async ({
   const filePath = path.join(tempDir, `file.${duckdbFormat.toLowerCase()}`);
 
   return await connectAndClose(async (db) => {
+    const coalesceStatement = `COALESCE(${columns.map((column) => getColumnName(column)).join(',')}) IS NOT NULL`;
+
     const selectedColumns = columns
       .map((column) => `${getColumnName(column)} as "${column.name}"`)
       .join(', ');
@@ -159,6 +161,8 @@ export const exportDatasetTableRows = async ({
         COPY (
           SELECT ${selectedColumns} 
           FROM ${tableName}
+          WHERE ${coalesceStatement}
+          ORDER BY rowIdx ASC
         ) TO '${filePath}' (FORMAT ${duckdbFormat})
     `);
 

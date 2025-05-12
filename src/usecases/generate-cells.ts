@@ -30,7 +30,7 @@ export interface GenerateCellsParams {
   timeout?: number;
 }
 
-const MAX_CONCURRENCY = NUM_CONCURRENT_REQUESTS;
+const MAX_CONCURRENCY = Math.min(NUM_CONCURRENT_REQUESTS, 16);
 
 /**
  * Generates cells for a given column based on the provided parameters.

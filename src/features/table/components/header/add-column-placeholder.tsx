@@ -14,6 +14,7 @@ import { TEMPORAL_ID, useColumnsStore } from '~/state';
 
 export const TableAddCellHeaderPlaceHolder = component$(() => {
   const ref = useSignal<HTMLElement>();
+  const isOpen = useSignal(false);
   const { open } = useExecution();
   const { columns, addTemporalColumn } = useColumnsStore();
 
@@ -54,14 +55,19 @@ export const TableAddCellHeaderPlaceHolder = component$(() => {
           class={cn(
             buttonVariants({ look: 'ghost' }),
             'w-[30px] h-[30px] bg-transparent text-primary rounded-full hover:bg-primary-100 flex items-center justify-center p-0',
+            {
+              'bg-primary-100': isOpen.value,
+            },
           )}
         >
           <LuPlus class="text-lg" />
         </Popover.Trigger>
 
         <Popover.Panel
-          stoppropagation:click
           class="shadow-lg w-fit min-w-[230px] p-1"
+          onToggle$={() => {
+            isOpen.value = !isOpen.value;
+          }}
         >
           <div class="flex flex-col">
             <ActionButton label="Translate" action={handleNewColumn} />

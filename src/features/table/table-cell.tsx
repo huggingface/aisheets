@@ -364,7 +364,7 @@ export const TableCell = component$<{
 
   const onShowSources = $((e: Event) => {
     e.stopPropagation();
-    if (cell.sourceUrls?.length) {
+    if (cell.sources?.length) {
       showSourcesModal.value = true;
     }
   });
@@ -417,7 +417,7 @@ export const TableCell = component$<{
             <>
               {!isStatic.value && (
                 <div class="absolute z-10 top-0 right-0 flex gap-1">
-                  {(cell.sourceUrls?.length ?? 0) > 0 && (
+                  {(cell.sources?.length ?? 0) > 0 && (
                     <Button
                       look="ghost"
                       hover={false}
@@ -570,16 +570,44 @@ export const TableCell = component$<{
                 Close
               </Button>
             </div>
-            <ul class="space-y-2">
-              {cell.sourceUrls?.map((url, i) => (
-                <li
-                  key={i}
-                  class="truncate text-blue-600 underline cursor-pointer"
-                  onClick$={() => window.open(url, '_blank')}
-                >
-                  {url}
-                </li>
-              ))}
+            <ul class="space-y-4">
+              {(() => {
+                if (!cell.sources) return null;
+                // Group unique snippets by URL
+                const grouped = cell.sources.reduce(
+                  (acc, source) => {
+                    const normalizedSnippet = source.snippet
+                      .trim()
+                      .replace(/\s+/g, ' ');
+                    if (!acc[source.url]) acc[source.url] = [];
+                    if (!acc[source.url].some((s) => s === normalizedSnippet)) {
+                      acc[source.url].push(normalizedSnippet);
+                    }
+                    return acc;
+                  },
+                  {} as Record<string, string[]>,
+                );
+                return Object.entries(grouped).map(([url, snippets]) => (
+                  <li key={url} class="truncate">
+                    <span
+                      class="text-blue-600 underline cursor-pointer block"
+                      onClick$={() => window.open(url, '_blank')}
+                    >
+                      {url}
+                    </span>
+                    <ul class="ml-4 mt-1 space-y-1">
+                      {snippets.map((snippet, j) => (
+                        <li
+                          key={j}
+                          class="block text-xs text-gray-500 max-h-16 overflow-hidden whitespace-pre-line"
+                        >
+                          {snippet}
+                        </li>
+                      ))}
+                    </ul>
+                  </li>
+                ));
+              })()}
             </ul>
           </div>
         </>

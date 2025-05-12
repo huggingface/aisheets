@@ -1,4 +1,5 @@
 import { getMaxRowIdxByColumnId, updateProcess } from '~/services';
+import { MAX_SOURCE_SNIPPET_LENGTH } from '~/services/db/models/cell';
 import { renderInstruction } from '~/services/inference/materialize-prompt';
 import type { MaterializePromptParams } from '~/services/inference/materialize-prompt';
 import {
@@ -137,9 +138,12 @@ async function* generateCellsFromScratch({
       })
     : undefined;
 
-  // Extract unique source URLs if available
-  const sourceUrls = sourcesContext
-    ? [...new Set(sourcesContext.map((source) => source.source_uri))]
+  // Extract sources (url + snippet) if available
+  const sources = sourcesContext
+    ? sourcesContext.map((source) => ({
+        url: source.source_uri,
+        snippet: source.text?.slice(0, MAX_SOURCE_SNIPPET_LENGTH) || '',
+      }))
     : undefined;
 
   // Sequential execution for fromScratch to accumulate examples
@@ -164,7 +168,7 @@ async function* generateCellsFromScratch({
     if (!cell) continue;
 
     cell.generating = true;
-    cell.sourceUrls = sourceUrls; // Add source URLs to cell
+    cell.sources = sources; // Add sources to cell
     yield { cell };
 
     const args = {
@@ -292,13 +296,16 @@ async function* generateCellsFromColumnsReferences({
       args.sourcesContext = sourcesContext;
     }
 
-    // Extract unique source URLs if available
-    const sourceUrls = sourcesContext
-      ? [...new Set(sourcesContext.map((source) => source.source_uri))]
+    // Extract sources (url + snippet) if available
+    const sources = sourcesContext
+      ? sourcesContext.map((source) => ({
+          url: source.source_uri,
+          snippet: source.text?.slice(0, MAX_SOURCE_SNIPPET_LENGTH) || '',
+        }))
       : undefined;
 
     cell.generating = true;
-    cell.sourceUrls = sourceUrls; // Add source URLs to cell
+    cell.sources = sources; // Add sources to cell
     cells.set(i, cell);
 
     streamRequests.push(args);

@@ -53,7 +53,7 @@ export const TableAddCellHeaderPlaceHolder = component$(() => {
           ref={ref}
           class={cn(
             buttonVariants({ look: 'ghost' }),
-            'w-[30px] h-[30px] bg-transparent text-primary rounded-full hover:bg-primary-100  flex items-center justify-center p-0',
+            'w-[30px] h-[30px] bg-transparent text-primary rounded-full hover:bg-primary-100 flex items-center justify-center p-0',
           )}
         >
           <LuPlus class="text-lg" />
@@ -63,7 +63,7 @@ export const TableAddCellHeaderPlaceHolder = component$(() => {
           stoppropagation:click
           class="shadow-lg w-fit min-w-[230px] p-1"
         >
-          <div class="flex flex-col gap-1">
+          <div class="flex flex-col">
             <ActionButton label="Translate" action={handleNewColumn} />
             <hr class="border-t border-slate-200 dark:border-slate-700" />
             <ActionButton label="Extract keywords from" />
@@ -85,7 +85,7 @@ export const ActionButton = component$<{
   return (
     <Button
       look="ghost"
-      class="flex items-center justify-start w-full h-[30px] gap-1 hover:bg-neutral-100 p-1"
+      class="flex items-center justify-start w-full h-[30px] gap-1 hover:bg-neutral-100 p-1 rounded-none first:rounded-tl-md first:rounded-tr-md last:rounded-bl-md last:rounded-br-md"
       onClick$={action}
     >
       <span>{label}</span>

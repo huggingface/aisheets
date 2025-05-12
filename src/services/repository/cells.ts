@@ -2,6 +2,10 @@ import { Op } from 'sequelize';
 import { ColumnCellModel } from '~/services/db/models/cell';
 import type { Cell } from '~/state';
 
+import {
+  type CellSource,
+  MAX_SOURCE_SNIPPET_LENGTH,
+} from '~/services/db/models/cell';
 import { ColumnModel, ProcessModel } from '../db/models';
 import { getColumnById, listColumnsByIds } from './columns';
 import { listDatasetTableRows, upsertColumnValues } from './tables';
@@ -261,6 +265,63 @@ export const getColumnCells = async ({
   return cells.flat();
 };
 
+// Utility to find the longest common prefix in an array of strings
+function getLongestCommonPrefix(strings: string[]): string {
+  if (!strings.length) return '';
+  let prefix = strings[0];
+  for (let i = 1; i < strings.length; i++) {
+    let j = 0;
+    while (
+      j < prefix.length &&
+      j < strings[i].length &&
+      prefix[j] === strings[i][j]
+    ) {
+      j++;
+    }
+    prefix = prefix.slice(0, j);
+    if (!prefix) break;
+  }
+  return prefix;
+}
+
+// Remove common prefix and truncate each snippet
+function processSources(sources?: CellSource[]): CellSource[] | undefined {
+  if (!sources || sources.length === 0) return sources;
+  // Group sources by URL, preserving order of first appearance
+  const urlOrder: string[] = [];
+  const grouped: Record<string, CellSource[]> = {};
+  for (const source of sources) {
+    if (!grouped[source.url]) {
+      grouped[source.url] = [];
+      urlOrder.push(source.url);
+    }
+    grouped[source.url].push(source);
+  }
+  // Process each group
+  const processed: CellSource[] = [];
+  for (const url of urlOrder) {
+    const group = grouped[url];
+    const snippets = group.map((s) => s.snippet);
+    const allIdentical = snippets.every((s) => s === snippets[0]);
+    if (allIdentical) {
+      processed.push({
+        ...group[0],
+        snippet: snippets[0].slice(0, MAX_SOURCE_SNIPPET_LENGTH),
+      });
+      continue;
+    }
+    const prefix = getLongestCommonPrefix(snippets);
+    for (const source of group) {
+      const tail = source.snippet.slice(prefix.length).trim();
+      processed.push({
+        ...source,
+        snippet: tail.slice(0, MAX_SOURCE_SNIPPET_LENGTH),
+      });
+    }
+  }
+  return processed;
+}
+
 export const createCell = async ({
   cell,
   columnId,
@@ -281,7 +342,7 @@ export const createCell = async ({
     ...cell,
     generating: false,
     columnId,
-    sources: cell.sources,
+    sources: processSources(cell.sources),
   });
 
   return {
@@ -319,6 +380,9 @@ export const updateCell = async (cell: Partial<Cell>): Promise<Cell> => {
     }),
   );
 
+  if (updatedCell.sources) {
+    updatedCell.sources = processSources(updatedCell.sources);
+  }
   model.set({ ...updatedCell });
   model = await model.save();
 

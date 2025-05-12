@@ -7,7 +7,12 @@ import {
 } from '@builder.io/qwik';
 import { server$ } from '@builder.io/qwik-city';
 import { cn } from '@qwik-ui/utils';
-import { LuGlobe, LuThumbsUp } from '@qwikest/icons/lucide';
+import {
+  LuArrowUpRight,
+  LuGlobe,
+  LuThumbsUp,
+  LuX,
+} from '@qwikest/icons/lucide';
 import { Button, Skeleton, Textarea } from '~/components';
 import { useClickOutside } from '~/components/hooks/click/outside';
 import { Tooltip } from '~/components/ui/tooltip/tooltip';
@@ -22,6 +27,9 @@ import {
   VideoRenderer,
 } from './components/cell-media-renderer';
 import { processMediaContent } from './utils/binary-content';
+
+// TEMP: Frontend snippet display limit for testing. Adjust as needed!
+const FRONTEND_SNIPPET_DISPLAY_LIMIT = 100;
 
 const loadCell = server$(async (cellId: string) => {
   const persistedCell = await getColumnCellById(cellId);
@@ -106,6 +114,34 @@ export const CellContentRenderer = component$<{
 
   return <p>{content}</p>;
 });
+
+// Utility to find the longest common prefix in an array of strings
+function getLongestCommonPrefix(strings: string[]): string {
+  if (!strings.length) return '';
+  let prefix = strings[0];
+  for (let i = 1; i < strings.length; i++) {
+    let j = 0;
+    while (
+      j < prefix.length &&
+      j < strings[i].length &&
+      prefix[j] === strings[i][j]
+    ) {
+      j++;
+    }
+    prefix = prefix.slice(0, j);
+    if (!prefix) break;
+  }
+  return prefix;
+}
+
+export function getDomain(url: string): string {
+  try {
+    const { hostname } = new URL(url);
+    return hostname;
+  } catch {
+    return url;
+  }
+}
 
 export const TableCell = component$<{
   cell: Cell;
@@ -362,13 +398,6 @@ export const TableCell = component$<{
     }),
   );
 
-  const onShowSources = $((e: Event) => {
-    e.stopPropagation();
-    if (cell.sources?.length) {
-      showSourcesModal.value = true;
-    }
-  });
-
   const closeSourcesModal = $((e?: Event) => {
     if (e) e.stopPropagation();
     showSourcesModal.value = false;
@@ -416,8 +445,9 @@ export const TableCell = component$<{
           ) : (
             <>
               {!isStatic.value && (
-                <div class="absolute z-10 top-0 right-0 flex gap-1">
-                  {(cell.sources?.length ?? 0) > 0 && (
+                <>
+                  {/* Globe button on the left */}
+                  <div class="absolute z-10 top-0 left-0 flex gap-1">
                     <Button
                       look="ghost"
                       hover={false}
@@ -430,7 +460,12 @@ export const TableCell = component$<{
                           hidden: !cell.value,
                         },
                       )}
-                      onClick$={onShowSources}
+                      onClick$={(e) => {
+                        e.stopPropagation();
+                        if (cell.sources?.length) {
+                          showSourcesModal.value = true;
+                        }
+                      }}
                     >
                       <Tooltip
                         text="View sources used to generate this cell"
@@ -439,34 +474,37 @@ export const TableCell = component$<{
                         <LuGlobe class="text-sm" />
                       </Tooltip>
                     </Button>
-                  )}
-                  <Button
-                    look="ghost"
-                    hover={false}
-                    size="sm"
-                    class={cn(
-                      'opacity-0 group-hover:opacity-100 transition-opacity visible',
-                      {
-                        'bg-green-50/50 text-green-400 hover:bg-green-100':
-                          cell.validated,
-                        'hover:bg-gray-100 text-gray-400': !cell.validated,
-                        '!opacity-0': !cell.id,
-                        hidden: !cell.value,
-                      },
-                    )}
-                    onClick$={(e) => {
-                      e.stopPropagation();
-                      onValidateCell(originalValue.value, !cell.validated);
-                    }}
-                  >
-                    <Tooltip
-                      text="Mark this cell as correct. When you click regenerate 🥚, it will be used to improve other cells."
-                      class="break-words w-48 text-left"
+                  </div>
+                  {/* Thumbs up button on the right */}
+                  <div class="absolute z-10 top-0 right-0 flex gap-1">
+                    <Button
+                      look="ghost"
+                      hover={false}
+                      size="sm"
+                      class={cn(
+                        'opacity-0 group-hover:opacity-100 transition-opacity visible',
+                        {
+                          'bg-green-50/50 text-green-400 hover:bg-green-100':
+                            cell.validated,
+                          'hover:bg-gray-100 text-gray-400': !cell.validated,
+                          '!opacity-0': !cell.id,
+                          hidden: !cell.value,
+                        },
+                      )}
+                      onClick$={(e) => {
+                        e.stopPropagation();
+                        onValidateCell(originalValue.value, !cell.validated);
+                      }}
                     >
-                      <LuThumbsUp class="text-sm" />
-                    </Tooltip>
-                  </Button>
-                </div>
+                      <Tooltip
+                        text="Mark this cell as correct. When you click regenerate 🥚, it will be used to improve other cells."
+                        class="break-words w-48 text-left"
+                      >
+                        <LuThumbsUp class="text-sm" />
+                      </Tooltip>
+                    </Button>
+                  </div>
+                </>
               )}
               <div class="h-full mt-2 p-4">
                 {!contentValue.value && hasBlobContent(cellColumn.value) ? (
@@ -544,33 +582,25 @@ export const TableCell = component$<{
           )}
         </div>
       </div>
-
       {showSourcesModal.value && (
-        <>
-          {/* Backdrop */}
-          <div
-            class="fixed inset-0 bg-neutral-700/40 z-50"
-            onClick$={closeSourcesModal}
-          />
-          <div
-            class="fixed z-[100] bg-white border border-neutral-500 shadow-sm p-6 rounded"
-            style={{
-              left: '50%',
-              top: '50%',
-              transform: 'translate(-50%, -50%)',
-              width: '400px',
-              minHeight: '120px',
-              borderWidth: '1px',
-            }}
-            onClick$={(e) => e.stopPropagation()}
-          >
-            <div class="flex justify-between items-center mb-4">
-              <span class="font-semibold text-lg">Sources</span>
-              <Button look="ghost" size="sm" onClick$={closeSourcesModal}>
-                Close
-              </Button>
-            </div>
-            <ul class="space-y-4">
+        <div
+          class="fixed top-0 right-0 h-full w-[400px] z-[100] bg-white border-l border-neutral-300 shadow-lg flex flex-col"
+          style={{ minHeight: '100vh' }}
+          onClick$={(e) => e.stopPropagation()}
+        >
+          <div class="flex justify-between items-center p-4 border-b border-neutral-200">
+            <span class="font-semibold text-lg text-neutral-700">Sources</span>
+            <Button
+              look="ghost"
+              class="p-1.5 rounded-full hover:bg-neutral-200 cursor-pointer"
+              onClick$={closeSourcesModal}
+              aria-label="Close"
+            >
+              <LuX class="text-lg text-neutral" />
+            </Button>
+          </div>
+          <div class="flex-1 overflow-y-auto p-4">
+            <ul class="ml-2 mt-2 space-y-4">
               {(() => {
                 if (!cell.sources) return null;
                 // Group unique snippets by URL
@@ -587,30 +617,43 @@ export const TableCell = component$<{
                   },
                   {} as Record<string, string[]>,
                 );
-                return Object.entries(grouped).map(([url, snippets]) => (
-                  <li key={url} class="truncate">
-                    <span
-                      class="text-blue-600 underline cursor-pointer block"
+                return Object.entries(grouped).map(([url, snippets]) => {
+                  const domain = getDomain(url);
+                  return (
+                    <div
+                      key={url}
+                      class="bg-white p-4 transition-colors cursor-pointer hover:bg-neutral-100 hover:rounded-sm source-group"
                       onClick$={() => window.open(url, '_blank')}
+                      tabIndex={0}
+                      role="button"
+                      aria-label={`Open source: ${domain}`}
                     >
-                      {url}
-                    </span>
-                    <ul class="ml-4 mt-1 space-y-1">
-                      {snippets.map((snippet, j) => (
-                        <li
-                          key={j}
-                          class="block text-xs text-gray-500 max-h-16 overflow-hidden whitespace-pre-line"
-                        >
-                          {snippet}
-                        </li>
-                      ))}
-                    </ul>
-                  </li>
-                ));
+                      <div class="flex items-center justify-between">
+                        <span class="text-neutral-600 font-medium text-xs source-domain">
+                          {domain}
+                        </span>
+                        <LuArrowUpRight class="text-neutral text-base ml-2" />
+                      </div>
+                      <ul class="ml-2 mt-2 space-y-4">
+                        {snippets.map((snippet, j) => {
+                          if (!snippet) return null;
+                          return (
+                            <li
+                              key={j}
+                              class="block text-primary-600 whitespace-pre-line text-sm"
+                            >
+                              {snippet} ...
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </div>
+                  );
+                });
               })()}
             </ul>
           </div>
-        </>
+        </div>
       )}
     </div>
   );

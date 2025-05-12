@@ -11,7 +11,7 @@ import {
 import { db } from '~/services/db';
 import type { ColumnModel } from '~/services/db/models/column';
 
-export const MAX_SOURCE_SNIPPET_LENGTH = 240; // configurable
+export const MAX_SOURCE_SNIPPET_LENGTH = 300;
 
 export interface CellSource {
   url: string;

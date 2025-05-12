@@ -42,9 +42,9 @@ export const INFERENCE_TIMEOUT = 90000;
  *
  * This constant defines the number of concurrent requests to be sent to the endpoint while generating cells
  *
- * Default value: 8, max. number of concurrent requests 16
+ * Default value: 4, max. number of concurrent requests 8
  */
-export const NUM_CONCURRENT_REQUESTS = 8;
+export const NUM_CONCURRENT_REQUESTS = 4;
 
 /**
  * The Serper API key used for web searches.

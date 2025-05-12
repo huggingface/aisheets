@@ -106,17 +106,20 @@ export const generateCells = async function* ({
         session,
       });
     } else {
+      let remaining = limit;
       for (let i = offset; i < offset + limit; i += MAX_CONCURRENCY) {
         yield* generateCellsFromColumnsReferences({
           column,
           process,
           validatedCells,
           offset: i,
-          limit: Math.min(i + MAX_CONCURRENCY, limit - i),
+          limit: Math.min(MAX_CONCURRENCY, remaining),
           updateOnly,
           timeout,
           session,
         });
+
+        remaining -= MAX_CONCURRENCY;
       }
     }
   } finally {

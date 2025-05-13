@@ -185,7 +185,7 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
       <Textarea
         ref={textarea}
         look="ghost"
-        class="p-4 w-full h-64 min-h-64 max-h-64 resize-none overflow-auto text-base rounded-sm pb-16 placeholder:text-neutral-500"
+        class="p-4 w-full h-72 min-h-72 max-h-72 resize-none overflow-auto text-base rounded-sm pb-16 placeholder:text-neutral-500"
         placeholder={
           props.variables.value[0]
             ? `Translate into French: {{${props.variables.value[0].name}}}`

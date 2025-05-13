@@ -42,7 +42,7 @@ export const TableAddCellHeaderPlaceHolder = component$(() => {
   return (
     <th
       id={lastColumnId.value}
-      class={cn('visible w-20 flex justify-center items-center', {
+      class={cn('visible w-[62px] h-[38px] flex justify-center items-center', {
         hidden: lastColumnId.value === TEMPORAL_ID,
       })}
     >

@@ -31,8 +31,6 @@ export interface CreateColumn {
     prompt: string;
     searchEnabled: boolean;
     columnsReferences: string[];
-    offset: number;
-    limit: number;
     isExecuting?: boolean;
     cancellable?: NoSerialize<AbortController>;
   };
@@ -195,8 +193,6 @@ export const useColumnsStore = () => {
       process: {
         modelName: '',
         modelProvider: '',
-        offset: 0,
-        limit: 5,
         prompt: '',
         searchEnabled: false,
         columnsReferences: [],

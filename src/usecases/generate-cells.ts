@@ -17,7 +17,7 @@ import {
 } from '~/services/repository/cells';
 import { countDatasetTableRows } from '~/services/repository/tables';
 import { queryDatasetSources } from '~/services/websearch/embed';
-import type { Cell, Column, Process, Session } from '~/state';
+import type { Cell, CellSource, Column, Process, Session } from '~/state';
 import { collectValidatedExamples } from './collect-examples';
 
 export interface GenerateCellsParams {
@@ -211,21 +211,18 @@ async function* generateCellsFromScratch({
       for await (const response of runPromptExecutionStream(args)) {
         cell.value = response.value;
         cell.error = response.error;
-        if (cell.value && !cell.error) {
-          cell.sources = sources; // Add sources only after successful generation
-        }
         yield { cell };
       }
     } else {
       const response = await runPromptExecution(args);
       cell.value = response.value;
       cell.error = response.error;
-      if (cell.value && !cell.error) {
-        cell.sources = sources; // Add sources only after successful generation
-      }
     }
 
     cell.generating = false;
+    // Add sources only after successful generation
+    if (cell.value && !cell.error) cell.sources = sources;
+
     await updateCell(cell);
 
     yield { cell };
@@ -265,10 +262,9 @@ async function* generateCellsFromColumnsReferences({
     process;
 
   const streamRequests: PromptExecutionParams[] = [];
-  const cells = new Map<number, Cell>();
-  const cellsSources = new Map<
+  const cells = new Map<
     number,
-    Array<{ url: string; snippet: string }> | undefined
+    { cell: Cell; sources: CellSource[] | undefined }
   >();
 
   // Get initial examples from validated cells
@@ -339,8 +335,8 @@ async function* generateCellsFromColumnsReferences({
       : undefined;
 
     cell.generating = true;
-    cells.set(i, cell);
-    cellsSources.set(i, sources);
+
+    cells.set(i, { cell, sources });
 
     streamRequests.push(args);
   }
@@ -348,7 +344,7 @@ async function* generateCellsFromColumnsReferences({
   // Initial yield of empty cells in order
   const orderedIndices = Array.from(cells.keys()).sort((a, b) => a - b);
   for (const idx of orderedIndices) {
-    const cell = cells.get(idx);
+    const cell = cells.get(idx)?.cell;
     if (cell) yield { cell };
   }
 
@@ -358,17 +354,16 @@ async function* generateCellsFromColumnsReferences({
   )) {
     if (idx === undefined) continue;
 
-    const cell = cells.get(idx);
-    if (!cell) continue;
+    const cellData = cells.get(idx);
+    if (!cellData) continue;
 
+    const { cell, sources } = cellData;
     // Update cell with response
     cell.value = response.value || '';
     cell.error = response.error;
 
     if (response.done || !cell.value) {
-      if (cell.value && !cell.error) {
-        cell.sources = cellsSources.get(idx); // Get sources from the map
-      }
+      if (cell.value && !cell.error) cell.sources = sources;
       cell.generating = false;
       await updateCell(cell);
 

@@ -172,6 +172,14 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
     );
   });
 
+  useVisibleTask$(() => {
+    if (textarea.value) {
+      textarea.value.focus();
+      const length = textarea.value.value.length;
+      textarea.value.setSelectionRange(length, length);
+    }
+  });
+
   return (
     <div class="relative">
       <Textarea

@@ -3,8 +3,6 @@ import { scrapeUrlsBatch } from './scrape';
 import { SerperSearch } from './search';
 import type { HeaderElement } from './types';
 
-import { trackTime } from './utils/track-time';
-
 import * as config from '~/config';
 
 export interface WebSource {
@@ -53,7 +51,7 @@ function filterByBlockList<T extends { url: string }>(results: T[]): T[] {
   );
 }
 
-export async function createSourcesFromWebQueries({
+export async function* createSourcesFromWebQueries({
   dataset,
   queries,
   options,
@@ -66,36 +64,33 @@ export async function createSourcesFromWebQueries({
   options: {
     accessToken: string;
   };
-}): Promise<{
-  sources: WebSource[];
-  errors?: ErrorSource[];
-}> {
+}) {
   if (!queries || queries.length === 0) throw new Error('No queries provided');
   if (!dataset || !dataset.id) throw new Error('No dataset provided');
 
-  const { sources: webSources, errors } = await trackTime(() => {
-    console.log('Time for searchQueriesToSources');
-    return searchQueriesToSources(queries);
-  });
+  yield { step: `Searching for sources with queries: ${queries.join(', ')}` };
+  const { sources: webSources, errors } = await searchQueriesToSources(queries);
 
-  const scrappedUrls = await trackTime(() => {
-    console.log('Time for scrapeUrlsBatch');
-    return scrapeUrlsBatch(webSources.map((source) => source.url));
-  });
+  yield { step: `Visiting ${webSources.length} URLs` };
+  const scrappedUrls = await scrapeUrlsBatch(
+    webSources.map((source) => source.url),
+  );
 
-  for (const source of webSources) {
-    const scrapped = scrappedUrls.get(source.url);
-    if (scrapped) source.markdownTree = scrapped.markdownTree;
-  }
+  const sources = webSources
+    .map((source) => {
+      const { url } = source;
+      const scrapped = scrappedUrls.get(url);
 
-  const indexSize = await trackTime(() => {
-    console.log('Time for indexDatasetSources');
+      if (scrapped) source.markdownTree = scrapped.markdownTree;
+      return source;
+    })
+    .filter(({ markdownTree }) => markdownTree);
 
-    return indexDatasetSources({
-      dataset,
-      sources: webSources,
-      options,
-    });
+  yield { step: `Indexing ${sources.length} sources` };
+  const indexSize = await indexDatasetSources({
+    dataset,
+    sources: webSources,
+    options,
   });
 
   if (indexSize === 0) {
@@ -103,10 +98,7 @@ export async function createSourcesFromWebQueries({
     return { sources: [], errors };
   }
 
-  return {
-    sources: webSources,
-    errors,
-  };
+  yield { step: `Indexed ${indexSize} sources` };
 }
 
 const searchQueriesToSources = async (

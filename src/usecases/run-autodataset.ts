@@ -5,13 +5,14 @@ import {
   normalizeChatCompletionArgs,
   normalizeOptions,
 } from '~/services/inference/run-prompt-execution';
-import { createColumn } from '~/services/repository/columns';
+import { createColumn, getDatasetColumns } from '~/services/repository/columns';
 import { createDataset } from '~/services/repository/datasets';
 import { createProcess } from '~/services/repository/processes';
 import { createSourcesFromWebQueries } from '~/services/websearch/search-sources';
 import type { Column, Session } from '~/state';
 import type { ColumnKind } from '~/state/columns';
 import { useServerSession } from '~/state/session';
+import { generateCells } from './generate-cells';
 
 export interface AssistantParams {
   accessToken?: string;
@@ -121,9 +122,25 @@ COLUMNS:
 /**
  * Extracts structured dataset configuration from LLM output
  */
-function extractDatasetConfig(text: string, searchEnabled = true) {
+async function extractDatasetConfig({
+  instruction,
+  modelName,
+  modelProvider,
+  maxSearchQueries = 1,
+  searchEnabled = false,
+  session,
+  timeout,
+}: {
+  instruction: string;
+  searchEnabled?: boolean;
+  maxSearchQueries?: number;
+  modelName: string;
+  modelProvider: string;
+  session: Session;
+  timeout?: number;
+}) {
   // Define result structure with defaults
-  const result = {
+  const result: any = {
     datasetName: 'Auto-generated Dataset',
     columns: [] as Array<{ name: string; prompt: string }>,
     queries: [] as string[],
@@ -139,6 +156,26 @@ function extractDatasetConfig(text: string, searchEnabled = true) {
   };
 
   let currentSection: keyof typeof sectionPatterns | null = null;
+
+  const promptText = searchEnabled
+    ? SEARCH_PROMPT_TEMPLATE.replace('{instruction}', instruction).replace(
+        '{maxSearchQueries}',
+        maxSearchQueries?.toString() || '',
+      )
+    : NO_SEARCH_PROMPT_TEMPLATE.replace('{instruction}', instruction);
+
+  const response = await chatCompletion(
+    normalizeChatCompletionArgs({
+      messages: [{ role: 'user', content: promptText }],
+      modelName,
+      modelProvider,
+      accessToken: session.token,
+    }),
+    normalizeOptions(timeout),
+  );
+
+  const text = response.choices[0].message.content || '';
+  result.text = text;
 
   // Process text line by line
   for (const line of text.split('\n').map((l) => l.trim())) {
@@ -276,62 +313,6 @@ async function createDatasetWithColumns(
 }
 
 /**
- * Creates web sources for the dataset based on search queries
- */
-async function createWebSources(
-  dataset: { id: string; name: string },
-  queries: string[],
-  session: Session,
-) {
-  await createSourcesFromWebQueries({
-    dataset,
-    queries,
-    options: {
-      accessToken: session.token,
-    },
-  });
-}
-
-/**
- * Creates a dataset with the suggested columns from the assistant
- */
-async function createAutoDataset(
-  columns: Array<{ name: string; prompt: string }>,
-  session: Session,
-  modelName: string = DEFAULT_MODEL,
-  modelProvider: string = DEFAULT_MODEL_PROVIDER,
-  datasetName = 'New Dataset',
-  searchEnabled = false,
-  queries?: string[],
-) {
-  // Step 1: Create dataset and columns
-  const { dataset, createdColumns } = await createDatasetWithColumns(
-    columns,
-    session,
-    modelName,
-    modelProvider,
-    datasetName,
-    searchEnabled,
-  );
-
-  // Step 2: Create web sources if queries are provided
-  if (queries && queries.length > 0) {
-    await createWebSources(dataset, queries, session);
-  }
-
-  return {
-    dataset,
-    columns: createdColumns.map((col) => ({
-      name: col.name,
-      prompt:
-        col.process?.prompt ||
-        columns.find((c) => c.name === col.name)?.prompt ||
-        '',
-    })),
-  };
-}
-
-/**
  * Extracts column references from a prompt using the {{column_name}} syntax
  */
 function extractColumnReferences(
@@ -352,82 +333,103 @@ function extractColumnReferences(
   return references;
 }
 
+async function populateDataset(
+  dataset: { id: string; name: string },
+  session: Session,
+) {
+  try {
+    // Get the full column objects with processes
+    const columns = await getDatasetColumns(dataset);
+
+    // Generate cells for each column synchronously
+    for (const column of columns) {
+      if (!column.process) continue;
+
+      for await (const _ of generateCells({
+        column,
+        process: column.process,
+        session,
+        offset: 0,
+        limit: 5,
+      })) {
+        // We don't need to do anything with the yielded cells
+      }
+    }
+  } catch (error) {
+    console.error('❌ [PopulateDataset] Error populating dataset:', error);
+    throw error;
+  }
+}
+
 /**
  * Executes the assistant with the provided parameters
  */
-export const runAutoDataset = async function (
+export const runAutoDataset = async function* (
   this: RequestEventBase<QwikCityPlatform>,
-  params: AssistantParams,
-): Promise<
-  | string
-  | {
-      columns: Array<{ name: string; prompt: string }>;
-      queries: string[];
-      dataset: string;
-      datasetName: string;
-      createdColumns: Array<{ name: string; prompt: string }>;
-    }
-> {
+  {
+    instruction,
+    modelName = DEFAULT_MODEL,
+    modelProvider = DEFAULT_MODEL_PROVIDER,
+    searchEnabled = false,
+    maxSearchQueries = 1,
+    timeout,
+  }: AssistantParams,
+): AsyncGenerator<{
+  step: string;
+  dataset?: { id: string; name: string };
+  error?: string;
+}> {
   // Get the session directly from the request context
   const session = useServerSession(this);
 
-  // Use the model name from config if none is specified
-  const modelName = params.modelName || DEFAULT_MODEL;
-  const modelProvider = params.modelProvider || DEFAULT_MODEL_PROVIDER;
-
   try {
-    const promptText = params.searchEnabled
-      ? SEARCH_PROMPT_TEMPLATE.replace(
-          '{instruction}',
-          params.instruction,
-        ).replace(
-          '{maxSearchQueries}',
-          params.maxSearchQueries?.toString() || '',
-        )
-      : NO_SEARCH_PROMPT_TEMPLATE.replace('{instruction}', params.instruction);
-
-    const response = await chatCompletion(
-      normalizeChatCompletionArgs({
-        messages: [{ role: 'user', content: promptText }],
-        modelName,
-        modelProvider,
-        accessToken: session.token,
-      }),
-      normalizeOptions(params.timeout),
-    );
-
-    const responseText = response.choices[0].message.content || '';
-
     // Extract columns and search queries from the assistant output
-    const { datasetName, columns, queries } = extractDatasetConfig(
-      responseText,
-      params.searchEnabled,
-    );
+    yield { step: 'Configuring dataset' };
+
+    const { datasetName, columns, queries, text } = await extractDatasetConfig({
+      instruction,
+      modelName,
+      modelProvider,
+      maxSearchQueries,
+      searchEnabled,
+      timeout,
+      session,
+    });
 
     // If no structured data found, return the original response
     if (columns.length === 0) {
-      return responseText;
+      yield { step: 'Cannot process generated configuration', error: text };
+      return;
     }
 
-    // Create the dataset with the suggested columns
-    const { dataset, columns: createdColumns } = await createAutoDataset(
+    yield { step: `Creating dataset ${datasetName}` };
+    // Step 1: Create dataset and columns
+    const { dataset } = await createDatasetWithColumns(
       columns,
       session,
       modelName,
       modelProvider,
       datasetName,
-      params.searchEnabled,
-      params.searchEnabled ? queries : undefined,
+      searchEnabled,
     );
 
-    // Return the columns, queries, and dataset
-    return {
-      columns,
-      queries,
-      dataset: dataset.id,
-      datasetName,
-      createdColumns,
-    };
+    if (queries && queries.length > 0) {
+      yield { step: 'Searching web sources' };
+      yield* createSourcesFromWebQueries({
+        dataset,
+        queries,
+        options: {
+          accessToken: session.token,
+        },
+      });
+    }
+
+    yield { step: `Populating dataset ${datasetName}` };
+    // Populate the dataset with generated cells
+    await populateDataset(dataset, session);
+
+    // Return the dataset and columns
+    yield { step: 'Dataset created', dataset };
   } catch (error) {
     console.error('❌ [Assistant] Error in assistant execution:', error);
     return error instanceof Error ? error.message : String(error);

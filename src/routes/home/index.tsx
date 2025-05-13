@@ -8,26 +8,21 @@ import { Skeleton } from '~/components/ui/skeleton/skeleton';
 import { DragAndDrop } from '~/features/import/drag-n-drop';
 import { MainSidebarButton } from '~/features/main-sidebar';
 import { ActiveDatasetProvider } from '~/state';
-import { populateDataset } from '~/usecases/populate-dataset';
 import { runAutoDataset } from '~/usecases/run-autodataset';
 
-const runAutoDatasetAction = server$(async function (
+const runAutoDatasetAction = server$(async function* (
   instruction: string,
   searchEnabled: boolean,
-) {
-  return await runAutoDataset.call(this, {
+): AsyncGenerator<{
+  step: string;
+  error?: string;
+  dataset?: { id: string };
+}> {
+  yield* runAutoDataset.call(this, {
     instruction,
     searchEnabled,
     maxSearchQueries: 1,
   });
-});
-
-// Server action to populate the dataset
-const populateDatasetAction = server$(async function (
-  datasetId: string,
-  datasetName: string,
-) {
-  return await populateDataset.call(this, datasetId, datasetName);
 });
 
 export default component$(() => {
@@ -76,26 +71,20 @@ export default component$(() => {
     }
 
     isLoading.value = true;
-    currentStep.value = searchOnWeb.value
-      ? 'Configuring dataset, searching web sources, visiting URLs'
-      : 'Configuring dataset';
-    response.text = undefined;
-    response.error = undefined;
 
     try {
-      const result = await runAutoDatasetAction(
+      for await (const { step, error, dataset } of await runAutoDatasetAction(
         prompt.value,
         searchOnWeb.value,
-      );
+      )) {
+        if (step) currentStep.value = step;
 
-      if (typeof result === 'string') {
-        response.text = result;
-      } else if ('dataset' in result && result.dataset) {
-        currentStep.value = `Populating dataset "${result.datasetName}"`;
-        await populateDatasetAction(result.dataset, result.datasetName);
-        currentStep.value = 'Redirecting to dataset';
-        await nav(`/home/dataset/${result.dataset}/`);
-        return;
+        if (error) throw new Error(error);
+
+        if (dataset) {
+          currentStep.value = 'Redirecting to dataset...';
+          await nav(`/home/dataset/${dataset.id}`);
+        }
       }
     } catch (error) {
       console.error('Error running assistant:', error);

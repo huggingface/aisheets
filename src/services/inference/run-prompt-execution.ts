@@ -6,12 +6,7 @@ import {
   chatCompletionStream,
 } from '@huggingface/inference';
 
-import {
-  HF_TOKEN,
-  INFERENCE_TIMEOUT,
-  NUM_CONCURRENT_REQUESTS,
-  ORG_BILLING,
-} from '~/config';
+import { HF_TOKEN, INFERENCE_TIMEOUT, ORG_BILLING } from '~/config';
 import { type Example, materializePrompt } from './materialize-prompt';
 
 export interface PromptExecutionParams {
@@ -35,8 +30,6 @@ export interface PromptExecutionResponse {
   error?: string;
   done?: boolean;
 }
-
-const MAX_CONCURRENCY = Math.min(NUM_CONCURRENT_REQUESTS, 10);
 
 const handleError = (e: unknown): string => {
   if (e instanceof Error) return e.message;
@@ -147,7 +140,7 @@ export const runPromptExecutionStreamBatch = async function* (
     return { streamId, idx: param.idx! };
   };
 
-  const initialStreamCount = Math.min(MAX_CONCURRENCY, queue.length);
+  const initialStreamCount = queue.length;
   const streamIdxMap = new Map<number, number>();
 
   for (let i = 0; i < initialStreamCount; i++) {

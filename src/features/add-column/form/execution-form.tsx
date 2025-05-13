@@ -169,9 +169,6 @@ export const ExecutionForm = component$<SidebarProps>(
             prompt: prompt.value,
             columnsReferences: columnsReferences.value,
             searchEnabled: searchOnWeb.value,
-
-            offset: 0,
-            limit: 1,
           },
         };
 

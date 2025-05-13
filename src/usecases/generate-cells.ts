@@ -1,4 +1,5 @@
-import { getMaxRowIdxByColumnId, updateProcess } from '~/services';
+import { NUM_CONCURRENT_REQUESTS } from '~/config';
+import { getDatasetColumns, updateProcess } from '~/services';
 import { MAX_SOURCE_SNIPPET_LENGTH } from '~/services/db/models/cell';
 import { renderInstruction } from '~/services/inference/materialize-prompt';
 import type { MaterializePromptParams } from '~/services/inference/materialize-prompt';
@@ -14,6 +15,7 @@ import {
   getRowCells,
   updateCell,
 } from '~/services/repository/cells';
+import { countDatasetTableRows } from '~/services/repository/tables';
 import { queryDatasetSources } from '~/services/websearch/embed';
 import type { Cell, Column, Process, Session } from '~/state';
 import { collectValidatedExamples } from './collect-examples';
@@ -29,6 +31,8 @@ export interface GenerateCellsParams {
   updateOnly?: boolean;
   timeout?: number;
 }
+
+const MAX_CONCURRENCY = Math.min(NUM_CONCURRENT_REQUESTS, 8);
 
 /**
  * Generates cells for a given column based on the provided parameters.
@@ -70,7 +74,24 @@ export const generateCells = async function* ({
 }: GenerateCellsParams) {
   const { columnsReferences } = process;
 
-  if (!limit) limit = (await getMaxRowIdxByColumnId(column.id)) + 1;
+  if (!limit) {
+    const columnIds = columnsReferences?.length
+      ? columnsReferences
+      : await getDatasetColumns(column.dataset).then((columns) =>
+          columns.filter((col) => col.id !== column.id).map((col) => col.id),
+        );
+
+    const columnSizes = await Promise.all(
+      columnIds.map((colId) => {
+        return countDatasetTableRows({
+          dataset: column.dataset,
+          column: { id: colId },
+        });
+      }),
+    );
+
+    limit = Math.max(...columnSizes);
+  }
   if (!offset) offset = 0;
 
   try {
@@ -87,16 +108,21 @@ export const generateCells = async function* ({
         session,
       });
     } else {
-      yield* generateCellsFromColumnsReferences({
-        column,
-        process,
-        validatedCells,
-        offset,
-        limit,
-        updateOnly,
-        timeout,
-        session,
-      });
+      let remaining = limit;
+      for (let i = offset; i < offset + limit; i += MAX_CONCURRENCY) {
+        yield* generateCellsFromColumnsReferences({
+          column,
+          process,
+          validatedCells,
+          offset: i,
+          limit: Math.min(MAX_CONCURRENCY, remaining),
+          updateOnly,
+          timeout,
+          session,
+        });
+
+        remaining -= MAX_CONCURRENCY;
+      }
     }
   } finally {
     process.updatedAt = new Date();

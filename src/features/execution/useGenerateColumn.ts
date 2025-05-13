@@ -3,7 +3,6 @@ import { server$ } from '@builder.io/qwik-city';
 import { useExecution } from '~/features/add-column';
 import { getColumnById, getColumnCellById } from '~/services';
 import {
-  type Cell,
   type Column,
   type CreateColumn,
   TEMPORAL_ID,
@@ -44,7 +43,6 @@ export const useGenerateColumn = () => {
     );
 
     let newColumnId: string | undefined;
-    const pendingCells = new Map<number, Cell>();
 
     for await (const { column, cell } of response) {
       if (column) {
@@ -56,14 +54,7 @@ export const useGenerateColumn = () => {
         newColumnId = column.id;
       }
       if (cell) {
-        pendingCells.set(cell.idx, cell);
-        const orderedCells = Array.from(pendingCells.entries())
-          .sort(([idxA], [idxB]) => idxA - idxB)
-          .map(([_, cell]) => cell);
-
-        for (const orderedCell of orderedCells) {
-          replaceCell(orderedCell);
-        }
+        replaceCell(cell);
       }
     }
 
@@ -75,18 +66,9 @@ export const useGenerateColumn = () => {
 
   const onRegenerateCells = $(async (column: Column) => {
     const response = await regenerateCells(column);
-    const pendingCells = new Map<number, Cell>();
 
     for await (const cell of response) {
-      pendingCells.set(cell.idx, cell);
-
-      const orderedCells = Array.from(pendingCells.entries())
-        .sort(([idxA], [idxB]) => idxA - idxB)
-        .map(([_, cell]) => cell);
-
-      for (const orderedCell of orderedCells) {
-        replaceCell(orderedCell);
-      }
+      replaceCell(cell);
     }
 
     const updated = await getColumnById$(column.id);
@@ -98,22 +80,13 @@ export const useGenerateColumn = () => {
       persistedColumn.process!.cancellable!.signal,
       persistedColumn,
     );
-    const pendingCells = new Map<number, Cell>();
 
     for await (const { column, cell } of response) {
       if (column) {
         updateColumn(column);
       }
       if (cell) {
-        pendingCells.set(cell.idx, cell);
-
-        const orderedCells = Array.from(pendingCells.entries())
-          .sort(([idxA], [idxB]) => idxA - idxB)
-          .map(([_, cell]) => cell);
-
-        for (const orderedCell of orderedCells) {
-          replaceCell(orderedCell);
-        }
+        replaceCell(cell);
       }
     }
 

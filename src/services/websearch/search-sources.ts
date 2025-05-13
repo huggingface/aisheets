@@ -72,9 +72,20 @@ export async function* createSourcesFromWebQueries({
   const { sources: webSources, errors } = await searchQueriesToSources(queries);
 
   yield { step: `Visiting ${webSources.length} URLs` };
-  const scrappedUrls = await scrapeUrlsBatch(
+
+  const scrappedUrls = new Map<string, Source>();
+  for await (const { url, result } of scrapeUrlsBatch(
     webSources.map((source) => source.url),
-  );
+  )) {
+    if (!result) continue;
+
+    yield { step: `Processed ${url}` };
+
+    scrappedUrls.set(url, result);
+  }
+
+  const successCount = Array.from(scrappedUrls.values()).filter(Boolean).length;
+  yield { step: `Scraped ${successCount}/${webSources.length} URLs` };
 
   const sources = webSources
     .map((source) => {

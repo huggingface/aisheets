@@ -61,7 +61,7 @@ export const CSVDownload = component$(() => {
       onClick$={downloadTask}
       disabled={downloading.value || !canDownloadCSV.value}
     >
-      <div class="w-full flex items-center justify-start hover:bg-neutral-100 gap-2 p-1">
+      <div class="w-full flex items-center justify-start hover:bg-neutral-100 gap-2 p-1 rounded-none rounded-bl-md rounded-br-md">
         <LuDownload class="w-4 h-4" />
         Download CSV
       </div>

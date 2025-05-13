@@ -44,9 +44,15 @@ interface SidebarProps {
 export const ExecutionForm = component$<SidebarProps>(
   ({ column, onGenerateColumn }) => {
     const executionFormRef = useSignal<HTMLElement>();
-    const { mode, close } = useExecution();
-    const { columns, maxNumberOfRows, removeTemporalColumn, updateColumn } =
-      useColumnsStore();
+    const { initialPrompt, mode, close } = useExecution();
+    console.log('ExecutionForm', column.id, mode.value, initialPrompt.value);
+    const {
+      firstColumn,
+      columns,
+      maxNumberOfRows,
+      removeTemporalColumn,
+      updateColumn,
+    } = useColumnsStore();
 
     const { DEFAULT_MODEL, DEFAULT_MODEL_PROVIDER } = useContext(configContext);
 
@@ -69,6 +75,12 @@ export const ExecutionForm = component$<SidebarProps>(
 
     const onSelectedVariables = $((variables: { id: string }[]) => {
       columnsReferences.value = variables.map((v) => v.id);
+    });
+
+    useVisibleTask$(() => {
+      if (initialPrompt.value) {
+        prompt.value = initialPrompt.value;
+      }
     });
 
     useTask$(async () => {
@@ -189,20 +201,20 @@ export const ExecutionForm = component$<SidebarProps>(
         class="z-20 min-w-[660px] w-[660px] bg-neutral-100 font-normal border text-left"
         ref={executionFormRef}
       >
-        <div class="flex justify-end items-center p-1 h-[30px]">
+        <div class="flex justify-end items-center p-1 h-[38px]">
           <Button
             look="ghost"
-            class={`${columns.value.filter((c) => c.id !== TEMPORAL_ID).length >= 1 ? 'visible' : 'invisible'} p-1.5 rounded-full hover:bg-neutral-200 cursor-pointer transition-colors`}
+            class={`${columns.value.filter((c) => c.id !== TEMPORAL_ID).length >= 1 ? 'visible' : 'invisible'} rounded-full hover:bg-neutral-200 cursor-pointer transition-colors w-[30px] h-[30px]`}
             onClick$={handleCloseForm}
             tabIndex={0}
             aria-label="Close"
             style={{
-              opacity: columns.value[0]?.id === TEMPORAL_ID ? '0.5' : '1',
+              opacity: firstColumn.value.id === TEMPORAL_ID ? '0.5' : '1',
               pointerEvents:
-                columns.value[0]?.id === TEMPORAL_ID ? 'none' : 'auto',
+                firstColumn.value.id === TEMPORAL_ID ? 'none' : 'auto',
             }}
           >
-            <LuX class="text-lg text-neutral" />
+            <LuX class="text-sm text-neutral" />
           </Button>
         </div>
 
@@ -210,7 +222,7 @@ export const ExecutionForm = component$<SidebarProps>(
           <div class="absolute h-full w-full flex flex-col">
             <div class="flex flex-col gap-4 px-8 bg-neutral-100">
               <div class="relative">
-                <div class="h-48 min-h-48 max-h-48 bg-white border border-secondary-foreground rounded-sm">
+                <div class="h-96 min-h-96 max-h-96 bg-white border border-secondary-foreground rounded-sm">
                   <TemplateTextArea
                     bind:value={prompt}
                     variables={variables}

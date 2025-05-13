@@ -120,7 +120,7 @@ export const DragAndDrop = component$(() => {
             <Link
               href="/home/dataset/create/from-hub"
               class={cn(
-                'w-full flex items-center justify-start hover:bg-neutral-100 gap-2.5 p-2',
+                'w-full flex items-center justify-start hover:bg-neutral-100 gap-2.5 p-2 rounded-none rounded-tl-md rounded-tr-md',
               )}
             >
               <HFLogo class="items-left w-4 h-4 flex-shrink-0" />
@@ -132,7 +132,7 @@ export const DragAndDrop = component$(() => {
                 <hr class="border-t border-slate-200 dark:border-slate-700" />
                 <Button
                   look="ghost"
-                  class="w-full flex items-center justify-start hover:bg-neutral-100 gap-2.5 p-2"
+                  class="w-full flex items-center justify-start hover:bg-neutral-100 gap-2.5 p-2 rounded-none"
                   onClick$={() => {
                     navigate('/home/dataset/create/from-google-drive');
                   }}
@@ -147,7 +147,7 @@ export const DragAndDrop = component$(() => {
 
             <Button
               look="ghost"
-              class="w-full flex items-center justify-start hover:bg-neutral-100 gap-2.5 p-2"
+              class="w-full flex items-center justify-start hover:bg-neutral-100 gap-2.5 p-2 rounded-none rounded-bl-md rounded-br-md"
               onClick$={() => document.getElementById('file-select')?.click()}
             >
               <LuUpload class="w-4 h-4 flex-shrink-0" />

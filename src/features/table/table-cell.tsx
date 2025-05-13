@@ -7,7 +7,12 @@ import {
 } from '@builder.io/qwik';
 import { server$ } from '@builder.io/qwik-city';
 import { cn } from '@qwik-ui/utils';
-import { LuThumbsUp } from '@qwikest/icons/lucide';
+import {
+  LuArrowUpRight,
+  LuGlobe,
+  LuThumbsUp,
+  LuX,
+} from '@qwikest/icons/lucide';
 import { Button, Skeleton, Textarea } from '~/components';
 import { useClickOutside } from '~/components/hooks/click/outside';
 import { Tooltip } from '~/components/ui/tooltip/tooltip';
@@ -107,6 +112,15 @@ export const CellContentRenderer = component$<{
   return <p>{content}</p>;
 });
 
+export function getDomain(url: string): string {
+  try {
+    const { hostname } = new URL(url);
+    return hostname;
+  } catch {
+    return url;
+  }
+}
+
 export const TableCell = component$<{
   cell: Cell;
 }>(({ cell }) => {
@@ -126,6 +140,7 @@ export const TableCell = component$<{
   const editCellValueInput = useSignal<HTMLElement>();
   const contentRef = useSignal<HTMLElement>();
   const modalHeight = useSignal('200px');
+  const showSourcesModal = useSignal(false);
 
   // Track viewport visibility
   useVisibleTask$(({ track }) => {
@@ -361,6 +376,19 @@ export const TableCell = component$<{
     }),
   );
 
+  const closeSourcesModal = $((e?: Event) => {
+    if (e) e.stopPropagation();
+    showSourcesModal.value = false;
+  });
+
+  useVisibleTask$(() => {
+    const handler = () => {
+      showSourcesModal.value = false;
+    };
+    window.addEventListener('closeAllSourcesModals', handler);
+    return () => window.removeEventListener('closeAllSourcesModals', handler);
+  });
+
   return (
     <div
       class="min-h-[100px] h-[100px] group"
@@ -403,32 +431,60 @@ export const TableCell = component$<{
           ) : (
             <>
               {!isStatic.value && (
-                <Button
-                  look="ghost"
-                  hover={false}
-                  size="sm"
-                  class={cn(
-                    'absolute z-10 text-base top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity visible',
-                    {
-                      'bg-green-50/50 text-green-400 hover:bg-green-100':
-                        cell.validated,
-                      'hover:bg-gray-100 text-gray-400': !cell.validated,
-                      '!opacity-0': !cell.id,
-                      hidden: !cell.value,
-                    },
-                  )}
-                  onClick$={(e) => {
-                    e.stopPropagation();
-                    onValidateCell(originalValue.value, !cell.validated);
-                  }}
-                >
-                  <Tooltip
-                    text="Mark this cell as correct. When you click regenerate 🥚, it will be used to improve other cells."
-                    class="break-words w-48 text-left"
+                <div class="absolute z-10 top-0 right-0 flex gap-0.5">
+                  <Button
+                    look="ghost"
+                    hover={false}
+                    size="sm"
+                    class={cn(
+                      'opacity-0 group-hover:opacity-100 transition-opacity visible',
+                      {
+                        'hover:bg-gray-100 text-gray-400': true,
+                        '!opacity-0': !cell.id,
+                        hidden: !cell.value,
+                      },
+                    )}
+                    onClick$={(e) => {
+                      e.stopPropagation();
+                      if (cell.sources?.length) {
+                        window.dispatchEvent(
+                          new CustomEvent('closeAllSourcesModals'),
+                        );
+                        showSourcesModal.value = true;
+                      }
+                    }}
                   >
-                    <LuThumbsUp class="text-sm" />
-                  </Tooltip>
-                </Button>
+                    <Tooltip text="View sources" class="text-left">
+                      <LuGlobe class="text-sm" />
+                    </Tooltip>
+                  </Button>
+                  <Button
+                    look="ghost"
+                    hover={false}
+                    size="sm"
+                    class={cn(
+                      'opacity-0 group-hover:opacity-100 transition-opacity visible',
+                      {
+                        'bg-green-50/50 text-green-400 hover:bg-green-100':
+                          cell.validated,
+                        'hover:bg-gray-100 text-gray-400': !cell.validated,
+                        '!opacity-0': !cell.id,
+                        hidden: !cell.value,
+                      },
+                    )}
+                    onClick$={(e) => {
+                      e.stopPropagation();
+                      onValidateCell(originalValue.value, !cell.validated);
+                    }}
+                  >
+                    <Tooltip
+                      text="Mark this cell as correct. When you click regenerate 🥚, it will be used to improve other cells."
+                      class="break-words w-48 text-left"
+                    >
+                      <LuThumbsUp class="text-sm" />
+                    </Tooltip>
+                  </Button>
+                </div>
               )}
               <div class="h-full mt-2 p-4">
                 {!contentValue.value && hasBlobContent(cellColumn.value) ? (
@@ -506,6 +562,84 @@ export const TableCell = component$<{
           )}
         </div>
       </div>
+      {showSourcesModal.value && (
+        <div
+          class="fixed top-0 right-0 h-full w-[400px] z-[100] bg-white border-l border-neutral-300 shadow-lg flex flex-col sources-side-modal"
+          style={{ minHeight: '100vh' }}
+          onClick$={(e) => e.stopPropagation()}
+          window:onCloseSourcesModal$={() => {
+            showSourcesModal.value = false;
+          }}
+        >
+          <div class="flex justify-between items-center p-4 border-b border-neutral-200">
+            <span class="font-semibold text-lg text-neutral-700">Sources</span>
+            <Button
+              look="ghost"
+              class="p-1.5 rounded-full hover:bg-neutral-200 cursor-pointer"
+              onClick$={() => {
+                showSourcesModal.value = false;
+              }}
+              aria-label="Close"
+            >
+              <LuX class="text-lg text-neutral" />
+            </Button>
+          </div>
+          <div class="flex-1 overflow-y-auto p-4">
+            <ul class="ml-2 mt-2 space-y-4">
+              {(() => {
+                if (!cell.sources) return null;
+                // Group unique snippets by URL
+                const grouped = cell.sources.reduce(
+                  (acc, source) => {
+                    const normalizedSnippet = source.snippet
+                      .trim()
+                      .replace(/\s+/g, ' ');
+                    if (!acc[source.url]) acc[source.url] = [];
+                    if (!acc[source.url].some((s) => s === normalizedSnippet)) {
+                      acc[source.url].push(normalizedSnippet);
+                    }
+                    return acc;
+                  },
+                  {} as Record<string, string[]>,
+                );
+                return Object.entries(grouped).map(([url, snippets]) => {
+                  const domain = getDomain(url);
+                  return (
+                    <div
+                      key={url}
+                      class="bg-white p-4 transition-colors cursor-pointer hover:bg-neutral-100 hover:rounded-sm source-group"
+                      onClick$={() => window.open(url, '_blank')}
+                      tabIndex={0}
+                      role="button"
+                      aria-label={`Open source: ${domain}`}
+                    >
+                      <div class="flex items-center justify-between">
+                        <span class="text-neutral-600 font-medium text-xs source-domain">
+                          {domain}
+                        </span>
+                        <LuArrowUpRight class="text-neutral text-base ml-2" />
+                      </div>
+                      <ul class="ml-2 mt-2 space-y-4">
+                        {snippets.map((snippet, j) => {
+                          if (!snippet) return null;
+                          return (
+                            <li
+                              key={j}
+                              class="block text-primary-600 whitespace-pre-line text-sm"
+                            >
+                              {snippet} ...
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </div>
+                  );
+                });
+              })()}
+            </ul>
+          </div>
+        </div>
+      )}
     </div>
   );
 });

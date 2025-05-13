@@ -25,6 +25,14 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
+# Pulling
+echo "Downloading latest changes..."
+git pull
+if [ $? -ne 0 ]; then
+  echo "Error: Git pull failed."
+  exit 1
+fi
+
 # Install dependencies with pnpm
 echo "Installing dependencies with pnpm..."
 pnpm install

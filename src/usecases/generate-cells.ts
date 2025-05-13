@@ -194,7 +194,6 @@ async function* generateCellsFromScratch({
     if (!cell) continue;
 
     cell.generating = true;
-    cell.sources = sources; // Add sources to cell
     yield { cell };
 
     const args = {
@@ -212,13 +211,18 @@ async function* generateCellsFromScratch({
       for await (const response of runPromptExecutionStream(args)) {
         cell.value = response.value;
         cell.error = response.error;
-
+        if (cell.value && !cell.error) {
+          cell.sources = sources; // Add sources only after successful generation
+        }
         yield { cell };
       }
     } else {
       const response = await runPromptExecution(args);
       cell.value = response.value;
       cell.error = response.error;
+      if (cell.value && !cell.error) {
+        cell.sources = sources; // Add sources only after successful generation
+      }
     }
 
     cell.generating = false;
@@ -262,6 +266,10 @@ async function* generateCellsFromColumnsReferences({
 
   const streamRequests: PromptExecutionParams[] = [];
   const cells = new Map<number, Cell>();
+  const cellsSources = new Map<
+    number,
+    Array<{ url: string; snippet: string }> | undefined
+  >();
 
   // Get initial examples from validated cells
   const currentExamples = await collectValidatedExamples({
@@ -331,8 +339,8 @@ async function* generateCellsFromColumnsReferences({
       : undefined;
 
     cell.generating = true;
-    cell.sources = sources; // Add sources to cell
     cells.set(i, cell);
+    cellsSources.set(i, sources);
 
     streamRequests.push(args);
   }
@@ -358,6 +366,9 @@ async function* generateCellsFromColumnsReferences({
     cell.error = response.error;
 
     if (response.done || !cell.value) {
+      if (cell.value && !cell.error) {
+        cell.sources = cellsSources.get(idx); // Get sources from the map
+      }
       cell.generating = false;
       await updateCell(cell);
 

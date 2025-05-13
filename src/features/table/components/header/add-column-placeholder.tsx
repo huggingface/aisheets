@@ -12,57 +12,25 @@ import { useExecution } from '~/features/add-column';
 import { TEMPORAL_ID, useColumnsStore } from '~/state';
 
 const COLUMN_PROMPTS = {
-  translate: `You are an expert Translator, specialized in translating documents from English to French.
-  
-Your main goals are to ensure grammatically correct translations and deliver text that feels natural and human-oriented. 
+  translate: `Translate English to French, ensuring grammatical accuracy and natural, human-like phrasing.
 
-Instructions:
-1. Translate the provided text from the source language to the specified target language.
-2. Ensure that the translation maintains the meaning and context of the original text.
-3. Use appropriate grammar, syntax, and idiomatic expressions to make the translation sound natural.
-4. Avoid literal translations unless necessary to preserve the meaning.
-5. If there are cultural references or idioms, adapt them to be understandable and relevant in the target language.
-6. Keep the formatting and structure of the original text intact unless specified otherwise.
-7. Review the translation for any errors or awkward phrasing before finalizing.
+Maintain original meaning, context, and formatting. Adapt cultural references and review carefully.
 
 Original text: {{REPLACE_ME}}
-
 `,
 
-  extractKeywords: `You are an expert in identifying and extracting key concepts from text.
-  
-Your main goal is to identify and list the most salient keywords or key phrases that accurately represent the core topics and themes of the provided text.
+  extractKeywords: `Identify and extract the most salient keywords or key phrases representing the core topics from the provided text.
 
-Instructions:
-1. Carefully analyze the provided text from the column.
-2. Identify the most important and representative keywords or key phrases.
-3. Focus on terms (single words or multi-word phrases) that best capture the main topics, entities, and core concepts discussed.
-4. Prioritize relevance and significance to the overall meaning of the text.
-5. Return these keywords as a single, comma-separated string.
-6. Avoid overly generic or common words (stop words) unless they are specifically crucial to the context of this particular text.
-7. Aim for conciseness and impact in your selection. Ensure the keywords are directly from the text or very close derivatives if necessary for canonical form (e.g., "running" -> "run").
+Return these as a single, comma-separated string. Prioritize relevance and conciseness, avoiding common stop words.
 
 Text for keyword extraction: {{REPLACE_ME}}
-
 `,
 
-  summarize: `You are an expert in text summarization, adept at distilling information into concise and coherent overviews.
-  
-Your main goals are to capture the essential meaning and key points of the provided text, presenting them in a significantly shorter form while retaining accuracy and context.
+  summarize: `Condense the provided text, capturing its essential meaning and key points accurately and coherently.
 
-Instructions:
-1. Thoroughly analyze the provided text from the column to understand its core message.
-2. Identify the main ideas, key arguments, and crucial supporting details.
-3. Synthesize this information into a brief, clear, and informative summary.
-4. Ensure the summary is coherent, well-structured, and flows logically.
-5. Accurately represent the original meaning and context of the text without introducing personal opinions or interpretations.
-6. If the original content is already very short (e.g., a single short sentence or a few words that cannot be meaningfully shortened further), return the original text as is.
-7. For longer content, focus on creating a summary that is substantially shorter but still comprehensive in its coverage of vital information.
-8. Omit redundant information, minor details, and specific examples unless they are critical to understanding the main points.
-9. Use your own words as much as possible (abstractive summary) while preserving the original intent and key terminology.
+If the text is already very short, return it as is. Use your own words where possible (abstractive summary).
 
 Text to summarize: {{REPLACE_ME}}
-
 `,
 
   custom: '',
@@ -125,33 +93,33 @@ export const TableAddCellHeaderPlaceHolder = component$(() => {
         </Popover.Trigger>
 
         <Popover.Panel
-          class="shadow-lg w-fit min-w-[230px] p-1"
+          class="shadow-lg w-86 text-sm p-2"
           onToggle$={() => {
             isOpen.value = !isOpen.value;
           }}
         >
-          <div class="flex flex-col">
+          <div class="flex flex-col gap-0.5">
             <ActionButton
               label="Translate"
-              column={firstColumn.value.name}
+              column="column"
               onClick$={() => handleNewColumn('translate')}
             />
             <hr class="border-t border-slate-200 dark:border-slate-700" />
             <ActionButton
-              label="Extract keywords"
-              column={firstColumn.value.name}
+              label="Extract keywords from"
+              column="column"
               onClick$={() => handleNewColumn('extractKeywords')}
             />
             <hr class="border-t border-slate-200 dark:border-slate-700" />
             <ActionButton
               label="Summarize"
-              column={firstColumn.value.name}
+              column="column"
               onClick$={() => handleNewColumn('summarize')}
             />
             <hr class="border-t border-slate-200 dark:border-slate-700" />
             <ActionButton
-              label="Custom operation"
-              column={firstColumn.value.name}
+              label="Do something with"
+              column="column"
               onClick$={() => handleNewColumn('custom')}
             />
           </div>
@@ -169,7 +137,7 @@ export const ActionButton = component$<{
   return (
     <Button
       look="ghost"
-      class="flex items-center justify-start w-full h-[30px] gap-1 hover:bg-neutral-100 p-1 rounded-none first:rounded-tl-md first:rounded-tr-md last:rounded-bl-md last:rounded-br-md"
+      class="flex items-center justify-start w-full gap-2.5 p-2 hover:bg-neutral-100 rounded-none first:rounded-tl-md first:rounded-tr-md last:rounded-bl-md last:rounded-br-md"
       onClick$={onClick$}
     >
       <span>{label}</span>

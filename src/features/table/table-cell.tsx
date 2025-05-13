@@ -112,25 +112,6 @@ export const CellContentRenderer = component$<{
   return <p>{content}</p>;
 });
 
-// Utility to find the longest common prefix in an array of strings
-function getLongestCommonPrefix(strings: string[]): string {
-  if (!strings.length) return '';
-  let prefix = strings[0];
-  for (let i = 1; i < strings.length; i++) {
-    let j = 0;
-    while (
-      j < prefix.length &&
-      j < strings[i].length &&
-      prefix[j] === strings[i][j]
-    ) {
-      j++;
-    }
-    prefix = prefix.slice(0, j);
-    if (!prefix) break;
-  }
-  return prefix;
-}
-
 export function getDomain(url: string): string {
   try {
     const { hostname } = new URL(url);

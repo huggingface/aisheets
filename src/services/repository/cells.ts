@@ -265,7 +265,6 @@ export const getColumnCells = async ({
   return cells.flat();
 };
 
-// Utility to find the longest common prefix in an array of strings
 function getLongestCommonPrefix(strings: string[]): string {
   if (!strings.length) return '';
   let prefix = strings[0];
@@ -342,7 +341,6 @@ export const createCell = async ({
     ...cell,
     generating: false,
     columnId,
-    sources: processSources(cell.sources),
   });
 
   return {

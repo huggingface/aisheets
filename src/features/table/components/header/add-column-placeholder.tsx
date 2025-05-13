@@ -8,7 +8,6 @@ import {
 import { cn } from '@qwik-ui/utils';
 import { LuPlus } from '@qwikest/icons/lucide';
 import { Button, Popover, buttonVariants } from '~/components';
-import { nextTick } from '~/components/hooks/tick';
 import { useExecution } from '~/features/add-column';
 import { TEMPORAL_ID, useColumnsStore } from '~/state';
 
@@ -26,7 +25,7 @@ Instructions:
 6. Keep the formatting and structure of the original text intact unless specified otherwise.
 7. Review the translation for any errors or awkward phrasing before finalizing.
 
-Original text:
+Original text: {{REPLACE_ME}}
 
 `,
 
@@ -43,7 +42,7 @@ Instructions:
 6. Avoid overly generic or common words (stop words) unless they are specifically crucial to the context of this particular text.
 7. Aim for conciseness and impact in your selection. Ensure the keywords are directly from the text or very close derivatives if necessary for canonical form (e.g., "running" -> "run").
 
-Text for keyword extraction:
+Text for keyword extraction: {{REPLACE_ME}}
 
 `,
 
@@ -62,7 +61,7 @@ Instructions:
 8. Omit redundant information, minor details, and specific examples unless they are critical to understanding the main points.
 9. Use your own words as much as possible (abstractive summary) while preserving the original intent and key terminology.
 
-Text to summarize:
+Text to summarize: {{REPLACE_ME}}
 
 `,
 
@@ -75,7 +74,7 @@ export const TableAddCellHeaderPlaceHolder = component$(() => {
   const ref = useSignal<HTMLElement>();
   const isOpen = useSignal(false);
   const { open } = useExecution();
-  const { columns, addTemporalColumn } = useColumnsStore();
+  const { firstColumn, columns, addTemporalColumn } = useColumnsStore();
 
   const lastColumnId = useComputed$(
     () => columns.value[columns.value.length - 1].id,
@@ -86,9 +85,12 @@ export const TableAddCellHeaderPlaceHolder = component$(() => {
 
     await addTemporalColumn();
 
-    nextTick(() => {
-      open(TEMPORAL_ID, 'add', COLUMN_PROMPTS[promptType]);
-    });
+    const initialPrompt = COLUMN_PROMPTS[promptType].replace(
+      '{{REPLACE_ME}}',
+      `{{${firstColumn.value.name}}}`,
+    );
+
+    open(TEMPORAL_ID, 'add', initialPrompt);
   });
 
   const isVisible = () => {
@@ -131,21 +133,25 @@ export const TableAddCellHeaderPlaceHolder = component$(() => {
           <div class="flex flex-col">
             <ActionButton
               label="Translate"
+              column={firstColumn.value.name}
               onClick$={() => handleNewColumn('translate')}
             />
             <hr class="border-t border-slate-200 dark:border-slate-700" />
             <ActionButton
               label="Extract keywords"
+              column={firstColumn.value.name}
               onClick$={() => handleNewColumn('extractKeywords')}
             />
             <hr class="border-t border-slate-200 dark:border-slate-700" />
             <ActionButton
               label="Summarize"
+              column={firstColumn.value.name}
               onClick$={() => handleNewColumn('summarize')}
             />
             <hr class="border-t border-slate-200 dark:border-slate-700" />
             <ActionButton
               label="Custom operation"
+              column={firstColumn.value.name}
               onClick$={() => handleNewColumn('custom')}
             />
           </div>
@@ -157,8 +163,9 @@ export const TableAddCellHeaderPlaceHolder = component$(() => {
 
 export const ActionButton = component$<{
   label: string;
+  column: string;
   onClick$: QRL<(event: PointerEvent, element: HTMLButtonElement) => any>;
-}>(({ label, onClick$ }) => {
+}>(({ label, column, onClick$ }) => {
   return (
     <Button
       look="ghost"
@@ -166,7 +173,7 @@ export const ActionButton = component$<{
       onClick$={onClick$}
     >
       <span>{label}</span>
-      <span class="text-neutral-500">{'{{Colum}}'}</span>
+      <span class="text-neutral-500">{`{{${column}}}`}</span>
     </Button>
   );
 });

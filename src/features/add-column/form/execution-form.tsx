@@ -45,6 +45,7 @@ export const ExecutionForm = component$<SidebarProps>(
   ({ column, onGenerateColumn }) => {
     const executionFormRef = useSignal<HTMLElement>();
     const { initialPrompt, mode, close } = useExecution();
+    console.log('ExecutionForm', column.id, mode.value, initialPrompt.value);
     const {
       firstColumn,
       columns,
@@ -76,8 +77,7 @@ export const ExecutionForm = component$<SidebarProps>(
       columnsReferences.value = variables.map((v) => v.id);
     });
 
-    useVisibleTask$(({ track }) => {
-      track(initialPrompt);
+    useVisibleTask$(() => {
       if (initialPrompt.value) {
         prompt.value = initialPrompt.value;
       }

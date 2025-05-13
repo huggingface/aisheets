@@ -40,14 +40,10 @@ export const useAddColumnUseCase = () =>
       },
     };
 
-    const { limit, offset } = newColum.process;
-
     for await (const { cell } of generateCells({
       column,
       process: column.process!,
       session,
-      limit,
-      offset,
     })) {
       this.signal.onabort = () => {
         cell.generating = false;

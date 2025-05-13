@@ -13,18 +13,31 @@ import {
 
 export const countDatasetTableRows = async ({
   dataset,
+  column,
 }: {
   dataset: {
     id: string;
     name: string;
   };
+  column?: {
+    id: string;
+  };
 }): Promise<number> => {
   const tableName = getDatasetTableName(dataset);
 
+  let whereClause = '';
+
+  if (column) {
+    const columnName = getColumnName(column);
+    whereClause = `WHERE ${columnName} IS NOT NULL`;
+  }
+
   return await connectAndClose(async (db) => {
-    const results = await db.run(
-      `SELECT CAST(COUNT(*) AS INTEGER) FROM ${tableName}`,
-    );
+    const results = await db.run(`
+      SELECT CAST(COUNT(*) AS INTEGER)
+      FROM ${tableName}
+      ${whereClause}
+    `);
     return (await results.getRows())[0][0] as number;
   });
 };
@@ -151,6 +164,8 @@ export const exportDatasetTableRows = async ({
   const filePath = path.join(tempDir, `file.${duckdbFormat.toLowerCase()}`);
 
   return await connectAndClose(async (db) => {
+    const coalesceStatement = `COALESCE(${columns.map((column) => getColumnName(column)).join(',')}) IS NOT NULL`;
+
     const selectedColumns = columns
       .map((column) => `${getColumnName(column)} as "${column.name}"`)
       .join(', ');
@@ -159,6 +174,8 @@ export const exportDatasetTableRows = async ({
         COPY (
           SELECT ${selectedColumns} 
           FROM ${tableName}
+          WHERE ${coalesceStatement}
+          ORDER BY rowIdx ASC
         ) TO '${filePath}' (FORMAT ${duckdbFormat})
     `);
 

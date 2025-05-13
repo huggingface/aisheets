@@ -441,7 +441,7 @@ export const TableCell = component$<{
                       {
                         'hover:bg-gray-100 text-gray-400': true,
                         '!opacity-0': !cell.id,
-                        hidden: !cell.value,
+                        hidden: !cell.value || !cell.sources?.length,
                       },
                     )}
                     onClick$={(e) => {

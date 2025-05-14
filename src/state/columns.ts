@@ -1,6 +1,6 @@
 import { $, type NoSerialize, useComputed$ } from '@builder.io/qwik';
 
-import { type Dataset, useDatasetsStore } from '~/state/datasets';
+import { useDatasetsStore } from '~/state/datasets';
 
 export type ColumnKind = 'static' | 'dynamic';
 
@@ -24,7 +24,11 @@ export interface CreateColumn {
   name: string;
   type: string;
   kind: ColumnKind;
-  dataset: Omit<Dataset, 'columns'>;
+  dataset: {
+    id: string;
+    name: string;
+    createdBy: string;
+  };
   process?: {
     modelName: string;
     modelProvider: string;
@@ -63,7 +67,11 @@ export interface Column {
   visible: boolean;
   process?: Process | undefined;
   cells: Cell[];
-  dataset: Omit<Dataset, 'columns'>;
+  dataset: {
+    id: string;
+    name: string;
+    createdBy: string;
+  };
   numberOfCells?: number;
 }
 
@@ -214,7 +222,6 @@ export const useColumnsStore = () => {
     if (activeDataset.value.columns.length === 0) {
       activeDataset.value.columns = [await createPlaceholderColumn()];
     }
-
     return activeDataset.value.columns;
   });
 
@@ -231,23 +238,7 @@ export const useColumnsStore = () => {
     columns,
     firstColumn,
     replaceColumns,
-    maxNumberOfRows: $((column: Column, columnsReferences: string[]) => {
-      const dataset = activeDataset.value;
 
-      if (dataset.columns.length === 0 || column.id === firstColumn.value.id) {
-        return 1000;
-      }
-
-      if (columnsReferences && columnsReferences.length > 0) {
-        const cellsCount = dataset.columns
-          .filter((c) => columnsReferences.includes(c.id))
-          .map((c) => c.numberOfCells ?? 0);
-
-        if (cellsCount.length > 0) return Math.min(...cellsCount);
-      }
-
-      return firstColumn.value.numberOfCells ?? 0;
-    }),
     isDirty: $((column: Column) => isDirty(column)),
     addTemporalColumn: $(async () => {
       if (activeDataset.value.columns.some((c) => c.id === TEMPORAL_ID)) return;

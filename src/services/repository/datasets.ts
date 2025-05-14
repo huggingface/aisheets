@@ -2,7 +2,11 @@ import { DatasetModel } from '~/services/db/models';
 import type { Dataset } from '~/state';
 import { getColumnCells } from './cells';
 import { getDatasetColumns } from './columns';
-import { createDatasetTable, createDatasetTableFromFile } from './tables';
+import {
+  countDatasetTableRows,
+  createDatasetTable,
+  createDatasetTableFromFile,
+} from './tables';
 
 interface CreateDatasetParams {
   name: string;
@@ -31,14 +35,21 @@ export const getUserDatasets = async (user: {
     order: [['createdAt', 'DESC']],
   });
 
-  const datasets = model.map((dataset) => ({
-    id: dataset.id,
-    name: dataset.name,
-    createdBy: dataset.createdBy,
-    columns: [],
-    createdAt: dataset.createdAt,
-    updatedAt: dataset.updatedAt,
-  }));
+  const datasets = await Promise.all(
+    model.map(async (dataset) => {
+      const datasetSize = await countDatasetTableRows({ dataset });
+
+      return {
+        id: dataset.id,
+        name: dataset.name,
+        createdBy: dataset.createdBy,
+        columns: [],
+        createdAt: dataset.createdAt,
+        updatedAt: dataset.updatedAt,
+        size: datasetSize,
+      };
+    }),
+  );
 
   return datasets;
 };
@@ -77,6 +88,8 @@ export const importDatasetFromFile = async (
       options,
     );
 
+    const datasetSize = await countDatasetTableRows({ dataset: model });
+
     return {
       id: model.id,
       name: model.name,
@@ -84,6 +97,7 @@ export const importDatasetFromFile = async (
       columns,
       createdAt: model.createdAt,
       updatedAt: model.updatedAt,
+      size: datasetSize,
     };
   } catch (error) {
     console.error('Error importing dataset from file:', error);
@@ -111,6 +125,7 @@ export const createDataset = async ({
       columns: [],
       createdAt: model.createdAt,
       updatedAt: model.updatedAt,
+      size: 0,
     };
   } catch (error) {
     console.error('Error creating dataset:', error);
@@ -125,6 +140,7 @@ export const getDatasetById = async (id: string): Promise<Dataset | null> => {
   if (!model) return null;
 
   const columns = await getDatasetColumns(model);
+  const datasetSize = await countDatasetTableRows({ dataset: model });
 
   const dataset = {
     id: model.id,
@@ -133,8 +149,12 @@ export const getDatasetById = async (id: string): Promise<Dataset | null> => {
     columns,
     createdAt: model.createdAt,
     updatedAt: model.updatedAt,
+    size: datasetSize,
   };
 
+  // Ideally, this should be done by the table-body component. But, if we remove this
+  // line, the table-body rendering get weird the first time. Need to investigate.
+  // cc @damianpumar
   await Promise.all(
     dataset.columns.map(async (column) => {
       column.cells = await getColumnCells({
@@ -159,10 +179,13 @@ export const updateDataset = async ({
   model.set({ name });
   await model.save();
 
+  const datasetSize = await countDatasetTableRows({ dataset: model });
+
   return {
     id: model.id,
     name: model.name,
     createdBy: model.createdBy,
     columns: [],
+    size: datasetSize,
   };
 };

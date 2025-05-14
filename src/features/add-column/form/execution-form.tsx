@@ -45,14 +45,8 @@ export const ExecutionForm = component$<SidebarProps>(
   ({ column, onGenerateColumn }) => {
     const executionFormRef = useSignal<HTMLElement>();
     const { initialPrompt, mode, close } = useExecution();
-    console.log('ExecutionForm', column.id, mode.value, initialPrompt.value);
-    const {
-      firstColumn,
-      columns,
-      maxNumberOfRows,
-      removeTemporalColumn,
-      updateColumn,
-    } = useColumnsStore();
+    const { firstColumn, columns, removeTemporalColumn, updateColumn } =
+      useColumnsStore();
 
     const { DEFAULT_MODEL, DEFAULT_MODEL_PROVIDER } = useContext(configContext);
 
@@ -66,8 +60,6 @@ export const ExecutionForm = component$<SidebarProps>(
     const selectedModel = useSignal<Model>();
     const selectedProvider = useSignal<string>();
     const inputModelId = useSignal<string | undefined>();
-
-    const maxRows = useSignal<number>(0);
 
     const loadModels = useResource$(async () => {
       return await useListModels();
@@ -122,12 +114,6 @@ export const ExecutionForm = component$<SidebarProps>(
       }
 
       inputModelId.value = process.modelName;
-    });
-
-    useVisibleTask$(async ({ track }) => {
-      const newValue = track(columnsReferences);
-
-      maxRows.value = await maxNumberOfRows(column, newValue);
     });
 
     useVisibleTask$(({ track }) => {

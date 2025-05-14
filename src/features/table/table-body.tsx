@@ -23,10 +23,19 @@ import { useExecution } from '~/features/add-column';
 import { useGenerateColumn } from '~/features/execution';
 import { TableCell } from '~/features/table/table-cell';
 import { deleteRowsCells, getColumnCells } from '~/services';
-import { type Cell, type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
+import {
+  type Cell,
+  type Column,
+  TEMPORAL_ID,
+  useColumnsStore,
+  useDatasetsStore,
+} from '~/state';
 
 export const TableBody = component$(() => {
-  const pageSize = 10;
+  const pageSize = 25;
+  const rowSize = 108; // px
+
+  const { activeDataset } = useDatasetsStore();
 
   const {
     columns,
@@ -37,6 +46,10 @@ export const TableBody = component$(() => {
   } = useColumnsStore();
   const { onGenerateColumn } = useGenerateColumn();
   const selectedRows = useSignal<number[]>([]);
+
+  const datasetSize = useComputed$(() => {
+    return activeDataset.value?.size || 0;
+  });
 
   const data = useComputed$(() => {
     const getCell = (column: Column, rowIndex: number): Cell => {
@@ -149,7 +162,7 @@ export const TableBody = component$(() => {
     const cell =
       firstColumnsWithValue.value[firstColumnsWithValue.value.length - 1];
 
-    if (!cell.id) return;
+    if (!cell?.id) return;
 
     dragStartCell.value = cell;
     selectedCellsId.value = [cell];
@@ -461,12 +474,6 @@ export const TableBody = component$(() => {
     },
   );
 
-  useTask$(() => {
-    loadPage({
-      rangeStart: 0,
-    });
-  });
-
   useVisibleTask$(() => {
     scrollElement.value = document.querySelector('.scrollable') as HTMLElement;
   });
@@ -477,14 +484,15 @@ export const TableBody = component$(() => {
     <tbody
       class="grid relative"
       style={{
-        height: `${1000 * 108}px`,
+        height: `${datasetSize.value * rowSize}px`,
       }}
     >
       <VirtualScrollContainer
-        totalCount={1000}
-        buffer={3}
-        estimateSize={108}
-        overscan={30}
+        key={datasetSize.value}
+        totalCount={datasetSize.value}
+        buffer={pageSize}
+        estimateSize={rowSize}
+        overscan={pageSize * 2}
         pageSize={pageSize}
         data={data}
         loadNextPage={loadPage}

@@ -15,6 +15,7 @@ export interface Dataset {
   name: string;
   createdBy: string;
   columns: Column[];
+  size: number;
   createdAt?: Date;
   updatedAt?: Date;
 }

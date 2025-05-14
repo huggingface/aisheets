@@ -1,6 +1,4 @@
-import { indexDatasetSources } from './embed/engine';
-import { scrapeUrlsBatch } from './scrape';
-import { SerperSearch } from './search';
+import { SerperSearch } from './search/serper-search';
 import type { HeaderElement } from './types';
 
 import * as config from '~/config';
@@ -51,68 +49,7 @@ function filterByBlockList<T extends { url: string }>(results: T[]): T[] {
   );
 }
 
-export async function* createSourcesFromWebQueries({
-  dataset,
-  queries,
-  options,
-}: {
-  dataset: {
-    id: string;
-    name: string;
-  };
-  queries: string[];
-  options: {
-    accessToken: string;
-  };
-}) {
-  if (!queries || queries.length === 0) throw new Error('No queries provided');
-  if (!dataset || !dataset.id) throw new Error('No dataset provided');
-
-  yield { step: `Searching for sources with queries: ${queries.join(', ')}` };
-  const { sources: webSources, errors } = await searchQueriesToSources(queries);
-
-  yield { step: `Visiting ${webSources.length} URLs` };
-
-  const scrappedUrls = new Map<string, Source>();
-  for await (const { url, result } of scrapeUrlsBatch(
-    webSources.map((source) => source.url),
-  )) {
-    if (!result) continue;
-
-    yield { step: `Processed ${url}` };
-
-    scrappedUrls.set(url, result);
-  }
-
-  const successCount = Array.from(scrappedUrls.values()).filter(Boolean).length;
-  yield { step: `Scraped ${successCount}/${webSources.length} URLs` };
-
-  const sources = webSources
-    .map((source) => {
-      const { url } = source;
-      const scrapped = scrappedUrls.get(url);
-
-      if (scrapped) source.markdownTree = scrapped.markdownTree;
-      return source;
-    })
-    .filter(({ markdownTree }) => markdownTree);
-
-  yield { step: `Indexing ${sources.length} sources` };
-  const indexSize = await indexDatasetSources({
-    dataset,
-    sources: webSources,
-    options,
-  });
-
-  if (indexSize === 0) {
-    console.error('No sources indexed');
-    return { sources: [], errors };
-  }
-
-  yield { step: `Indexed ${indexSize} sources` };
-}
-
-const searchQueriesToSources = async (
+export const searchQueriesToSources = async (
   queries: string[],
 ): Promise<{
   sources: WebSource[];

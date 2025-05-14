@@ -14,9 +14,9 @@ const runAutoDatasetAction = server$(async function* (
   instruction: string,
   searchEnabled: boolean,
 ): AsyncGenerator<{
-  step: string;
-  error?: string;
-  dataset?: { id: string };
+  event: string;
+  error?: any;
+  data?: any;
 }> {
   yield* runAutoDataset.call(this, {
     instruction,
@@ -30,6 +30,38 @@ export default component$(() => {
   const searchOnWeb = useSignal(false);
   const prompt = useSignal('');
   const currentStep = useSignal('');
+
+  const creationFlow = useStore({
+    datasetName: {
+      name: '',
+      done: false,
+    },
+
+    queries: {
+      queries: [],
+      done: false,
+    },
+
+    visitUrls: {
+      urls: [] as {
+        url: string;
+        status: string;
+        ok?: boolean;
+      }[],
+      done: false,
+    },
+
+    indexSources: {
+      count: 0,
+      done: false,
+      ok: false,
+    },
+
+    populateDataset: {
+      done: false,
+    },
+  });
+
   const examples = [
     {
       title: 'Challenging medicine multi-choice questions',
@@ -65,25 +97,90 @@ export default component$(() => {
   }>({});
 
   const handleAssistant = $(async () => {
-    if (!prompt.value.trim()) {
-      console.warn('Prompt is empty');
-      return;
-    }
+    if (!prompt.value.trim()) return;
+    if (isLoading.value) return;
 
     isLoading.value = true;
 
     try {
-      for await (const { step, error, dataset } of await runAutoDatasetAction(
+      for await (const { event, error, data } of await runAutoDatasetAction(
         prompt.value,
         searchOnWeb.value,
       )) {
-        if (step) currentStep.value = step;
-
         if (error) throw new Error(error);
 
-        if (dataset) {
-          currentStep.value = 'Redirecting to dataset...';
-          await nav(`/home/dataset/${dataset.id}`);
+        switch (event) {
+          case 'dataset.config':
+            currentStep.value = 'Configuring dataset...';
+            break;
+
+          case 'dataset.create':
+            creationFlow.datasetName.name = data.name;
+            creationFlow.datasetName.done = true;
+            currentStep.value = 'Creating dataset...';
+            break;
+
+          case 'dataset.search':
+            creationFlow.queries.queries = data.queries;
+            creationFlow.queries.done = true;
+            currentStep.value = 'Searching the web...';
+            break;
+
+          case 'sources.process':
+            creationFlow.visitUrls.urls = data.urls.map((url: string) => ({
+              url,
+              status: 'pending',
+            }));
+
+            currentStep.value = 'Visiting URLs...';
+            break;
+
+          case 'source.process.completed':
+            creationFlow.visitUrls.urls = creationFlow.visitUrls.urls.map(
+              (item) => {
+                if (item.url === data.url)
+                  return {
+                    ...item,
+                    status: 'completed',
+                    ok: Boolean(data.ok),
+                  };
+
+                return item;
+              },
+            );
+            currentStep.value = `Processed ${data.url}`;
+            break;
+
+          case 'sources.index':
+            currentStep.value = 'Indexing sources...';
+            break;
+
+          case 'sources.index.success':
+            creationFlow.indexSources.count = data.count;
+            creationFlow.indexSources.done = true;
+            creationFlow.indexSources.ok = true;
+            currentStep.value = 'Sources indexed';
+            break;
+
+          case 'sources.index.error':
+            creationFlow.indexSources.count = 0;
+            creationFlow.indexSources.done = true;
+            break;
+
+          case 'dataset.populate':
+            currentStep.value = 'Populating dataset...';
+            break;
+
+          case 'dataset.populate.success': {
+            const { dataset } = data;
+            currentStep.value = 'Redirecting to dataset...';
+            await nav(`/home/dataset/${dataset.id}`);
+            break;
+          }
+
+          default:
+            currentStep.value = event;
+            break;
         }
       }
     } catch (error) {
@@ -119,17 +216,92 @@ export default component$(() => {
               preventdefault:submit
               onSubmit$={onSubmitHandler}
             >
-              <div
-                class="px-4 text-sm text-neutral-600 flex items-center gap-2"
-                style="min-height:24px"
-              >
-                {isLoading.value && currentStep.value ? (
-                  <>
+              {isLoading.value && currentStep.value ? (
+                <>
+                  {creationFlow.datasetName.name && (
+                    <>
+                      <div class="px-4 text-sm text-neutral-600 flex items-center gap-2">
+                        <h1>{creationFlow.datasetName.name}</h1>
+                      </div>
+
+                      {creationFlow.queries.done && (
+                        <div class="px-4 text-sm text-neutral-600 flex flex-col gap-2">
+                          <h2 class="text-neutral-500 font-medium">
+                            Web search queries:
+                          </h2>
+                          {creationFlow.queries.queries.map((query, index) => (
+                            <div key={index} class="flex items-center gap-2">
+                              <span class="font-medium">{index + 1}.</span>
+                              <span>{query}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {creationFlow.visitUrls.urls.length > 0 && (
+                        <div class="px-4 text-sm text-neutral-600 flex flex-col gap-2">
+                          <h2 class="text-neutral-500 font-medium">
+                            Visiting URLs:
+                          </h2>
+                          {creationFlow.visitUrls.urls.map((item, index) => (
+                            <div key={index} class="flex items-center gap-2">
+                              {item.status === 'completed' && item.ok && (
+                                <span class="text-green-500">
+                                  <LuEgg class="text-lg" />
+                                </span>
+                              )}
+                              {item.status === 'completed' && !item.ok && (
+                                <span class="text-red-500">
+                                  <LuEgg class="text-lg" />
+                                </span>
+                              )}
+                              {item.status === 'pending' && (
+                                <span class="text-yellow-500">
+                                  <LuEgg class="text-lg" />
+                                </span>
+                              )}
+                              <span>{item.url.slice(0, 50)}...</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {creationFlow.indexSources.done &&
+                        creationFlow.indexSources.ok && (
+                          <div class="px-4 text-sm text-neutral-600 flex flex-col gap-2">
+                            <div class="flex items-center gap-2">
+                              <span class="font-medium">
+                                {creationFlow.indexSources.count}
+                              </span>
+                              <span>chunks indexed</span>
+                            </div>
+                          </div>
+                        )}
+
+                      {creationFlow.indexSources.done &&
+                        !creationFlow.indexSources.ok && (
+                          <div class="px-4 text-sm text-neutral-600 flex flex-col gap-2">
+                            <div
+                              class="flex items
+                              center gap-2 text-red-500"
+                            >
+                              <span>Failed to index sources</span>
+                            </div>
+                          </div>
+                        )}
+                    </>
+                  )}
+
+                  <div
+                    class="px-4 text-sm text-neutral-600 flex items-center gap-2"
+                    style="min-height:24px"
+                  >
                     <Skeleton />
                     <span>{currentStep.value}</span>
-                  </>
-                ) : null}
-              </div>
+                  </div>
+                </>
+              ) : null}
+
               <div class="w-full bg-white border border-secondary-foreground rounded-xl pb-14 shadow-[0px_4px_6px_rgba(0,0,0,0.1)]">
                 <Textarea
                   id="prompt"

@@ -8,7 +8,13 @@ import {
 import { createColumn, getDatasetColumns } from '~/services/repository/columns';
 import { createDataset } from '~/services/repository/datasets';
 import { createProcess } from '~/services/repository/processes';
-import { createSourcesFromWebQueries } from '~/services/websearch/search-sources';
+
+import { indexDatasetSources } from '~/services/websearch/embed';
+import { scrapeUrlsBatch } from '~/services/websearch/scrape';
+import {
+  type Source,
+  searchQueriesToSources,
+} from '~/services/websearch/search-sources';
 import type { Column, Session } from '~/state';
 import type { ColumnKind } from '~/state/columns';
 import { useServerSession } from '~/state/session';
@@ -361,6 +367,119 @@ async function populateDataset(
   }
 }
 
+interface Event {
+  event: string;
+  data?: any;
+  error?: any;
+}
+
+const EVENTS = {
+  datasetConfig: 'dataset.config',
+  datasetConfigError: 'dataset.config.error',
+
+  datasetCreate: 'dataset.create',
+  datasetCreateSuccess: 'dataset.create.success',
+  datasetCreateError: 'dataset.create.error',
+
+  datasetSearch: 'dataset.search',
+  datasetSearchSuccess: 'dataset.search.success',
+  datasetSearchError: 'dataset.search.error',
+
+  datasetPopulate: 'dataset.populate',
+  datasetPopulateSuccess: 'dataset.populate.success',
+  datasetPopulateError: 'dataset.populate.error',
+
+  sourcesProcess: 'sources.process',
+
+  sourceCompleted: 'source.process.completed',
+
+  sourceIndex: 'sources.index',
+  sourceIndexSuccess: 'sources.index.success',
+  sourceIndexError: 'sources.index.error',
+
+  genericError: 'generic.error',
+};
+
+async function* createSourcesFromWebQueries({
+  dataset,
+  queries,
+  options,
+}: {
+  dataset: {
+    id: string;
+    name: string;
+  };
+  queries: string[];
+  options: {
+    accessToken: string;
+  };
+}): AsyncGenerator<Event> {
+  const { sources: webSources, errors } = await searchQueriesToSources(queries);
+
+  yield {
+    event: EVENTS.datasetSearchSuccess,
+    data: { sources: webSources, errors },
+  };
+
+  yield {
+    event: EVENTS.sourcesProcess,
+    data: { urls: webSources.map((source) => source.url) },
+  };
+
+  const scrappedUrls = new Map<string, Source>();
+  for await (const { url, result } of scrapeUrlsBatch(
+    webSources.map((source) => source.url),
+  )) {
+    if (!result) {
+      yield {
+        event: EVENTS.sourceCompleted,
+        data: { url, ok: false },
+      };
+      continue;
+    }
+
+    yield {
+      event: EVENTS.sourceCompleted,
+      data: { url, ok: true },
+    };
+    scrappedUrls.set(url, result);
+  }
+
+  const sources = webSources
+    .map((source) => {
+      const { url } = source;
+      const scrapped = scrappedUrls.get(url);
+
+      if (scrapped) source.markdownTree = scrapped.markdownTree;
+      return source;
+    })
+    .filter(({ markdownTree }) => markdownTree);
+
+  yield {
+    event: EVENTS.sourceIndex,
+    data: { urls: sources.map((source) => source.url) },
+  };
+
+  const indexedChunks = await indexDatasetSources({
+    dataset,
+    sources: webSources,
+    options,
+  });
+
+  if (indexedChunks <= 0) {
+    yield {
+      event: EVENTS.sourceIndexError,
+      data: { error: 'No chunks indexed' },
+    };
+    return;
+  }
+
+  yield {
+    event: EVENTS.sourceIndexSuccess,
+    data: { count: indexedChunks },
+  };
+}
+
 /**
  * Executes the assistant with the provided parameters
  */
@@ -374,19 +493,15 @@ export const runAutoDataset = async function* (
     maxSearchQueries = 1,
     timeout,
   }: AssistantParams,
-): AsyncGenerator<{
-  step: string;
-  dataset?: { id: string; name: string };
-  error?: string;
-}> {
+): AsyncGenerator<Event> {
   // Get the session directly from the request context
   const session = useServerSession(this);
 
   try {
     // Extract columns and search queries from the assistant output
-    yield { step: 'Configuring dataset' };
+    yield { event: EVENTS.datasetConfig };
 
-    const { datasetName, columns, queries, text } = await extractDatasetConfig({
+    const { datasetName, columns, queries } = await extractDatasetConfig({
       instruction,
       modelName,
       modelProvider,
@@ -398,11 +513,18 @@ export const runAutoDataset = async function* (
 
     // If no structured data found, return the original response
     if (columns.length === 0) {
-      yield { step: 'Cannot process generated configuration', error: text };
+      yield {
+        event: EVENTS.datasetConfigError,
+        error: 'No structured data found in the assistant response',
+      };
       return;
     }
 
-    yield { step: `Creating dataset ${datasetName}` };
+    yield {
+      event: EVENTS.datasetCreate,
+      data: { name: datasetName },
+    };
+
     // Step 1: Create dataset and columns
     const { dataset } = await createDatasetWithColumns(
       columns,
@@ -414,7 +536,11 @@ export const runAutoDataset = async function* (
     );
 
     if (queries && queries.length > 0) {
-      yield { step: 'Searching web sources' };
+      yield {
+        event: EVENTS.datasetSearch,
+        data: { queries },
+      };
+
       yield* createSourcesFromWebQueries({
         dataset,
         queries,
@@ -424,14 +550,24 @@ export const runAutoDataset = async function* (
       });
     }
 
-    yield { step: `Populating dataset ${datasetName}` };
     // Populate the dataset with generated cells
+    yield {
+      event: EVENTS.datasetPopulate,
+      data: { dataset },
+    };
     await populateDataset(dataset, session);
 
     // Return the dataset and columns
-    yield { step: 'Dataset created', dataset };
+    yield {
+      event: EVENTS.datasetPopulateSuccess,
+      data: { dataset },
+    };
   } catch (error) {
-    console.error('❌ [Assistant] Error in assistant execution:', error);
-    return error instanceof Error ? error.message : String(error);
+    const message = error instanceof Error ? error.message : String(error);
+
+    yield {
+      event: EVENTS.genericError,
+      error: message,
+    };
   }
 };

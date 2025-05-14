@@ -36,6 +36,11 @@ export interface CreateColumn {
   };
 }
 
+export interface CellSource {
+  url: string;
+  snippet: string;
+}
+
 export type Cell = {
   id?: string;
   idx: number;
@@ -44,6 +49,7 @@ export type Cell = {
   validated: boolean;
   value?: any;
   error?: string;
+  sources?: CellSource[];
   column?: {
     id: string;
   };

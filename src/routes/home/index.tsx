@@ -1,7 +1,14 @@
 import { $, component$, useSignal, useStore } from '@builder.io/qwik';
 import { server$, useNavigate } from '@builder.io/qwik-city';
 import { cn } from '@qwik-ui/utils';
-import { LuEgg, LuGlobe } from '@qwikest/icons/lucide';
+import {
+  LuCheck,
+  LuCircle,
+  LuEgg,
+  LuGlobe,
+  LuSearch,
+  LuX,
+} from '@qwikest/icons/lucide';
 import { Button, Textarea } from '~/components';
 import { MainLogo, SecondLogo } from '~/components/ui/logo/logo';
 import { Skeleton } from '~/components/ui/skeleton/skeleton';
@@ -148,7 +155,7 @@ export default component$(() => {
                 return item;
               },
             );
-            currentStep.value = `Processed ${data.url}`;
+
             break;
 
           case 'sources.index':
@@ -167,9 +174,11 @@ export default component$(() => {
             creationFlow.indexSources.done = true;
             break;
 
-          case 'dataset.populate':
-            currentStep.value = 'Populating dataset...';
+          case 'dataset.populate': {
+            const { dataset } = data;
+            currentStep.value = `Populating dataset ${dataset.name}...`;
             break;
+          }
 
           case 'dataset.populate.success': {
             const { dataset } = data;
@@ -218,64 +227,90 @@ export default component$(() => {
             >
               {isLoading.value && currentStep.value ? (
                 <>
-                  {creationFlow.datasetName.name && (
-                    <>
-                      <div class="px-4 text-sm text-neutral-600 flex items-center gap-2">
+                  {searchOnWeb.value && creationFlow.datasetName.name && (
+                    <div class="border border-primary-200 bg-primary-50 shadow-[0px_4px_6px_rgba(0,0,0,0.1)]">
+                      <div class="h-4" />
+
+                      <div class="px-4 text-md text-neutral-600 flex items-center gap-2">
                         <h1>{creationFlow.datasetName.name}</h1>
                       </div>
 
+                      <div class="h-4" />
+
                       {creationFlow.queries.done && (
-                        <div class="px-4 text-sm text-neutral-600 flex flex-col gap-2">
-                          <h2 class="text-neutral-500 font-medium">
-                            Web search queries:
-                          </h2>
-                          {creationFlow.queries.queries.map((query, index) => (
-                            <div key={index} class="flex items-center gap-2">
-                              <span class="font-medium">{index + 1}.</span>
-                              <span>{query}</span>
-                            </div>
-                          ))}
-                        </div>
+                        <>
+                          <div class="px-4 text-sm text-neutral-600 flex flex-col gap-2">
+                            <h2 class="text-neutral-500 font-medium">
+                              Web search queries:
+                            </h2>
+                            {creationFlow.queries.queries.map(
+                              (query, index) => (
+                                <div
+                                  key={index}
+                                  class="flex items-center gap-2"
+                                >
+                                  <LuSearch class="text-lg text-neutral-500" />
+                                  <span>{query}</span>
+                                </div>
+                              ),
+                            )}
+                          </div>
+
+                          <div class="h-4" />
+                        </>
                       )}
 
                       {creationFlow.visitUrls.urls.length > 0 && (
-                        <div class="px-4 text-sm text-neutral-600 flex flex-col gap-2">
-                          <h2 class="text-neutral-500 font-medium">
-                            Visiting URLs:
-                          </h2>
-                          {creationFlow.visitUrls.urls.map((item, index) => (
-                            <div key={index} class="flex items-center gap-2">
-                              {item.status === 'completed' && item.ok && (
-                                <span class="text-green-500">
-                                  <LuEgg class="text-lg" />
+                        <>
+                          <div class="px-4 text-sm text-neutral-600 flex flex-col gap-2">
+                            <h2 class="text-neutral-500 font-medium">
+                              Visiting URLs:
+                            </h2>
+                            {creationFlow.visitUrls.urls.map((item, index) => (
+                              <div key={index} class="flex items-center gap-2">
+                                {item.status === 'completed' && item.ok && (
+                                  <span class="text-green-500">
+                                    <LuCheck class="text-lg" />
+                                  </span>
+                                )}
+                                {item.status === 'completed' && !item.ok && (
+                                  <span class="text-red-500">
+                                    <LuX class="text-lg" />
+                                  </span>
+                                )}
+                                {item.status === 'pending' && (
+                                  <span class="text-yellow-500">
+                                    <LuCircle class="text-lg animate-pulse" />
+                                  </span>
+                                )}
+                                <span>
+                                  {item.url.slice(0, 80)}{' '}
+                                  {item.url.length > 80 && '...'}
                                 </span>
-                              )}
-                              {item.status === 'completed' && !item.ok && (
-                                <span class="text-red-500">
-                                  <LuEgg class="text-lg" />
-                                </span>
-                              )}
-                              {item.status === 'pending' && (
-                                <span class="text-yellow-500">
-                                  <LuEgg class="text-lg" />
-                                </span>
-                              )}
-                              <span>{item.url.slice(0, 50)}...</span>
-                            </div>
-                          ))}
-                        </div>
+                              </div>
+                            ))}
+                          </div>
+                          <div class="h-4" />
+                        </>
                       )}
 
                       {creationFlow.indexSources.done &&
                         creationFlow.indexSources.ok && (
-                          <div class="px-4 text-sm text-neutral-600 flex flex-col gap-2">
-                            <div class="flex items-center gap-2">
-                              <span class="font-medium">
-                                {creationFlow.indexSources.count}
-                              </span>
-                              <span>chunks indexed</span>
+                          <>
+                            <div class="px-4 text-sm text-neutral-600 flex flex-col gap-2">
+                              <div class="flex items-center gap-2">
+                                <h2 class="text-neutral-500 font-medium">
+                                  {' '}
+                                  Indexed{' '}
+                                  <span class="font-bold">
+                                    {creationFlow.indexSources.count}
+                                  </span>{' '}
+                                  chunks from sources
+                                </h2>
+                              </div>
                             </div>
-                          </div>
+                            <div class="h-4" />
+                          </>
                         )}
 
                       {creationFlow.indexSources.done &&
@@ -289,15 +324,17 @@ export default component$(() => {
                             </div>
                           </div>
                         )}
-                    </>
+                    </div>
                   )}
 
-                  <div
-                    class="px-4 text-sm text-neutral-600 flex items-center gap-2"
-                    style="min-height:24px"
-                  >
-                    <Skeleton />
-                    <span>{currentStep.value}</span>
+                  <div class="w-full">
+                    <div
+                      class="px-4 text-sm text-neutral-600 flex items-center gap-2"
+                      style="min-height:24px"
+                    >
+                      <Skeleton />
+                      <span>{currentStep.value}</span>
+                    </div>
                   </div>
                 </>
               ) : null}

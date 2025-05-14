@@ -1,6 +1,6 @@
 import { $, type NoSerialize, useComputed$ } from '@builder.io/qwik';
 
-import { type Dataset, useDatasetsStore } from '~/state/datasets';
+import { useDatasetsStore } from '~/state/datasets';
 
 export type ColumnKind = 'static' | 'dynamic';
 
@@ -24,7 +24,11 @@ export interface CreateColumn {
   name: string;
   type: string;
   kind: ColumnKind;
-  dataset: Omit<Dataset, 'columns'>;
+  dataset: {
+    id: string;
+    name: string;
+    createdBy: string;
+  };
   process?: {
     modelName: string;
     modelProvider: string;
@@ -57,7 +61,11 @@ export interface Column {
   visible: boolean;
   process?: Process | undefined;
   cells: Cell[];
-  dataset: Omit<Dataset, 'columns'>;
+  dataset: {
+    id: string;
+    name: string;
+    createdBy: string;
+  };
   numberOfCells?: number;
 }
 

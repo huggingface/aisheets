@@ -219,6 +219,9 @@ export const useColumnsStore = () => {
   });
 
   const columns = useComputed$(async () => {
+    if (activeDataset.value.columns.length === 0) {
+      activeDataset.value.columns = [await createPlaceholderColumn()];
+    }
     return activeDataset.value.columns;
   });
 

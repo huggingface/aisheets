@@ -152,6 +152,9 @@ export const getDatasetById = async (id: string): Promise<Dataset | null> => {
     size: datasetSize,
   };
 
+  // Ideally, this should be done by the table-body component. But, if we remove this
+  // line, the table-body rendering get weird the first time. Need to investigate.
+  // cc @damianpumar
   await Promise.all(
     dataset.columns.map(async (column) => {
       column.cells = await getColumnCells({

@@ -1,6 +1,8 @@
 import { NUM_CONCURRENT_REQUESTS } from '~/config';
 import { getDatasetColumns, updateProcess } from '~/services';
+import { MAX_SOURCE_SNIPPET_LENGTH } from '~/services/db/models/cell';
 import { renderInstruction } from '~/services/inference/materialize-prompt';
+import type { MaterializePromptParams } from '~/services/inference/materialize-prompt';
 import {
   type PromptExecutionParams,
   runPromptExecution,
@@ -15,7 +17,7 @@ import {
 } from '~/services/repository/cells';
 import { countDatasetTableRows } from '~/services/repository/tables';
 import { queryDatasetSources } from '~/services/websearch/embed';
-import type { Cell, Column, Process, Session } from '~/state';
+import type { Cell, CellSource, Column, Process, Session } from '~/state';
 import { collectValidatedExamples } from './collect-examples';
 
 export interface GenerateCellsParams {
@@ -162,6 +164,14 @@ async function* generateCellsFromScratch({
       })
     : undefined;
 
+  // Extract sources (url + snippet) if available
+  const sources = sourcesContext
+    ? sourcesContext.map((source) => ({
+        url: source.source_uri,
+        snippet: source.text?.slice(0, MAX_SOURCE_SNIPPET_LENGTH) || '',
+      }))
+    : undefined;
+
   // Sequential execution for fromScratch to accumulate examples
   // Get all existing cells in the column to achieve diversity
   const existingCellsExamples = column.cells
@@ -201,7 +211,6 @@ async function* generateCellsFromScratch({
       for await (const response of runPromptExecutionStream(args)) {
         cell.value = response.value;
         cell.error = response.error;
-
         yield { cell };
       }
     } else {
@@ -211,6 +220,9 @@ async function* generateCellsFromScratch({
     }
 
     cell.generating = false;
+    // Add sources only after successful generation
+    if (cell.value && !cell.error) cell.sources = sources;
+
     await updateCell(cell);
 
     yield { cell };
@@ -250,7 +262,10 @@ async function* generateCellsFromColumnsReferences({
     process;
 
   const streamRequests: PromptExecutionParams[] = [];
-  const cells = new Map<number, Cell>();
+  const cells = new Map<
+    number,
+    { cell: Cell; sources: CellSource[] | undefined }
+  >();
 
   // Get initial examples from validated cells
   const currentExamples = await collectValidatedExamples({
@@ -299,18 +314,29 @@ async function* generateCellsFromColumnsReferences({
       idx: i,
     };
 
+    let sourcesContext: MaterializePromptParams['sourcesContext'];
     if (searchEnabled) {
-      args.sourcesContext = await queryDatasetSources({
+      sourcesContext = await queryDatasetSources({
         dataset: column.dataset,
         query: renderInstruction(prompt, args.data),
         options: {
           accessToken: session.token,
         },
       });
+      args.sourcesContext = sourcesContext;
     }
 
+    // Extract sources (url + snippet) if available
+    const sources = sourcesContext
+      ? sourcesContext.map((source) => ({
+          url: source.source_uri,
+          snippet: source.text?.slice(0, MAX_SOURCE_SNIPPET_LENGTH) || '',
+        }))
+      : undefined;
+
     cell.generating = true;
-    cells.set(i, cell);
+
+    cells.set(i, { cell, sources });
 
     streamRequests.push(args);
   }
@@ -318,7 +344,7 @@ async function* generateCellsFromColumnsReferences({
   // Initial yield of empty cells in order
   const orderedIndices = Array.from(cells.keys()).sort((a, b) => a - b);
   for (const idx of orderedIndices) {
-    const cell = cells.get(idx);
+    const cell = cells.get(idx)?.cell;
     if (cell) yield { cell };
   }
 
@@ -328,14 +354,16 @@ async function* generateCellsFromColumnsReferences({
   )) {
     if (idx === undefined) continue;
 
-    const cell = cells.get(idx);
-    if (!cell) continue;
+    const cellData = cells.get(idx);
+    if (!cellData) continue;
 
+    const { cell, sources } = cellData;
     // Update cell with response
     cell.value = response.value || '';
     cell.error = response.error;
 
     if (response.done || !cell.value) {
+      if (cell.value && !cell.error) cell.sources = sources;
       cell.generating = false;
       await updateCell(cell);
 

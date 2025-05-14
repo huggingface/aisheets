@@ -30,7 +30,6 @@ interface Popover {
 export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
   const textarea = useSignal<HTMLTextAreaElement | undefined>();
   const bracketTrigger = useSignal<HTMLDivElement | undefined>();
-  const scrollPosition = useStore({ top: 0, left: 0 });
 
   const popOverVisible = useSignal(false);
 
@@ -72,7 +71,8 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
     const isInMiddleOfBrackets = isRequestingVariable
       ? lastOpeningBracketIndex > lastClosingBracketIndex &&
         lastClosingBracketIndex !== -1
-      : lastClosingBracketIndex > lastOpeningBracketIndex;
+      : lastClosingBracketIndex > lastOpeningBracketIndex &&
+        lastOpeningBracketIndex !== -1;
 
     return {
       textBeforeCursor,
@@ -172,32 +172,20 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
     );
   });
 
+  useVisibleTask$(() => {
+    if (textarea.value) {
+      textarea.value.focus();
+      const length = textarea.value.value.length;
+      textarea.value.setSelectionRange(length, length);
+    }
+  });
+
   return (
     <div class="relative">
-      {referenceVariables.variables.length > 0 && (
-        <div
-          class="p-4 absolute top-0 left-0 w-full h-full whitespace-pre-wrap break-words text-transparent pointer-events-none overflow-hidden text-base"
-          aria-hidden="true"
-        >
-          <div
-            style={{
-              transform: `translate(-${scrollPosition.left}px, -${scrollPosition.top}px)`,
-              position: 'absolute',
-              width: `calc(100% + ${scrollPosition.left}px)`,
-            }}
-          >
-            <Highlights
-              text={props['bind:value'].value}
-              variables={referenceVariables.variables}
-            />
-          </div>
-        </div>
-      )}
-
       <Textarea
         ref={textarea}
         look="ghost"
-        class="p-4 w-full h-80 min-h-80 max-h-80 resize-none overflow-auto text-base rounded-sm pb-16 placeholder:text-neutral-500"
+        class="p-4 w-full h-72 min-h-72 max-h-72 resize-none overflow-auto text-base rounded-sm pb-16 placeholder:text-neutral-500"
         placeholder={
           props.variables.value[0]
             ? `Translate into French: {{${props.variables.value[0].name}}}`
@@ -209,10 +197,6 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
         onClick$={(event) =>
           updateBracketsSelectorPosition(event.target as HTMLTextAreaElement)
         }
-        onScroll$={(event) => {
-          const target = event.target as HTMLTextAreaElement;
-          scrollPosition.top = target.scrollTop;
-        }}
         value={props['bind:value'].value}
       />
 
@@ -246,30 +230,5 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
         </Select.Popover>
       </Select.Root>
     </div>
-  );
-});
-
-export const Highlights = component$<{
-  text: string;
-  variables: string[];
-}>(({ text, variables }) => {
-  const highlightWords = variables.map((variable) => `{{${variable}}}`);
-  const escapedWords = highlightWords.map((word) =>
-    word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
-  );
-  const regex = new RegExp(`(${escapedWords.join('|')})`, 'gi');
-  const parts = text.split(regex);
-
-  return parts.map((part) =>
-    regex.test(part) ? (
-      <span
-        key={part}
-        class="bg-gray-300 bg-opacity-60 pb-1 pt-[1px] pr-[1px] rounded-[4px]"
-      >
-        {part}
-      </span>
-    ) : (
-      part
-    ),
   );
 });

@@ -8,12 +8,11 @@ import {
   useContext,
   useContextProvider,
   useSignal,
-  useTask$,
 } from '@builder.io/qwik';
-import { TEMPORAL_ID, useColumnsStore } from '~/state';
 
 export type Execution = {
   columnId?: string;
+  prompt?: string;
   mode?: 'add' | 'edit';
 };
 
@@ -21,22 +20,8 @@ const executionContext =
   createContextId<Signal<Execution>>('execution.context');
 
 export const ExecutionProvider = component$(() => {
-  const { columns } = useColumnsStore();
-
   const internalState = useSignal<Execution>({});
   useContextProvider(executionContext, internalState);
-
-  useTask$(({ track }) => {
-    track(columns);
-    const lastColumnId = columns.value[columns.value.length - 1].id;
-
-    if (lastColumnId === TEMPORAL_ID) {
-      internalState.value = {
-        columnId: lastColumnId,
-        mode: 'add',
-      };
-    }
-  });
 
   return <Slot />;
 });
@@ -46,13 +31,22 @@ export const useExecution = () => {
 
   const columnId = useComputed$(() => context.value.columnId);
   const mode = useComputed$(() => context.value.mode);
+  const initialPrompt = useComputed$(() => context.value.prompt);
 
   return {
     columnId,
     mode,
-    open: $((columnId: Execution['columnId'], mode: 'add' | 'edit') => {
-      context.value = { columnId, mode };
-    }),
+    initialPrompt,
+    open: $(
+      (
+        columnId: Execution['columnId'],
+        mode: Execution['mode'],
+        prompt?: string,
+      ) => {
+        console.log('open execution', columnId, mode, prompt);
+        context.value = { columnId, mode, prompt };
+      },
+    ),
     close: $(() => {
       context.value = {};
     }),

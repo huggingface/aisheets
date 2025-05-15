@@ -1,14 +1,7 @@
 import { $, component$, useSignal, useStore } from '@builder.io/qwik';
 import { server$, useNavigate } from '@builder.io/qwik-city';
 import { cn } from '@qwik-ui/utils';
-import {
-  LuCheck,
-  LuCircle,
-  LuEgg,
-  LuGlobe,
-  LuSearch,
-  LuX,
-} from '@qwikest/icons/lucide';
+import { LuCheck, LuEgg, LuGlobe, LuSearch, LuX } from '@qwikest/icons/lucide';
 import { Button, Textarea } from '~/components';
 import { MainLogo, SecondLogo } from '~/components/ui/logo/logo';
 import { Skeleton } from '~/components/ui/skeleton/skeleton';
@@ -130,7 +123,7 @@ export default component$(() => {
           case 'dataset.search':
             creationFlow.queries.queries = data.queries;
             creationFlow.queries.done = true;
-            currentStep.value = 'Searching the web...';
+            currentStep.value = `Searching the web: ${data.queries.map((q: string) => `"${q}"`).join(', ')}`;
             break;
 
           case 'sources.process':
@@ -139,7 +132,7 @@ export default component$(() => {
               status: 'pending',
             }));
 
-            currentStep.value = 'Visiting URLs...';
+            currentStep.value = 'Processing URLs...';
             break;
 
           case 'source.process.completed':
@@ -192,7 +185,7 @@ export default component$(() => {
             break;
         }
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error running assistant:', error);
       response.error = error instanceof Error ? error.message : String(error);
     } finally {
@@ -227,115 +220,169 @@ export default component$(() => {
             >
               {isLoading.value && currentStep.value ? (
                 <>
-                  {searchOnWeb.value && creationFlow.datasetName.name && (
-                    <div class="border border-primary-200 bg-primary-50 shadow-[0px_4px_6px_rgba(0,0,0,0.1)]">
-                      <div class="h-4" />
-
-                      <div class="px-4 text-md text-neutral-600 flex items-center gap-2">
-                        <h1>{creationFlow.datasetName.name}</h1>
-                      </div>
-
-                      <div class="h-4" />
-
-                      {creationFlow.queries.done && (
-                        <>
-                          <div class="px-4 text-sm text-neutral-600 flex flex-col gap-2">
-                            <h2 class="text-neutral-500 font-medium">
-                              Web search queries:
-                            </h2>
-                            {creationFlow.queries.queries.map(
-                              (query, index) => (
-                                <div
-                                  key={index}
-                                  class="flex items-center gap-2"
-                                >
-                                  <LuSearch class="text-lg text-neutral-500" />
-                                  <span>{query}</span>
-                                </div>
-                              ),
-                            )}
-                          </div>
-
-                          <div class="h-4" />
-                        </>
+                  {searchOnWeb.value && (
+                    <div>
+                      {/* Step: Configuring dataset */}
+                      {currentStep.value === 'Configuring dataset...' && (
+                        <div
+                          class="px-4 text-sm text-neutral-600 flex items-center gap-2"
+                          style="min-height:24px"
+                        >
+                          <Skeleton />
+                          <span>Configuring dataset...</span>
+                        </div>
                       )}
-
-                      {creationFlow.visitUrls.urls.length > 0 && (
-                        <>
-                          <div class="px-4 text-sm text-neutral-600 flex flex-col gap-2">
-                            <h2 class="text-neutral-500 font-medium">
-                              Visiting URLs:
-                            </h2>
-                            {creationFlow.visitUrls.urls.map((item, index) => (
-                              <div key={index} class="flex items-center gap-2">
-                                {item.status === 'completed' && item.ok && (
-                                  <span class="text-green-500">
-                                    <LuCheck class="text-lg" />
-                                  </span>
-                                )}
-                                {item.status === 'completed' && !item.ok && (
-                                  <span class="text-red-500">
-                                    <LuX class="text-lg" />
-                                  </span>
-                                )}
-                                {item.status === 'pending' && (
-                                  <span class="text-yellow-500">
-                                    <LuCircle class="text-lg animate-pulse" />
-                                  </span>
-                                )}
-                                <span>
-                                  {item.url.slice(0, 80)}{' '}
-                                  {item.url.length > 80 && '...'}
-                                </span>
-                              </div>
-                            ))}
+                      {creationFlow.datasetName.name &&
+                        !creationFlow.datasetName.done && (
+                          <div
+                            class="px-4 text-sm text-neutral-600 font-medium flex items-center gap-2"
+                            style="min-height:24px"
+                          >
+                            Configured dataset
                           </div>
-                          <div class="h-4" />
-                        </>
-                      )}
-
-                      {creationFlow.indexSources.done &&
-                        creationFlow.indexSources.ok && (
-                          <>
-                            <div class="px-4 text-sm text-neutral-600 flex flex-col gap-2">
-                              <div class="flex items-center gap-2">
-                                <h2 class="text-neutral-500 font-medium">
-                                  {' '}
-                                  Indexed{' '}
-                                  <span class="font-bold">
-                                    {creationFlow.indexSources.count}
-                                  </span>{' '}
-                                  chunks from sources
-                                </h2>
-                              </div>
-                            </div>
-                            <div class="h-4" />
-                          </>
                         )}
 
-                      {creationFlow.indexSources.done &&
-                        !creationFlow.indexSources.ok && (
-                          <div class="px-4 text-sm text-neutral-600 flex flex-col gap-2">
-                            <div
-                              class="flex items
-                              center gap-2 text-red-500"
-                            >
-                              <span>Failed to index sources</span>
-                            </div>
+                      {/* Step: Creating dataset configuration */}
+                      {currentStep.value === 'Creating dataset...' && (
+                        <div
+                          class="px-4 text-sm text-neutral-600 flex items-center gap-2"
+                          style="min-height:24px"
+                        >
+                          <Skeleton />
+                          <span>Creating dataset configuration...</span>
+                        </div>
+                      )}
+                      {creationFlow.datasetName.done && (
+                        <div
+                          class="px-4 text-sm text-neutral-600 font-medium flex items-center gap-2"
+                          style="min-height:24px"
+                        >
+                          Created dataset configuration
+                        </div>
+                      )}
+
+                      {/* Step: Searching the web */}
+                      {currentStep.value.startsWith('Searching the web') && (
+                        <div
+                          class="px-4 text-sm text-neutral-600 flex items-center gap-2"
+                          style="min-height:24px"
+                        >
+                          <Skeleton />
+                          <span>{currentStep.value}</span>
+                        </div>
+                      )}
+                      {creationFlow.queries.done &&
+                        !currentStep.value.startsWith('Searching the web') && (
+                          <div
+                            class="px-4 text-sm text-neutral-600 font-medium flex items-center gap-2"
+                            style="min-height:24px"
+                          >
+                            Searched the web
                           </div>
+                        )}
+                      {creationFlow.queries.done && (
+                        <div class="px-4 text-sm text-neutral-600 flex flex-col gap-2">
+                          {creationFlow.queries.queries.map((query, index) => (
+                            <div key={index} class="flex items-center gap-2">
+                              <LuSearch class="text-lg text-neutral-500" />
+                              <span>{query}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* After Configuring dataset */}
+                      <div class="h-4" />
+
+                      {/* After Creating dataset configuration */}
+                      <div class="h-4" />
+
+                      {/* After Searched the web */}
+                      <div class="h-4" />
+
+                      {/* Step: Processing URLs */}
+                      {currentStep.value.startsWith('Processing URLs') && (
+                        <div
+                          class="px-4 text-sm text-neutral-600 flex items-center gap-2"
+                          style="min-height:24px"
+                        >
+                          <Skeleton />
+                          <span>{currentStep.value}</span>
+                        </div>
+                      )}
+                      {creationFlow.visitUrls.urls.length > 0 &&
+                        creationFlow.visitUrls.urls.every(
+                          (item) => item.status === 'completed',
+                        ) &&
+                        !currentStep.value.startsWith('Processing URLs') && (
+                          <div
+                            class="px-4 text-sm text-neutral-600 font-medium flex items-center gap-2"
+                            style="min-height:24px"
+                          >
+                            Processed URLs
+                          </div>
+                        )}
+                      {creationFlow.visitUrls.urls.length > 0 && (
+                        <div class="px-4 text-sm text-neutral-600 flex flex-col gap-2">
+                          {creationFlow.visitUrls.urls.map((item, index) => (
+                            <div key={index} class="flex items-center gap-2">
+                              {item.status === 'completed' && item.ok && (
+                                <span class="text-green-500">
+                                  <LuCheck class="text-lg" />
+                                </span>
+                              )}
+                              {item.status === 'completed' && !item.ok && (
+                                <span class="text-red-500">
+                                  <LuX class="text-lg" />
+                                </span>
+                              )}
+                              {item.status === 'pending' && (
+                                <span
+                                  class="flex items-center"
+                                  style="width:1.25em;height:1.25em;"
+                                >
+                                  <svg
+                                    width="20"
+                                    height="20"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    aria-labelledby="loadingSpinnerTitle"
+                                    class="animate-spin"
+                                  >
+                                    <title id="loadingSpinnerTitle">
+                                      Loading spinner
+                                    </title>
+                                    <path
+                                      d="M12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22C17.5228 22 22 17.5228 22 12"
+                                      stroke="currentColor"
+                                      stroke-width="2"
+                                      stroke-linecap="round"
+                                    />
+                                  </svg>
+                                </span>
+                              )}
+                              <span>
+                                {item.url.slice(0, 80)}{' '}
+                                {item.url.length > 80 && '...'}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* After Processed URLs */}
+                      <div class="h-4" />
+
+                      {/* After Indexed sources */}
+                      {creationFlow.indexSources.done &&
+                        creationFlow.indexSources.ok &&
+                        (currentStep.value.startsWith('Populating dataset') ||
+                          creationFlow.populateDataset.done) && (
+                          <div class="h-4" />
                         )}
                     </div>
                   )}
-
-                  <div class="w-full">
-                    <div
-                      class="px-4 text-sm text-neutral-600 flex items-center gap-2"
-                      style="min-height:24px"
-                    >
-                      <Skeleton />
-                      <span>{currentStep.value}</span>
-                    </div>
-                  </div>
                 </>
               ) : null}
 

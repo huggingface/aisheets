@@ -230,9 +230,12 @@ export default component$(() => {
                 </div>
               )}
               {/* Status/progress section: only show when loading */}
-              {isLoading.value && currentStep.value && (
-                <div class="w-full h-[520px] flex flex-col mb-8 transition-all duration-300 opacity-100 translate-y-0">
-                  <div class="bg-neutral-100 rounded-md w-full pt-2 pb-4 border border-neutral-200">
+              <div
+                style="transition: all 0.75s ease-in-out"
+                class={`overflow-hidden ${isLoading.value && currentStep.value ? 'h-[520px] mb-8' : 'h-0 mb-0'}`}
+              >
+                {isLoading.value && currentStep.value && (
+                  <div class="bg-neutral-100 rounded-md w-full pt-2 pb-4 border border-neutral-200 h-full">
                     <div class="bg-neutral-100 rounded-md w-full pt-2 flex-grow overflow-y-auto max-h-full">
                       {searchOnWeb.value && (
                         <div class="w-full">
@@ -566,8 +569,8 @@ export default component$(() => {
                       )}
                     </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
 
               {/* Spacer to push textarea to bottom */}
               {/* <div class="flex-1" /> */}

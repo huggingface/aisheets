@@ -1,7 +1,7 @@
 import { $, component$, useSignal, useStore } from '@builder.io/qwik';
 import { server$, useNavigate } from '@builder.io/qwik-city';
 import { cn } from '@qwik-ui/utils';
-import { LuCheck, LuEgg, LuGlobe, LuSearch, LuX } from '@qwikest/icons/lucide';
+import { LuCheck, LuEgg, LuGlobe, LuX } from '@qwikest/icons/lucide';
 import { Button, Textarea } from '~/components';
 import { MainLogo, SecondLogo } from '~/components/ui/logo/logo';
 import { Skeleton } from '~/components/ui/skeleton/skeleton';
@@ -219,7 +219,7 @@ export default component$(() => {
               onSubmit$={onSubmitHandler}
             >
               {isLoading.value && currentStep.value ? (
-                <>
+                <div class="mb-8">
                   {searchOnWeb.value && (
                     <div>
                       {/* Step: Configuring dataset */}
@@ -241,6 +241,14 @@ export default component$(() => {
                             Configured dataset
                           </div>
                         )}
+                      {/* Only show spacing if next step is present */}
+                      {(currentStep.value === 'Creating dataset...' ||
+                        creationFlow.datasetName.done) &&
+                        (currentStep.value === 'Configuring dataset...' ||
+                          (creationFlow.datasetName.name &&
+                            !creationFlow.datasetName.done)) && (
+                          <div class="h-4" />
+                        )}
 
                       {/* Step: Creating dataset configuration */}
                       {currentStep.value === 'Creating dataset...' && (
@@ -260,6 +268,11 @@ export default component$(() => {
                           Created dataset configuration
                         </div>
                       )}
+                      {/* Only show spacing if next step is present */}
+                      {(currentStep.value.startsWith('Searching the web') ||
+                        creationFlow.queries.done) &&
+                        (currentStep.value === 'Creating dataset...' ||
+                          creationFlow.datasetName.done) && <div class="h-4" />}
 
                       {/* Step: Searching the web */}
                       {currentStep.value.startsWith('Searching the web') && (
@@ -280,25 +293,14 @@ export default component$(() => {
                             Searched the web
                           </div>
                         )}
-                      {creationFlow.queries.done && (
-                        <div class="px-4 text-sm text-neutral-600 flex flex-col gap-2">
-                          {creationFlow.queries.queries.map((query, index) => (
-                            <div key={index} class="flex items-center gap-2">
-                              <LuSearch class="text-lg text-neutral-500" />
-                              <span>{query}</span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* After Configuring dataset */}
-                      <div class="h-4" />
-
-                      {/* After Creating dataset configuration */}
-                      <div class="h-4" />
-
-                      {/* After Searched the web */}
-                      <div class="h-4" />
+                      {/* Only show spacing if next step is present */}
+                      {(currentStep.value.startsWith('Processing URLs') ||
+                        (creationFlow.visitUrls.urls.length > 0 &&
+                          creationFlow.visitUrls.urls.every(
+                            (item) => item.status === 'completed',
+                          ))) &&
+                        (currentStep.value.startsWith('Searching the web') ||
+                          creationFlow.queries.done) && <div class="h-4" />}
 
                       {/* Step: Processing URLs */}
                       {currentStep.value.startsWith('Processing URLs') && (
@@ -370,20 +372,67 @@ export default component$(() => {
                           ))}
                         </div>
                       )}
+                      {/* Only show spacing if next step is present */}
+                      {(currentStep.value.startsWith('Indexing sources') ||
+                        (creationFlow.indexSources.done &&
+                          creationFlow.indexSources.ok)) &&
+                        (currentStep.value.startsWith('Processing URLs') ||
+                          (creationFlow.visitUrls.urls.length > 0 &&
+                            creationFlow.visitUrls.urls.every(
+                              (item) => item.status === 'completed',
+                            ))) && <div class="h-4" />}
 
-                      {/* After Processed URLs */}
-                      <div class="h-4" />
-
-                      {/* After Indexed sources */}
+                      {/* Step: Indexing sources */}
+                      {currentStep.value.startsWith('Indexing sources') && (
+                        <div
+                          class="px-4 text-sm text-neutral-600 flex items-center gap-2"
+                          style="min-height:24px"
+                        >
+                          <Skeleton />
+                          <span>Indexing sources...</span>
+                        </div>
+                      )}
                       {creationFlow.indexSources.done &&
                         creationFlow.indexSources.ok &&
-                        (currentStep.value.startsWith('Populating dataset') ||
-                          creationFlow.populateDataset.done) && (
+                        !currentStep.value.startsWith('Indexing sources') && (
+                          <div
+                            class="px-4 text-sm text-neutral-600 font-medium flex items-center gap-2"
+                            style="min-height:24px"
+                          >
+                            Indexed sources
+                          </div>
+                        )}
+                      {/* Only show spacing if next step is present */}
+                      {(currentStep.value.startsWith('Populating dataset') ||
+                        creationFlow.populateDataset.done) &&
+                        (currentStep.value.startsWith('Indexing sources') ||
+                          (creationFlow.indexSources.done &&
+                            creationFlow.indexSources.ok)) && (
                           <div class="h-4" />
+                        )}
+
+                      {/* Step: Populating dataset */}
+                      {currentStep.value.startsWith('Populating dataset') && (
+                        <div
+                          class="px-4 text-sm text-neutral-600 flex items-center gap-2"
+                          style="min-height:24px"
+                        >
+                          <Skeleton />
+                          <span>{currentStep.value}</span>
+                        </div>
+                      )}
+                      {creationFlow.populateDataset.done &&
+                        !currentStep.value.startsWith('Populating dataset') && (
+                          <div
+                            class="px-4 text-sm text-neutral-600 font-medium flex items-center gap-2"
+                            style="min-height:24px"
+                          >
+                            Populated dataset
+                          </div>
                         )}
                     </div>
                   )}
-                </>
+                </div>
               ) : null}
 
               <div class="w-full bg-white border border-secondary-foreground rounded-xl pb-14 shadow-[0px_4px_6px_rgba(0,0,0,0.1)]">

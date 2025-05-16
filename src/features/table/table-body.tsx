@@ -5,6 +5,7 @@ import {
   component$,
   noSerialize,
   useComputed$,
+  useContext,
   useSignal,
   useStore,
   useTask$,
@@ -22,6 +23,7 @@ import { VirtualScrollContainer } from '~/components/ui/virtual-scroll/virtual-s
 import { useExecution } from '~/features/add-column';
 import { useGenerateColumn } from '~/features/execution';
 import { TableCell } from '~/features/table/table-cell';
+import { configContext } from '~/routes/home/layout';
 import { deleteRowsCells, getColumnCells } from '~/services';
 import {
   type Cell,
@@ -34,6 +36,8 @@ import {
 export const TableBody = component$(() => {
   const pageSize = 25;
   const rowSize = 108; // px
+
+  const { modelEndpointEnabled } = useContext(configContext);
 
   const { activeDataset } = useDatasetsStore();
 
@@ -218,6 +222,7 @@ export const TableBody = component$(() => {
       ...column,
       process: {
         ...column.process!,
+        useEndpointURL: modelEndpointEnabled,
         offset,
         limit,
       },

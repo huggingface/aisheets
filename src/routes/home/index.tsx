@@ -1,14 +1,7 @@
 import { $, component$, useSignal, useStore } from '@builder.io/qwik';
 import { server$, useNavigate } from '@builder.io/qwik-city';
 import { cn } from '@qwik-ui/utils';
-import {
-  LuCheck,
-  LuCheckCircle,
-  LuClock7,
-  LuEgg,
-  LuGlobe,
-  LuX,
-} from '@qwikest/icons/lucide';
+import { LuCheckCircle, LuClock7, LuEgg, LuGlobe } from '@qwikest/icons/lucide';
 import { Button, Textarea } from '~/components';
 import { MainLogo, SecondLogo } from '~/components/ui/logo/logo';
 import { DragAndDrop } from '~/features/import/drag-n-drop';
@@ -415,46 +408,17 @@ export default component$(() => {
                         <div class="px-4 text-sm text-neutral-600 flex flex-col gap-2 ml-8 mt-3">
                           {creationFlow.visitUrls.urls.map((item, index) => (
                             <div key={index} class="flex items-center gap-2">
-                              {item.status === 'completed' && item.ok && (
-                                <span class="text-green-500">
-                                  <LuCheck class="text-lg" />
+                              {item.status === 'pending' ? (
+                                <span class="text-neutral-500">
+                                  {item.url.slice(0, 80)}
+                                  {item.url.length > 80 && '...'}
+                                </span>
+                              ) : (
+                                <span class="text-neutral-700">
+                                  {item.url.slice(0, 80)}
+                                  {item.url.length > 80 && '...'}
                                 </span>
                               )}
-                              {item.status === 'completed' && !item.ok && (
-                                <span class="text-red-500">
-                                  <LuX class="text-lg" />
-                                </span>
-                              )}
-                              {item.status === 'pending' && (
-                                <span
-                                  class="flex items-center"
-                                  style="width:1.25em;height:1.25em;"
-                                >
-                                  <svg
-                                    width="20"
-                                    height="20"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    aria-labelledby="loadingSpinnerTitle"
-                                    class="animate-spin"
-                                  >
-                                    <title id="loadingSpinnerTitle">
-                                      Loading spinner
-                                    </title>
-                                    <path
-                                      d="M12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22C17.5228 22 22 17.5228 22 12"
-                                      stroke="currentColor"
-                                      stroke-width="2"
-                                      stroke-linecap="round"
-                                    />
-                                  </svg>
-                                </span>
-                              )}
-                              <span>
-                                {item.url.slice(0, 80)}{' '}
-                                {item.url.length > 80 && '...'}
-                              </span>
                             </div>
                           ))}
                         </div>

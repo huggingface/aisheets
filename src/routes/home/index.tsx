@@ -219,7 +219,7 @@ export default component$(() => {
               onSubmit$={onSubmitHandler}
             >
               {isLoading.value && currentStep.value ? (
-                <div class="mb-8">
+                <div class="mb-8 bg-neutral-100 rounded-md">
                   {searchOnWeb.value && (
                     <div>
                       {/* Step: Configuring dataset */}

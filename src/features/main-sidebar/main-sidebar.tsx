@@ -26,9 +26,9 @@ export const MainSidebarButton = component$(() => {
     <button
       type="button"
       onClick$={handleClick$}
-      class="transition-all duration-300 p-1.5 rounded-full hover:bg-neutral-200 text-gray-400"
+      class="w-[30px] h-[30px] transition-all duration-300 p-1.5 rounded-full hover:bg-neutral-200 text-gray-400"
     >
-      <LuPanelLeft class="w-4 h-4" />
+      <LuPanelLeft class="text-lg" />
     </button>
   );
 });

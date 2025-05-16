@@ -1,4 +1,4 @@
-import { NUM_CONCURRENT_REQUESTS } from '~/config';
+import { MODEL_ENDPOINT_URL, NUM_CONCURRENT_REQUESTS } from '~/config';
 import { getDatasetColumns, updateProcess } from '~/services';
 import { MAX_SOURCE_SNIPPET_LENGTH } from '~/services/db/models/cell';
 import { renderInstruction } from '~/services/inference/materialize-prompt';
@@ -152,7 +152,8 @@ async function* generateCellsFromScratch({
   timeout: number | undefined;
   session: Session;
 }) {
-  const { modelName, modelProvider, prompt, searchEnabled } = process;
+  const { modelName, modelProvider, prompt, searchEnabled, useEndpointURL } =
+    process;
 
   const sourcesContext = searchEnabled
     ? await queryDatasetSources({
@@ -200,6 +201,8 @@ async function* generateCellsFromScratch({
       accessToken: session.token,
       modelName,
       modelProvider,
+      endpointUrl:
+        useEndpointURL && MODEL_ENDPOINT_URL ? MODEL_ENDPOINT_URL : undefined,
       examples: existingCellsExamples,
       instruction: prompt,
       sourcesContext,
@@ -258,8 +261,14 @@ async function* generateCellsFromColumnsReferences({
   timeout: number | undefined;
   session: Session;
 }) {
-  const { columnsReferences, modelName, modelProvider, prompt, searchEnabled } =
-    process;
+  const {
+    columnsReferences,
+    modelName,
+    modelProvider,
+    prompt,
+    searchEnabled,
+    useEndpointURL,
+  } = process;
 
   const streamRequests: PromptExecutionParams[] = [];
   const cells = new Map<
@@ -307,6 +316,8 @@ async function* generateCellsFromColumnsReferences({
       accessToken: session.token,
       modelName,
       modelProvider,
+      endpointUrl:
+        useEndpointURL && MODEL_ENDPOINT_URL ? MODEL_ENDPOINT_URL : undefined,
       examples: currentExamples,
       instruction: prompt,
       timeout,

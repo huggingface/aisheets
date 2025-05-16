@@ -11,6 +11,7 @@ export const useClientConfig = routeLoader$(async function (
 ): Promise<{
   DEFAULT_MODEL: string;
   DEFAULT_MODEL_PROVIDER: string;
+  modelEndpointEnabled: boolean;
   isGoogleAuthEnabled: boolean;
 }> {
   useServerSession(this);
@@ -18,6 +19,7 @@ export const useClientConfig = routeLoader$(async function (
   return {
     DEFAULT_MODEL: config.DEFAULT_MODEL,
     DEFAULT_MODEL_PROVIDER: config.DEFAULT_MODEL_PROVIDER,
+    modelEndpointEnabled: config.MODEL_ENDPOINT_URL !== undefined,
     isGoogleAuthEnabled: Boolean(
       config.GOOGLE_CLIENT_ID && config.GOOGLE_REDIRECT_URI,
     ),

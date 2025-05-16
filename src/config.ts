@@ -67,6 +67,16 @@ export const DEFAULT_MODEL: string =
   process.env.DEFAULT_MODEL ?? 'meta-llama/Llama-3.3-70B-Instruct';
 
 /**
+ * The URL of the model endpoint for inference operations.
+ * This value is retrieved from the environment variable `MODEL_ENDPOINT_URL`.
+ * If this value is defined, it will be used to send requests and the default model and provider will be ignored.
+ * Otherwise, the default model and provider will be used.
+ * Default value: undefined
+ */
+export const MODEL_ENDPOINT_URL: string | undefined =
+  process.env.MODEL_ENDPOINT_URL;
+
+/**
  * List of model IDs that should be excluded from the model list.
  * This value is retrieved from the environment variable `EXCLUDED_MODELS` as a comma-separated string.
  * If not set, defaults to a predefined list of models.

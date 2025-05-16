@@ -1,10 +1,16 @@
 import { $, component$, useSignal, useStore } from '@builder.io/qwik';
 import { server$, useNavigate } from '@builder.io/qwik-city';
 import { cn } from '@qwik-ui/utils';
-import { LuCheck, LuEgg, LuGlobe, LuX } from '@qwikest/icons/lucide';
+import {
+  LuCheck,
+  LuCheckCircle,
+  LuClock7,
+  LuEgg,
+  LuGlobe,
+  LuX,
+} from '@qwikest/icons/lucide';
 import { Button, Textarea } from '~/components';
 import { MainLogo, SecondLogo } from '~/components/ui/logo/logo';
-import { Skeleton } from '~/components/ui/skeleton/skeleton';
 import { DragAndDrop } from '~/features/import/drag-n-drop';
 import { MainSidebarButton } from '~/features/main-sidebar';
 import { ActiveDatasetProvider } from '~/state';
@@ -202,40 +208,67 @@ export default component$(() => {
   return (
     <ActiveDatasetProvider>
       <MainSidebarButton />
-      <div class="w-full h-full flex flex-col items-center justify-center">
-        <div class="flex flex-col items-center justify-center space-y-14">
-          <div class="flex flex-col items-center justify-center space-y-4">
-            <MainLogo class="w-[70px] h-[70px]" />
-            <h1 class="text-neutral-600 text-2xl font-semibold">
-              Design your data in a sheet
-            </h1>
-            <h2 class="text-neutral-500 font-medium">From a simple idea</h2>
-          </div>
+      <div class="w-full min-h-screen flex flex-col items-center justify-center">
+        <div class="flex flex-col items-center justify-center space-y-14 flex-1 w-full">
+          {/* Show top section only when not loading */}
+          {!isLoading.value && (
+            <div class="flex flex-col items-center justify-center space-y-4">
+              <MainLogo class="w-[70px] h-[70px]" />
+              <h1 class="text-neutral-600 text-2xl font-semibold">
+                Design your data in a sheet
+              </h1>
+              <h2 class="text-neutral-500 font-medium">From a simple idea</h2>
+            </div>
+          )}
 
-          <div class="flex flex-col items-center justify-center space-y-8">
+          <div class="flex flex-col items-center justify-center space-y-8 flex-1 w-full">
             <form
-              class="relative w-[700px]"
+              class="relative w-[700px] flex flex-col flex-1 justify-end"
               preventdefault:submit
               onSubmit$={onSubmitHandler}
             >
+              {/* Show the message above the status box when loading */}
+              {isLoading.value && (
+                <div class="flex items-center gap-2 px-4 pt-4 pb-2">
+                  <LuClock7 class="text-lg text-neutral-500" />
+                  <span class="font-semibold text-base text-primary-500">
+                    The dataset will be ready in a few minutes
+                  </span>
+                </div>
+              )}
+              {/* Status/progress section: only show when loading */}
               {isLoading.value && currentStep.value ? (
-                <div class="mb-8 bg-neutral-100 rounded-md">
+                <div class="mb-8 bg-neutral-100 rounded-md flex-1 w-full pt-6">
                   {searchOnWeb.value && (
-                    <div>
+                    <div class="w-full">
                       {/* Step: Configuring dataset */}
                       {currentStep.value === 'Configuring dataset...' && (
                         <div
                           class="px-4 text-sm text-neutral-600 flex items-center gap-2"
                           style="min-height:24px"
                         >
-                          <Skeleton />
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            class="lucide lucide-loader-circle-icon lucide-loader-circle animate-spin"
+                          >
+                            <title>Loading...</title>
+                            <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                          </svg>
                           <span>Configuring dataset...</span>
                         </div>
                       )}
                       {creationFlow.datasetName.name &&
                         !creationFlow.datasetName.done && (
                           <div
-                            class="px-4 text-sm text-neutral-600 font-medium flex items-center gap-2"
+                            class="px-4 text-sm text-neutral-600 flex items-center gap-2"
                             style="min-height:24px"
                           >
                             Configured dataset
@@ -256,16 +289,34 @@ export default component$(() => {
                           class="px-4 text-sm text-neutral-600 flex items-center gap-2"
                           style="min-height:24px"
                         >
-                          <Skeleton />
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            class="lucide lucide-loader-circle-icon lucide-loader-circle animate-spin"
+                          >
+                            <title>Loading...</title>
+                            <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                          </svg>
                           <span>Creating dataset configuration...</span>
                         </div>
                       )}
                       {creationFlow.datasetName.done && (
                         <div
-                          class="px-4 text-sm text-neutral-600 font-medium flex items-center gap-2"
+                          class="px-4 text-sm text-primary-600 flex items-center gap-2"
                           style="min-height:24px"
                         >
-                          Created dataset configuration
+                          <LuCheckCircle
+                            class="text-lg text-primary-600"
+                            style="width:24px;height:24px;"
+                          />
+                          <span>Created dataset configuration</span>
                         </div>
                       )}
                       {/* Only show spacing if next step is present */}
@@ -280,17 +331,35 @@ export default component$(() => {
                           class="px-4 text-sm text-neutral-600 flex items-center gap-2"
                           style="min-height:24px"
                         >
-                          <Skeleton />
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            class="lucide lucide-loader-circle-icon lucide-loader-circle animate-spin"
+                          >
+                            <title>Loading...</title>
+                            <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                          </svg>
                           <span>{currentStep.value}</span>
                         </div>
                       )}
                       {creationFlow.queries.done &&
                         !currentStep.value.startsWith('Searching the web') && (
                           <div
-                            class="px-4 text-sm text-neutral-600 font-medium flex items-center gap-2"
+                            class="px-4 text-sm text-primary-600 flex items-center gap-2"
                             style="min-height:24px"
                           >
-                            Searched the web
+                            <LuCheckCircle
+                              class="text-lg text-primary-600"
+                              style="width:24px;height:24px;"
+                            />
+                            {`Searched the web: ${creationFlow.queries.queries.map((q: string) => `"${q}"`).join(', ')}`}
                           </div>
                         )}
                       {/* Only show spacing if next step is present */}
@@ -308,7 +377,21 @@ export default component$(() => {
                           class="px-4 text-sm text-neutral-600 flex items-center gap-2"
                           style="min-height:24px"
                         >
-                          <Skeleton />
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            class="lucide lucide-loader-circle-icon lucide-loader-circle animate-spin"
+                          >
+                            <title>Loading...</title>
+                            <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                          </svg>
                           <span>{currentStep.value}</span>
                         </div>
                       )}
@@ -318,14 +401,18 @@ export default component$(() => {
                         ) &&
                         !currentStep.value.startsWith('Processing URLs') && (
                           <div
-                            class="px-4 text-sm text-neutral-600 font-medium flex items-center gap-2"
+                            class="px-4 text-sm text-primary-600 flex items-center gap-2"
                             style="min-height:24px"
                           >
-                            Processed URLs
+                            <LuCheckCircle
+                              class="text-lg text-primary-600"
+                              style="width:24px;height:24px;"
+                            />
+                            <span>Processed URLs</span>
                           </div>
                         )}
                       {creationFlow.visitUrls.urls.length > 0 && (
-                        <div class="px-4 text-sm text-neutral-600 flex flex-col gap-2">
+                        <div class="px-4 text-sm text-neutral-600 flex flex-col gap-2 ml-8 mt-3">
                           {creationFlow.visitUrls.urls.map((item, index) => (
                             <div key={index} class="flex items-center gap-2">
                               {item.status === 'completed' && item.ok && (
@@ -388,7 +475,21 @@ export default component$(() => {
                           class="px-4 text-sm text-neutral-600 flex items-center gap-2"
                           style="min-height:24px"
                         >
-                          <Skeleton />
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            class="lucide lucide-loader-circle-icon lucide-loader-circle animate-spin"
+                          >
+                            <title>Loading...</title>
+                            <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                          </svg>
                           <span>Indexing sources...</span>
                         </div>
                       )}
@@ -396,10 +497,14 @@ export default component$(() => {
                         creationFlow.indexSources.ok &&
                         !currentStep.value.startsWith('Indexing sources') && (
                           <div
-                            class="px-4 text-sm text-neutral-600 font-medium flex items-center gap-2"
+                            class="px-4 text-sm text-primary-600 flex items-center gap-2"
                             style="min-height:24px"
                           >
-                            Indexed sources
+                            <LuCheckCircle
+                              class="text-lg text-primary-600"
+                              style="width:24px;height:24px;"
+                            />
+                            <span>Indexed sources</span>
                           </div>
                         )}
                       {/* Only show spacing if next step is present */}
@@ -417,17 +522,35 @@ export default component$(() => {
                           class="px-4 text-sm text-neutral-600 flex items-center gap-2"
                           style="min-height:24px"
                         >
-                          <Skeleton />
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            class="lucide lucide-loader-circle-icon lucide-loader-circle animate-spin"
+                          >
+                            <title>Loading...</title>
+                            <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                          </svg>
                           <span>{currentStep.value}</span>
                         </div>
                       )}
                       {creationFlow.populateDataset.done &&
                         !currentStep.value.startsWith('Populating dataset') && (
                           <div
-                            class="px-4 text-sm text-neutral-600 font-medium flex items-center gap-2"
+                            class="px-4 text-sm text-primary-600 flex items-center gap-2"
                             style="min-height:24px"
                           >
-                            Populated dataset
+                            <LuCheckCircle
+                              class="text-lg text-primary-600"
+                              style="width:24px;height:24px;"
+                            />
+                            <span>Populated dataset</span>
                           </div>
                         )}
                     </div>
@@ -435,91 +558,99 @@ export default component$(() => {
                 </div>
               ) : null}
 
-              <div class="w-full bg-white border border-secondary-foreground rounded-xl pb-14 shadow-[0px_4px_6px_rgba(0,0,0,0.1)]">
-                <Textarea
-                  id="prompt"
-                  look="ghost"
-                  value={prompt.value}
-                  placeholder="Describe the dataset you want or try one of the examples below"
-                  class="p-4 max-h-40 resize-none overflow-auto text-base placeholder:text-neutral-500"
-                  onInput$={(e, el) => {
-                    prompt.value = el.value;
-                    const target = e.target as HTMLTextAreaElement;
-                    target.style.height = 'auto';
-                    target.style.height = `${target.scrollHeight}px`;
-                  }}
-                  onKeyDown$={async (e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      await handleAssistant();
-                    }
-                    // Shift+Enter will insert a newline by default
-                  }}
-                />
-              </div>
-              <div
-                class="w-full absolute bottom-0 p-4 flex flex-row items-center justify-between cursor-text"
-                onClick$={() => document.getElementById('prompt')?.focus()}
-              >
-                <div class="flex w-full justify-between items-center h-[30px]">
-                  <Button
-                    type="button"
-                    look="secondary"
-                    class={cn(
-                      'flex px-[10px] py-[8px] gap-[10px] bg-white text-neutral-600 hover:bg-neutral-100 h-[30px] rounded-[8px]',
-                      {
-                        'border-primary-100 outline-primary-100 bg-primary-50 hover:bg-primary-50 text-primary-500 hover:text-primary-400':
-                          searchOnWeb.value,
-                      },
-                    )}
-                    onClick$={() => {
-                      searchOnWeb.value = !searchOnWeb.value;
+              {/* Spacer to push textarea to bottom */}
+              {/* <div class="flex-1" /> */}
+              {/* Textarea and controls */}
+              <div>
+                <div class="w-full bg-white border border-secondary-foreground rounded-xl pb-14 shadow-[0px_4px_6px_rgba(0,0,0,0.1)]">
+                  <Textarea
+                    id="prompt"
+                    look="ghost"
+                    value={prompt.value}
+                    placeholder="Describe the dataset you want or try one of the examples below"
+                    class="p-4 max-h-40 resize-none overflow-auto text-base placeholder:text-neutral-500"
+                    onInput$={(e, el) => {
+                      prompt.value = el.value;
+                      const target = e.target as HTMLTextAreaElement;
+                      target.style.height = 'auto';
+                      target.style.height = `${target.scrollHeight}px`;
                     }}
-                  >
-                    <LuGlobe class="text-lg" />
-                    Search the web
-                  </Button>
+                    onKeyDown$={async (e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        await handleAssistant();
+                      }
+                      // Shift+Enter will insert a newline by default
+                    }}
+                  />
+                </div>
+                <div
+                  class="w-full absolute bottom-0 p-4 flex flex-row items-center justify-between cursor-text"
+                  onClick$={() => document.getElementById('prompt')?.focus()}
+                >
+                  <div class="flex w-full justify-between items-center h-[30px]">
+                    <Button
+                      type="button"
+                      look="secondary"
+                      class={cn(
+                        'flex px-[10px] py-[8px] gap-[10px] bg-white text-neutral-600 hover:bg-neutral-100 h-[30px] rounded-[8px]',
+                        {
+                          'border-primary-100 outline-primary-100 bg-primary-50 hover:bg-primary-50 text-primary-500 hover:text-primary-400':
+                            searchOnWeb.value,
+                        },
+                      )}
+                      onClick$={() => {
+                        searchOnWeb.value = !searchOnWeb.value;
+                      }}
+                    >
+                      <LuGlobe class="text-lg" />
+                      Search the web
+                    </Button>
 
-                  <Button
-                    look="primary"
-                    type="submit"
-                    class="w-[30px] h-[30px] rounded-full flex items-center justify-center p-0"
-                    disabled={isLoading.value || !prompt.value.trim()}
-                  >
-                    <LuEgg class="text-lg" />
-                  </Button>
+                    <Button
+                      look="primary"
+                      type="submit"
+                      class="w-[30px] h-[30px] rounded-full flex items-center justify-center p-0"
+                      disabled={isLoading.value || !prompt.value.trim()}
+                    >
+                      <LuEgg class="text-lg" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             </form>
 
-            <div class="flex flex-col items-center justify-center space-y-8">
-              <div class="w-[700px] flex flex-row flex-wrap justify-start items-center gap-2">
-                {examples.map((example) => (
-                  <Button
-                    key={example.title}
-                    look="secondary"
-                    class="flex gap-2 text-xs px-2 rounded-xl bg-transparent hover:bg-neutral-100 whitespace-nowrap"
-                    onClick$={() => {
-                      prompt.value = example.prompt;
-                      document.getElementById('prompt')?.focus();
-                    }}
-                  >
-                    <SecondLogo class="w-4" />
-                    {example.title}
-                  </Button>
-                ))}
-              </div>
+            {/* Show examples and drag-and-drop only when not loading */}
+            {!isLoading.value && (
+              <div class="flex flex-col items-center justify-center space-y-8">
+                <div class="w-[700px] flex flex-row flex-wrap justify-start items-center gap-2">
+                  {examples.map((example) => (
+                    <Button
+                      key={example.title}
+                      look="secondary"
+                      class="flex gap-2 text-xs px-2 rounded-xl bg-transparent hover:bg-neutral-100 whitespace-nowrap"
+                      onClick$={() => {
+                        prompt.value = example.prompt;
+                        document.getElementById('prompt')?.focus();
+                      }}
+                    >
+                      <SecondLogo class="w-4" />
+                      {example.title}
+                    </Button>
+                  ))}
+                </div>
 
-              <div class="w-[697px] flex justify-center items-center">
-                <hr class="w-full border-t" />
-                <span class="mx-10 text-neutral-500">OR</span>
-                <hr class="w-full border-t" />
-              </div>
+                <div class="w-[697px] flex justify-center items-center">
+                  <hr class="w-full border-t" />
+                  <span class="mx-10 text-neutral-500">OR</span>
+                  <hr class="w-full border-t" />
+                </div>
 
-              <div class="w-[530px] h-[230px]">
-                <DragAndDrop />
+                <div class="w-[530px] h-[230px]">
+                  <DragAndDrop />
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>

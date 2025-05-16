@@ -1,6 +1,10 @@
 import type { RequestEventBase } from '@builder.io/qwik-city';
 import { chatCompletion } from '@huggingface/inference';
-import { DEFAULT_MODEL, DEFAULT_MODEL_PROVIDER } from '~/config';
+import {
+  DEFAULT_MODEL,
+  DEFAULT_MODEL_PROVIDER,
+  MODEL_ENDPOINT_URL,
+} from '~/config';
 import {
   normalizeChatCompletionArgs,
   normalizeOptions,
@@ -392,6 +396,7 @@ export const runAutoDataset = async function (
         modelName,
         modelProvider,
         accessToken: session.token,
+        endpointUrl: MODEL_ENDPOINT_URL,
       }),
       normalizeOptions(params.timeout),
     );

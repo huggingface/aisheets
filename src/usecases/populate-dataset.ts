@@ -1,4 +1,5 @@
 import type { RequestEventBase } from '@builder.io/qwik-city';
+import { MODEL_ENDPOINT_URL } from '~/config';
 import { getDatasetColumns } from '../services/repository/columns';
 import { useServerSession } from '../state/session';
 import { generateCells } from './generate-cells';
@@ -27,7 +28,10 @@ export const populateDataset = async function (
 
       for await (const _ of generateCells({
         column,
-        process: column.process,
+        process: {
+          ...column.process,
+          useEndpointURL: MODEL_ENDPOINT_URL !== undefined,
+        },
         session,
         offset: 0,
         limit: 5,

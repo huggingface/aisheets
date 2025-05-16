@@ -202,7 +202,7 @@ export default component$(() => {
     <ActiveDatasetProvider>
       <MainSidebarButton />
       <div class="w-full min-h-screen flex flex-col items-center justify-center">
-        <div class="flex flex-col items-center justify-center space-y-14 flex-1 w-full">
+        <div class="flex flex-col justify-between min-h-screen w-full items-center">
           {/* Show top section only when not loading */}
           {!isLoading.value && (
             <div class="flex flex-col items-center justify-center space-y-4">
@@ -214,9 +214,9 @@ export default component$(() => {
             </div>
           )}
 
-          <div class="flex flex-col items-center justify-center space-y-8 flex-1 w-full">
+          <div class="flex flex-col justify-between w-full h-full items-center">
             <form
-              class="relative w-[700px] flex flex-col flex-1 justify-end"
+              class="relative w-[700px] flex flex-col h-full justify-between"
               preventdefault:submit
               onSubmit$={onSubmitHandler}
             >
@@ -231,7 +231,7 @@ export default component$(() => {
               )}
               {/* Status/progress section: only show when loading */}
               {isLoading.value && currentStep.value ? (
-                <div class="mb-8 bg-neutral-100 rounded-md flex-1 w-full pt-6">
+                <div class="bg-neutral-100 rounded-md w-full pt-6 min-h-[500px] mb-8">
                   {searchOnWeb.value && (
                     <div class="w-full">
                       {/* Step: Configuring dataset */}

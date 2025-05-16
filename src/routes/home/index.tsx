@@ -2,11 +2,13 @@ import { $, component$, useSignal, useStore } from '@builder.io/qwik';
 import { server$, useNavigate } from '@builder.io/qwik-city';
 import { cn } from '@qwik-ui/utils';
 import { LuEgg, LuGlobe } from '@qwikest/icons/lucide';
-import { Button, Textarea } from '~/components';
+import { Button, Textarea, buttonVariants } from '~/components';
 import { MainLogo, SecondLogo } from '~/components/ui/logo/logo';
 import { Skeleton } from '~/components/ui/skeleton/skeleton';
 import { DragAndDrop } from '~/features/import/drag-n-drop';
 import { MainSidebarButton } from '~/features/main-sidebar';
+import { Username } from '~/features/user/username';
+import { useSession } from '~/loaders';
 import { ActiveDatasetProvider } from '~/state';
 import { populateDataset } from '~/usecases/populate-dataset';
 import { runAutoDataset } from '~/usecases/run-autodataset';
@@ -31,6 +33,7 @@ const populateDatasetAction = server$(async function (
 });
 
 export default component$(() => {
+  const session = useSession();
   const nav = useNavigate();
   const searchOnWeb = useSignal(false);
   const prompt = useSignal('');
@@ -113,7 +116,24 @@ export default component$(() => {
 
   return (
     <ActiveDatasetProvider>
-      <MainSidebarButton />
+      <div class="flex justify-between w-full">
+        <MainSidebarButton />
+        {session.value.anonymous ? (
+          <Button
+            class={buttonVariants({
+              class: 'bg-primary-600 hover:bg-primary-500',
+              look: 'primary',
+            })}
+            onClick$={() => {
+              nav('/auth');
+            }}
+          >
+            Log in
+          </Button>
+        ) : (
+          <Username />
+        )}
+      </div>
       <div class="w-full h-full flex flex-col items-center justify-center">
         <div class="flex flex-col items-center justify-center space-y-14">
           <div class="flex flex-col items-center justify-center space-y-4">

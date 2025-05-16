@@ -6,24 +6,27 @@ import { MainSidebarButton } from '~/features/main-sidebar';
 
 import { Table } from '~/features/table';
 import { Username } from '~/features/user/username';
+import { ActiveDatasetProvider } from '~/state';
 
 export default component$(() => {
   return (
-    <div class="flex flex-col h-full w-full">
-      <div class="sticky">
-        <div class="flex flex-col gap-2">
-          <div class="flex justify-between items-center w-full gap-1">
-            <div class="flex items-center w-fit gap-4">
-              <MainSidebarButton />
-              <DatasetName />
-              <SaveDataset />
+    <ActiveDatasetProvider>
+      <div class="flex flex-col h-full w-full">
+        <div class="sticky">
+          <div class="flex flex-col gap-2">
+            <div class="flex justify-between items-center w-full gap-1">
+              <div class="flex items-center w-fit gap-4">
+                <MainSidebarButton />
+                <DatasetName />
+                <SaveDataset />
+              </div>
+              <Username />
             </div>
-            <Username />
           </div>
         </div>
+        <Table />
       </div>
-      <Table />
-    </div>
+    </ActiveDatasetProvider>
   );
 });
 

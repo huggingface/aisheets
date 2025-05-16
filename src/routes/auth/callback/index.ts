@@ -2,7 +2,9 @@ import type { RequestEvent } from '@builder.io/qwik-city';
 import * as hub from '@huggingface/hub';
 import { saveSession } from '~/services/auth/session';
 
-export const onGet = async ({ cookie, redirect, query, url }: RequestEvent) => {
+export const onGet = async (event: RequestEvent) => {
+  const { cookie, redirect, query, url } = event;
+
   const code = query.get('code');
   const stateParam = query.get('state');
 
@@ -34,6 +36,7 @@ export const onGet = async ({ cookie, redirect, query, url }: RequestEvent) => {
     });
 
     const session = {
+      anonymous: false,
       token: auth.accessToken,
       user: {
         name: auth.userInfo.name,
@@ -42,7 +45,7 @@ export const onGet = async ({ cookie, redirect, query, url }: RequestEvent) => {
       },
     };
 
-    saveSession(cookie, session);
+    saveSession(event, session);
   } catch (e) {
     console.error(e);
   }

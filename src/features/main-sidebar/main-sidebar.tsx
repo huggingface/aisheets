@@ -1,11 +1,11 @@
 import { $, component$, useSignal, useTask$ } from '@builder.io/qwik';
-import { Link, useNavigate } from '@builder.io/qwik-city';
+import { Link } from '@builder.io/qwik-city';
 import { cn } from '@qwik-ui/utils';
 import { LuPanelLeft } from '@qwikest/icons/lucide';
 import { isToday } from 'date-fns';
-import { Button, buttonVariants } from '~/components';
 import { useModals } from '~/components/hooks';
 import { useClickOutside } from '~/components/hooks/click/outside';
+import { Login } from '~/components/ui/login/Login';
 import { MainLogo } from '~/components/ui/logo/logo';
 import { useAllDatasetsLoader, useSession } from '~/loaders';
 import { useDatasetsStore } from '~/state';
@@ -38,7 +38,6 @@ export const MainSidebar = component$(() => {
   const { activeDataset } = useDatasetsStore();
   const datasetsLoaded = useAllDatasetsLoader();
   const session = useSession();
-  const nav = useNavigate();
 
   const datasets = useSignal(datasetsLoaded.value);
 
@@ -121,9 +120,9 @@ export const MainSidebar = component$(() => {
       </div>
 
       {session.value.anonymous ? (
-        <div class="w-[273px] p-[18px]">
-          <div class="w-full h-[160px] p-4 rounded-md bg-neutral-200">
-            <div class="flex flex-col justify-center gap-2 text-sm">
+        <div class="w-[273px] h-fit p-[18px]">
+          <div class="w-full h-full p-4 rounded-md bg-neutral-200">
+            <div class="flex flex-col justify-center gap-3 text-sm">
               <p class="font-medium">Log in with Hugging Face</p>
 
               <p>
@@ -131,17 +130,7 @@ export const MainSidebar = component$(() => {
                 the Hub — it’s free.
               </p>
 
-              <Button
-                class={buttonVariants({
-                  class: 'bg-primary-600 hover:bg-primary-500',
-                  look: 'primary',
-                })}
-                onClick$={() => {
-                  nav('/auth');
-                }}
-              >
-                Log in
-              </Button>
+              <Login />
             </div>
           </div>
         </div>

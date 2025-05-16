@@ -230,8 +230,8 @@ export default component$(() => {
                 </div>
               )}
               {/* Status/progress section: only show when loading */}
-              {isLoading.value && currentStep.value ? (
-                <div class="w-full h-[540px] flex flex-col mb-8">
+              {isLoading.value && currentStep.value && (
+                <div class="w-full h-[520px] flex flex-col mb-8 transition-all duration-300 opacity-100 translate-y-0">
                   <div class="bg-neutral-100 rounded-md w-full pt-2 pb-4 border border-neutral-200">
                     <div class="bg-neutral-100 rounded-md w-full pt-2 flex-grow overflow-y-auto max-h-full">
                       {searchOnWeb.value && (
@@ -239,13 +239,13 @@ export default component$(() => {
                           {/* Step: Configuring dataset */}
                           {currentStep.value === 'Configuring dataset...' && (
                             <div
-                              class="px-4 text-sm text-neutral-600 flex items-center gap-2"
+                              class="px-4 text-base text-neutral-600 flex items-center gap-2"
                               style="min-height:24px"
                             >
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
-                                width="24"
-                                height="24"
+                                width="20"
+                                height="20"
                                 viewBox="0 0 24 24"
                                 fill="none"
                                 stroke="currentColor"
@@ -263,7 +263,7 @@ export default component$(() => {
                           {creationFlow.datasetName.name &&
                             !creationFlow.datasetName.done && (
                               <div
-                                class="px-4 text-sm text-neutral-600 flex items-center gap-2"
+                                class="px-4 text-base text-neutral-600 flex items-center gap-2"
                                 style="min-height:24px"
                               >
                                 Configured dataset
@@ -281,13 +281,13 @@ export default component$(() => {
                           {/* Step: Creating dataset configuration */}
                           {currentStep.value === 'Creating dataset...' && (
                             <div
-                              class="px-4 text-sm text-neutral-600 flex items-center gap-2"
+                              class="px-4 text-base text-neutral-600 flex items-center gap-2"
                               style="min-height:24px"
                             >
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
-                                width="24"
-                                height="24"
+                                width="20"
+                                height="20"
                                 viewBox="0 0 24 24"
                                 fill="none"
                                 stroke="currentColor"
@@ -304,12 +304,12 @@ export default component$(() => {
                           )}
                           {creationFlow.datasetName.done && (
                             <div
-                              class="px-4 text-sm text-primary-600 flex items-center gap-2"
+                              class="px-4 text-base text-primary-600 flex items-center gap-2"
                               style="min-height:24px"
                             >
                               <LuCheckCircle
-                                class="text-lg text-primary-600"
-                                style="width:24px;height:24px;"
+                                class="text-primary-600"
+                                style="width:18px;height:18px;"
                               />
                               <span>Created dataset configuration</span>
                             </div>
@@ -327,13 +327,13 @@ export default component$(() => {
                             'Searching the web',
                           ) && (
                             <div
-                              class="px-4 text-sm text-neutral-600 flex items-center gap-2"
+                              class="px-4 text-base text-neutral-600 flex items-center gap-2"
                               style="min-height:24px"
                             >
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
-                                width="24"
-                                height="24"
+                                width="20"
+                                height="20"
                                 viewBox="0 0 24 24"
                                 fill="none"
                                 stroke="currentColor"
@@ -353,12 +353,12 @@ export default component$(() => {
                               'Searching the web',
                             ) && (
                               <div
-                                class="px-4 text-sm text-primary-600 flex items-center gap-2"
+                                class="px-4 text-base text-primary-600 flex items-center gap-2"
                                 style="min-height:24px"
                               >
                                 <LuCheckCircle
-                                  class="text-lg text-primary-600"
-                                  style="width:24px;height:24px;"
+                                  class="text-primary-600"
+                                  style="width:18px;height:18px;"
                                 />
                                 {`Searched the web: ${creationFlow.queries.queries.map((q: string) => `"${q}"`).join(', ')}`}
                               </div>
@@ -377,13 +377,13 @@ export default component$(() => {
                           {/* Step: Processing URLs */}
                           {currentStep.value.startsWith('Processing URLs') && (
                             <div
-                              class="px-4 text-sm text-neutral-600 flex items-center gap-2"
+                              class="px-4 text-base text-neutral-600 flex items-center gap-2"
                               style="min-height:24px"
                             >
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
-                                width="24"
-                                height="24"
+                                width="20"
+                                height="20"
                                 viewBox="0 0 24 24"
                                 fill="none"
                                 stroke="currentColor"
@@ -406,18 +406,18 @@ export default component$(() => {
                               'Processing URLs',
                             ) && (
                               <div
-                                class="px-4 text-sm text-primary-600 flex items-center gap-2"
+                                class="px-4 text-base text-primary-600 flex items-center gap-2"
                                 style="min-height:24px"
                               >
                                 <LuCheckCircle
-                                  class="text-lg text-primary-600"
-                                  style="width:24px;height:24px;"
+                                  class="text-primary-600"
+                                  style="width:18px;height:18px;"
                                 />
                                 <span>Processed URLs</span>
                               </div>
                             )}
                           {creationFlow.visitUrls.urls.length > 0 && (
-                            <div class="px-4 text-sm text-neutral-600 flex flex-col gap-2 ml-8 mt-3">
+                            <div class="px-4 text-base text-neutral-600 flex flex-col gap-2 ml-8 mt-3">
                               {creationFlow.visitUrls.urls.map(
                                 (item, index) => (
                                   <div
@@ -444,13 +444,13 @@ export default component$(() => {
                                             stroke-linejoin="round"
                                           />
                                         </svg>
-                                        <span class="text-neutral-500">
+                                        <span class="text-neutral-500 text-sm">
                                           {item.url.slice(0, 80)}
                                           {item.url.length > 80 && '...'}
                                         </span>
                                       </>
                                     ) : (
-                                      <span class="text-neutral-700">
+                                      <span class="text-neutral-700 text-sm">
                                         {item.url.slice(0, 80)}
                                         {item.url.length > 80 && '...'}
                                       </span>
@@ -473,13 +473,13 @@ export default component$(() => {
                           {/* Step: Indexing sources */}
                           {currentStep.value.startsWith('Indexing sources') && (
                             <div
-                              class="px-4 text-sm text-neutral-600 flex items-center gap-2"
+                              class="px-4 text-base text-neutral-600 flex items-center gap-2"
                               style="min-height:24px"
                             >
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
-                                width="24"
-                                height="24"
+                                width="20"
+                                height="20"
                                 viewBox="0 0 24 24"
                                 fill="none"
                                 stroke="currentColor"
@@ -500,12 +500,12 @@ export default component$(() => {
                               'Indexing sources',
                             ) && (
                               <div
-                                class="px-4 text-sm text-primary-600 flex items-center gap-2"
+                                class="px-4 text-base text-primary-600 flex items-center gap-2"
                                 style="min-height:24px"
                               >
                                 <LuCheckCircle
-                                  class="text-lg text-primary-600"
-                                  style="width:24px;height:24px;"
+                                  class="text-primary-600"
+                                  style="width:18px;height:18px;"
                                 />
                                 <span>Indexed sources</span>
                               </div>
@@ -526,13 +526,13 @@ export default component$(() => {
                             'Populating dataset',
                           ) && (
                             <div
-                              class="px-4 text-sm text-neutral-600 flex items-center gap-2"
+                              class="px-4 text-base text-neutral-600 flex items-center gap-2"
                               style="min-height:24px"
                             >
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
-                                width="24"
-                                height="24"
+                                width="20"
+                                height="20"
                                 viewBox="0 0 24 24"
                                 fill="none"
                                 stroke="currentColor"
@@ -552,12 +552,12 @@ export default component$(() => {
                               'Populating dataset',
                             ) && (
                               <div
-                                class="px-4 text-sm text-primary-600 flex items-center gap-2"
+                                class="px-4 text-base text-primary-600 flex items-center gap-2"
                                 style="min-height:24px"
                               >
                                 <LuCheckCircle
-                                  class="text-lg text-primary-600"
-                                  style="width:24px;height:24px;"
+                                  class="text-primary-600"
+                                  style="width:18px;height:18px;"
                                 />
                                 <span>Populated dataset</span>
                               </div>
@@ -567,7 +567,7 @@ export default component$(() => {
                     </div>
                   </div>
                 </div>
-              ) : null}
+              )}
 
               {/* Spacer to push textarea to bottom */}
               {/* <div class="flex-1" /> */}

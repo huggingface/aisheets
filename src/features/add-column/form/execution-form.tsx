@@ -48,7 +48,8 @@ export const ExecutionForm = component$<SidebarProps>(
     const { firstColumn, columns, removeTemporalColumn, updateColumn } =
       useColumnsStore();
 
-    const { DEFAULT_MODEL, DEFAULT_MODEL_PROVIDER } = useContext(configContext);
+    const { DEFAULT_MODEL, DEFAULT_MODEL_PROVIDER, modelEndpointEnabled } =
+      useContext(configContext);
 
     const isOpenModel = useSignal(false);
 
@@ -59,6 +60,9 @@ export const ExecutionForm = component$<SidebarProps>(
 
     const selectedModel = useSignal<Model>();
     const selectedProvider = useSignal<string>();
+
+    const endpointURLSelected = useSignal(modelEndpointEnabled);
+
     const inputModelId = useSignal<string | undefined>();
 
     const loadModels = useResource$(async () => {
@@ -100,16 +104,15 @@ export const ExecutionForm = component$<SidebarProps>(
           providers: [process.modelProvider!],
         };
         selectedProvider.value = process.modelProvider!;
-      }
-      // Otherwise pre-select the default model
-      else if (models) {
-        const defaultModel = models.find((m: Model) => m.id === DEFAULT_MODEL);
+      } else {
+        const defaultModel = models?.find((m: Model) => m.id === DEFAULT_MODEL);
         if (defaultModel) {
+          const defaultProvider = defaultModel.providers.find(
+            (provider) => provider === DEFAULT_MODEL_PROVIDER,
+          );
+
           selectedModel.value = defaultModel;
-          selectedProvider.value =
-            defaultModel.providers.find(
-              (provider) => provider === DEFAULT_MODEL_PROVIDER,
-            ) || defaultModel.providers[0];
+          selectedProvider.value = defaultProvider || defaultModel.providers[0];
         }
       }
 
@@ -121,6 +124,7 @@ export const ExecutionForm = component$<SidebarProps>(
       track(selectedProvider);
       track(prompt);
       track(columnsReferences);
+      track(endpointURLSelected);
 
       updateColumn({
         ...column,
@@ -164,6 +168,7 @@ export const ExecutionForm = component$<SidebarProps>(
             ...column.process,
             modelName,
             modelProvider,
+            useEndpointURL: endpointURLSelected.value,
             prompt: prompt.value,
             columnsReferences: columnsReferences.value,
             searchEnabled: searchOnWeb.value,
@@ -256,18 +261,12 @@ export const ExecutionForm = component$<SidebarProps>(
                 </div>
               </div>
 
-              <div class="flex items-center justify-start gap-1">
-                Model
-                <p class="text-neutral-500 underline">
-                  {selectedModel.value?.id}
-                </p>
-                with inference provider
-                <p class="italic">{selectedProvider.value}</p>
-                <Button
-                  look="ghost"
-                  class="hover:bg-neutral-200"
-                  onClick$={() => (isOpenModel.value = true)}
-                >
+              <div
+                onClick$={() => (isOpenModel.value = !isOpenModel.value)}
+                class="flex items-center justify-start gap-1"
+              >
+                <Label class="cursor-pointer">Advanced settings</Label>
+                <Button look="ghost" class="hover:bg-neutral-200">
                   <LuSettings class="text-neutral-500" />
                 </Button>
               </div>
@@ -298,12 +297,27 @@ export const ExecutionForm = component$<SidebarProps>(
 
                       return (
                         <div class="flex flex-col gap-4">
-                          <div class="flex gap-4">
+                          <div
+                            class="flex gap-4"
+                            onClick$={() => {
+                              endpointURLSelected.value = false;
+                            }}
+                          >
                             <div class="flex-[2]">
-                              <Label class="flex gap-1 mb-2 font-normal">
+                              <Label
+                                class={cn(
+                                  !endpointURLSelected.value
+                                    ? 'text-primary-500'
+                                    : 'text-neutral-500',
+                                  'flex gap-1 mb-2 font-primary cursor-pointer',
+                                )}
+                              >
                                 Model
                               </Label>
-                              <Select.Root value={selectedModel.value?.id}>
+                              <Select.Root
+                                disabled={endpointURLSelected.value}
+                                value={selectedModel.value?.id}
+                              >
                                 <Select.Trigger class="px-4 bg-white rounded-base border-neutral-300-foreground">
                                   <Select.DisplayValue />
                                 </Select.Trigger>
@@ -336,10 +350,18 @@ export const ExecutionForm = component$<SidebarProps>(
                               </Select.Root>
                             </div>
                             <div class="flex-1" key={selectedModel.value.id}>
-                              <Label class="flex gap-1 mb-2 font-normal">
+                              <Label
+                                class={cn(
+                                  !endpointURLSelected.value
+                                    ? 'text-primary-500'
+                                    : 'text-neutral-500',
+                                  'flex gap-1 mb-2 font-primary cursor-pointer',
+                                )}
+                              >
                                 Inference Providers
                               </Label>
                               <Select.Root
+                                disabled={endpointURLSelected.value}
                                 value={selectedProvider.value}
                                 onChange$={$((value: string | string[]) => {
                                   const provider = Array.isArray(value)
@@ -385,6 +407,31 @@ export const ExecutionForm = component$<SidebarProps>(
                       );
                     }}
                   />
+                  <div class="flex gap-4 mt-4" />
+
+                  {modelEndpointEnabled && (
+                    <>
+                      <div class="flex gap-4 mb-4">
+                        <div class="w-full h-px bg-neutral-200" />
+                      </div>
+                      <div class="flex gap-4 mb-4">
+                        <Label
+                          class={cn(
+                            endpointURLSelected.value
+                              ? 'text-primary-500'
+                              : 'text-neutral-500',
+                            'flex gap-1 mb-2 font-primary cursor-pointer',
+                          )}
+                          onClick$={() => {
+                            endpointURLSelected.value =
+                              !endpointURLSelected.value;
+                          }}
+                        >
+                          Pre-defined custom endpoint URL
+                        </Label>
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
             </div>

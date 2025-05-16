@@ -231,81 +231,127 @@ export default component$(() => {
               )}
               {/* Status/progress section: only show when loading */}
               <div
-                style="transition: all 0.75s ease-in-out"
-                class={`overflow-hidden ${isLoading.value && currentStep.value ? 'h-[520px] mb-8' : 'h-0 mb-0'}`}
+                style={`height: ${isLoading.value && currentStep.value ? '520px' : '0'}; transition: height 0.75s cubic-bezier(0.4,0,0.2,1);`}
+                class="w-full overflow-hidden"
               >
                 {isLoading.value && currentStep.value && (
-                  <div class="bg-neutral-100 rounded-md w-full pt-2 pb-4 border border-neutral-200 h-full">
-                    <div class="bg-neutral-100 rounded-md w-full pt-2 flex-grow overflow-y-auto max-h-full">
-                      {searchOnWeb.value && (
-                        <div class="w-full">
-                          {/* Step: Configuring dataset */}
-                          {currentStep.value === 'Configuring dataset...' && (
+                  <div class="bg-neutral-100 rounded-md w-full pt-2 pb-4 border border-neutral-200 mt-2">
+                    {searchOnWeb.value && (
+                      <div class="w-full">
+                        {/* Step: Configuring dataset */}
+                        {currentStep.value === 'Configuring dataset...' && (
+                          <div
+                            class="px-4 text-base text-neutral-600 flex items-center gap-2"
+                            style="min-height:24px"
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="20"
+                              height="20"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              class="lucide lucide-loader-circle-icon lucide-loader-circle animate-spin"
+                            >
+                              <title>Loading...</title>
+                              <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                            </svg>
+                            <span>Configuring dataset...</span>
+                          </div>
+                        )}
+                        {creationFlow.datasetName.name &&
+                          !creationFlow.datasetName.done && (
                             <div
                               class="px-4 text-base text-neutral-600 flex items-center gap-2"
                               style="min-height:24px"
                             >
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="20"
-                                height="20"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                class="lucide lucide-loader-circle-icon lucide-loader-circle animate-spin"
-                              >
-                                <title>Loading...</title>
-                                <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-                              </svg>
-                              <span>Configuring dataset...</span>
+                              Configured dataset
                             </div>
                           )}
-                          {creationFlow.datasetName.name &&
-                            !creationFlow.datasetName.done && (
-                              <div
-                                class="px-4 text-base text-neutral-600 flex items-center gap-2"
-                                style="min-height:24px"
-                              >
-                                Configured dataset
-                              </div>
-                            )}
-                          {/* Only show spacing if next step is present */}
-                          {(currentStep.value === 'Creating dataset...' ||
-                            creationFlow.datasetName.done) &&
-                            (currentStep.value === 'Configuring dataset...' ||
-                              (creationFlow.datasetName.name &&
-                                !creationFlow.datasetName.done)) && (
-                              <div class="h-4" />
-                            )}
+                        {/* Only show spacing if next step is present */}
+                        {(currentStep.value === 'Creating dataset...' ||
+                          creationFlow.datasetName.done) &&
+                          (currentStep.value === 'Configuring dataset...' ||
+                            (creationFlow.datasetName.name &&
+                              !creationFlow.datasetName.done)) && (
+                            <div class="h-4" />
+                          )}
 
-                          {/* Step: Creating dataset configuration */}
-                          {currentStep.value === 'Creating dataset...' && (
-                            <div
-                              class="px-4 text-base text-neutral-600 flex items-center gap-2"
-                              style="min-height:24px"
+                        {/* Step: Creating dataset configuration */}
+                        {currentStep.value === 'Creating dataset...' && (
+                          <div
+                            class="px-4 text-base text-neutral-600 flex items-center gap-2"
+                            style="min-height:24px"
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="20"
+                              height="20"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              class="lucide lucide-loader-circle-icon lucide-loader-circle animate-spin"
                             >
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="20"
-                                height="20"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                class="lucide lucide-loader-circle-icon lucide-loader-circle animate-spin"
-                              >
-                                <title>Loading...</title>
-                                <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-                              </svg>
-                              <span>Creating dataset configuration...</span>
-                            </div>
+                              <title>Loading...</title>
+                              <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                            </svg>
+                            <span>Creating dataset configuration...</span>
+                          </div>
+                        )}
+                        {creationFlow.datasetName.done && (
+                          <div
+                            class="px-4 text-base text-primary-600 flex items-center gap-2"
+                            style="min-height:24px"
+                          >
+                            <LuCheckCircle
+                              class="text-primary-600"
+                              style="width:18px;height:18px;"
+                            />
+                            <span>Created dataset configuration</span>
+                          </div>
+                        )}
+                        {/* Only show spacing if next step is present */}
+                        {(currentStep.value.startsWith('Searching the web') ||
+                          creationFlow.queries.done) &&
+                          (currentStep.value === 'Creating dataset...' ||
+                            creationFlow.datasetName.done) && (
+                            <div class="h-4" />
                           )}
-                          {creationFlow.datasetName.done && (
+
+                        {/* Step: Searching the web */}
+                        {currentStep.value.startsWith('Searching the web') && (
+                          <div
+                            class="px-4 text-base text-neutral-600 flex items-center gap-2"
+                            style="min-height:24px"
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="20"
+                              height="20"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              class="lucide lucide-loader-circle-icon lucide-loader-circle animate-spin"
+                            >
+                              <title>Loading...</title>
+                              <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                            </svg>
+                            <span>{currentStep.value}</span>
+                          </div>
+                        )}
+                        {creationFlow.queries.done &&
+                          !currentStep.value.startsWith(
+                            'Searching the web',
+                          ) && (
                             <div
                               class="px-4 text-base text-primary-600 flex items-center gap-2"
                               style="min-height:24px"
@@ -314,260 +360,195 @@ export default component$(() => {
                                 class="text-primary-600"
                                 style="width:18px;height:18px;"
                               />
-                              <span>Created dataset configuration</span>
+                              {`Searched the web: ${creationFlow.queries.queries.map((q: string) => `"${q}"`).join(', ')}`}
                             </div>
                           )}
-                          {/* Only show spacing if next step is present */}
-                          {(currentStep.value.startsWith('Searching the web') ||
-                            creationFlow.queries.done) &&
-                            (currentStep.value === 'Creating dataset...' ||
-                              creationFlow.datasetName.done) && (
-                              <div class="h-4" />
-                            )}
+                        {/* Only show spacing if next step is present */}
+                        {(currentStep.value.startsWith('Processing URLs') ||
+                          (creationFlow.visitUrls.urls.length > 0 &&
+                            creationFlow.visitUrls.urls.every(
+                              (item) => item.status === 'completed',
+                            ))) &&
+                          (currentStep.value.startsWith('Searching the web') ||
+                            creationFlow.queries.done) && <div class="h-4" />}
 
-                          {/* Step: Searching the web */}
-                          {currentStep.value.startsWith(
-                            'Searching the web',
-                          ) && (
+                        {/* Step: Processing URLs */}
+                        {currentStep.value.startsWith('Processing URLs') && (
+                          <div
+                            class="px-4 text-base text-neutral-600 flex items-center gap-2"
+                            style="min-height:24px"
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="20"
+                              height="20"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              class="lucide lucide-loader-circle-icon lucide-loader-circle animate-spin"
+                            >
+                              <title>Loading...</title>
+                              <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                            </svg>
+                            <span>{currentStep.value}</span>
+                          </div>
+                        )}
+                        {creationFlow.visitUrls.urls.length > 0 &&
+                          creationFlow.visitUrls.urls.every(
+                            (item) => item.status === 'completed',
+                          ) &&
+                          !currentStep.value.startsWith('Processing URLs') && (
                             <div
-                              class="px-4 text-base text-neutral-600 flex items-center gap-2"
+                              class="px-4 text-base text-primary-600 flex items-center gap-2"
                               style="min-height:24px"
                             >
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="20"
-                                height="20"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                class="lucide lucide-loader-circle-icon lucide-loader-circle animate-spin"
-                              >
-                                <title>Loading...</title>
-                                <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-                              </svg>
-                              <span>{currentStep.value}</span>
+                              <LuCheckCircle
+                                class="text-primary-600"
+                                style="width:18px;height:18px;"
+                              />
+                              <span>Processed URLs</span>
                             </div>
                           )}
-                          {creationFlow.queries.done &&
-                            !currentStep.value.startsWith(
-                              'Searching the web',
-                            ) && (
-                              <div
-                                class="px-4 text-base text-primary-600 flex items-center gap-2"
-                                style="min-height:24px"
-                              >
-                                <LuCheckCircle
-                                  class="text-primary-600"
-                                  style="width:18px;height:18px;"
-                                />
-                                {`Searched the web: ${creationFlow.queries.queries.map((q: string) => `"${q}"`).join(', ')}`}
+                        {creationFlow.visitUrls.urls.length > 0 && (
+                          <div class="px-4 text-base text-neutral-600 flex flex-col gap-2 ml-8 mt-3">
+                            {creationFlow.visitUrls.urls.map((item, index) => (
+                              <div key={index} class="flex items-center gap-2">
+                                {item.status === 'pending' ? (
+                                  <>
+                                    <svg
+                                      width="18"
+                                      height="18"
+                                      viewBox="0 0 24 24"
+                                      fill="none"
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      class="animate-spin text-neutral-500"
+                                      style="min-width:18px;min-height:18px;"
+                                    >
+                                      <title>Loading...</title>
+                                      <path
+                                        d="M21 12a9 9 0 1 1-6.219-8.56"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                      />
+                                    </svg>
+                                    <span class="text-neutral-500 text-sm">
+                                      {item.url.slice(0, 80)}
+                                      {item.url.length > 80 && '...'}
+                                    </span>
+                                  </>
+                                ) : (
+                                  <span class="text-neutral-700 text-sm">
+                                    {item.url.slice(0, 80)}
+                                    {item.url.length > 80 && '...'}
+                                  </span>
+                                )}
                               </div>
-                            )}
-                          {/* Only show spacing if next step is present */}
-                          {(currentStep.value.startsWith('Processing URLs') ||
+                            ))}
+                          </div>
+                        )}
+                        {/* Only show spacing if next step is present */}
+                        {(currentStep.value.startsWith('Indexing sources') ||
+                          (creationFlow.indexSources.done &&
+                            creationFlow.indexSources.ok)) &&
+                          (currentStep.value.startsWith('Processing URLs') ||
                             (creationFlow.visitUrls.urls.length > 0 &&
                               creationFlow.visitUrls.urls.every(
                                 (item) => item.status === 'completed',
-                              ))) &&
-                            (currentStep.value.startsWith(
-                              'Searching the web',
-                            ) ||
-                              creationFlow.queries.done) && <div class="h-4" />}
+                              ))) && <div class="h-4" />}
 
-                          {/* Step: Processing URLs */}
-                          {currentStep.value.startsWith('Processing URLs') && (
+                        {/* Step: Indexing sources */}
+                        {currentStep.value.startsWith('Indexing sources') && (
+                          <div
+                            class="px-4 text-base text-neutral-600 flex items-center gap-2"
+                            style="min-height:24px"
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="20"
+                              height="20"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              class="lucide lucide-loader-circle-icon lucide-loader-circle animate-spin"
+                            >
+                              <title>Loading...</title>
+                              <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                            </svg>
+                            <span>Indexing sources...</span>
+                          </div>
+                        )}
+                        {creationFlow.indexSources.done &&
+                          creationFlow.indexSources.ok &&
+                          !currentStep.value.startsWith('Indexing sources') && (
                             <div
-                              class="px-4 text-base text-neutral-600 flex items-center gap-2"
+                              class="px-4 text-base text-primary-600 flex items-center gap-2"
                               style="min-height:24px"
                             >
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="20"
-                                height="20"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                class="lucide lucide-loader-circle-icon lucide-loader-circle animate-spin"
-                              >
-                                <title>Loading...</title>
-                                <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-                              </svg>
-                              <span>{currentStep.value}</span>
+                              <LuCheckCircle
+                                class="text-primary-600"
+                                style="width:18px;height:18px;"
+                              />
+                              <span>Indexed sources</span>
                             </div>
                           )}
-                          {creationFlow.visitUrls.urls.length > 0 &&
-                            creationFlow.visitUrls.urls.every(
-                              (item) => item.status === 'completed',
-                            ) &&
-                            !currentStep.value.startsWith(
-                              'Processing URLs',
-                            ) && (
-                              <div
-                                class="px-4 text-base text-primary-600 flex items-center gap-2"
-                                style="min-height:24px"
-                              >
-                                <LuCheckCircle
-                                  class="text-primary-600"
-                                  style="width:18px;height:18px;"
-                                />
-                                <span>Processed URLs</span>
-                              </div>
-                            )}
-                          {creationFlow.visitUrls.urls.length > 0 && (
-                            <div class="px-4 text-base text-neutral-600 flex flex-col gap-2 ml-8 mt-3">
-                              {creationFlow.visitUrls.urls.map(
-                                (item, index) => (
-                                  <div
-                                    key={index}
-                                    class="flex items-center gap-2"
-                                  >
-                                    {item.status === 'pending' ? (
-                                      <>
-                                        <svg
-                                          width="18"
-                                          height="18"
-                                          viewBox="0 0 24 24"
-                                          fill="none"
-                                          xmlns="http://www.w3.org/2000/svg"
-                                          class="animate-spin text-neutral-500"
-                                          style="min-width:18px;min-height:18px;"
-                                        >
-                                          <title>Loading...</title>
-                                          <path
-                                            d="M21 12a9 9 0 1 1-6.219-8.56"
-                                            stroke="currentColor"
-                                            stroke-width="2"
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                          />
-                                        </svg>
-                                        <span class="text-neutral-500 text-sm">
-                                          {item.url.slice(0, 80)}
-                                          {item.url.length > 80 && '...'}
-                                        </span>
-                                      </>
-                                    ) : (
-                                      <span class="text-neutral-700 text-sm">
-                                        {item.url.slice(0, 80)}
-                                        {item.url.length > 80 && '...'}
-                                      </span>
-                                    )}
-                                  </div>
-                                ),
-                              )}
-                            </div>
-                          )}
-                          {/* Only show spacing if next step is present */}
-                          {(currentStep.value.startsWith('Indexing sources') ||
+                        {/* Only show spacing if next step is present */}
+                        {(currentStep.value.startsWith('Populating dataset') ||
+                          creationFlow.populateDataset.done) &&
+                          (currentStep.value.startsWith('Indexing sources') ||
                             (creationFlow.indexSources.done &&
-                              creationFlow.indexSources.ok)) &&
-                            (currentStep.value.startsWith('Processing URLs') ||
-                              (creationFlow.visitUrls.urls.length > 0 &&
-                                creationFlow.visitUrls.urls.every(
-                                  (item) => item.status === 'completed',
-                                ))) && <div class="h-4" />}
-
-                          {/* Step: Indexing sources */}
-                          {currentStep.value.startsWith('Indexing sources') && (
-                            <div
-                              class="px-4 text-base text-neutral-600 flex items-center gap-2"
-                              style="min-height:24px"
-                            >
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="20"
-                                height="20"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                class="lucide lucide-loader-circle-icon lucide-loader-circle animate-spin"
-                              >
-                                <title>Loading...</title>
-                                <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-                              </svg>
-                              <span>Indexing sources...</span>
-                            </div>
+                              creationFlow.indexSources.ok)) && (
+                            <div class="h-4" />
                           )}
-                          {creationFlow.indexSources.done &&
-                            creationFlow.indexSources.ok &&
-                            !currentStep.value.startsWith(
-                              'Indexing sources',
-                            ) && (
-                              <div
-                                class="px-4 text-base text-primary-600 flex items-center gap-2"
-                                style="min-height:24px"
-                              >
-                                <LuCheckCircle
-                                  class="text-primary-600"
-                                  style="width:18px;height:18px;"
-                                />
-                                <span>Indexed sources</span>
-                              </div>
-                            )}
-                          {/* Only show spacing if next step is present */}
-                          {(currentStep.value.startsWith(
-                            'Populating dataset',
-                          ) ||
-                            creationFlow.populateDataset.done) &&
-                            (currentStep.value.startsWith('Indexing sources') ||
-                              (creationFlow.indexSources.done &&
-                                creationFlow.indexSources.ok)) && (
-                              <div class="h-4" />
-                            )}
 
-                          {/* Step: Populating dataset */}
-                          {currentStep.value.startsWith(
+                        {/* Step: Populating dataset */}
+                        {currentStep.value.startsWith('Populating dataset') && (
+                          <div
+                            class="px-4 text-base text-neutral-600 flex items-center gap-2"
+                            style="min-height:24px"
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="20"
+                              height="20"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              class="lucide lucide-loader-circle-icon lucide-loader-circle animate-spin"
+                            >
+                              <title>Loading...</title>
+                              <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                            </svg>
+                            <span>{currentStep.value}</span>
+                          </div>
+                        )}
+                        {creationFlow.populateDataset.done &&
+                          !currentStep.value.startsWith(
                             'Populating dataset',
                           ) && (
                             <div
-                              class="px-4 text-base text-neutral-600 flex items-center gap-2"
+                              class="px-4 text-base text-primary-600 flex items-center gap-2"
                               style="min-height:24px"
                             >
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="20"
-                                height="20"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                class="lucide lucide-loader-circle-icon lucide-loader-circle animate-spin"
-                              >
-                                <title>Loading...</title>
-                                <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-                              </svg>
-                              <span>{currentStep.value}</span>
+                              <LuCheckCircle
+                                class="text-primary-600"
+                                style="width:18px;height:18px;"
+                              />
+                              <span>Populated dataset</span>
                             </div>
                           )}
-                          {creationFlow.populateDataset.done &&
-                            !currentStep.value.startsWith(
-                              'Populating dataset',
-                            ) && (
-                              <div
-                                class="px-4 text-base text-primary-600 flex items-center gap-2"
-                                style="min-height:24px"
-                              >
-                                <LuCheckCircle
-                                  class="text-primary-600"
-                                  style="width:18px;height:18px;"
-                                />
-                                <span>Populated dataset</span>
-                              </div>
-                            )}
-                        </div>
-                      )}
-                    </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

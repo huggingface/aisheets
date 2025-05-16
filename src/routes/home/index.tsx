@@ -223,9 +223,9 @@ export default component$(() => {
               {/* Show the message above the status box when loading */}
               {isLoading.value && (
                 <div class="flex items-center gap-2 px-4 pt-4 pb-2">
-                  <LuClock7 class="text-lg text-neutral-500" />
+                  <LuClock7 class="text-lg text-primary-500" />
                   <span class="font-semibold text-base text-primary-500">
-                    The dataset will be ready in a few minutes
+                    The dataset will be ready very soon
                   </span>
                 </div>
               )}
@@ -236,95 +236,93 @@ export default component$(() => {
               >
                 {isLoading.value && currentStep.value && (
                   <div class="bg-neutral-100 rounded-md w-full pt-2 pb-4 border border-neutral-200 mt-2">
+                    {/* Always show these steps */}
+                    {currentStep.value === 'Configuring dataset...' && (
+                      <div
+                        class="px-4 text-base text-neutral-600 flex items-center gap-2"
+                        style="min-height:24px"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="20"
+                          height="20"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          class="lucide lucide-loader-circle-icon lucide-loader-circle animate-spin"
+                        >
+                          <title>Loading...</title>
+                          <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                        </svg>
+                        <span>Configuring dataset...</span>
+                      </div>
+                    )}
+                    {creationFlow.datasetName.name &&
+                      !creationFlow.datasetName.done && (
+                        <div
+                          class="px-4 text-base text-neutral-600 flex items-center gap-2"
+                          style="min-height:24px"
+                        >
+                          Configured dataset
+                        </div>
+                      )}
+                    {/* Only show spacing if next step is present */}
+                    {(currentStep.value === 'Creating dataset...' ||
+                      creationFlow.datasetName.done) &&
+                      (currentStep.value === 'Configuring dataset...' ||
+                        (creationFlow.datasetName.name &&
+                          !creationFlow.datasetName.done)) && (
+                        <div class="h-4" />
+                      )}
+
+                    {/* Step: Creating dataset configuration */}
+                    {currentStep.value === 'Creating dataset...' && (
+                      <div
+                        class="px-4 text-base text-neutral-600 flex items-center gap-2"
+                        style="min-height:24px"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="20"
+                          height="20"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          class="lucide lucide-loader-circle-icon lucide-loader-circle animate-spin"
+                        >
+                          <title>Loading...</title>
+                          <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                        </svg>
+                        <span>Creating dataset configuration...</span>
+                      </div>
+                    )}
+                    {creationFlow.datasetName.done && (
+                      <div
+                        class="px-4 text-base text-primary-600 flex items-center gap-2"
+                        style="min-height:24px"
+                      >
+                        <LuCheckCircle
+                          class="text-primary-600"
+                          style="width:18px;height:18px;"
+                        />
+                        <span>Created dataset configuration</span>
+                      </div>
+                    )}
+                    {/* Only show spacing if next step is present */}
+                    {(currentStep.value.startsWith('Searching the web') ||
+                      creationFlow.queries.done) &&
+                      (currentStep.value === 'Creating dataset...' ||
+                        creationFlow.datasetName.done) && <div class="h-4" />}
+
+                    {/* Only show these if search is enabled */}
                     {searchOnWeb.value && (
-                      <div class="w-full">
-                        {/* Step: Configuring dataset */}
-                        {currentStep.value === 'Configuring dataset...' && (
-                          <div
-                            class="px-4 text-base text-neutral-600 flex items-center gap-2"
-                            style="min-height:24px"
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="20"
-                              height="20"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              stroke-width="2"
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              class="lucide lucide-loader-circle-icon lucide-loader-circle animate-spin"
-                            >
-                              <title>Loading...</title>
-                              <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-                            </svg>
-                            <span>Configuring dataset...</span>
-                          </div>
-                        )}
-                        {creationFlow.datasetName.name &&
-                          !creationFlow.datasetName.done && (
-                            <div
-                              class="px-4 text-base text-neutral-600 flex items-center gap-2"
-                              style="min-height:24px"
-                            >
-                              Configured dataset
-                            </div>
-                          )}
-                        {/* Only show spacing if next step is present */}
-                        {(currentStep.value === 'Creating dataset...' ||
-                          creationFlow.datasetName.done) &&
-                          (currentStep.value === 'Configuring dataset...' ||
-                            (creationFlow.datasetName.name &&
-                              !creationFlow.datasetName.done)) && (
-                            <div class="h-4" />
-                          )}
-
-                        {/* Step: Creating dataset configuration */}
-                        {currentStep.value === 'Creating dataset...' && (
-                          <div
-                            class="px-4 text-base text-neutral-600 flex items-center gap-2"
-                            style="min-height:24px"
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="20"
-                              height="20"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              stroke-width="2"
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              class="lucide lucide-loader-circle-icon lucide-loader-circle animate-spin"
-                            >
-                              <title>Loading...</title>
-                              <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-                            </svg>
-                            <span>Creating dataset configuration...</span>
-                          </div>
-                        )}
-                        {creationFlow.datasetName.done && (
-                          <div
-                            class="px-4 text-base text-primary-600 flex items-center gap-2"
-                            style="min-height:24px"
-                          >
-                            <LuCheckCircle
-                              class="text-primary-600"
-                              style="width:18px;height:18px;"
-                            />
-                            <span>Created dataset configuration</span>
-                          </div>
-                        )}
-                        {/* Only show spacing if next step is present */}
-                        {(currentStep.value.startsWith('Searching the web') ||
-                          creationFlow.queries.done) &&
-                          (currentStep.value === 'Creating dataset...' ||
-                            creationFlow.datasetName.done) && (
-                            <div class="h-4" />
-                          )}
-
-                        {/* Step: Searching the web */}
+                      <>
                         {currentStep.value.startsWith('Searching the web') && (
                           <div
                             class="px-4 text-base text-neutral-600 flex items-center gap-2"
@@ -499,56 +497,46 @@ export default component$(() => {
                               <span>Indexed sources</span>
                             </div>
                           )}
-                        {/* Only show spacing if next step is present */}
-                        {(currentStep.value.startsWith('Populating dataset') ||
-                          creationFlow.populateDataset.done) &&
-                          (currentStep.value.startsWith('Indexing sources') ||
-                            (creationFlow.indexSources.done &&
-                              creationFlow.indexSources.ok)) && (
-                            <div class="h-4" />
-                          )}
+                      </>
+                    )}
 
-                        {/* Step: Populating dataset */}
-                        {currentStep.value.startsWith('Populating dataset') && (
-                          <div
-                            class="px-4 text-base text-neutral-600 flex items-center gap-2"
-                            style="min-height:24px"
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="20"
-                              height="20"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              stroke-width="2"
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              class="lucide lucide-loader-circle-icon lucide-loader-circle animate-spin"
-                            >
-                              <title>Loading...</title>
-                              <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-                            </svg>
-                            <span>{currentStep.value}</span>
-                          </div>
-                        )}
-                        {creationFlow.populateDataset.done &&
-                          !currentStep.value.startsWith(
-                            'Populating dataset',
-                          ) && (
-                            <div
-                              class="px-4 text-base text-primary-600 flex items-center gap-2"
-                              style="min-height:24px"
-                            >
-                              <LuCheckCircle
-                                class="text-primary-600"
-                                style="width:18px;height:18px;"
-                              />
-                              <span>Populated dataset</span>
-                            </div>
-                          )}
+                    {/* Always show these steps */}
+                    {currentStep.value.startsWith('Populating dataset') && (
+                      <div
+                        class="px-4 text-base text-neutral-600 flex items-center gap-2"
+                        style="min-height:24px"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="20"
+                          height="20"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          class="lucide lucide-loader-circle-icon lucide-loader-circle animate-spin"
+                        >
+                          <title>Loading...</title>
+                          <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                        </svg>
+                        <span>{currentStep.value}</span>
                       </div>
                     )}
+                    {creationFlow.populateDataset.done &&
+                      !currentStep.value.startsWith('Populating dataset') && (
+                        <div
+                          class="px-4 text-base text-primary-600 flex items-center gap-2"
+                          style="min-height:24px"
+                        >
+                          <LuCheckCircle
+                            class="text-primary-600"
+                            style="width:18px;height:18px;"
+                          />
+                          <span>Populated dataset</span>
+                        </div>
+                      )}
                   </div>
                 )}
               </div>

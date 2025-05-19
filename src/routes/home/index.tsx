@@ -231,7 +231,7 @@ export default component$(() => {
               )}
               {/* Status/progress section: only show when loading */}
               <div
-                style={`height: ${isLoading.value && currentStep.value ? '530px' : '0'}; transition: height 0.75s cubic-bezier(0.4,0,0.2,1);`}
+                style={`height: ${isLoading.value && currentStep.value ? '510px' : '0'}; transition: height 0.75s cubic-bezier(0.4,0,0.2,1);`}
                 class="w-full overflow-hidden mb-8"
               >
                 {isLoading.value && currentStep.value && (

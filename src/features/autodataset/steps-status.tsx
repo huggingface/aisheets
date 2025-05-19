@@ -193,7 +193,7 @@ export const StepsStatus = component$<StepStatusProps>(
                   <div class="px-4 text-base text-neutral-600 flex flex-col gap-2 ml-8 mt-3">
                     {creationFlow.visitUrls.urls.map((item, index) => (
                       <UrlItem
-                        key={index}
+                        key={index + '-' + item.status}
                         url={item.url}
                         status={item.status}
                       />

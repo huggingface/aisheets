@@ -263,9 +263,20 @@ export const ExecutionForm = component$<SidebarProps>(
 
               <div
                 onClick$={() => (isOpenModel.value = !isOpenModel.value)}
-                class="flex items-center justify-start gap-1"
+                class="flex items-center justify-start gap-1 cursor-pointer"
               >
-                <Label class="cursor-pointer">Advanced settings</Label>
+                {modelEndpointEnabled ? (
+                  <Label class="cursor-pointer">Advanced settings</Label>
+                ) : (
+                  <div class="flex items-center justify-start gap-1">
+                    Model
+                    <p class="text-neutral-500 underline">
+                      {selectedModel.value?.id}
+                    </p>
+                    with inference provider
+                    <p class="italic">{selectedProvider.value}</p>
+                  </div>
+                )}
                 <Button look="ghost" class="hover:bg-neutral-200">
                   <LuSettings class="text-neutral-500" />
                 </Button>

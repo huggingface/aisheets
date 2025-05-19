@@ -174,7 +174,7 @@ export const StepsStatus = component$<StepStatusProps>(
                   text={
                     creationFlow.queries.done
                       ? `Searched the web: ${creationFlow.queries.queries.map((q: string) => `"${q}"`).join(', ')}`
-                      : currentStep
+                      : `Searching the web: ${creationFlow.queries.queries.map((q: string) => `"${q}"`).join(', ')}...`
                   }
                 />
 
@@ -186,7 +186,14 @@ export const StepsStatus = component$<StepStatusProps>(
                       (item) => item.status === 'completed',
                     )
                   }
-                  text="Processed URLs"
+                  text={
+                    creationFlow.visitUrls.urls.length > 0 &&
+                    creationFlow.visitUrls.urls.every(
+                      (item) => item.status === 'completed',
+                    )
+                      ? 'Processed URLs'
+                      : 'Processing URLs...'
+                  }
                 />
 
                 {creationFlow.visitUrls.urls.length > 0 && (
@@ -207,7 +214,12 @@ export const StepsStatus = component$<StepStatusProps>(
                     creationFlow.indexSources.done &&
                     creationFlow.indexSources.ok
                   }
-                  text="Indexed sources"
+                  text={
+                    creationFlow.indexSources.done &&
+                    creationFlow.indexSources.ok
+                      ? 'Indexed sources'
+                      : 'Indexing sources...'
+                  }
                 />
               </>
             )}
@@ -217,7 +229,7 @@ export const StepsStatus = component$<StepStatusProps>(
               text={
                 creationFlow.populateDataset.done
                   ? 'Populated dataset'
-                  : currentStep
+                  : 'Populating dataset...'
               }
             />
           </div>

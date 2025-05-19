@@ -231,15 +231,14 @@ export default component$(() => {
               )}
               {/* Status/progress section: only show when loading */}
               <div
-                style={`height: ${isLoading.value && currentStep.value ? '520px' : '0'}; transition: height 0.75s cubic-bezier(0.4,0,0.2,1);`}
-                class="w-full overflow-hidden"
+                style={`height: ${isLoading.value && currentStep.value ? '530px' : '0'}; transition: height 0.75s cubic-bezier(0.4,0,0.2,1);`}
+                class="w-full overflow-hidden mb-8"
               >
                 {isLoading.value && currentStep.value && (
                   <div class="bg-neutral-100 rounded-md w-full pt-2 pb-4 border border-neutral-200 mt-2">
-                    {/* Always show these steps */}
                     {currentStep.value === 'Configuring dataset...' && (
                       <div
-                        class="px-4 text-base text-neutral-600 flex items-center gap-2"
+                        class="px-4 py-2 text-base text-neutral-600 flex items-center gap-2"
                         style="min-height:24px"
                       >
                         <svg
@@ -263,25 +262,16 @@ export default component$(() => {
                     {creationFlow.datasetName.name &&
                       !creationFlow.datasetName.done && (
                         <div
-                          class="px-4 text-base text-neutral-600 flex items-center gap-2"
+                          class="px-4 py-2 text-base text-neutral-600 flex items-center gap-2"
                           style="min-height:24px"
                         >
                           Configured dataset
                         </div>
                       )}
-                    {/* Only show spacing if next step is present */}
-                    {(currentStep.value === 'Creating dataset...' ||
-                      creationFlow.datasetName.done) &&
-                      (currentStep.value === 'Configuring dataset...' ||
-                        (creationFlow.datasetName.name &&
-                          !creationFlow.datasetName.done)) && (
-                        <div class="h-4" />
-                      )}
-
                     {/* Step: Creating dataset configuration */}
                     {currentStep.value === 'Creating dataset...' && (
                       <div
-                        class="px-4 text-base text-neutral-600 flex items-center gap-2"
+                        class="px-4 py-2 text-base text-neutral-600 flex items-center gap-2"
                         style="min-height:24px"
                       >
                         <svg
@@ -304,7 +294,7 @@ export default component$(() => {
                     )}
                     {creationFlow.datasetName.done && (
                       <div
-                        class="px-4 text-base text-primary-600 flex items-center gap-2"
+                        class="px-4 py-2 text-base text-primary-600 flex items-center gap-2"
                         style="min-height:24px"
                       >
                         <LuCheckCircle
@@ -314,18 +304,13 @@ export default component$(() => {
                         <span>Created dataset configuration</span>
                       </div>
                     )}
-                    {/* Only show spacing if next step is present */}
-                    {(currentStep.value.startsWith('Searching the web') ||
-                      creationFlow.queries.done) &&
-                      (currentStep.value === 'Creating dataset...' ||
-                        creationFlow.datasetName.done) && <div class="h-4" />}
 
                     {/* Only show these if search is enabled */}
                     {searchOnWeb.value && (
                       <>
                         {currentStep.value.startsWith('Searching the web') && (
                           <div
-                            class="px-4 text-base text-neutral-600 flex items-center gap-2"
+                            class="px-4 py-2 text-base text-neutral-600 flex items-center gap-2"
                             style="min-height:24px"
                           >
                             <svg
@@ -351,7 +336,7 @@ export default component$(() => {
                             'Searching the web',
                           ) && (
                             <div
-                              class="px-4 text-base text-primary-600 flex items-center gap-2"
+                              class="px-4 py-2 text-base text-primary-600 flex items-center gap-2"
                               style="min-height:24px"
                             >
                               <LuCheckCircle
@@ -361,19 +346,11 @@ export default component$(() => {
                               {`Searched the web: ${creationFlow.queries.queries.map((q: string) => `"${q}"`).join(', ')}`}
                             </div>
                           )}
-                        {/* Only show spacing if next step is present */}
-                        {(currentStep.value.startsWith('Processing URLs') ||
-                          (creationFlow.visitUrls.urls.length > 0 &&
-                            creationFlow.visitUrls.urls.every(
-                              (item) => item.status === 'completed',
-                            ))) &&
-                          (currentStep.value.startsWith('Searching the web') ||
-                            creationFlow.queries.done) && <div class="h-4" />}
 
                         {/* Step: Processing URLs */}
                         {currentStep.value.startsWith('Processing URLs') && (
                           <div
-                            class="px-4 text-base text-neutral-600 flex items-center gap-2"
+                            class="px-4 py-2 text-base text-neutral-600 flex items-center gap-2"
                             style="min-height:24px"
                           >
                             <svg
@@ -400,7 +377,7 @@ export default component$(() => {
                           ) &&
                           !currentStep.value.startsWith('Processing URLs') && (
                             <div
-                              class="px-4 text-base text-primary-600 flex items-center gap-2"
+                              class="px-4 py-2 text-base text-primary-600 flex items-center gap-2"
                               style="min-height:24px"
                             >
                               <LuCheckCircle
@@ -449,20 +426,11 @@ export default component$(() => {
                             ))}
                           </div>
                         )}
-                        {/* Only show spacing if next step is present */}
-                        {(currentStep.value.startsWith('Indexing sources') ||
-                          (creationFlow.indexSources.done &&
-                            creationFlow.indexSources.ok)) &&
-                          (currentStep.value.startsWith('Processing URLs') ||
-                            (creationFlow.visitUrls.urls.length > 0 &&
-                              creationFlow.visitUrls.urls.every(
-                                (item) => item.status === 'completed',
-                              ))) && <div class="h-4" />}
 
                         {/* Step: Indexing sources */}
                         {currentStep.value.startsWith('Indexing sources') && (
                           <div
-                            class="px-4 text-base text-neutral-600 flex items-center gap-2"
+                            class="px-4 py-2 text-base text-neutral-600 flex items-center gap-2"
                             style="min-height:24px"
                           >
                             <svg
@@ -487,7 +455,7 @@ export default component$(() => {
                           creationFlow.indexSources.ok &&
                           !currentStep.value.startsWith('Indexing sources') && (
                             <div
-                              class="px-4 text-base text-primary-600 flex items-center gap-2"
+                              class="px-4 py-2 text-base text-primary-600 flex items-center gap-2"
                               style="min-height:24px"
                             >
                               <LuCheckCircle
@@ -503,7 +471,7 @@ export default component$(() => {
                     {/* Always show these steps */}
                     {currentStep.value.startsWith('Populating dataset') && (
                       <div
-                        class="px-4 text-base text-neutral-600 flex items-center gap-2"
+                        class="px-4 py2 text-base text-neutral-600 flex items-center gap-2"
                         style="min-height:24px"
                       >
                         <svg
@@ -527,7 +495,7 @@ export default component$(() => {
                     {creationFlow.populateDataset.done &&
                       !currentStep.value.startsWith('Populating dataset') && (
                         <div
-                          class="px-4 text-base text-primary-600 flex items-center gap-2"
+                          class="px-4 py-2 text-base text-primary-600 flex items-center gap-2"
                           style="min-height:24px"
                         >
                           <LuCheckCircle
@@ -540,10 +508,6 @@ export default component$(() => {
                   </div>
                 )}
               </div>
-
-              {/* Spacer to push textarea to bottom */}
-              {/* <div class="flex-1" /> */}
-              {/* Textarea and controls */}
               <div>
                 <div class="w-full bg-white border border-secondary-foreground rounded-xl pb-14 shadow-[0px_4px_6px_rgba(0,0,0,0.1)]">
                   <Textarea

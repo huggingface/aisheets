@@ -1,4 +1,4 @@
-import { type JSX, component$ } from '@builder.io/qwik';
+import { component$ } from '@builder.io/qwik';
 import { LuCheckCircle, LuClock7 } from '@qwikest/icons/lucide';
 
 interface StepStatusProps {
@@ -76,38 +76,33 @@ interface StepItemProps {
   isActive: boolean;
   isDone: boolean;
   text: string;
-  icon?: JSX.Element;
 }
 
-const StepItem = component$<StepItemProps>(
-  ({ isActive, isDone, text, icon }) => {
-    if (!isActive && !isDone) return null;
+const StepItem = component$<StepItemProps>(({ isActive, isDone, text }) => {
+  if (!isActive && !isDone) return null;
 
-    return (
-      <div
-        class="px-4 py-2 text-base flex items-center gap-2"
-        style="min-height:24px"
-      >
-        {isActive ? (
-          <>
-            <LoadingSpinner />
-            <span class="text-neutral-600">{text}</span>
-          </>
-        ) : (
-          <>
-            {icon || (
-              <LuCheckCircle
-                class="text-primary-600"
-                style="width:18px;height:18px;"
-              />
-            )}
-            <span class="text-primary-600">{text}</span>
-          </>
-        )}
-      </div>
-    );
-  },
-);
+  return (
+    <div
+      class="px-4 py-2 text-base flex items-center gap-2"
+      style="min-height:24px"
+    >
+      {isActive ? (
+        <>
+          <LoadingSpinner />
+          <span class="text-neutral-600">{text}</span>
+        </>
+      ) : (
+        <>
+          <LuCheckCircle
+            class="text-primary-600"
+            style="width:18px;height:18px;"
+          />
+          <span class="text-primary-600">{text}</span>
+        </>
+      )}
+    </div>
+  );
+});
 
 interface UrlItemProps {
   url: string;

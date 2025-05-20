@@ -1,14 +1,18 @@
 import { component$ } from '@builder.io/qwik';
 import type { DocumentHead } from '@builder.io/qwik-city';
+import { Login } from '~/components/ui/login/Login';
 import { DatasetName } from '~/features/datasets';
 import { SaveDataset } from '~/features/export';
 import { MainSidebarButton } from '~/features/main-sidebar';
 
 import { Table } from '~/features/table';
 import { Username } from '~/features/user/username';
+import { useSession } from '~/loaders';
 import { ActiveDatasetProvider } from '~/state';
 
 export default component$(() => {
+  const session = useSession();
+
   return (
     <ActiveDatasetProvider>
       <div class="flex flex-col h-full w-full">
@@ -20,7 +24,7 @@ export default component$(() => {
                 <DatasetName />
                 <SaveDataset />
               </div>
-              <Username />
+              {session.value.anonymous ? <Login /> : <Username />}
             </div>
           </div>
         </div>

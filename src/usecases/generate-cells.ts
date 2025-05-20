@@ -448,7 +448,7 @@ Given this prompt that will be used to generate content:
 
 {prompt}
 
-Create {maxQueries} specific search queries that will help gather relevant information for this prompt. The queries should be focused on finding information that would help generate high-quality content.
+Create exactly {maxQueries} specific search queries that will help gather relevant information for this prompt. The queries should be focused on finding information that would help generate high-quality content.
 
 Your response must follow this exact format:
 

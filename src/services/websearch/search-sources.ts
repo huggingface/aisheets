@@ -80,6 +80,7 @@ export async function createSourcesFromWebQueries({
 
   const { sources: webSources, errors } = await trackTime(() => {
     console.log('Time for searchQueriesToSources');
+    console.log(queries);
     return searchQueriesToSources(queries);
   });
 
@@ -113,10 +114,9 @@ export async function createSourcesFromWebQueries({
     const scrappedUrls = await trackTime(async () => {
       const results = new Map<string, Source>();
       for await (const { url, result } of scrapeUrlsBatch(
-        webSources.map((source) => source.url),
+        newSources.map((source) => source.url),
       )) {
         if (!result) continue;
-
         results.set(url, result);
       }
       return results;
@@ -138,7 +138,7 @@ export async function createSourcesFromWebQueries({
       console.log('Time for indexDatasetSources');
       return indexDatasetSources({
         dataset,
-        sources: newSources.filter((s) => s.markdownTree), // Only index sources that were successfully scraped
+        sources: newSources.filter((s) => s.markdownTree), // Only index successfully scraped new sources
         options,
       });
     });

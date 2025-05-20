@@ -187,7 +187,8 @@ export const ExecutionForm = component$<SidebarProps>(
         class="z-20 min-w-[660px] w-[660px] bg-neutral-100 font-normal border text-left"
         ref={executionFormRef}
       >
-        <div class="flex justify-end items-center p-1 h-[38px]">
+        <div class="flex justify-between items-center p-1 h-[38px]">
+          <span class="px-8">Instructions to generate cells</span>
           <Button
             look="ghost"
             class={`${columns.value.filter((c) => c.id !== TEMPORAL_ID).length >= 1 ? 'visible' : 'invisible'} rounded-full hover:bg-neutral-200 cursor-pointer transition-colors w-[30px] h-[30px]`}

@@ -453,11 +453,11 @@ const getOrCreateCellInDB = async (
 };
 
 const SEARCH_QUERIES_PROMPT_TEMPLATE = `
-Given this prompt that will be used to generate content:
+Given this prompt that will be used to generate content for the dataset "{datasetName}":
 
 {prompt}
 
-Create exactly {maxQueries} specific search queries that will help gather relevant information for this prompt. The queries should be focused on finding information that would help generate high-quality content.
+Create exactly {maxQueries} specific search queries that will help gather relevant information for this prompt. The queries should be focused on finding information that would help generate high-quality content for this specific dataset context.
 
 Your response must follow this exact format:
 
@@ -465,7 +465,7 @@ SEARCH QUERIES:
 - "specific search query 1"
 - "specific search query 2"
 
-Make sure the queries are specific and relevant to the prompt. Avoid generic queries.
+Make sure the queries are specific and relevant to both the prompt and the dataset context. Avoid generic queries.
 `.trim();
 
 async function buildWebSearchQueries({
@@ -479,13 +479,15 @@ async function buildWebSearchQueries({
 }): Promise<string[]> {
   const { modelName = DEFAULT_MODEL, modelProvider = DEFAULT_MODEL_PROVIDER } =
     column.process || {};
-  const maxQueries = 1; // Default to 3 queries, can be made configurable if needed
+  const maxQueries = 1;
 
   try {
     const promptText = SEARCH_QUERIES_PROMPT_TEMPLATE.replace(
       '{prompt}',
       prompt,
-    ).replace('{maxQueries}', maxQueries.toString());
+    )
+      .replace('{maxQueries}', maxQueries.toString())
+      .replace('{datasetName}', column.dataset.name);
 
     const response = await chatCompletion(
       normalizeChatCompletionArgs({

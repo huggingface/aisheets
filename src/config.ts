@@ -97,13 +97,65 @@ export const EXCLUDED_MODELS: string[] = process.env.EXCLUDED_MODELS?.split(
 ];
 
 /**
+ * The model ID for the embedding model.
+ *
+ * This value is retrieved from the environment variable `EMBEDDING_MODEL`.
+ *
+ *
+ * Default value: 'Xenova/all-MiniLM-L6-v2'
+ */
+export const EMBEDDING_MODEL_ID: string =
+  process.env.EMBEDDING_MODEL || 'Xenova/all-MiniLM-L6-v2';
+
+/**
+ * The dimension of the embedding model.
+ *
+ * This value is retrieved from the environment variable `EMBEDDING_DIM`.
+ *
+ * The embedding dimension is the size of the vector representation of the input data. It must be
+ * consistent with the model used for embedding.
+ *
+ * Default value: 384 (See default model: 'Xenova/all-MiniLM-L6-v2')
+ */
+export const EMBEDDING_MODEL_DIM: number = Number(
+  process.env.EMBEDDING_DIM ?? 384,
+);
+
+/**
+ * The provider for the embedding model.
+ * This value is retrieved from the environment variable `EMBEDDING_MODEL_PROVIDER`.
+ *
+ * If defined, it will be used to call inference endpoints for embedding models. Othewise, the
+ * transfomers library will be used to load the model from Hugging Face.
+ *
+ * Default value: undefined
+ */
+export const EMBEDDING_MODEL_PROVIDER: string | undefined =
+  process.env.EMBEDDING_MODEL_PROVIDER;
+
+/**
+ * The URL for the embedding model endpoint.
+ *
+ * This value is retrieved from the environment variable `EMBEDDING_ENDPOINT_URL`.
+ *
+ * If defined, it will be used to call inference endpoints for embedding models. Othewise, the
+ * transfomers library will be used to load the model from Hugging Face.
+ *
+ * Default value: undefined
+ */
+export const EMBEDDING_ENDPOINT_URL: string | undefined =
+  process.env.EMBEDDING_ENDPOINT_URL;
+
+/**
  * Default configuration for embedding operations
  */
 export const DEFAULT_EMBEDDING_MODEL = {
-  provider: process.env.EMBEDDING_MODEL_PROVIDER ?? 'hf-inference',
-  model: process.env.EMBEDDING_MODEL ?? 'mixedbread-ai/mxbai-embed-large-v1',
-  endpointUrl: process.env.EMBEDDING_ENDPOINT_URL,
-  embeddingDim: Number(process.env.EMBEDDING_DIM ?? 1024),
+  model: EMBEDDING_MODEL_ID,
+  embeddingDim: EMBEDDING_MODEL_DIM,
+
+  provider: EMBEDDING_MODEL_PROVIDER,
+  endpointUrl: EMBEDDING_ENDPOINT_URL,
+
   isInstruct: process.env.EMBEDDING_IS_INSTRUCT
     ? process.env.EMBEDDING_IS_INSTRUCT === 'true'
     : true,

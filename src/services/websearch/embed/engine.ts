@@ -250,3 +250,26 @@ export const queryDatasetSources = async ({
     return [];
   }
 };
+
+export const checkSourceExists = async ({
+  dataset,
+  sourceUri,
+}: {
+  dataset: {
+    id: string;
+  };
+  sourceUri: string;
+}): Promise<boolean> => {
+  try {
+    // Escape quotes in sourceUri to prevent SQL injection
+    const escapedSourceUri = sourceUri.replace(/"/g, '\\"');
+    const filterByDatasetAndSource = `dataset_id = "${dataset.id}" AND source_uri = "${escapedSourceUri}"`;
+    const count = await embeddingsIndex.countRows(filterByDatasetAndSource);
+    return count > 0;
+  } catch (error) {
+    console.error('Error checking if source exists:', error);
+    // If there's an error checking, we should assume the source doesn't exist
+    // This is safer than assuming it does exist and skipping it
+    return false;
+  }
+};

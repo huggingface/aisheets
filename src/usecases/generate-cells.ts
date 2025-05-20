@@ -1,7 +1,11 @@
+import { chatCompletion } from '@huggingface/inference';
+import { DEFAULT_MODEL, DEFAULT_MODEL_PROVIDER } from '~/config';
 import { getMaxRowIdxByColumnId, updateProcess } from '~/services';
 import { renderInstruction } from '~/services/inference/materialize-prompt';
 import {
   type PromptExecutionParams,
+  normalizeChatCompletionArgs,
+  normalizeOptions,
   runPromptExecution,
   runPromptExecutionStream,
   runPromptExecutionStreamBatch,
@@ -146,6 +150,7 @@ async function* generateCellsFromScratch({
         options: {
           accessToken: session.token,
         },
+        maxSources: 1,
       });
     }
 
@@ -315,6 +320,7 @@ async function* generateCellsFromColumnsReferences({
           options: {
             accessToken: session.token,
           },
+          maxSources: 1,
         });
       }
 
@@ -379,7 +385,23 @@ const getOrCreateCellInDB = async (
   return cell;
 };
 
-function buildWebSearchQueries({
+const SEARCH_QUERIES_PROMPT_TEMPLATE = `
+Given this prompt that will be used to generate content:
+
+{prompt}
+
+Create {maxQueries} specific search queries that will help gather relevant information for this prompt. The queries should be focused on finding information that would help generate high-quality content.
+
+Your response must follow this exact format:
+
+SEARCH QUERIES:
+- "specific search query 1"
+- "specific search query 2"
+
+Make sure the queries are specific and relevant to the prompt. Avoid generic queries.
+`.trim();
+
+async function buildWebSearchQueries({
   prompt,
   column,
   options,
@@ -388,5 +410,49 @@ function buildWebSearchQueries({
   column: Column;
   options: { accessToken: string };
 }): Promise<string[]> {
-  return Promise.resolve([]);
+  const { modelName = DEFAULT_MODEL, modelProvider = DEFAULT_MODEL_PROVIDER } =
+    column.process || {};
+  const maxQueries = 1; // Default to 3 queries, can be made configurable if needed
+
+  try {
+    const promptText = SEARCH_QUERIES_PROMPT_TEMPLATE.replace(
+      '{prompt}',
+      prompt,
+    ).replace('{maxQueries}', maxQueries.toString());
+
+    const response = await chatCompletion(
+      normalizeChatCompletionArgs({
+        messages: [{ role: 'user', content: promptText }],
+        modelName,
+        modelProvider,
+        accessToken: options.accessToken,
+      }),
+      normalizeOptions(),
+    );
+
+    const responseText = response.choices[0].message.content || '';
+
+    // Extract queries using regex similar to extractDatasetConfig
+    const queries: string[] = [];
+    const regex = /^["'](.+)["']$/;
+
+    for (const line of responseText.split('\n').map((l) => l.trim())) {
+      if (line.startsWith('-')) {
+        const item = line.substring(1).trim();
+        const quotedMatch = item.match(regex);
+        const query = quotedMatch ? quotedMatch[1] : item;
+        if (query) {
+          queries.push(query);
+        }
+      }
+    }
+
+    return queries;
+  } catch (error) {
+    console.error(
+      '❌ [buildWebSearchQueries] Error generating search queries:',
+      error,
+    );
+    return [];
+  }
 }

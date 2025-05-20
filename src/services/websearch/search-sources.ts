@@ -6,6 +6,7 @@ import type { HeaderElement } from './types';
 import { trackTime } from './utils/track-time';
 
 import * as config from '~/config';
+import { checkSourceExists } from './embed/engine';
 
 export interface WebSource {
   url: string;
@@ -57,6 +58,7 @@ export async function createSourcesFromWebQueries({
   dataset,
   queries,
   options,
+  maxSources,
 }: {
   dataset: {
     id: string;
@@ -66,6 +68,7 @@ export async function createSourcesFromWebQueries({
   options: {
     accessToken: string;
   };
+  maxSources?: number;
 }): Promise<{
   sources: WebSource[];
   errors?: ErrorSource[];
@@ -73,38 +76,88 @@ export async function createSourcesFromWebQueries({
   if (!queries || queries.length === 0) throw new Error('No queries provided');
   if (!dataset || !dataset.id) throw new Error('No dataset provided');
 
+  console.log(
+    `[createSourcesFromWebQueries] Starting for dataset ${dataset.name} with ${queries.length} queries`,
+  );
+
   const { sources: webSources, errors } = await trackTime(() => {
     console.log('Time for searchQueriesToSources');
     return searchQueriesToSources(queries);
   });
 
-  const scrappedUrls = await trackTime(() => {
-    console.log('Time for scrapeUrlsBatch');
-    return scrapeUrlsBatch(webSources.map((source) => source.url));
-  });
+  // Limit sources if maxSources is provided
+  const limitedSources = maxSources
+    ? webSources.slice(0, maxSources)
+    : webSources;
+  console.log(
+    `[createSourcesFromWebQueries] Found ${limitedSources.length} sources from search`,
+  );
 
-  for (const source of webSources) {
-    const scrapped = scrappedUrls.get(source.url);
-    if (scrapped) source.markdownTree = scrapped.markdownTree;
-  }
-
-  const indexSize = await trackTime(() => {
-    console.log('Time for indexDatasetSources');
-
-    return indexDatasetSources({
+  // Filter out sources that already exist in the vector DB
+  const newSources = [];
+  const existingSources = [];
+  for (const source of limitedSources) {
+    const exists = await checkSourceExists({
       dataset,
-      sources: webSources,
-      options,
+      sourceUri: source.url,
     });
-  });
-
-  if (indexSize === 0) {
-    console.error('No sources indexed');
-    return { sources: [], errors };
+    if (!exists) {
+      newSources.push(source);
+    } else {
+      existingSources.push(source);
+    }
   }
 
+  console.log(
+    `[createSourcesFromWebQueries] ${existingSources.length} sources already exist, ${newSources.length} new sources to process`,
+  );
+
+  // Only scrape and index new sources
+  if (newSources.length > 0) {
+    const scrappedUrls = await trackTime(() => {
+      console.log('Time for scrapeUrlsBatch');
+      return scrapeUrlsBatch(newSources.map((source) => source.url));
+    });
+
+    let scrapedCount = 0;
+    for (const source of newSources) {
+      const scrapped = scrappedUrls.get(source.url);
+      if (scrapped) {
+        source.markdownTree = scrapped.markdownTree;
+        scrapedCount++;
+      }
+    }
+    console.log(
+      `[createSourcesFromWebQueries] Successfully scraped ${scrapedCount} out of ${newSources.length} new sources`,
+    );
+
+    const indexSize = await trackTime(() => {
+      console.log('Time for indexDatasetSources');
+      return indexDatasetSources({
+        dataset,
+        sources: newSources.filter((s) => s.markdownTree), // Only index sources that were successfully scraped
+        options,
+      });
+    });
+
+    if (indexSize === 0) {
+      console.error(
+        '[createSourcesFromWebQueries] No new sources were indexed',
+      );
+    } else {
+      console.log(
+        `[createSourcesFromWebQueries] Successfully indexed ${indexSize} new sources`,
+      );
+    }
+  } else {
+    console.log(
+      '[createSourcesFromWebQueries] All sources already exist in the vector DB, skipping scraping and indexing',
+    );
+  }
+
+  // Return all sources (both new and existing) to maintain the same interface
   return {
-    sources: webSources,
+    sources: limitedSources,
     errors,
   };
 }

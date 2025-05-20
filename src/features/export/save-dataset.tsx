@@ -2,12 +2,17 @@ import { component$ } from '@builder.io/qwik';
 import { cn } from '@qwik-ui/utils';
 import { LuDownload } from '@qwikest/icons/lucide';
 import { Label, Popover, buttonVariants } from '~/components';
+import { useSession } from '~/loaders';
 import { TEMPORAL_ID, useDatasetsStore } from '~/state';
 import { CSVDownload } from './csv-download';
 import { ExportToHub } from './export-to-hub';
 
 export const SaveDataset = component$(() => {
   const { activeDataset } = useDatasetsStore();
+
+  const session = useSession();
+
+  if (session.value.anonymous) return <CSVDownload showText={false} />;
 
   return (
     <Popover.Root flip={false} floating="right-start" gutter={14}>

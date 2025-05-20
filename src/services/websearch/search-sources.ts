@@ -94,8 +94,8 @@ export async function createSourcesFromWebQueries({
   );
 
   // Filter out sources that already exist in the vector DB
-  const newSources = [];
-  const existingSources = [];
+  const newSources: WebSource[] = [];
+  const existingSources: WebSource[] = [];
   for (const source of limitedSources) {
     const exists = await checkSourceExists({
       dataset,

@@ -2,6 +2,7 @@ import { isBrowser } from '@builder.io/qwik';
 import type { RequestEventBase } from '@builder.io/qwik-city';
 
 export interface Session {
+  anonymous: boolean;
   token: string;
   user: {
     name: string;
@@ -10,23 +11,16 @@ export interface Session {
   };
 }
 
-export const useServerSession = (
-  request: RequestEventBase<QwikCityPlatform>,
-): Session => {
+export const useServerSession = ({
+  sharedMap,
+}: RequestEventBase<QwikCityPlatform>): Session => {
   if (isBrowser) {
     throw new Error('useServerSession must be used on the server.');
   }
 
-  const session = request.sharedMap.get('session')!;
+  const session = sharedMap.get('session') ?? sharedMap.get('anonymous');
 
   if (!session) throw new Error('Session not found.');
 
-  return {
-    token: session.token,
-    user: {
-      name: session.user.name,
-      username: session.user.username,
-      picture: session.user.picture,
-    },
-  };
+  return session;
 };

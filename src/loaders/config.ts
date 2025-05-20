@@ -12,6 +12,8 @@ export const useClientConfig = routeLoader$(async function (
   DEFAULT_MODEL: string;
   DEFAULT_MODEL_PROVIDER: string;
   isGoogleAuthEnabled: boolean;
+  GOOGLE_CLIENT_ID?: string;
+  GOOGLE_REDIRECT_URI?: string;
 }> {
   useServerSession(this);
 
@@ -21,28 +23,7 @@ export const useClientConfig = routeLoader$(async function (
     isGoogleAuthEnabled: Boolean(
       config.GOOGLE_CLIENT_ID && config.GOOGLE_REDIRECT_URI,
     ),
-  };
-});
-
-/**
- * All config variables that are needed on the server side.
- *
- */
-export const useServerConfig = routeLoader$(async function (
-  this: RequestEventLoader,
-) {
-  useServerSession(this);
-
-  return {
-    CLIENT_ID: config.CLIENT_ID,
-    HF_TOKEN: config.HF_TOKEN,
-
-    GOOGLE_CLIENT_ID: config.GOOGLE_CLIENT_ID!,
-    GOOGLE_REDIRECT_URI: config.GOOGLE_REDIRECT_URI!,
-    OAUTH_SCOPES: config.OAUTH_SCOPES,
-    DATA_DIR: config.DATA_DIR,
-    INFERENCE_TIMEOUT: config.INFERENCE_TIMEOUT,
-    NUM_CONCURRENT_REQUESTS: config.NUM_CONCURRENT_REQUESTS,
-    SERPER_API_KEY: config.SERPER_API_KEY,
+    GOOGLE_CLIENT_ID: config.GOOGLE_CLIENT_ID,
+    GOOGLE_REDIRECT_URI: config.GOOGLE_REDIRECT_URI,
   };
 });

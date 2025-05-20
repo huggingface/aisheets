@@ -3,10 +3,13 @@ import { server$, useNavigate } from '@builder.io/qwik-city';
 import { cn } from '@qwik-ui/utils';
 import { LuEgg, LuGlobe } from '@qwikest/icons/lucide';
 import { Button, Textarea } from '~/components';
+import { Login } from '~/components/ui/login/Login';
 import { MainLogo, SecondLogo } from '~/components/ui/logo/logo';
 import { StepsStatus } from '~/features/autodataset/steps-status';
 import { DragAndDrop } from '~/features/import/drag-n-drop';
 import { MainSidebarButton } from '~/features/main-sidebar';
+import { Username } from '~/features/user/username';
+import { useSession } from '~/loaders';
 import { ActiveDatasetProvider } from '~/state';
 import { runAutoDataset } from '~/usecases/run-autodataset';
 
@@ -26,6 +29,7 @@ const runAutoDatasetAction = server$(async function* (
 });
 
 export default component$(() => {
+  const session = useSession();
   const nav = useNavigate();
   const searchOnWeb = useSignal(false);
   const prompt = useSignal('');
@@ -201,7 +205,10 @@ export default component$(() => {
 
   return (
     <ActiveDatasetProvider>
-      <MainSidebarButton />
+      <div class="flex justify-between w-full">
+        <MainSidebarButton />
+        {session.value.anonymous ? <Login /> : <Username />}
+      </div>
       <div class="w-full min-h-screen flex flex-col items-center justify-center">
         <div class="flex flex-col justify-between min-h-screen w-full items-center">
           {/* Show top section only when not loading */}

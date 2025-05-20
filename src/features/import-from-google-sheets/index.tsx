@@ -2,11 +2,11 @@ import { $, component$, useComputed$, useSignal } from '@builder.io/qwik';
 import { useNavigate } from '@builder.io/qwik-city';
 import { LuChevronRightSquare, LuExternalLink } from '@qwikest/icons/lucide';
 import { Button, Label } from '~/components';
-import { useServerConfig } from '~/loaders';
+import { useClientConfig } from '~/loaders';
 import { useImportFromURL } from '~/usecases/import-from-url.usecase';
 
 export const ImportFromGoogleSheets = component$(() => {
-  const config = useServerConfig();
+  const config = useClientConfig();
   const nav = useNavigate();
 
   const url = useSignal('');
@@ -19,8 +19,8 @@ export const ImportFromGoogleSheets = component$(() => {
     const { GOOGLE_CLIENT_ID, GOOGLE_REDIRECT_URI } = config.value;
 
     const params = new URLSearchParams({
-      client_id: GOOGLE_CLIENT_ID,
-      redirect_uri: GOOGLE_REDIRECT_URI,
+      client_id: GOOGLE_CLIENT_ID!,
+      redirect_uri: GOOGLE_REDIRECT_URI!,
       response_type: 'token',
       scope: 'https://www.googleapis.com/auth/spreadsheets',
     });

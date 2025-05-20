@@ -141,12 +141,11 @@ export async function scrapeUrl(
 /**
  * Scrape multiple URLs in parallel with concurrency control
  */
-export async function scrapeUrlsBatch(
+export async function* scrapeUrlsBatch(
   urls: string[],
   maxConcurrent = MAX_CONCURRENT_SCRAPES,
-): Promise<Map<string, ScrapedPage | null>> {
+) {
   logger.info(`Starting parallel scraping of ${urls.length} URLs`);
-  const results = new Map<string, ScrapedPage | null>();
 
   // Process URLs in chunks to limit concurrency
   for (let i = 0; i < urls.length; i += maxConcurrent) {
@@ -158,20 +157,15 @@ export async function scrapeUrlsBatch(
     const promises = chunk.map(async (url) => {
       try {
         const result = await scrapeUrl(url);
-        results.set(url, result);
+        return { url, result };
       } catch (error) {
         logger.error(`Failed to scrape ${url}:`, error);
-        results.set(url, null);
+        return { url, result: null };
       }
     });
 
-    await Promise.all(promises);
+    for (const promise of promises) {
+      yield promise;
+    }
   }
-
-  const successCount = Array.from(results.values()).filter(Boolean).length;
-  logger.success(
-    `Completed scraping: ${successCount}/${urls.length} successful`,
-  );
-
-  return results;
 }

@@ -1,9 +1,5 @@
-import { indexDatasetSources } from './embed/engine';
-import { scrapeUrlsBatch } from './scrape';
-import { SerperSearch } from './search';
+import { SerperSearch } from './search/serper-search';
 import type { HeaderElement } from './types';
-
-import { trackTime } from './utils/track-time';
 
 import * as config from '~/config';
 
@@ -53,63 +49,7 @@ function filterByBlockList<T extends { url: string }>(results: T[]): T[] {
   );
 }
 
-export async function createSourcesFromWebQueries({
-  dataset,
-  queries,
-  options,
-}: {
-  dataset: {
-    id: string;
-    name: string;
-  };
-  queries: string[];
-  options: {
-    accessToken: string;
-  };
-}): Promise<{
-  sources: WebSource[];
-  errors?: ErrorSource[];
-}> {
-  if (!queries || queries.length === 0) throw new Error('No queries provided');
-  if (!dataset || !dataset.id) throw new Error('No dataset provided');
-
-  const { sources: webSources, errors } = await trackTime(() => {
-    console.log('Time for searchQueriesToSources');
-    return searchQueriesToSources(queries);
-  });
-
-  const scrappedUrls = await trackTime(() => {
-    console.log('Time for scrapeUrlsBatch');
-    return scrapeUrlsBatch(webSources.map((source) => source.url));
-  });
-
-  for (const source of webSources) {
-    const scrapped = scrappedUrls.get(source.url);
-    if (scrapped) source.markdownTree = scrapped.markdownTree;
-  }
-
-  const indexSize = await trackTime(() => {
-    console.log('Time for indexDatasetSources');
-
-    return indexDatasetSources({
-      dataset,
-      sources: webSources,
-      options,
-    });
-  });
-
-  if (indexSize === 0) {
-    console.error('No sources indexed');
-    return { sources: [], errors };
-  }
-
-  return {
-    sources: webSources,
-    errors,
-  };
-}
-
-const searchQueriesToSources = async (
+export const searchQueriesToSources = async (
   queries: string[],
 ): Promise<{
   sources: WebSource[];

@@ -69,6 +69,8 @@ Only include columns that are directly relevant to the request. Create exactly {
 
 Avoid adding columns with typical database things, like tweet_id, id, timestamp, etc.
 
+Limit the number of columns to maximum 3 unless it's strictly required or the user specifies the columns themselves.
+
 ALWAYS include a prompt for each column.
 
 Here are some high-quality examples of dataset configurations:
@@ -112,6 +114,8 @@ COLUMNS:
 Only include columns that are directly relevant to the request.
 
 Avoid adding columns with typical database things, like tweet_id, id, timestamp, etc.
+
+Limit the number of columns to maximum 3 unless it's strictly required or the user specifies the columns themselves.
 
 Here are some high-quality examples of dataset configurations:
 

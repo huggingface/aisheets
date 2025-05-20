@@ -23,10 +23,19 @@ import { useExecution } from '~/features/add-column';
 import { useGenerateColumn } from '~/features/execution';
 import { TableCell } from '~/features/table/table-cell';
 import { deleteRowsCells, getColumnCells } from '~/services';
-import { type Cell, type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
+import {
+  type Cell,
+  type Column,
+  TEMPORAL_ID,
+  useColumnsStore,
+  useDatasetsStore,
+} from '~/state';
 
 export const TableBody = component$(() => {
-  const pageSize = 10;
+  const pageSize = 25;
+  const rowSize = 108; // px
+
+  const { activeDataset } = useDatasetsStore();
 
   const {
     columns,
@@ -37,6 +46,10 @@ export const TableBody = component$(() => {
   } = useColumnsStore();
   const { onGenerateColumn } = useGenerateColumn();
   const selectedRows = useSignal<number[]>([]);
+
+  const datasetSize = useComputed$(() => {
+    return activeDataset.value?.size || 0;
+  });
 
   const data = useComputed$(() => {
     const getCell = (column: Column, rowIndex: number): Cell => {
@@ -149,7 +162,7 @@ export const TableBody = component$(() => {
     const cell =
       firstColumnsWithValue.value[firstColumnsWithValue.value.length - 1];
 
-    if (!cell.id) return;
+    if (!cell?.id) return;
 
     dragStartCell.value = cell;
     selectedCellsId.value = [cell];
@@ -186,25 +199,15 @@ export const TableBody = component$(() => {
   const handleMouseUp$ = $(async () => {
     if (!dragStartCell.value) return;
     if (!draggedColumn.value) return;
-    if (!dragStartCell.value.value) return;
+
+    if (selectedCellsId.value.length === 1) return;
 
     const column = draggedColumn.value;
 
-    let offset = 0;
-    for (const cell of selectedCellsId.value) {
-      offset = cell.idx;
-
-      if (!cell.value) break;
-    }
-
+    const offset = selectedCellsId.value[0].idx;
     const limit = latestCellSelected.value?.idx - offset + 1;
 
     dragStartCell.value = undefined;
-
-    const selectedCellsHasValue = column.cells.some(
-      (c) => c.idx >= offset && c.idx <= limit + offset && c.value,
-    );
-    if (selectedCellsHasValue) return;
 
     column.process!.cancellable = noSerialize(new AbortController());
     column.process!.isExecuting = true;
@@ -434,7 +437,7 @@ export const TableBody = component$(() => {
 
                       {latestCellSelected.value?.column?.id ===
                         cell.column?.id &&
-                        latestCellSelected.value.value &&
+                        latestCellSelected.value &&
                         latestCellSelected.value?.idx === cell.idx && (
                           <div class="absolute bottom-1 right-4 w-3 h-3 cursor-crosshair z-10">
                             {columns.value.find((c) => c.id === cell.column?.id)
@@ -471,12 +474,6 @@ export const TableBody = component$(() => {
     },
   );
 
-  useTask$(() => {
-    loadPage({
-      rangeStart: 0,
-    });
-  });
-
   useVisibleTask$(() => {
     scrollElement.value = document.querySelector('.scrollable') as HTMLElement;
   });
@@ -487,14 +484,15 @@ export const TableBody = component$(() => {
     <tbody
       class="grid relative"
       style={{
-        height: `${1000 * 108}px`,
+        height: `${datasetSize.value * rowSize}px`,
       }}
     >
       <VirtualScrollContainer
-        totalCount={1000}
-        buffer={3}
-        estimateSize={108}
-        overscan={30}
+        key={datasetSize.value}
+        totalCount={datasetSize.value}
+        buffer={pageSize}
+        estimateSize={rowSize}
+        overscan={pageSize * 2}
         pageSize={pageSize}
         data={data}
         loadNextPage={loadPage}

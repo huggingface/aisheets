@@ -1,12 +1,10 @@
-import { indexDatasetSources } from './embed/engine';
-import { scrapeUrlsBatch } from './scrape';
-import { SerperSearch } from './search';
+import { SerperSearch } from './search/serper-search';
 import type { HeaderElement } from './types';
 
-import { trackTime } from './utils/track-time';
-
 import * as config from '~/config';
-import { checkSourceExists } from './embed/engine';
+import { checkSourceExists, indexDatasetSources } from './embed/engine';
+import { scrapeUrlsBatch } from './scrape';
+import { trackTime } from './utils/track-time';
 
 export interface WebSource {
   url: string;
@@ -101,11 +99,9 @@ export async function createSourcesFromWebQueries({
       dataset,
       sourceUri: source.url,
     });
-    if (!exists) {
-      newSources.push(source);
-    } else {
-      existingSources.push(source);
-    }
+
+    if (!exists) newSources.push(source);
+    else existingSources.push(source);
   }
 
   console.log(
@@ -114,9 +110,16 @@ export async function createSourcesFromWebQueries({
 
   // Only scrape and index new sources
   if (newSources.length > 0) {
-    const scrappedUrls = await trackTime(() => {
-      console.log('Time for scrapeUrlsBatch');
-      return scrapeUrlsBatch(newSources.map((source) => source.url));
+    const scrappedUrls = await trackTime(async () => {
+      const results = new Map<string, Source>();
+      for await (const { url, result } of scrapeUrlsBatch(
+        webSources.map((source) => source.url),
+      )) {
+        if (!result) continue;
+
+        results.set(url, result);
+      }
+      return results;
     });
 
     let scrapedCount = 0;
@@ -162,7 +165,7 @@ export async function createSourcesFromWebQueries({
   };
 }
 
-const searchQueriesToSources = async (
+export const searchQueriesToSources = async (
   queries: string[],
 ): Promise<{
   sources: WebSource[];

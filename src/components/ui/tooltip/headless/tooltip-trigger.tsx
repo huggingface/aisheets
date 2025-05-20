@@ -7,10 +7,10 @@ import {
   sync$,
   useContext,
   useSignal,
-  useTask$,
+  useVisibleTask$,
 } from '@builder.io/qwik';
-import { isServer } from '@builder.io/qwik/build';
 import { usePopover } from '@qwik-ui/headless';
+import { nextTick } from '~/components/hooks/tick';
 import { TooltipContextId, type TriggerDataState } from './tooltip-context';
 
 export const HTooltipTrigger = component$((props: PropsOf<'button'>) => {
@@ -54,8 +54,10 @@ export const HTooltipTrigger = component$((props: PropsOf<'button'>) => {
 
   const setTooltipClosed$ = $(() => {
     clearTimeoutIfExists(openTimeout);
-    hidePopover();
-    setTooltipState(false, 'closing', closeTimeout);
+    nextTick(() => {
+      hidePopover();
+      setTooltipState(false, 'closing', closeTimeout);
+    });
   });
 
   const preventDefaultSync$ = sync$((e: Event) => {
@@ -69,10 +71,8 @@ export const HTooltipTrigger = component$((props: PropsOf<'button'>) => {
     }
   });
 
-  useTask$(({ track, cleanup }) => {
+  useVisibleTask$(({ track, cleanup }) => {
     track(() => context.state.value);
-
-    if (isServer) return;
 
     if (context.state.value === 'open') {
       document.addEventListener('keydown', handleKeyDown$);
@@ -88,6 +88,10 @@ export const HTooltipTrigger = component$((props: PropsOf<'button'>) => {
     cleanup(() => {
       document.removeEventListener('keydown', handleKeyDown$);
     });
+  });
+
+  useVisibleTask$(() => {
+    hidePopover();
   });
 
   return (

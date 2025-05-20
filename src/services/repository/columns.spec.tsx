@@ -27,8 +27,6 @@ describe('addColumn', () => {
         modelProvider: 'hf-inference',
         prompt: 'test prompt',
         searchEnabled: false,
-        offset: 0,
-        limit: 10,
         columnsReferences: [],
       },
       dataset: {
@@ -72,8 +70,6 @@ describe('addColumn', () => {
         modelProvider: 'hf-inference',
         prompt: 'test prompt',
         searchEnabled: false,
-        offset: 0,
-        limit: 10,
         columnsReferences: columns.map((c) => c.id),
       },
       dataset: {

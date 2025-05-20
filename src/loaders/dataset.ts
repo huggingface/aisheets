@@ -7,6 +7,7 @@ const EMPTY_DATASET = {
   name: '',
   createdBy: '',
   columns: [],
+  size: 0,
 };
 
 export const useActiveDatasetLoader = routeLoader$<Dataset>(

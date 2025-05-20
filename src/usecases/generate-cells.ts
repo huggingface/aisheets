@@ -1,7 +1,13 @@
 import { chatCompletion } from '@huggingface/inference';
-import { DEFAULT_MODEL, DEFAULT_MODEL_PROVIDER } from '~/config';
-import { getMaxRowIdxByColumnId, updateProcess } from '~/services';
+import {
+  DEFAULT_MODEL,
+  DEFAULT_MODEL_PROVIDER,
+  NUM_CONCURRENT_REQUESTS,
+} from '~/config';
+import { getDatasetColumns, updateProcess } from '~/services';
+import { MAX_SOURCE_SNIPPET_LENGTH } from '~/services/db/models/cell';
 import { renderInstruction } from '~/services/inference/materialize-prompt';
+import type { MaterializePromptParams } from '~/services/inference/materialize-prompt';
 import {
   type PromptExecutionParams,
   normalizeChatCompletionArgs,
@@ -16,9 +22,10 @@ import {
   getRowCells,
   updateCell,
 } from '~/services/repository/cells';
+import { countDatasetTableRows } from '~/services/repository/tables';
 import { queryDatasetSources } from '~/services/websearch/embed';
 import { createSourcesFromWebQueries } from '~/services/websearch/search-sources';
-import type { Cell, Column, Process, Session } from '~/state';
+import type { Cell, CellSource, Column, Process, Session } from '~/state';
 import { collectValidatedExamples } from './collect-examples';
 
 export interface GenerateCellsParams {
@@ -32,6 +39,8 @@ export interface GenerateCellsParams {
   updateOnly?: boolean;
   timeout?: number;
 }
+
+const MAX_CONCURRENCY = Math.min(NUM_CONCURRENT_REQUESTS, 8);
 
 /**
  * Generates cells for a given column based on the provided parameters.
@@ -73,7 +82,24 @@ export const generateCells = async function* ({
 }: GenerateCellsParams) {
   const { columnsReferences } = process;
 
-  if (!limit) limit = (await getMaxRowIdxByColumnId(column.id)) + 1;
+  if (!limit) {
+    const columnIds = columnsReferences?.length
+      ? columnsReferences
+      : await getDatasetColumns(column.dataset).then((columns) =>
+          columns.filter((col) => col.id !== column.id).map((col) => col.id),
+        );
+
+    const columnSizes = await Promise.all(
+      columnIds.map((colId) => {
+        return countDatasetTableRows({
+          dataset: column.dataset,
+          column: { id: colId },
+        });
+      }),
+    );
+
+    limit = Math.max(...columnSizes);
+  }
   if (!offset) offset = 0;
 
   try {
@@ -90,16 +116,21 @@ export const generateCells = async function* ({
         session,
       });
     } else {
-      yield* generateCellsFromColumnsReferences({
-        column,
-        process,
-        validatedCells,
-        offset,
-        limit,
-        updateOnly,
-        timeout,
-        session,
-      });
+      let remaining = limit;
+      for (let i = offset; i < offset + limit; i += MAX_CONCURRENCY) {
+        yield* generateCellsFromColumnsReferences({
+          column,
+          process,
+          validatedCells,
+          offset: i,
+          limit: Math.min(MAX_CONCURRENCY, remaining),
+          updateOnly,
+          timeout,
+          session,
+        });
+
+        remaining -= MAX_CONCURRENCY;
+      }
     }
   } finally {
     process.updatedAt = new Date();
@@ -164,6 +195,14 @@ async function* generateCellsFromScratch({
     });
   }
 
+  // Extract sources (url + snippet) if available
+  const sources = sourcesContext
+    ? sourcesContext.map((source) => ({
+        url: source.source_uri,
+        snippet: source.text?.slice(0, MAX_SOURCE_SNIPPET_LENGTH) || '',
+      }))
+    : undefined;
+
   // Sequential execution for fromScratch to accumulate examples
   // Get all existing cells in the column to achieve diversity
   const existingCellsExamples = column.cells
@@ -203,7 +242,6 @@ async function* generateCellsFromScratch({
       for await (const response of runPromptExecutionStream(args)) {
         cell.value = response.value;
         cell.error = response.error;
-
         yield { cell };
       }
     } else {
@@ -213,6 +251,9 @@ async function* generateCellsFromScratch({
     }
 
     cell.generating = false;
+    // Add sources only after successful generation
+    if (cell.value && !cell.error) cell.sources = sources;
+
     await updateCell(cell);
 
     yield { cell };
@@ -252,7 +293,10 @@ async function* generateCellsFromColumnsReferences({
     process;
 
   const streamRequests: PromptExecutionParams[] = [];
-  const cells = new Map<number, Cell>();
+  const cells = new Map<
+    number,
+    { cell: Cell; sources: CellSource[] | undefined }
+  >();
 
   // Get initial examples from validated cells
   const currentExamples = await collectValidatedExamples({
@@ -301,6 +345,7 @@ async function* generateCellsFromColumnsReferences({
       idx: i,
     };
 
+    let sourcesContext: MaterializePromptParams['sourcesContext'];
     if (searchEnabled) {
       const renderedInstruction = renderInstruction(prompt, args.data);
 
@@ -325,17 +370,28 @@ async function* generateCellsFromColumnsReferences({
       }
 
       // 3. Search for relevant results
-      args.sourcesContext = await queryDatasetSources({
+
+      sourcesContext = await queryDatasetSources({
         dataset: column.dataset,
         query: renderedInstruction,
         options: {
           accessToken: session.token,
         },
       });
+      args.sourcesContext = sourcesContext;
     }
 
+    // Extract sources (url + snippet) if available
+    const sources = sourcesContext
+      ? sourcesContext.map((source) => ({
+          url: source.source_uri,
+          snippet: source.text?.slice(0, MAX_SOURCE_SNIPPET_LENGTH) || '',
+        }))
+      : undefined;
+
     cell.generating = true;
-    cells.set(i, cell);
+
+    cells.set(i, { cell, sources });
 
     streamRequests.push(args);
   }
@@ -343,7 +399,7 @@ async function* generateCellsFromColumnsReferences({
   // Initial yield of empty cells in order
   const orderedIndices = Array.from(cells.keys()).sort((a, b) => a - b);
   for (const idx of orderedIndices) {
-    const cell = cells.get(idx);
+    const cell = cells.get(idx)?.cell;
     if (cell) yield { cell };
   }
 
@@ -353,14 +409,16 @@ async function* generateCellsFromColumnsReferences({
   )) {
     if (idx === undefined) continue;
 
-    const cell = cells.get(idx);
-    if (!cell) continue;
+    const cellData = cells.get(idx);
+    if (!cellData) continue;
 
+    const { cell, sources } = cellData;
     // Update cell with response
     cell.value = response.value || '';
     cell.error = response.error;
 
     if (response.done || !cell.value) {
+      if (cell.value && !cell.error) cell.sources = sources;
       cell.generating = false;
       await updateCell(cell);
 

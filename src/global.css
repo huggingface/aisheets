@@ -78,3 +78,8 @@
     --transform-press: scale(0.95);
   }
 }
+
+/* Only underline the domain when its own block is hovered */
+.source-group:hover .source-domain {
+  text-decoration: underline;
+}

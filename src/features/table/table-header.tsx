@@ -37,7 +37,7 @@ export const TableHeader = component$(() => {
                 <th
                   key={column.id}
                   class={cn(
-                    'min-w-[326px] w-[326px] max-w-[326px] h-[30px] border bg-neutral-100 text-primary-600 font-normal',
+                    'min-w-[326px] w-[326px] max-w-[326px] h-[38px] border bg-neutral-100 text-primary-600 font-normal',
                     {
                       'border-r-0': column.id === TEMPORAL_ID,
                     },
@@ -112,7 +112,7 @@ const ExecutionHeaderDebounced = component$<{ column: Column }>(
     if (!state.isVisible) return null;
 
     return (
-      <th class="min-w-[660px] w-[660px] h-[30px] bg-neutral-100 border" />
+      <th class="min-w-[660px] w-[660px] h-[38px] bg-neutral-100 border" />
     );
   },
 );

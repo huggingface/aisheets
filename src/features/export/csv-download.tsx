@@ -1,11 +1,12 @@
 import { $, component$, useComputed$, useSignal } from '@builder.io/qwik';
 import { LuDownload } from '@qwikest/icons/lucide';
 import { Button } from '~/components';
+import { Tooltip } from '~/components/ui/tooltip/tooltip';
 import { type Column, useColumnsStore, useDatasetsStore } from '~/state';
 import { useGenerateCSVFile } from '~/usecases/generate-csv-file.usecase';
 
-export const CSVDownload = component$<{ showText?: boolean }>(
-  ({ showText = true }) => {
+export const CSVDownload = component$<{ showText?: boolean; toolTip?: string }>(
+  ({ showText = true, toolTip }) => {
     const downloading = useSignal(false);
 
     const generateCSVFile = useGenerateCSVFile();
@@ -57,19 +58,31 @@ export const CSVDownload = component$<{ showText?: boolean }>(
       }
     });
 
-    return (
+    const body = (
       <Button
         look="ghost"
         class="disabled:text-neutral-300 hover:bg-neutral-100 w-full flex justify-start items-center"
         onClick$={downloadTask}
         disabled={downloading.value || !canDownloadCSV.value}
       >
+        {toolTip && <Tooltip text="Download as CSV" floating="right-start" />}
         <div class="w-full flex items-center justify-start hover:bg-neutral-100 gap-2 p-1 rounded-none rounded-bl-md rounded-br-md">
           <LuDownload class="w-4 h-4" />
           {showText && 'Download CSV'}
         </div>
       </Button>
     );
+
+    if (toolTip) {
+      return (
+        <Tooltip text={toolTip} floating="right-start">
+          {body}
+        </Tooltip>
+      );
+    }
+    // If no tooltip, return the button directly
+
+    return body;
   },
 );
 

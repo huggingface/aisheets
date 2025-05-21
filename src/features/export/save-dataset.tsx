@@ -12,7 +12,18 @@ export const SaveDataset = component$(() => {
 
   const session = useSession();
 
-  if (session.value.anonymous) return <CSVDownload showText={false} />;
+  if (session.value.anonymous) {
+    return (
+      <div
+        class={cn(
+          buttonVariants({ look: 'secondary', size: 'sm' }),
+          'w-8 h-8 disabled:cursor-not-allowed bg-white',
+        )}
+      >
+        <CSVDownload showText={false} toolTip="Download as CSV" />
+      </div>
+    );
+  }
 
   return (
     <Popover.Root flip={false} floating="right-start" gutter={14}>
@@ -30,7 +41,7 @@ export const SaveDataset = component$(() => {
           <LuDownload class="w-4 h-4" />
         </Label>
       </Popover.Trigger>
-      <Popover.Panel class="w-86 max-h-40 shadow-lg p-1">
+      <Popover.Panel class="w-86 text-sm shadow-lg p-2">
         <ExportToHub />
         <hr class="border-t border-slate-200 dark:border-slate-700" />
         <CSVDownload />

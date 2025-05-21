@@ -54,8 +54,8 @@ export const runPromptExecution = async ({
   });
   const args = normalizeChatCompletionArgs({
     messages: [{ role: 'user', content: inputPrompt }],
-    modelName,
     modelProvider,
+    modelName,
     accessToken,
   });
   const options = normalizeOptions(timeout);
@@ -64,9 +64,15 @@ export const runPromptExecution = async ({
 
   try {
     const response = await chatCompletion(args, options);
-    return { value: response.choices[0].message.content };
+    return {
+      value: response.choices[0].message.content,
+      done: true,
+    };
   } catch (e) {
-    return { error: handleError(e) };
+    return {
+      error: handleError(e),
+      done: true,
+    };
   }
 };
 
@@ -110,72 +116,6 @@ export const runPromptExecutionStream = async function* ({
     yield { value: accumulated, done: true };
   } catch (e) {
     yield { error: handleError(e), done: true };
-  }
-};
-
-export const runPromptExecutionStreamBatch = async function* (
-  params: PromptExecutionParams[],
-): AsyncGenerator<{ idx: number; response: PromptExecutionResponse }> {
-  const queue = [...params];
-  const activeStreams = new Map<
-    number,
-    AsyncGenerator<PromptExecutionResponse>
-  >();
-  const activePromises = new Map<
-    number,
-    Promise<IteratorResult<PromptExecutionResponse>>
-  >();
-  let streamIdCounter = 0;
-
-  const startNewStream = () => {
-    if (queue.length === 0) return false;
-
-    const param = queue.shift()!;
-    const streamId = streamIdCounter++;
-    const stream = runPromptExecutionStream(param);
-
-    activeStreams.set(streamId, stream);
-    activePromises.set(streamId, stream.next());
-
-    return { streamId, idx: param.idx! };
-  };
-
-  const initialStreamCount = queue.length;
-  const streamIdxMap = new Map<number, number>();
-
-  for (let i = 0; i < initialStreamCount; i++) {
-    const result = startNewStream();
-    if (result) {
-      streamIdxMap.set(result.streamId, result.idx);
-    }
-  }
-
-  while (activePromises.size > 0) {
-    const streamIds = Array.from(activePromises.keys());
-    const promises = streamIds.map((id) => activePromises.get(id)!);
-
-    const { value: result, index } = await Promise.race(
-      promises.map((promise, index) =>
-        promise.then((value) => ({ value, index })),
-      ),
-    );
-
-    const streamId = streamIds[index];
-    const idx = streamIdxMap.get(streamId)!;
-
-    if (result.done) {
-      activeStreams.delete(streamId);
-      activePromises.delete(streamId);
-      streamIdxMap.delete(streamId);
-
-      const newStream = startNewStream();
-      if (newStream) {
-        streamIdxMap.set(newStream.streamId, newStream.idx);
-      }
-    } else {
-      yield { idx, response: result.value };
-      activePromises.set(streamId, activeStreams.get(streamId)!.next());
-    }
   }
 };
 

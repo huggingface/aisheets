@@ -26,6 +26,7 @@ import { countDatasetTableRows } from '~/services/repository/tables';
 import { queryDatasetSources } from '~/services/websearch/embed';
 import { createSourcesFromWebQueries } from '~/services/websearch/search-sources';
 import type { Cell, CellSource, Column, Process, Session } from '~/state';
+import { collectValidatedExamples } from './collect-examples';
 
 export interface GenerateCellsParams {
   column: Column;
@@ -160,21 +161,6 @@ async function* generateCellsFromScratch({
   session: Session;
 }) {
   const { modelName, modelProvider, prompt, searchEnabled } = process;
-
-  // Set generating state for all cells that will be processed
-  for (let i = offset; i < limit + offset; i++) {
-    if (validatedCells?.map((cell) => cell.idx).includes(i)) continue;
-
-    const cell = await (updateOnly
-      ? getColumnCellByIdx({ idx: i, columnId: column.id })
-      : getOrCreateCellInDB(column.id, i));
-
-    if (!cell) continue;
-
-    cell.generating = true;
-    await updateCell(cell);
-    yield { cell };
-  }
 
   let sourcesContext = undefined;
   if (searchEnabled) {
@@ -312,19 +298,22 @@ async function* generateCellsFromColumnsReferences({
     { cell: Cell; sources: CellSource[] | undefined }
   >();
 
-  // Set generating state for all cells upfront
+  // Get initial examples from validated cells
+  const currentExamples = await collectValidatedExamples({
+    validatedCells,
+    columnsReferences,
+  });
+
+  const validatedIdxs = validatedCells?.map((cell) => cell.idx);
+  // Create all cells and requests in order
   for (let i = offset; i < limit + offset; i++) {
-    if (validatedCells?.map((cell) => cell.idx).includes(i)) continue;
+    if (validatedIdxs?.includes(i)) continue;
 
     const cell = await (updateOnly
       ? getColumnCellByIdx({ idx: i, columnId: column.id })
       : getOrCreateCellInDB(column.id, i));
 
     if (!cell) continue;
-
-    cell.generating = true;
-    await updateCell(cell);
-    yield { cell };
 
     const rowCells = await getRowCells({
       rowIdx: i,
@@ -349,7 +338,7 @@ async function* generateCellsFromColumnsReferences({
       accessToken: session.token,
       modelName,
       modelProvider,
-      examples: [],
+      examples: currentExamples,
       instruction: prompt,
       timeout,
       data,
@@ -399,6 +388,8 @@ async function* generateCellsFromColumnsReferences({
           snippet: source.text?.slice(0, MAX_SOURCE_SNIPPET_LENGTH) || '',
         }))
       : undefined;
+
+    cell.generating = true;
 
     cells.set(i, { cell, sources });
 

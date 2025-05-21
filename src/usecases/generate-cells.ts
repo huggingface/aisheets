@@ -453,11 +453,11 @@ const getOrCreateCellInDB = async (
 };
 
 const SEARCH_QUERIES_PROMPT_TEMPLATE = `
-Given this prompt that will be used to generate content for the dataset "{datasetName}":
+Given this prompt that will be used to generate a cell in a column of the dataset named "{datasetName}":
 
 {prompt}
 
-Create exactly {maxQueries} specific search queries that will help gather relevant information for this prompt. The queries should be focused on finding information that would help generate high-quality content for this specific dataset context.
+Create exactly {maxQueries} specific optimized Google search queries that will help gather relevant, accurate, and specific information for this prompt. The queries should be focused on finding information that would help generate high-quality content for this specific cell, taking into account the context of the dataset.
 
 Your response must follow this exact format:
 

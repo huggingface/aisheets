@@ -58,7 +58,7 @@ DATASET NAME:
 Short Descriptive Name
 
 COLUMNS:
-- column_name1 : prompt1 (this first column is always the main object and the only one not referencing other columns)
+- column_name1 : prompt1 (this first column is always the main object and the only one not referencing other columns). For listing items avoid using words like Describe, Generate, etc. and instead use: Identify, Extract from sources, etc.
 - column_name2 : prompt2 (referencing {{column_name}} if needed)
 - column_name3 : prompt3...
 
@@ -80,13 +80,12 @@ DATASET NAME:
 Modern Movie Reviews Collection
 
 COLUMNS:
-- movie_title : Generate a movie title in the style of recent releases
-- review : Write a detailed movie review for {{movie_title}}
-- rating : Rate {{movie_title}} from 1-5 stars based on {{review}}
-- genre : Identify the movie genre based on {{review}}
+- movie_title : Identify a movie title from the sources. Don't repeat existing items in the dataset.
+- review : Write a detailed movie review for {{movie_title}} based on the sources.
+- genre : Identify the movie genre of {{movie_title}} based on the sources.
 
 SEARCH QUERIES:
-- "recent movie releases 2024 reviews"
+- "movie releases 2024 reviews"
 - "popular movie genres trends analysis"
 `.trim();
 

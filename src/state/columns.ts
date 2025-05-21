@@ -281,6 +281,7 @@ export const useColumnsStore = () => {
         ];
       } else {
         column.cells.push(cell);
+        column.cells.sort((a, b) => a.idx - b.idx);
       }
 
       replaceColumns(columns.value);

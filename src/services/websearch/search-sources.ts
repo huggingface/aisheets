@@ -78,24 +78,25 @@ export async function createSourcesFromWebQueries({
     `[createSourcesFromWebQueries] Starting for dataset ${dataset.name} with ${queries.length} queries`,
   );
 
-  const { sources: webSources, errors } = await trackTime(() => {
+  const { sources: webSources, errors } = await trackTime(async () => {
     console.log('Time for searchQueriesToSources');
     console.log(queries);
-    return searchQueriesToSources(queries);
+    const results = await searchQueriesToSources(queries);
+
+    // Limit sources if maxSources is provided
+    if (maxSources) results.sources = results.sources.slice(0, maxSources);
+
+    return results;
   });
 
-  // Limit sources if maxSources is provided
-  const limitedSources = maxSources
-    ? webSources.slice(0, maxSources)
-    : webSources;
   console.log(
-    `[createSourcesFromWebQueries] Found ${limitedSources.length} sources from search`,
+    `[createSourcesFromWebQueries] Found ${webSources.length} sources from search`,
   );
 
   // Filter out sources that already exist in the vector DB
   const newSources: WebSource[] = [];
   const existingSources: WebSource[] = [];
-  for (const source of limitedSources) {
+  for (const source of webSources) {
     const exists = await checkSourceExists({
       dataset,
       sourceUri: source.url,
@@ -160,7 +161,7 @@ export async function createSourcesFromWebQueries({
 
   // Return all sources (both new and existing) to maintain the same interface
   return {
-    sources: limitedSources,
+    sources: webSources,
     errors,
   };
 }

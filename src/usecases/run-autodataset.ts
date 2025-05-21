@@ -28,6 +28,7 @@ export interface AssistantParams {
   searchEnabled?: boolean;
   timeout?: number;
   maxSearchQueries?: number;
+  maxSources?: number;
 }
 
 export interface WebSearchQuery {
@@ -408,6 +409,7 @@ async function* createSourcesFromWebQueries({
   dataset,
   queries,
   options,
+  maxSources = 5,
 }: {
   dataset: {
     id: string;
@@ -417,22 +419,28 @@ async function* createSourcesFromWebQueries({
   options: {
     accessToken: string;
   };
+  maxSources?: number;
 }): AsyncGenerator<Event> {
   const { sources: webSources, errors } = await searchQueriesToSources(queries);
 
+  // Limit sources if maxSources is provided
+  const limitedSources = maxSources
+    ? webSources.slice(0, maxSources)
+    : webSources;
+
   yield {
     event: EVENTS.datasetSearchSuccess,
-    data: { sources: webSources, errors },
+    data: { sources: limitedSources, errors },
   };
 
   yield {
     event: EVENTS.sourcesProcess,
-    data: { urls: webSources.map((source) => source.url) },
+    data: { urls: limitedSources.map((source) => source.url) },
   };
 
   const scrappedUrls = new Map<string, Source>();
   for await (const { url, result } of scrapeUrlsBatch(
-    webSources.map((source) => source.url),
+    limitedSources.map((source) => source.url),
   )) {
     if (!result) {
       yield {
@@ -449,7 +457,7 @@ async function* createSourcesFromWebQueries({
     scrappedUrls.set(url, result);
   }
 
-  const sources = webSources
+  const sources = limitedSources
     .map((source) => {
       const { url } = source;
       const scrapped = scrappedUrls.get(url);
@@ -466,7 +474,7 @@ async function* createSourcesFromWebQueries({
 
   const indexedChunks = await indexDatasetSources({
     dataset,
-    sources: webSources,
+    sources: sources,
     options,
   });
 
@@ -495,6 +503,7 @@ export const runAutoDataset = async function* (
     modelProvider = DEFAULT_MODEL_PROVIDER,
     searchEnabled = false,
     maxSearchQueries = 1,
+    maxSources = 5,
     timeout,
   }: AssistantParams,
 ): AsyncGenerator<Event> {
@@ -551,6 +560,7 @@ export const runAutoDataset = async function* (
         options: {
           accessToken: session.token,
         },
+        maxSources,
       });
     }
 

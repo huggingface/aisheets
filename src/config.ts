@@ -77,6 +77,16 @@ export const MODEL_ENDPOINT_URL: string | undefined =
   process.env.MODEL_ENDPOINT_URL;
 
 /**
+ * The name of the model endpoint for inference operations.
+ *
+ * This value is retrieved from the environment variable `MODEL_ENDPOINT_NAME`.
+ *
+ * Default value: 'unknown'
+ */
+export const MODEL_ENDPOINT_NAME: string =
+  process.env.MODEL_ENDPOINT_NAME ?? 'unknown';
+
+/**
  * List of model IDs that should be excluded from the model list.
  * This value is retrieved from the environment variable `EXCLUDED_MODELS` as a comma-separated string.
  * If not set, defaults to a predefined list of models.

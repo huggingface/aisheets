@@ -163,6 +163,7 @@ async function* generateCellsFromScratch({
       options: {
         accessToken: session.token,
       },
+      maxQueries: 1,
     });
 
     // 2. Index web search results into the embbedding store
@@ -322,6 +323,7 @@ async function singleCellGeneration({
       options: {
         accessToken: session.token,
       },
+      maxQueries: 1,
     });
 
     if (queries.length > 0) {
@@ -500,14 +502,15 @@ async function buildWebSearchQueries({
   prompt,
   column,
   options,
+  maxQueries = 1,
 }: {
   prompt: string;
   column: Column;
   options: { accessToken: string };
+  maxQueries?: number;
 }): Promise<string[]> {
   const { modelName = DEFAULT_MODEL, modelProvider = DEFAULT_MODEL_PROVIDER } =
     column.process || {};
-  const maxQueries = 1;
 
   try {
     const promptText = SEARCH_QUERIES_PROMPT_TEMPLATE.replace(
@@ -533,6 +536,7 @@ async function buildWebSearchQueries({
     const queries: string[] = [];
     const regex = /^["'](.+)["']$/;
 
+    // Process all lines to extract queries
     for (const line of responseText.split('\n').map((l) => l.trim())) {
       if (line.startsWith('-')) {
         const item = line.substring(1).trim();
@@ -544,7 +548,8 @@ async function buildWebSearchQueries({
       }
     }
 
-    return queries;
+    // Return only up to maxQueries queries, regardless of how many the model returned
+    return queries.slice(0, maxQueries);
   } catch (error) {
     console.error(
       '❌ [buildWebSearchQueries] Error generating search queries:',

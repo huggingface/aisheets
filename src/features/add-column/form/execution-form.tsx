@@ -18,7 +18,7 @@ import {
   LuX,
 } from '@qwikest/icons/lucide';
 
-import { Button, Input, Label, Select } from '~/components';
+import { Button, Label, Select } from '~/components';
 
 import {
   TemplateTextArea,
@@ -284,87 +284,75 @@ export const ExecutionForm = component$<SidebarProps>(
                   </div>
 
                   <div class="flex flex-col gap-4">
-                    {models.length === 0 ? (
-                      <Input
-                        bind:value={inputModelId}
-                        class="bg-white px-4 h-10 border-neutral-300-foreground"
-                        placeholder="Cannot load model suggestions. Please enter the model ID manually."
-                      />
-                    ) : (
-                      <div class="flex gap-4">
-                        <div class="flex-[2]">
-                          <Label class="flex gap-1 mb-2 font-normal">
-                            Model
-                          </Label>
-                          <Select.Root value={selectedModel.value?.id}>
-                            <Select.Trigger class="px-4 bg-white rounded-base border-neutral-300-foreground">
-                              <Select.DisplayValue />
-                            </Select.Trigger>
-                            <Select.Popover class="border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto">
-                              {models.map((model) => (
+                    <div class="flex gap-4">
+                      <div class="flex-[2]">
+                        <Label class="flex gap-1 mb-2 font-normal">Model</Label>
+                        <Select.Root value={selectedModel.value?.id}>
+                          <Select.Trigger class="px-4 bg-white rounded-base border-neutral-300-foreground">
+                            <Select.DisplayValue />
+                          </Select.Trigger>
+                          <Select.Popover class="border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto">
+                            {models.map((model) => (
+                              <Select.Item
+                                key={model.id}
+                                class="text-foreground hover:bg-accent"
+                                value={model.id}
+                                onClick$={$(() => {
+                                  selectedModel.value = model;
+                                  selectedProvider.value = model.providers[0];
+                                })}
+                              >
+                                <Select.ItemLabel>{model.id}</Select.ItemLabel>
+                                {model.size && (
+                                  <span class="ml-2 bg-gray-100 text-gray-700 px-2 py-0.5 rounded text-sm">
+                                    {model.size}
+                                  </span>
+                                )}
+                                <Select.ItemIndicator>
+                                  <LuCheck class="h-4 w-4" />
+                                </Select.ItemIndicator>
+                              </Select.Item>
+                            ))}
+                          </Select.Popover>
+                        </Select.Root>
+                      </div>
+                      <div class="flex-1" key={selectedModel.value?.id}>
+                        <Label class="flex gap-1 mb-2 font-normal">
+                          Inference Providers
+                        </Label>
+                        <Select.Root
+                          value={selectedProvider.value}
+                          onChange$={$((value: string | string[]) => {
+                            const provider = Array.isArray(value)
+                              ? value[0]
+                              : value;
+                            selectedProvider.value = provider;
+                          })}
+                        >
+                          <Select.Trigger class="px-4 bg-white rounded-base border-neutral-300-foreground">
+                            <Select.DisplayValue />
+                          </Select.Trigger>
+                          <Select.Popover class="border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto">
+                            {selectedModel.value?.providers?.map(
+                              (provider, idx) => (
                                 <Select.Item
-                                  key={model.id}
+                                  key={idx}
                                   class="text-foreground hover:bg-accent"
-                                  value={model.id}
-                                  onClick$={$(() => {
-                                    selectedModel.value = model;
-                                    selectedProvider.value = model.providers[0];
-                                  })}
+                                  value={provider}
                                 >
                                   <Select.ItemLabel>
-                                    {model.id}
+                                    {provider}
                                   </Select.ItemLabel>
-                                  {model.size && (
-                                    <span class="ml-2 bg-gray-100 text-gray-700 px-2 py-0.5 rounded text-sm">
-                                      {model.size}
-                                    </span>
-                                  )}
                                   <Select.ItemIndicator>
                                     <LuCheck class="h-4 w-4" />
                                   </Select.ItemIndicator>
                                 </Select.Item>
-                              ))}
-                            </Select.Popover>
-                          </Select.Root>
-                        </div>
-                        <div class="flex-1" key={selectedModel.value?.id}>
-                          <Label class="flex gap-1 mb-2 font-normal">
-                            Inference Providers
-                          </Label>
-                          <Select.Root
-                            value={selectedProvider.value}
-                            onChange$={$((value: string | string[]) => {
-                              const provider = Array.isArray(value)
-                                ? value[0]
-                                : value;
-                              selectedProvider.value = provider;
-                            })}
-                          >
-                            <Select.Trigger class="px-4 bg-white rounded-base border-neutral-300-foreground">
-                              <Select.DisplayValue />
-                            </Select.Trigger>
-                            <Select.Popover class="border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto">
-                              {selectedModel.value?.providers?.map(
-                                (provider, idx) => (
-                                  <Select.Item
-                                    key={idx}
-                                    class="text-foreground hover:bg-accent"
-                                    value={provider}
-                                  >
-                                    <Select.ItemLabel>
-                                      {provider}
-                                    </Select.ItemLabel>
-                                    <Select.ItemIndicator>
-                                      <LuCheck class="h-4 w-4" />
-                                    </Select.ItemIndicator>
-                                  </Select.Item>
-                                ),
-                              ) || []}
-                            </Select.Popover>
-                          </Select.Root>
-                        </div>
+                              ),
+                            ) || []}
+                          </Select.Popover>
+                        </Select.Root>
                       </div>
-                    )}
+                    </div>
                   </div>
                 </div>
               )}

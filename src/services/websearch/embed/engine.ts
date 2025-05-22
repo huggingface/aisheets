@@ -90,6 +90,7 @@ export const indexDatasetSources = async ({
   dataset,
   sources,
   options,
+  maxChunks = 100, // Default to 100 chunks to prevent long processing times
 }: {
   dataset: {
     id: string;
@@ -99,6 +100,7 @@ export const indexDatasetSources = async ({
   options: {
     accessToken: string;
   };
+  maxChunks?: number; // Optional parameter to limit total chunks
 }): Promise<number> => {
   const chunkedSources = sources
     .map((source) => {
@@ -122,6 +124,14 @@ export const indexDatasetSources = async ({
       }));
     },
   );
+
+  // Limit the total number of chunks if maxChunks is specified
+  if (maxChunks && rows.length > maxChunks) {
+    console.log(
+      `[indexDatasetSources] Limiting chunks from ${rows.length} to ${maxChunks} for dataset ${dataset.name}`,
+    );
+    rows = rows.slice(0, maxChunks);
+  }
 
   const processEmbeddingsBatch = async (
     batch: Record<string, any>[],

@@ -151,7 +151,7 @@ export const ORG_BILLING = process.env.ORG_BILLING ?? undefined;
  */
 export const BLOCKED_URLS: string[] = process.env.BLOCKED_URLS?.split(',').map(
   (u) => u.trim(),
-) ?? ['youtube.com', 'twitter.com'];
+) ?? ['youtube.com', 'x.com', 'bloomberg.com', 'nytimes.com'];
 
 const RUNTIME_ENV = join(DATA_DIR, process.env.NODE_ENV ?? 'development');
 

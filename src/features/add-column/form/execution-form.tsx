@@ -297,12 +297,17 @@ export const ExecutionForm = component$<SidebarProps>(
                 </Button>
 
                 {modelEndpointEnabled && !endpointURLSelected.value && (
-                  <Tooltip text="Reset default model">
-                    <LuUndo2
-                      class="w-4 h-4 rounded-full gap-2 text-neutral-500 cursor-pointer hover:bg-neutral-200"
-                      onClick$={() => (endpointURLSelected.value = true)}
-                    />
-                  </Tooltip>
+                  <div
+                    class="flex-1 flex items-center"
+                    style={{ justifyContent: 'flex-end', marginRight: '1%' }}
+                  >
+                    <Tooltip text="Reset default model">
+                      <LuUndo2
+                        class="w-4 h-4 rounded-full gap-2 text-neutral-500 cursor-pointer hover:bg-neutral-200"
+                        onClick$={() => (endpointURLSelected.value = true)}
+                      />
+                    </Tooltip>
+                  </div>
                 )}
               </div>
 

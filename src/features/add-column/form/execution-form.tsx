@@ -8,6 +8,7 @@ import {
   useTask$,
   useVisibleTask$,
 } from '@builder.io/qwik';
+
 import { cn } from '@qwik-ui/utils';
 import {
   LuCheck,
@@ -15,10 +16,12 @@ import {
   LuGlobe,
   LuSettings,
   LuStopCircle,
+  LuUndo2,
   LuX,
 } from '@qwikest/icons/lucide';
 
 import { Button, Label, Select } from '~/components';
+import { Tooltip } from '~/components/ui/tooltip/tooltip';
 
 import {
   TemplateTextArea,
@@ -278,7 +281,7 @@ export const ExecutionForm = component$<SidebarProps>(
                     <p class="text-neutral-500 underline">
                       {selectedModel.value?.id}
                     </p>
-                    with
+                    with provider
                     <p class="italic">{selectedProvider.value}</p>
                   </div>
                 )}
@@ -287,13 +290,12 @@ export const ExecutionForm = component$<SidebarProps>(
                 </Button>
 
                 {modelEndpointEnabled && !endpointURLSelected.value && (
-                  <button
-                    type="button"
-                    class="flex items-center justify-end gap-1 cursor-pointer text-neutral-500 hover:text-primary-500 ml-auto underline bg-transparent border-none p-0"
-                    onClick$={() => (endpointURLSelected.value = true)}
-                  >
-                    Switch to default configuration
-                  </button>
+                  <Tooltip text="Reset default model">
+                    <LuUndo2
+                      class="w-4 h-4 rounded-full gap-2 text-neutral-500 cursor-pointer hover:bg-neutral-200"
+                      onClick$={() => (endpointURLSelected.value = true)}
+                    />
+                  </Tooltip>
                 )}
               </div>
 

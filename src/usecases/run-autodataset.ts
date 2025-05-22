@@ -420,26 +420,24 @@ async function* createSourcesFromWebQueries({
   };
   maxSources?: number;
 }): AsyncGenerator<Event> {
-  const { sources: webSources, errors } = await searchQueriesToSources(queries);
-
-  // Limit sources if maxSources is provided
-  const limitedSources = maxSources
-    ? webSources.slice(0, maxSources)
-    : webSources;
+  const { sources: webSources, errors } = await searchQueriesToSources(
+    queries,
+    maxSources,
+  );
 
   yield {
     event: EVENTS.datasetSearchSuccess,
-    data: { sources: limitedSources, errors },
+    data: { sources: webSources, errors },
   };
 
   yield {
     event: EVENTS.sourcesProcess,
-    data: { urls: limitedSources.map((source) => source.url) },
+    data: { urls: webSources.map((source) => source.url) },
   };
 
   const scrappedUrls = new Map<string, Source>();
   for await (const { url, result } of scrapeUrlsBatch(
-    limitedSources.map((source) => source.url),
+    webSources.map((source) => source.url),
   )) {
     if (!result) {
       yield {
@@ -456,7 +454,7 @@ async function* createSourcesFromWebQueries({
     scrappedUrls.set(url, result);
   }
 
-  const sources = limitedSources
+  const sources = webSources
     .map((source) => {
       const { url } = source;
       const scrapped = scrappedUrls.get(url);

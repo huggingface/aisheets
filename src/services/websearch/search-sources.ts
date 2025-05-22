@@ -81,17 +81,8 @@ export async function createSourcesFromWebQueries({
   const { sources: webSources, errors } = await trackTime(async () => {
     console.log('Time for searchQueriesToSources');
     console.log(queries);
-    const results = await searchQueriesToSources(queries);
-
-    // Limit sources if maxSources is provided
-    if (maxSources) results.sources = results.sources.slice(0, maxSources);
-
-    return results;
+    return await searchQueriesToSources(queries, maxSources);
   });
-
-  console.log(
-    `[createSourcesFromWebQueries] Found ${webSources.length} sources from search`,
-  );
 
   // Filter out sources that already exist in the vector DB
   const newSources: WebSource[] = [];
@@ -168,6 +159,7 @@ export async function createSourcesFromWebQueries({
 
 export const searchQueriesToSources = async (
   queries: string[],
+  maxSources = 10,
 ): Promise<{
   sources: WebSource[];
   errors?: ErrorSource[];
@@ -213,7 +205,10 @@ export const searchQueriesToSources = async (
   }
 
   return {
-    sources: filterByBlockList(Array.from(sourcesMap.values())),
+    sources: filterByBlockList(Array.from(sourcesMap.values())).slice(
+      0,
+      maxSources,
+    ),
     errors,
   };
 };

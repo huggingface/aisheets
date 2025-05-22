@@ -313,7 +313,7 @@ async function singleCellGeneration({
   };
 
   let sourcesContext: MaterializePromptParams['sourcesContext'];
-  console.log('searchEnabled', searchEnabled);
+
   if (searchEnabled) {
     const renderedInstruction = renderInstruction(prompt, args.data);
 

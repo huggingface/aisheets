@@ -90,7 +90,7 @@ Use the web sources below to accurately follow the user instruction. If the info
 {{#hasExamples}}
 # Current dataset
 
-Read carefully these data points to avoid repeating them and ensure diversity across the whole dataset. Data points are prior outputs to avoid mimicking. Treat them as exclusion criteria.
+Read carefully these data points to avoid repeating them and ensure diversity across the whole dataset. Data points are prior outputs to avoid mimicking. DO NOT repeat in your response any of the existing items in the list below:
 
 ## Data points
 {{formattedExamples}}

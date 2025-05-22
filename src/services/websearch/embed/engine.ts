@@ -1,4 +1,5 @@
 import { featureExtraction } from '@huggingface/inference';
+import { pipeline } from '@huggingface/transformers';
 import * as lancedb from '@lancedb/lancedb';
 import * as arrow from 'apache-arrow';
 import { DEFAULT_EMBEDDING_MODEL, VECTOR_DB_DIR } from '~/config';
@@ -9,9 +10,56 @@ import {
 import type { WebSource } from '~/services/websearch/search-sources';
 import { flattenTree, stringifyMarkdownElement } from '../markdown';
 
+let processEmbeddings: (
+  texts: string[],
+  options: {
+    accessToken: string;
+  },
+) => Promise<number[][]> = async () => {
+  throw new Error('processEmbeddings function not initialized');
+};
+
+const { provider, endpointUrl, model } = DEFAULT_EMBEDDING_MODEL;
+
+if (provider === undefined && endpointUrl === undefined) {
+  const extractor = await pipeline('feature-extraction', model);
+
+  processEmbeddings = async (
+    texts: string[],
+    options: {
+      accessToken: string;
+    },
+  ): Promise<number[][]> => {
+    const results = await extractor(texts, { pooling: 'cls' });
+    return results.tolist();
+  };
+} else {
+  processEmbeddings = async (
+    texts: string[],
+    options: {
+      accessToken: string;
+    },
+  ): Promise<number[][]> => {
+    const results = await featureExtraction(
+      normalizeFeatureExtractionArgs({
+        inputs: texts,
+        accessToken: options.accessToken,
+        modelName: model,
+        modelProvider: provider!,
+        endpointUrl: endpointUrl,
+      }),
+      normalizeOptions(),
+    );
+
+    return results as number[][];
+  };
+}
+
 export const configureEmbeddingsIndex = async () => {
   // Check if the database is empty
   const db = await lancedb.connect(VECTOR_DB_DIR);
+
+  const { embeddingDim } = DEFAULT_EMBEDDING_MODEL;
 
   const schema = new arrow.Schema([
     new arrow.Field('dataset_id', new arrow.Utf8()),
@@ -20,16 +68,20 @@ export const configureEmbeddingsIndex = async () => {
     new arrow.Field(
       'embedding',
       new arrow.FixedSizeList(
-        DEFAULT_EMBEDDING_MODEL.embeddingDim,
+        embeddingDim,
         new arrow.Field('item', new arrow.Float32(), true),
       ),
     ),
   ]);
 
-  const embeddingsIndex = await db.createEmptyTable('embeddings', schema, {
-    existOk: true,
-    mode: 'create',
-  });
+  const embeddingsIndex = await db.createEmptyTable(
+    `embeddings-${embeddingDim}`,
+    schema,
+    {
+      existOk: true,
+      mode: 'create',
+    },
+  );
 
   // Create both vector and FTS indices
   await embeddingsIndex.createIndex('dataset_id', { replace: true });
@@ -68,28 +120,20 @@ export const embedder = async (
       ? texts.map(getDetailedInstruct)
       : texts;
 
-  const results = await featureExtraction(
-    normalizeFeatureExtractionArgs({
-      inputs: processedTexts,
-      accessToken: options.accessToken,
-      modelName: DEFAULT_EMBEDDING_MODEL.model,
-      modelProvider: DEFAULT_EMBEDDING_MODEL.provider,
-      endpointUrl: DEFAULT_EMBEDDING_MODEL.endpointUrl,
-    }),
-    normalizeOptions(),
-  );
+  const results = await processEmbeddings(processedTexts, options);
 
   if (!Array.isArray(results)) {
     throw new Error('Invalid response from Hugging Face API');
   }
 
-  return results as number[][];
+  return results;
 };
 
 export const indexDatasetSources = async ({
   dataset,
   sources,
   options,
+  maxChunks = 100, // Default to 100 chunks to prevent long processing times
 }: {
   dataset: {
     id: string;
@@ -99,6 +143,7 @@ export const indexDatasetSources = async ({
   options: {
     accessToken: string;
   };
+  maxChunks?: number; // Optional parameter to limit total chunks
 }): Promise<number> => {
   const chunkedSources = sources
     .map((source) => {
@@ -122,6 +167,14 @@ export const indexDatasetSources = async ({
       }));
     },
   );
+
+  // Limit the total number of chunks if maxChunks is specified
+  if (maxChunks && rows.length > maxChunks) {
+    console.log(
+      `[indexDatasetSources] Limiting chunks from ${rows.length} to ${maxChunks} for dataset ${dataset.name}`,
+    );
+    rows = rows.slice(0, maxChunks);
+  }
 
   const processEmbeddingsBatch = async (
     batch: Record<string, any>[],
@@ -248,5 +301,28 @@ export const queryDatasetSources = async ({
   } catch (error) {
     console.error('Error querying dataset sources:', error);
     return [];
+  }
+};
+
+export const checkSourceExists = async ({
+  dataset,
+  sourceUri,
+}: {
+  dataset: {
+    id: string;
+  };
+  sourceUri: string;
+}): Promise<boolean> => {
+  try {
+    // Escape quotes in sourceUri to prevent SQL injection
+    const escapedSourceUri = sourceUri.replace(/"/g, '\\"');
+    const filterByDatasetAndSource = `dataset_id = "${dataset.id}" AND source_uri = "${escapedSourceUri}"`;
+    const count = await embeddingsIndex.countRows(filterByDatasetAndSource);
+    return count > 0;
+  } catch (error) {
+    console.error('Error checking if source exists:', error);
+    // If there's an error checking, we should assume the source doesn't exist
+    // This is safer than assuming it does exist and skipping it
+    return false;
   }
 };

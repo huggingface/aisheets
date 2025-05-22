@@ -1,11 +1,9 @@
 import {
   $,
   type QRL,
-  Resource,
   component$,
   noSerialize,
   useContext,
-  useResource$,
   useSignal,
   useTask$,
   useVisibleTask$,
@@ -20,21 +18,21 @@ import {
   LuX,
 } from '@qwikest/icons/lucide';
 
-import { Button, Input, Label, Select } from '~/components';
+import { Button, Label, Select } from '~/components';
 
 import {
   TemplateTextArea,
   type Variable,
 } from '~/features/add-column/components/template-textarea';
 import { useExecution } from '~/features/add-column/form/execution';
-import { configContext } from '~/routes/home/layout';
+import type { Model } from '~/loaders/hub-models';
+import { configContext, modelsContext } from '~/routes/home/layout';
 import {
   type Column,
   type CreateColumn,
   TEMPORAL_ID,
   useColumnsStore,
 } from '~/state';
-import { type Model, useListModels } from '~/usecases/list-models';
 
 interface SidebarProps {
   column: Column;
@@ -55,6 +53,8 @@ export const ExecutionForm = component$<SidebarProps>(
       MODEL_ENDPOINT_NAME,
     } = useContext(configContext);
 
+    const models = useContext(modelsContext);
+
     const isOpenModel = useSignal(false);
 
     const prompt = useSignal<string>('');
@@ -69,10 +69,6 @@ export const ExecutionForm = component$<SidebarProps>(
 
     const inputModelId = useSignal<string | undefined>();
 
-    const loadModels = useResource$(async () => {
-      return await useListModels();
-    });
-
     const onSelectedVariables = $((variables: { id: string }[]) => {
       columnsReferences.value = variables.map((v) => v.id);
     });
@@ -83,9 +79,7 @@ export const ExecutionForm = component$<SidebarProps>(
       }
     });
 
-    useTask$(async () => {
-      const models = await loadModels.value;
-
+    useTask$(() => {
       variables.value = columns.value
         .filter((c) => c.id !== column.id && !hasBlobContent(c))
         .map((c) => ({
@@ -101,7 +95,7 @@ export const ExecutionForm = component$<SidebarProps>(
 
       // If there's a previously selected model, use that
       if (process.modelName) {
-        selectedModel.value = models?.find(
+        selectedModel.value = models.find(
           (m: Model) => m.id === process.modelName,
         ) || {
           id: process.modelName,
@@ -316,112 +310,82 @@ export const ExecutionForm = component$<SidebarProps>(
                     </Button>
                   </div>
 
-                  <Resource
-                    value={loadModels}
-                    onPending={() => (
-                      <Select.Disabled>Loading models...</Select.Disabled>
-                    )}
-                    onResolved={(models) => {
-                      if (!selectedModel.value?.id) {
-                        selectedModel.value = models[0];
-                        selectedProvider.value = models[0].providers[0];
-                      }
-
-                      return (
-                        <div
-                          class="flex flex-col gap-4"
-                          onClick$={() => {
-                            console.log('click');
-                            endpointURLSelected.value = false;
-                          }}
-                        >
-                          <div class="flex gap-4">
-                            <div class="flex-[2]">
-                              <Label class="flex gap-1 mb-2 font-normal">
-                                Model
-                              </Label>
-                              <Select.Root value={selectedModel.value?.id}>
-                                <Select.Trigger class="px-4 bg-white rounded-base border-neutral-300-foreground">
-                                  <Select.DisplayValue />
-                                </Select.Trigger>
-                                <Select.Popover class="border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto">
-                                  {models.map((model) => (
-                                    <Select.Item
-                                      key={model.id}
-                                      class="text-foreground hover:bg-accent"
-                                      value={model.id}
-                                      onClick$={$(() => {
-                                        selectedModel.value = model;
-                                        selectedProvider.value =
-                                          model.providers[0];
-                                      })}
-                                    >
-                                      <Select.ItemLabel>
-                                        {model.id}
-                                      </Select.ItemLabel>
-                                      {model.size && (
-                                        <span class="ml-2 bg-gray-100 text-gray-700 px-2 py-0.5 rounded text-sm">
-                                          {model.size}
-                                        </span>
-                                      )}
-                                      <Select.ItemIndicator>
-                                        <LuCheck class="h-4 w-4" />
-                                      </Select.ItemIndicator>
-                                    </Select.Item>
-                                  ))}
-                                </Select.Popover>
-                              </Select.Root>
-                            </div>
-                            <div class="flex-1" key={selectedModel.value.id}>
-                              <Label class="flex gap-1 mb-2 font-normal">
-                                Inference Providers
-                              </Label>
-                              <Select.Root
-                                value={selectedProvider.value}
-                                onChange$={$((value: string | string[]) => {
-                                  const provider = Array.isArray(value)
-                                    ? value[0]
-                                    : value;
-                                  selectedProvider.value = provider;
+                  <div class="flex flex-col gap-4">
+                    <div
+                      class="flex gap-4"
+                      onClick$={() => {
+                        endpointURLSelected.value = false;
+                      }}
+                    >
+                      <div class="flex-[2]">
+                        <Label class="flex gap-1 mb-2 font-normal">Model</Label>
+                        <Select.Root value={selectedModel.value?.id}>
+                          <Select.Trigger class="px-4 bg-white rounded-base border-neutral-300-foreground">
+                            <Select.DisplayValue />
+                          </Select.Trigger>
+                          <Select.Popover class="border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto">
+                            {models.map((model) => (
+                              <Select.Item
+                                key={model.id}
+                                class="text-foreground hover:bg-accent"
+                                value={model.id}
+                                onClick$={$(() => {
+                                  selectedModel.value = model;
+                                  selectedProvider.value = model.providers[0];
                                 })}
                               >
-                                <Select.Trigger class="px-4 bg-white rounded-base border-neutral-300-foreground">
-                                  <Select.DisplayValue />
-                                </Select.Trigger>
-                                <Select.Popover class="border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto">
-                                  {selectedModel.value?.providers?.map(
-                                    (provider, idx) => (
-                                      <Select.Item
-                                        key={idx}
-                                        class="text-foreground hover:bg-accent"
-                                        value={provider}
-                                      >
-                                        <Select.ItemLabel>
-                                          {provider}
-                                        </Select.ItemLabel>
-                                        <Select.ItemIndicator>
-                                          <LuCheck class="h-4 w-4" />
-                                        </Select.ItemIndicator>
-                                      </Select.Item>
-                                    ),
-                                  ) || []}
-                                </Select.Popover>
-                              </Select.Root>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    }}
-                    onRejected={() => {
-                      return (
-                        <Input
-                          bind:value={inputModelId}
-                          class="bg-white px-4 h-10 border-neutral-300-foreground"
-                          placeholder="Cannot load model suggestions. Please enter the model ID manually."
-                        />
-                      );
-                    }}
-                  />
+                                <Select.ItemLabel>{model.id}</Select.ItemLabel>
+                                {model.size && (
+                                  <span class="ml-2 bg-gray-100 text-gray-700 px-2 py-0.5 rounded text-sm">
+                                    {model.size}
+                                  </span>
+                                )}
+                                <Select.ItemIndicator>
+                                  <LuCheck class="h-4 w-4" />
+                                </Select.ItemIndicator>
+                              </Select.Item>
+                            ))}
+                          </Select.Popover>
+                        </Select.Root>
+                      </div>
+                      <div class="flex-1" key={selectedModel.value?.id}>
+                        <Label class="flex gap-1 mb-2 font-normal">
+                          Inference Providers
+                        </Label>
+                        <Select.Root
+                          value={selectedProvider.value}
+                          onChange$={$((value: string | string[]) => {
+                            const provider = Array.isArray(value)
+                              ? value[0]
+                              : value;
+                            selectedProvider.value = provider;
+                          })}
+                        >
+                          <Select.Trigger class="px-4 bg-white rounded-base border-neutral-300-foreground">
+                            <Select.DisplayValue />
+                          </Select.Trigger>
+                          <Select.Popover class="border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto">
+                            {selectedModel.value?.providers?.map(
+                              (provider, idx) => (
+                                <Select.Item
+                                  key={idx}
+                                  class="text-foreground hover:bg-accent"
+                                  value={provider}
+                                >
+                                  <Select.ItemLabel>
+                                    {provider}
+                                  </Select.ItemLabel>
+                                  <Select.ItemIndicator>
+                                    <LuCheck class="h-4 w-4" />
+                                  </Select.ItemIndicator>
+                                </Select.Item>
+                              ),
+                            ) || []}
+                          </Select.Popover>
+                        </Select.Root>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>

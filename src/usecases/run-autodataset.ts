@@ -32,6 +32,7 @@ export interface AssistantParams {
   searchEnabled?: boolean;
   timeout?: number;
   maxSearchQueries?: number;
+  maxSources?: number;
 }
 
 export interface WebSearchQuery {
@@ -61,7 +62,7 @@ DATASET NAME:
 Short Descriptive Name
 
 COLUMNS:
-- column_name1 : prompt1 (this first column is always the main object and the only one not referencing other columns)
+- column_name1 : prompt1 (this first column is always the main object and the only one not referencing other columns). This colum should generate a single value. For listing items avoid using words like Describe, Generate, etc. and instead use: Identify one, Extract one, Name one etc.
 - column_name2 : prompt2 (referencing {{column_name}} if needed)
 - column_name3 : prompt3...
 
@@ -73,6 +74,8 @@ Only include columns that are directly relevant to the request. Create exactly {
 
 Avoid adding columns with typical database things, like tweet_id, id, timestamp, etc.
 
+Limit the number of columns to maximum 3 unless it's strictly required or the user specifies the columns themselves.
+
 ALWAYS include a prompt for each column.
 
 Here are some high-quality examples of dataset configurations:
@@ -81,13 +84,12 @@ DATASET NAME:
 Modern Movie Reviews Collection
 
 COLUMNS:
-- movie_title : Generate a movie title in the style of recent releases
-- review : Write a detailed movie review for {{movie_title}}
-- rating : Rate {{movie_title}} from 1-5 stars based on {{review}}
-- genre : Identify the movie genre based on {{review}}
+- movie_title : Identify one movie title from the provided sources. Don't repeat existing items in the dataset.
+- review : Write a detailed movie review for {{movie_title}} based on the provided sources.
+- genre : Identify the movie genre of {{movie_title}} based on the provided sources.
 
 SEARCH QUERIES:
-- "recent movie releases 2024 reviews"
+- "movie releases 2024 reviews"
 - "popular movie genres trends analysis"
 `.trim();
 
@@ -116,6 +118,8 @@ COLUMNS:
 Only include columns that are directly relevant to the request.
 
 Avoid adding columns with typical database things, like tweet_id, id, timestamp, etc.
+
+Limit the number of columns to maximum 3 unless it's strictly required or the user specifies the columns themselves.
 
 Here are some high-quality examples of dataset configurations:
 
@@ -412,6 +416,7 @@ async function* createSourcesFromWebQueries({
   dataset,
   queries,
   options,
+  maxSources = 5,
 }: {
   dataset: {
     id: string;
@@ -421,8 +426,12 @@ async function* createSourcesFromWebQueries({
   options: {
     accessToken: string;
   };
+  maxSources?: number;
 }): AsyncGenerator<Event> {
-  const { sources: webSources, errors } = await searchQueriesToSources(queries);
+  const { sources: webSources, errors } = await searchQueriesToSources(
+    queries,
+    maxSources,
+  );
 
   yield {
     event: EVENTS.datasetSearchSuccess,
@@ -470,7 +479,7 @@ async function* createSourcesFromWebQueries({
 
   const indexedChunks = await indexDatasetSources({
     dataset,
-    sources: webSources,
+    sources: sources,
     options,
   });
 
@@ -499,6 +508,7 @@ export const runAutoDataset = async function* (
     modelProvider = DEFAULT_MODEL_PROVIDER,
     searchEnabled = false,
     maxSearchQueries = 1,
+    maxSources = 5,
     timeout,
   }: AssistantParams,
 ): AsyncGenerator<Event> {
@@ -555,6 +565,7 @@ export const runAutoDataset = async function* (
         options: {
           accessToken: session.token,
         },
+        maxSources,
       });
     }
 

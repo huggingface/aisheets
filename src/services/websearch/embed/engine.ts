@@ -59,6 +59,8 @@ export const configureEmbeddingsIndex = async () => {
   // Check if the database is empty
   const db = await lancedb.connect(VECTOR_DB_DIR);
 
+  const { embeddingDim } = DEFAULT_EMBEDDING_MODEL;
+
   const schema = new arrow.Schema([
     new arrow.Field('dataset_id', new arrow.Utf8()),
     new arrow.Field('source_uri', new arrow.Utf8()),
@@ -66,16 +68,20 @@ export const configureEmbeddingsIndex = async () => {
     new arrow.Field(
       'embedding',
       new arrow.FixedSizeList(
-        DEFAULT_EMBEDDING_MODEL.embeddingDim,
+        embeddingDim,
         new arrow.Field('item', new arrow.Float32(), true),
       ),
     ),
   ]);
 
-  const embeddingsIndex = await db.createEmptyTable('embeddings', schema, {
-    existOk: true,
-    mode: 'create',
-  });
+  const embeddingsIndex = await db.createEmptyTable(
+    `embeddings-${embeddingDim}`,
+    schema,
+    {
+      existOk: true,
+      mode: 'create',
+    },
+  );
 
   // Create both vector and FTS indices
   await embeddingsIndex.createIndex('dataset_id', { replace: true });

@@ -7,7 +7,12 @@ import {
 import type { RequestEventBase } from '@builder.io/qwik-city';
 
 import { INFERENCE_PROVIDERS } from '@huggingface/inference';
-import { EXCLUDED_MODELS, HF_TOKEN } from '~/config';
+import {
+  DEFAULT_MODEL,
+  DEFAULT_MODEL_PROVIDER,
+  EXCLUDED_MODELS,
+  HF_TOKEN,
+} from '~/config';
 import { type Session, useServerSession } from '~/state';
 
 // This list helps to exclude providers that are not supported by the endpoint
@@ -114,7 +119,7 @@ const fetchModelsForPipeline = async (
 
   const data: any[] = await response.json();
 
-  return data.reduce((acc: Model[], model) => {
+  const models = data.reduce((acc: Model[], model) => {
     const providers = model.inferenceProviderMapping;
 
     if (!providers?.length) return acc;
@@ -152,12 +157,26 @@ const fetchModelsForPipeline = async (
 
     return acc;
   }, []) as Model[];
+
+  return models;
 };
 
 export const useHubModels = routeLoader$(async function (
   this: RequestEventLoader,
 ): Promise<Model[]> {
   const models = await listModels();
+
+  if (models.length === 0) {
+    return [
+      {
+        id: DEFAULT_MODEL,
+        providers: [DEFAULT_MODEL_PROVIDER],
+        tags: ['conversational'],
+        safetensors: {},
+        pipeline_tag: 'text-generation',
+      },
+    ];
+  }
 
   return models;
 });

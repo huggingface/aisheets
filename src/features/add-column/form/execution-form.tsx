@@ -263,12 +263,12 @@ export const ExecutionForm = component$<SidebarProps>(
                 </div>
               </div>
 
-              <div
-                onClick$={() => (isOpenModel.value = !isOpenModel.value)}
-                class="flex items-center justify-start gap-1 cursor-pointer"
-              >
+              <div class="flex items-center justify-start gap-1">
                 {endpointURLSelected.value ? (
-                  <div class="flex items-center justify-start gap-1">
+                  <div
+                    onClick$={() => (isOpenModel.value = !isOpenModel.value)}
+                    class="flex items-center justify-start gap-1 cursor-pointer"
+                  >
                     Model
                     <p class="text-neutral-500 underline">
                       {MODEL_ENDPOINT_NAME}
@@ -285,7 +285,11 @@ export const ExecutionForm = component$<SidebarProps>(
                     <p class="italic">{selectedProvider.value}</p>
                   </div>
                 )}
-                <Button look="ghost" class="hover:bg-neutral-200">
+                <Button
+                  onClick$={() => (isOpenModel.value = !isOpenModel.value)}
+                  look="ghost"
+                  class="hover:bg-neutral-200"
+                >
                   <LuSettings class="text-neutral-500" />
                 </Button>
 

@@ -301,7 +301,7 @@ export const ExecutionForm = component$<SidebarProps>(
                         <div class="flex flex-col gap-4">
                           <div class="flex gap-4">
                             <div class="flex-[2]">
-                              <Label class="flex gap-1 mb-2 font-normal-bold">
+                              <Label class="flex gap-1 mb-2 font-normal">
                                 Model
                               </Label>
                               <Select.Root value={selectedModel.value?.id}>
@@ -337,7 +337,7 @@ export const ExecutionForm = component$<SidebarProps>(
                               </Select.Root>
                             </div>
                             <div class="flex-1" key={selectedModel.value.id}>
-                              <Label class="flex gap-1 mb-2 font-normal-bold">
+                              <Label class="flex gap-1 mb-2 font-normal">
                                 Inference Providers
                               </Label>
                               <Select.Root

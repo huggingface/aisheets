@@ -1,4 +1,10 @@
-import { type RequestEventBase, server$ } from '@builder.io/qwik-city';
+import {
+  type RequestEventLoader,
+  routeLoader$,
+  server$,
+} from '@builder.io/qwik-city';
+
+import type { RequestEventBase } from '@builder.io/qwik-city';
 
 import { INFERENCE_PROVIDERS } from '@huggingface/inference';
 import { EXCLUDED_MODELS, HF_TOKEN } from '~/config';
@@ -53,7 +59,7 @@ export interface Model {
   trendingScore?: number;
 }
 
-export const useListModels = server$(async function (
+const listModels = server$(async function (
   this: RequestEventBase<QwikCityPlatform>,
 ): Promise<Model[]> {
   const session = useServerSession(this);
@@ -147,3 +153,11 @@ const fetchModelsForPipeline = async (
     return acc;
   }, []) as Model[];
 };
+
+export const useHubModels = routeLoader$(async function (
+  this: RequestEventLoader,
+): Promise<Model[]> {
+  const models = await listModels();
+
+  return models;
+});

@@ -1,4 +1,5 @@
 import { featureExtraction } from '@huggingface/inference';
+import { pipeline } from '@huggingface/transformers';
 import * as lancedb from '@lancedb/lancedb';
 import * as arrow from 'apache-arrow';
 import { DEFAULT_EMBEDDING_MODEL, VECTOR_DB_DIR } from '~/config';
@@ -8,6 +9,51 @@ import {
 } from '~/services/inference/run-prompt-execution';
 import type { WebSource } from '~/services/websearch/search-sources';
 import { flattenTree, stringifyMarkdownElement } from '../markdown';
+
+let processEmbeddings: (
+  texts: string[],
+  options: {
+    accessToken: string;
+  },
+) => Promise<number[][]> = async () => {
+  throw new Error('processEmbeddings function not initialized');
+};
+
+const { provider, endpointUrl, model } = DEFAULT_EMBEDDING_MODEL;
+
+if (provider === undefined && endpointUrl === undefined) {
+  const extractor = await pipeline('feature-extraction', model);
+
+  processEmbeddings = async (
+    texts: string[],
+    options: {
+      accessToken: string;
+    },
+  ): Promise<number[][]> => {
+    const results = await extractor(texts, { pooling: 'cls' });
+    return results.tolist();
+  };
+} else {
+  processEmbeddings = async (
+    texts: string[],
+    options: {
+      accessToken: string;
+    },
+  ): Promise<number[][]> => {
+    const results = await featureExtraction(
+      normalizeFeatureExtractionArgs({
+        inputs: texts,
+        accessToken: options.accessToken,
+        modelName: model,
+        modelProvider: provider!,
+        endpointUrl: endpointUrl,
+      }),
+      normalizeOptions(),
+    );
+
+    return results as number[][];
+  };
+}
 
 export const configureEmbeddingsIndex = async () => {
   // Check if the database is empty
@@ -68,22 +114,13 @@ export const embedder = async (
       ? texts.map(getDetailedInstruct)
       : texts;
 
-  const results = await featureExtraction(
-    normalizeFeatureExtractionArgs({
-      inputs: processedTexts,
-      accessToken: options.accessToken,
-      modelName: DEFAULT_EMBEDDING_MODEL.model,
-      modelProvider: DEFAULT_EMBEDDING_MODEL.provider,
-      endpointUrl: DEFAULT_EMBEDDING_MODEL.endpointUrl,
-    }),
-    normalizeOptions(),
-  );
+  const results = await processEmbeddings(processedTexts, options);
 
   if (!Array.isArray(results)) {
     throw new Error('Invalid response from Hugging Face API');
   }
 
-  return results as number[][];
+  return results;
 };
 
 export const indexDatasetSources = async ({

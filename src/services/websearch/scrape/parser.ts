@@ -13,7 +13,6 @@ interface DBSCANOptions<T> {
 
 /**
  * A basic spatial parser for extracting HTML structure from pages
- * This is a simplified version of what HuggingFace might be using
  */
 export function spatialParser(): {
   title: string;
@@ -23,89 +22,19 @@ export function spatialParser(): {
   createdAt?: string;
   updatedAt?: string;
   elements: SerializedHTMLElement[];
+  metrics: {
+    clusterCount: number;
+  };
 } {
-  const DBSCAN = <T>({
-    dataset,
-    epsilon = 1,
-    epsilonCompare = (distance: number, eps: number) => distance < eps,
-    minimumPoints = 2,
-    distanceFunction,
-  }: DBSCANOptions<T>) => {
-    const visitedIndices: Record<number, boolean> = {};
-    const isVisited = (i: number) => visitedIndices[i];
-    const markVisited = (i: number) => {
-      visitedIndices[i] = true;
-    };
-
-    const clusteredIndices: Record<number, boolean> = {};
-    const isClustered = (i: number) => clusteredIndices[i];
-    const markClustered = (i: number) => {
-      clusteredIndices[i] = true;
-    };
-
-    const uniqueMerge = <U>(targetArray: U[], sourceArray: U[]) => {
-      for (let i = 0; i < sourceArray.length; i += 1) {
-        const item = sourceArray[i];
-        if (targetArray.indexOf(item) < 0) {
-          targetArray.push(item);
-        }
-      }
-    };
-
-    const findNeighbors = (index: number) => {
-      const neighbors = [];
-      for (let other = 0; other < dataset.length; other += 1) {
-        const distance = distanceFunction(dataset[index], dataset[other]);
-        if (epsilonCompare(distance, epsilon)) {
-          neighbors.push(other);
-        }
-      }
-      return neighbors;
-    };
-
-    const noise: number[] = [];
-    const addNoise = (i: number) => noise.push(i);
-
-    const clusters: number[][] = [];
-    const createCluster = () => clusters.push([]) - 1;
-    const addIndexToCluster = (c: number, i: number) => {
-      clusters[c].push(i);
-      markClustered(i);
-    };
-
-    const expandCluster = (c: number, neighbors: number[]) => {
-      for (let i = 0; i < neighbors.length; i += 1) {
-        const neighborIndex = neighbors[i];
-        if (!isVisited(neighborIndex)) {
-          markVisited(neighborIndex);
-          const secondaryNeighbors = findNeighbors(neighborIndex);
-          if (secondaryNeighbors.length >= minimumPoints) {
-            uniqueMerge(neighbors, secondaryNeighbors);
-          }
-        }
-        if (!isClustered(neighborIndex)) {
-          addIndexToCluster(c, neighborIndex);
-        }
-      }
-    };
-
-    dataset.forEach((element: T, index: number) => {
-      if (!isVisited(index)) {
-        markVisited(index);
-        const neighbors = findNeighbors(index);
-        if (neighbors.length < minimumPoints) {
-          addNoise(index);
-        } else {
-          const clusterIndex = createCluster();
-          addIndexToCluster(clusterIndex, index);
-          expandCluster(clusterIndex, neighbors);
-        }
-      }
-    });
-
-    return { clusters, noise };
+  const metrics = {
+    startTime: performance.now(),
+    nodeCollection: 0,
+    clustering: 0,
+    filtering: 0,
+    serialization: 0,
   };
 
+  // Define constants first
   const IgnoredTagsList = [
     'footer',
     'nav',
@@ -135,6 +64,189 @@ export function spatialParser(): {
     'i',
   ];
 
+  // Helper functions that need to be defined before use
+  const findCriticalClusters = (clusters: number[][]) => {
+    const startTime = performance.now();
+    // Early exit for empty clusters
+    if (clusters.length === 0) return [];
+
+    // Calculate cluster text lengths once
+    const clusterTextLengths = clusters.map((cluster) =>
+      totalTextLength(cluster),
+    );
+    const totalText = clusterTextLengths.reduce(
+      (sum, length) => sum + length,
+      0,
+    );
+
+    if (totalText === 0) return [];
+
+    // Process clusters in a single pass
+    const clusterMetrics = clusters.map((cluster, index) => ({
+      cluster,
+      centrality: clusterCentrality(cluster),
+      textShare: round((clusterTextLengths[index] / totalText) * 100), // Use pre-calculated length
+    }));
+
+    // Early exit for dominant cluster
+    const dominantCluster = clusterMetrics[0];
+    if (dominantCluster?.textShare > 60) {
+      return [dominantCluster.cluster];
+    }
+
+    // Sort and filter in a single pass
+    const sortedClusters = clusterMetrics
+      .filter((c) => c.textShare >= 2)
+      .sort((a, b) => {
+        const penaltyA = 0.9 ** (a.centrality / 100);
+        const penaltyB = 0.9 ** (b.centrality / 100);
+        return b.textShare * penaltyB - a.textShare * penaltyA;
+      });
+
+    // Early exit if no significant clusters
+    if (sortedClusters.length === 0) return [];
+
+    // Find large clusters in a single pass
+    const largeClusters = sortedClusters.filter((c) =>
+      approximatelyEqual(c.textShare, sortedClusters[0].textShare, 10),
+    );
+
+    const totalLargeShare = largeClusters.reduce(
+      (sum, c) => sum + c.textShare,
+      0,
+    );
+    if (totalLargeShare > 60) {
+      return largeClusters.map((c) => c.cluster);
+    }
+
+    // Collect critical clusters with early exit
+    let totalShare = 0;
+    const criticalClusters = [];
+    for (const cluster of sortedClusters) {
+      if (totalShare > 60) break;
+      criticalClusters.push(cluster.cluster);
+      totalShare += cluster.textShare;
+    }
+
+    metrics.clustering += performance.now() - startTime;
+    return totalShare >= 60 ? criticalClusters : [];
+  };
+
+  // Cache DOM queries that are used multiple times
+  const documentBody = document.body;
+  if (!documentBody) throw new Error('Page failed to load');
+
+  // Pre-compute these selectors once
+  const possibleCodeParents = Array.from(document.querySelectorAll('pre, p'));
+  const possibleTableParents = Array.from(document.querySelectorAll('table'));
+  const possibleListParents = Array.from(document.querySelectorAll('ul, ol'));
+  const barredNodes = new Set(
+    document.querySelectorAll(IgnoredTagsList.join(',')),
+  );
+
+  const DBSCAN = <T>({
+    dataset,
+    epsilon = 1,
+    epsilonCompare = (distance: number, eps: number) => distance < eps,
+    minimumPoints = 2,
+    distanceFunction,
+  }: DBSCANOptions<T>) => {
+    // Create a spatial grid for faster neighbor lookup
+    const gridSize = epsilon * 2;
+    const grid: Record<string, number[]> = {};
+
+    const getGridKey = (x: number, y: number) =>
+      `${Math.floor(x / gridSize)},${Math.floor(y / gridSize)}`;
+
+    // Pre-compute grid positions
+    dataset.forEach((item: T, index: number) => {
+      const rect = (item as NodeWithRect).rect;
+      const key = getGridKey(rect.x, rect.y);
+      if (!grid[key]) grid[key] = [];
+      grid[key].push(index);
+    });
+
+    const visitedIndices = new Set<number>();
+    const clusteredIndices = new Set<number>();
+    const noise: number[] = [];
+    const clusters: number[][] = [];
+
+    const findNeighbors = (index: number) => {
+      const item = dataset[index] as NodeWithRect;
+      const rect = item.rect;
+      const neighbors = new Set<number>();
+
+      // Only check nearby grid cells
+      const startX = Math.floor((rect.x - epsilon) / gridSize);
+      const endX = Math.floor((rect.x + rect.width + epsilon) / gridSize);
+      const startY = Math.floor((rect.y - epsilon) / gridSize);
+      const endY = Math.floor((rect.y + rect.height + epsilon) / gridSize);
+
+      for (let x = startX; x <= endX; x++) {
+        for (let y = startY; y <= endY; y++) {
+          const key = `${x},${y}`;
+          const cell = grid[key];
+          if (cell) {
+            for (const otherIndex of cell) {
+              if (otherIndex !== index) {
+                const distance = distanceFunction(
+                  dataset[index],
+                  dataset[otherIndex],
+                );
+                if (epsilonCompare(distance, epsilon)) {
+                  neighbors.add(otherIndex);
+                }
+              }
+            }
+          }
+        }
+      }
+
+      return Array.from(neighbors);
+    };
+
+    const uniqueMerge = <U>(targetArray: U[], sourceArray: U[]) => {
+      for (let i = 0; i < sourceArray.length; i += 1) {
+        const item = sourceArray[i];
+        if (targetArray.indexOf(item) < 0) {
+          targetArray.push(item);
+        }
+      }
+    };
+
+    const expandCluster = (c: number, neighbors: number[]) => {
+      for (let i = 0; i < neighbors.length; i += 1) {
+        const neighborIndex = neighbors[i];
+        if (!visitedIndices.has(neighborIndex)) {
+          visitedIndices.add(neighborIndex);
+          const secondaryNeighbors = findNeighbors(neighborIndex);
+          if (secondaryNeighbors.length >= minimumPoints) {
+            uniqueMerge(neighbors, secondaryNeighbors);
+          }
+        }
+        if (!clusteredIndices.has(neighborIndex)) {
+          clusteredIndices.add(neighborIndex);
+        }
+      }
+    };
+
+    dataset.forEach((element: T, index: number) => {
+      if (!visitedIndices.has(index)) {
+        visitedIndices.add(index);
+        const neighbors = findNeighbors(index);
+        if (neighbors.length < minimumPoints) {
+          noise.push(index);
+        } else {
+          const clusterIndex = clusters.length;
+          clusters.push(neighbors);
+          expandCluster(clusterIndex, neighbors);
+        }
+      }
+    });
+
+    return { clusters, noise };
+  };
+
   type ReadableNode = HTMLElement;
   type NodeWithRect = { node: ReadableNode; rect: DOMRect };
 
@@ -155,10 +267,6 @@ export function spatialParser(): {
   const hasValidParent = (node: Node) => {
     return node.parentElement && !node.parentElement.isSameNode(document.body);
   };
-
-  const possibleCodeParents = Array.from(document.querySelectorAll('pre, p'));
-  const possibleTableParents = Array.from(document.querySelectorAll('table'));
-  const possibleListParents = Array.from(document.querySelectorAll('ul, ol'));
 
   const findHighestDirectParentOfReadableNode = (node: Node): HTMLElement => {
     let parent = node.parentElement;
@@ -181,7 +289,7 @@ export function spatialParser(): {
     }
 
     if (['span', 'code', 'div'].includes(parent.nodeName.toLowerCase())) {
-      const hasParent = possibleCodeParents.find((tag) =>
+      const hasParent = possibleCodeParents.find((tag: Element) =>
         tag.contains(parent),
       ) as HTMLElement;
       if (hasParent) {
@@ -190,7 +298,7 @@ export function spatialParser(): {
     }
 
     if (parent.nodeName.toLowerCase() === 'li') {
-      const hasParent = possibleListParents.find((tag) =>
+      const hasParent = possibleListParents.find((tag: Element) =>
         tag.contains(parent),
       ) as HTMLElement;
       if (hasParent) {
@@ -199,7 +307,7 @@ export function spatialParser(): {
     }
 
     if (['td', 'th', 'tr'].includes(parent.nodeName.toLowerCase())) {
-      const hasParent = possibleTableParents.find((tag) =>
+      const hasParent = possibleTableParents.find((tag: Element) =>
         tag.contains(parent),
       ) as HTMLElement;
       if (hasParent) {
@@ -210,81 +318,78 @@ export function spatialParser(): {
     return parent;
   };
 
-  const barredNodes = Array.from(
-    document.querySelectorAll(IgnoredTagsList.join(',')),
-  );
-
+  // Optimize node filtering with early exits
   const doesNodePassHeuristics = (node: Node) => {
-    if ((node.textContent ?? '').trim().length < 10) {
+    const text = node.textContent?.trim() ?? '';
+    if (text.length < 10) return false;
+
+    const parentNode = node.parentElement;
+    if (!parentNode) return false;
+
+    // Early exit for barred nodes
+    if (barredNodes.has(parentNode)) return false;
+
+    // Check visibility once
+    if (
+      !parentNode.checkVisibility({
+        checkOpacity: true,
+        checkVisibilityCSS: true,
+      })
+    )
       return false;
-    }
 
-    const parentNode = findHighestDirectParentOfReadableNode(node);
-
-    if (parentNode && parentNode instanceof Element) {
-      if (
-        !parentNode.checkVisibility({
-          checkOpacity: true,
-          checkVisibilityCSS: true,
-        })
-      )
-        return false;
-
-      const rect = parentNode.getBoundingClientRect();
-      if (rect.width < 4 || rect.height < 4) {
-        return false;
-      }
-    }
-
-    if (parentNode && parentNode instanceof Element) {
-      if (barredNodes.some((barredNode) => barredNode.contains(parentNode))) {
-        return false;
-      }
-    }
+    const rect = parentNode.getBoundingClientRect();
+    if (rect.width < 4 || rect.height < 4) return false;
 
     return true;
   };
 
+  // Optimize node traversal
   const getAllReadableNodes = (): NodeWithRect[] => {
-    if (!document.body) throw new Error('Page failed to load');
-
+    const startTime = performance.now();
+    const readableNodes: Node[] = [];
     const treeWalker = document.createTreeWalker(
-      document.body,
+      documentBody,
       NodeFilter.SHOW_TEXT,
       {
         acceptNode(node) {
-          if (doesNodePassHeuristics(node)) {
-            return NodeFilter.FILTER_ACCEPT;
-          }
-          return NodeFilter.FILTER_SKIP;
+          return doesNodePassHeuristics(node)
+            ? NodeFilter.FILTER_ACCEPT
+            : NodeFilter.FILTER_SKIP;
         },
       },
     );
 
-    const readableNodes = [];
+    // Collect nodes in a single pass
     while (treeWalker.nextNode()) {
-      readableNodes.push(treeWalker.currentNode as ReadableNode);
+      readableNodes.push(treeWalker.currentNode);
     }
 
-    const parentsForReadableNodes = readableNodes.map(
-      findHighestDirectParentOfReadableNode,
-    );
-    const listWithOnlyParents: HTMLElement[] = [];
+    // Use Map for faster parent lookup
+    const parentMap = new Map<Node, HTMLElement>();
+    const uniqueParents = new Set<HTMLElement>();
+    const highestParentCache = new Map<HTMLElement, HTMLElement>();
 
-    for (let i = 0; i < parentsForReadableNodes.length; i++) {
-      const node = parentsForReadableNodes[i];
-      const hasParentInList = parentsForReadableNodes.find((otherNode, idx) => {
-        if (i === idx) return false;
-        return otherNode.contains(node);
-      });
-      listWithOnlyParents.push(hasParentInList ? hasParentInList : node);
+    // Single pass to find unique parents
+    for (const node of readableNodes) {
+      if (!node.parentElement) continue; // Should not happen with text nodes from TreeWalker
+      let highestParent = highestParentCache.get(node.parentElement);
+      if (!highestParent) {
+        highestParent = findHighestDirectParentOfReadableNode(node);
+        highestParentCache.set(node.parentElement, highestParent);
+      }
+
+      if (!parentMap.has(highestParent)) {
+        parentMap.set(highestParent, highestParent);
+        uniqueParents.add(highestParent);
+      }
     }
 
-    const uniqueParents = Array.from(new Set(listWithOnlyParents));
-
-    return uniqueParents.map((node) => {
-      return { node, rect: node.getBoundingClientRect() };
-    });
+    metrics.nodeCollection = performance.now() - startTime;
+    return Array.from(uniqueParents).map((node) => ({
+      node,
+      rect: node.getBoundingClientRect(),
+    }));
   };
 
   const distanceFunction = (a: NodeWithRect, b: NodeWithRect) => {
@@ -312,8 +417,8 @@ export function spatialParser(): {
   const clusterReadableNodes = (nodes: NodeWithRect[]) => {
     const { clusters } = DBSCAN({
       dataset: nodes,
-      epsilon: 28,
-      minimumPoints: 1,
+      epsilon: 40,
+      minimumPoints: 2,
       distanceFunction,
     });
     return clusters;
@@ -321,8 +426,9 @@ export function spatialParser(): {
 
   const totalTextLength = (cluster: number[]) => {
     return cluster
-      .map((t) =>
-        readableNodes[t].node.innerText?.replaceAll(/ {2}|\r\n|\n|\r/gm, ''),
+      .map(
+        (t) =>
+          readableNodes[t].node.textContent?.replace(/[\s\r\n]+/g, '') ?? '',
       )
       .join('').length;
   };
@@ -375,99 +481,6 @@ export function spatialParser(): {
     }
 
     return bounds.x - centerOfScreen;
-  };
-
-  const percentageTextShare = (cluster: number[], totalLength: number) => {
-    return round((totalTextLength(cluster) / totalLength) * 100);
-  };
-
-  const shouldMergeClusters = (clusterA: number[], clusterB: number[]) => {
-    const clusterABounds = getClusterBounds(clusterA);
-    const clusterBBounds = getClusterBounds(clusterB);
-
-    const isHorizontallyAligned =
-      approximatelyEqual(clusterABounds.x, clusterBBounds.x, 40) &&
-      approximatelyEqual(clusterABounds.width, clusterBBounds.width, 40);
-
-    if (!isHorizontallyAligned) return false;
-
-    const higherCluster =
-      clusterABounds.y < clusterBBounds.y ? clusterABounds : clusterBBounds;
-    const lowerCluster =
-      clusterABounds.y < clusterBBounds.y ? clusterBBounds : clusterBBounds;
-    const yGap = lowerCluster.y - (higherCluster.y + higherCluster.height);
-
-    if (approximatelyEqual(yGap, 0, 100)) return true;
-  };
-
-  const findCriticalClusters = (clusters: number[][]) => {
-    let i = 0;
-    while (i < clusters.length) {
-      const cluster = clusters[i];
-      for (let j = i + 1; j < clusters.length; j++) {
-        const otherCluster = clusters[j];
-        if (shouldMergeClusters(cluster, otherCluster)) {
-          cluster.push(...otherCluster);
-          clusters.splice(j, 1);
-          j -= 1;
-        }
-      }
-      i++;
-    }
-
-    const totalText = totalTextLength(clusters.flat());
-
-    const clusterWithMetrics = clusters.map((cluster) => {
-      const centrality = clusterCentrality(cluster);
-      return {
-        cluster,
-        centrality,
-        percentageTextShare: percentageTextShare(cluster, totalText),
-      };
-    });
-
-    const dominantCluster = clusterWithMetrics[0]?.percentageTextShare > 60;
-    if (dominantCluster) return [clusterWithMetrics[0].cluster];
-
-    const sortedClusters = clusterWithMetrics.sort((a, b) => {
-      const penaltyForA = 0.9 ** (a.centrality / 100);
-      const penaltyForB = 0.9 ** (b.centrality / 100);
-      const adjustedTextShareA = a.percentageTextShare * penaltyForA;
-      const adjustedTextShareB = b.percentageTextShare * penaltyForB;
-      return adjustedTextShareB - adjustedTextShareA;
-    });
-
-    const largeTextShareClusters = sortedClusters.filter((c) =>
-      approximatelyEqual(
-        c.percentageTextShare,
-        sortedClusters[0]?.percentageTextShare,
-        10,
-      ),
-    );
-
-    const totalTextShareOfLargeClusters = largeTextShareClusters.reduce(
-      (acc, cluster) => acc + cluster.percentageTextShare,
-      0,
-    );
-
-    if (totalTextShareOfLargeClusters > 60) {
-      return largeTextShareClusters.map((c) => c.cluster);
-    }
-
-    let totalTextShare = 0;
-    const criticalClusters = [];
-    for (const cluster of sortedClusters) {
-      if (cluster.percentageTextShare < 2) continue;
-      if (totalTextShare > 60) break;
-      criticalClusters.push(cluster.cluster);
-      totalTextShare += cluster.percentageTextShare;
-    }
-
-    if (totalTextShare < 60) {
-      return [];
-    }
-
-    return criticalClusters;
   };
 
   const allowListedAttributes = ['href', 'src', 'alt', 'title', 'class', 'id'];
@@ -538,26 +551,38 @@ export function spatialParser(): {
   }
 
   const readableNodes = getAllReadableNodes();
+  console.log(`Found ${readableNodes.length} readable nodes`);
+
   const clusters = clusterReadableNodes(readableNodes);
+  console.log(`DBSCAN found ${clusters.length} clusters`);
+
   const criticalClusters = findCriticalClusters(clusters);
+  console.log(`Found ${criticalClusters.length} critical clusters`);
 
-  const filteredNodes = readableNodes.filter((_, idx) => {
-    return criticalClusters.some((cluster) => {
-      return cluster.includes(idx);
-    });
-  });
+  // Original filtering without Set optimization
+  const filteredNodes = readableNodes.filter((_, idx) =>
+    criticalClusters.some((cluster) => cluster.includes(idx)),
+  );
+  console.log(`Filtered down to ${filteredNodes.length} nodes`);
 
+  // Original deduplication without Map
+  const uniqueNodes = new Set();
   const elements = filteredNodes
-    .filter(
-      (node, idx, nodes) =>
-        !nodes.slice(idx + 1).some((otherNode) => node.node === otherNode.node),
-    )
+    .filter(({ node }) => {
+      if (uniqueNodes.has(node)) return false;
+      uniqueNodes.add(node);
+      return true;
+    })
     .map(({ node }) => serializeHTMLElement(node));
+  console.log(`Final element count: ${elements.length}`);
 
   const metadata = getPageMetadata();
 
   return {
     ...metadata,
     elements,
+    metrics: {
+      clusterCount: clusters.length,
+    },
   };
 }

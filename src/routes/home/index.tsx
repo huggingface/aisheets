@@ -126,11 +126,11 @@ export default component$(() => {
 
           case 'dataset.search':
             creationFlow.queries.queries = data.queries;
-            creationFlow.queries.done = true;
             currentStep.value = `Searching the web: ${data.queries.map((q: string) => `"${q}"`).join(', ')}`;
             break;
 
           case 'sources.process':
+            creationFlow.queries.done = true;
             creationFlow.visitUrls.urls = data.urls.map((url: string) => ({
               url,
               status: 'pending',
@@ -242,7 +242,12 @@ export default component$(() => {
                     look="ghost"
                     value={prompt.value}
                     placeholder="Describe the dataset you want or try one of the examples below"
-                    class="p-4 max-h-40 resize-none overflow-auto text-base placeholder:text-neutral-500"
+                    class={cn(
+                      'p-4 max-h-40 resize-none overflow-auto text-base placeholder:text-neutral-500',
+                      {
+                        'opacity-50 pointer-events-none': isLoading.value,
+                      },
+                    )}
                     onInput$={(e, el) => {
                       prompt.value = el.value;
                       const target = e.target as HTMLTextAreaElement;

@@ -174,7 +174,7 @@ async function* generateCellsFromScratch({
         options: {
           accessToken: session.token,
         },
-        maxSources: 1,
+        maxSources: 2,
       });
     }
 
@@ -334,7 +334,7 @@ async function singleCellGeneration({
         options: {
           accessToken: session.token,
         },
-        maxSources: 1,
+        maxSources: 2,
       });
     }
 

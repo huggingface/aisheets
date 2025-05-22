@@ -285,12 +285,15 @@ export const ExecutionForm = component$<SidebarProps>(
                     <p class="italic">{selectedProvider.value}</p>
                   </div>
                 )}
+
                 <Button
                   onClick$={() => (isOpenModel.value = !isOpenModel.value)}
                   look="ghost"
                   class="hover:bg-neutral-200"
                 >
-                  <LuSettings class="text-neutral-500" />
+                  <Tooltip text="edit configuration">
+                    <LuSettings class="text-neutral-500" />
+                  </Tooltip>
                 </Button>
 
                 {modelEndpointEnabled && !endpointURLSelected.value && (

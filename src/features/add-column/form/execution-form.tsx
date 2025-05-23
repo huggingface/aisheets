@@ -256,9 +256,9 @@ export const ExecutionForm = component$<SidebarProps>(
 
         <div class="relative h-full w-full">
           <div class="absolute h-full w-full flex flex-col">
-            <div class="flex flex-col gap-4 px-8 bg-neutral-100">
+            <div class="flex flex-col gap-2 px-8 bg-neutral-100">
               <div class="relative">
-                <div class="h-96 min-h-96 max-h-96 bg-white border border-secondary-foreground rounded-sm">
+                <div class="h-72 min-h-72 max-h-72 bg-white border border-secondary-foreground rounded-sm">
                   <TemplateTextArea
                     bind:value={prompt}
                     variables={variables}
@@ -363,7 +363,7 @@ export const ExecutionForm = component$<SidebarProps>(
 
                   <div class="flex flex-col gap-4">
                     <div class="flex gap-4">
-                      <div class="flex-[2]" key={selectedModel.value?.id}>
+                      <div class="flex-[2]">
                         <Select.Root
                           bind:open={isModelDropdownOpen}
                           value={selectedModel.value?.id}
@@ -424,14 +424,25 @@ export const ExecutionForm = component$<SidebarProps>(
                                     {model.size}
                                   </span>
                                 )}
-                                <Select.ItemIndicator />
+                                {modelSearchQuery.value ===
+                                  selectedModel.value?.id && (
+                                  <Select.ItemIndicator />
+                                )}
                               </Select.Item>
                             ))}
                           </Select.Popover>
                         </Select.Root>
                       </div>
-                      <div class="flex-1" key={selectedProvider.value}>
-                        <Select.Root value={selectedProvider.value}>
+                      <div class="flex-1" key={selectedModel.value?.id}>
+                        <Select.Root
+                          value={selectedProvider.value}
+                          onChange$={$((value: string | string[]) => {
+                            const provider = Array.isArray(value)
+                              ? value[0]
+                              : value;
+                            selectedProvider.value = provider;
+                          })}
+                        >
                           <Select.Label>Inference Providers</Select.Label>
                           <Select.Trigger class="px-4 bg-white rounded-base border-neutral-300-foreground">
                             <Select.DisplayValue />

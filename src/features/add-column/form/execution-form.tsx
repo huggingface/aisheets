@@ -12,7 +12,6 @@ import {
 
 import { cn } from '@qwik-ui/utils';
 import {
-  LuCheck,
   LuEgg,
   LuGlobe,
   LuSettings,
@@ -366,8 +365,6 @@ export const ExecutionForm = component$<SidebarProps>(
                     <div class="flex gap-4">
                       <div class="flex-[2]">
                         <Select.Root
-                          loop={false}
-                          multiple={false}
                           bind:open={isModelDropdownOpen}
                           value={selectedModel.value?.id}
                         >
@@ -429,9 +426,7 @@ export const ExecutionForm = component$<SidebarProps>(
                                 )}
                                 {modelSearchQuery.value ===
                                   selectedModel.value?.id && (
-                                  <Select.ItemIndicator>
-                                    <LuCheck class="h-4 w-4" />
-                                  </Select.ItemIndicator>
+                                  <Select.ItemIndicator />
                                 )}
                               </Select.Item>
                             ))}
@@ -463,9 +458,7 @@ export const ExecutionForm = component$<SidebarProps>(
                                   <Select.ItemLabel>
                                     {provider}
                                   </Select.ItemLabel>
-                                  <Select.ItemIndicator>
-                                    <LuCheck class="h-4 w-4" />
-                                  </Select.ItemIndicator>
+                                  <Select.ItemIndicator />
                                 </Select.Item>
                               ),
                             ) || []}

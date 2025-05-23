@@ -3,6 +3,7 @@ import {
   type QRL,
   component$,
   noSerialize,
+  useComputed$,
   useContext,
   useSignal,
   useTask$,
@@ -19,8 +20,8 @@ import {
   LuUndo2,
   LuX,
 } from '@qwikest/icons/lucide';
-
-import { Button, Label, Select } from '~/components';
+import { Button, Select, triggerLooks } from '~/components';
+import { nextTick } from '~/components/hooks/tick';
 import { Tooltip } from '~/components/ui/tooltip/tooltip';
 
 import {
@@ -65,6 +66,8 @@ export const ExecutionForm = component$<SidebarProps>(
     const variables = useSignal<Variable[]>([]);
     const searchOnWeb = useSignal(false);
 
+    const isModelDropdownOpen = useSignal(false);
+    const modelSearchQuery = useSignal<string>('');
     const selectedModel = useSignal<Model>();
     const selectedProvider = useSignal<string>();
 
@@ -74,6 +77,31 @@ export const ExecutionForm = component$<SidebarProps>(
 
     const onSelectedVariables = $((variables: { id: string }[]) => {
       columnsReferences.value = variables.map((v) => v.id);
+    });
+
+    const filteredModels = useComputed$(() => {
+      let filteredModels = models;
+      if (
+        modelSearchQuery.value &&
+        modelSearchQuery.value !== selectedModel.value?.id
+      ) {
+        filteredModels = models.filter((model) =>
+          model.id.toLowerCase().includes(modelSearchQuery.value.toLowerCase()),
+        );
+      }
+
+      return filteredModels;
+    });
+
+    useTask$(({ track }) => {
+      track(modelSearchQuery);
+
+      if (modelSearchQuery.value.length <= 1) return;
+
+      nextTick(() => {
+        isModelDropdownOpen.value =
+          filteredModels.value && filteredModels.value.length !== models.length;
+      }, 300);
     });
 
     useVisibleTask$(() => {
@@ -118,6 +146,22 @@ export const ExecutionForm = component$<SidebarProps>(
       }
 
       inputModelId.value = process.modelName;
+    });
+
+    useVisibleTask$(({ track }) => {
+      track(isOpenModel);
+
+      isModelDropdownOpen.value = !isOpenModel.value;
+      if (!isOpenModel.value) {
+        modelSearchQuery.value = selectedModel.value?.id || '';
+      }
+    });
+
+    useVisibleTask$(({ track }) => {
+      track(() => selectedModel.value?.id);
+
+      modelSearchQuery.value =
+        selectedModel.value?.id || modelSearchQuery.value;
     });
 
     useVisibleTask$(({ track }) => {
@@ -306,7 +350,7 @@ export const ExecutionForm = component$<SidebarProps>(
               </div>
 
               {isOpenModel.value && (
-                <div class="px-3 pb-4 pt-2 bg-white border border-secondary-foreground rounded-sm">
+                <div class="px-3 pb-12 pt-2 bg-white border border-secondary-foreground rounded-sm">
                   <div class="flex justify-end items-center">
                     <Button
                       look="ghost"
@@ -319,20 +363,51 @@ export const ExecutionForm = component$<SidebarProps>(
                   </div>
 
                   <div class="flex flex-col gap-4">
-                    <div
-                      class="flex gap-4"
-                      onClick$={() => {
-                        endpointURLSelected.value = false;
-                      }}
-                    >
+                    <div class="flex gap-4">
                       <div class="flex-[2]">
-                        <Label class="flex gap-1 mb-2 font-normal">Model</Label>
-                        <Select.Root value={selectedModel.value?.id}>
-                          <Select.Trigger class="px-4 bg-white rounded-base border-neutral-300-foreground">
-                            <Select.DisplayValue />
-                          </Select.Trigger>
-                          <Select.Popover class="border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto">
-                            {models.map((model) => (
+                        <Select.Root
+                          loop={false}
+                          multiple={false}
+                          bind:open={isModelDropdownOpen}
+                          value={selectedModel.value?.id}
+                        >
+                          <Select.Label>Model</Select.Label>
+                          <div
+                            class={cn(
+                              'w-full flex flex-row justify-between items-center',
+                              triggerLooks('default'),
+                            )}
+                          >
+                            <input
+                              class="h-8 w-full outline-none"
+                              onFocusIn$={() => {
+                                if (
+                                  selectedModel.value?.id ===
+                                  modelSearchQuery.value
+                                ) {
+                                  modelSearchQuery.value = '';
+                                }
+                              }}
+                              onClick$={() => {
+                                isModelDropdownOpen.value = false;
+                              }}
+                              placeholder="Search models..."
+                              bind:value={modelSearchQuery}
+                            />
+                            <Select.Trigger look="headless" />
+                          </div>
+                          <Select.Popover
+                            floating="bottom-end"
+                            gutter={8}
+                            class={cn(
+                              'border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto',
+                              {
+                                'opacity-0 hidden':
+                                  !filteredModels.value.length,
+                              },
+                            )}
+                          >
+                            {filteredModels.value.map((model) => (
                               <Select.Item
                                 key={model.id}
                                 class="text-foreground hover:bg-accent"
@@ -340,6 +415,10 @@ export const ExecutionForm = component$<SidebarProps>(
                                 onClick$={$(() => {
                                   selectedModel.value = model;
                                   selectedProvider.value = model.providers[0];
+                                  endpointURLSelected.value = false;
+
+                                  modelSearchQuery.value = model.id;
+                                  isModelDropdownOpen.value = false;
                                 })}
                               >
                                 <Select.ItemLabel>{model.id}</Select.ItemLabel>
@@ -348,18 +427,18 @@ export const ExecutionForm = component$<SidebarProps>(
                                     {model.size}
                                   </span>
                                 )}
-                                <Select.ItemIndicator>
-                                  <LuCheck class="h-4 w-4" />
-                                </Select.ItemIndicator>
+                                {modelSearchQuery.value ===
+                                  selectedModel.value?.id && (
+                                  <Select.ItemIndicator>
+                                    <LuCheck class="h-4 w-4" />
+                                  </Select.ItemIndicator>
+                                )}
                               </Select.Item>
                             ))}
                           </Select.Popover>
                         </Select.Root>
                       </div>
                       <div class="flex-1" key={selectedModel.value?.id}>
-                        <Label class="flex gap-1 mb-2 font-normal">
-                          Inference Providers
-                        </Label>
                         <Select.Root
                           value={selectedProvider.value}
                           onChange$={$((value: string | string[]) => {
@@ -369,6 +448,7 @@ export const ExecutionForm = component$<SidebarProps>(
                             selectedProvider.value = provider;
                           })}
                         >
+                          <Select.Label>Inference Providers</Select.Label>
                           <Select.Trigger class="px-4 bg-white rounded-base border-neutral-300-foreground">
                             <Select.DisplayValue />
                           </Select.Trigger>

@@ -281,6 +281,14 @@ export const ExecutionForm = component$<SidebarProps>(
                     <p class="text-neutral-500 underline">
                       {selectedModel.value?.id}
                     </p>
+                    {modelEndpointEnabled && !endpointURLSelected.value && (
+                      <Tooltip text="Reset default model">
+                        <LuUndo2
+                          class="w-4 h-4 rounded-full gap-2 text-neutral-500 cursor-pointer hover:bg-neutral-200"
+                          onClick$={() => (endpointURLSelected.value = true)}
+                        />
+                      </Tooltip>
+                    )}
                     with provider
                     <p class="italic">{selectedProvider.value}</p>
                   </div>
@@ -295,20 +303,6 @@ export const ExecutionForm = component$<SidebarProps>(
                     <LuSettings class="text-neutral-500" />
                   </Tooltip>
                 </Button>
-
-                {modelEndpointEnabled && !endpointURLSelected.value && (
-                  <div
-                    class="flex-1 flex items-center"
-                    style={{ justifyContent: 'flex-end', marginRight: '1%' }}
-                  >
-                    <Tooltip text="Reset default model">
-                      <LuUndo2
-                        class="w-4 h-4 rounded-full gap-2 text-neutral-500 cursor-pointer hover:bg-neutral-200"
-                        onClick$={() => (endpointURLSelected.value = true)}
-                      />
-                    </Tooltip>
-                  </div>
-                )}
               </div>
 
               {isOpenModel.value && (

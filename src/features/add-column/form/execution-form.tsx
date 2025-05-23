@@ -424,10 +424,7 @@ export const ExecutionForm = component$<SidebarProps>(
                                     {model.size}
                                   </span>
                                 )}
-                                {modelSearchQuery.value ===
-                                  selectedModel.value?.id && (
-                                  <Select.ItemIndicator />
-                                )}
+                                <Select.ItemIndicator />
                               </Select.Item>
                             ))}
                           </Select.Popover>

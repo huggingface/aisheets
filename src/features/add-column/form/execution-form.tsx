@@ -363,7 +363,7 @@ export const ExecutionForm = component$<SidebarProps>(
 
                   <div class="flex flex-col gap-4">
                     <div class="flex gap-4">
-                      <div class="flex-[2]">
+                      <div class="flex-[2]" key={selectedModel.value?.id}>
                         <Select.Root
                           bind:open={isModelDropdownOpen}
                           value={selectedModel.value?.id}
@@ -433,16 +433,8 @@ export const ExecutionForm = component$<SidebarProps>(
                           </Select.Popover>
                         </Select.Root>
                       </div>
-                      <div class="flex-1" key={selectedModel.value?.id}>
-                        <Select.Root
-                          value={selectedProvider.value}
-                          onChange$={$((value: string | string[]) => {
-                            const provider = Array.isArray(value)
-                              ? value[0]
-                              : value;
-                            selectedProvider.value = provider;
-                          })}
-                        >
+                      <div class="flex-1" key={selectedProvider.value}>
+                        <Select.Root value={selectedProvider.value}>
                           <Select.Label>Inference Providers</Select.Label>
                           <Select.Trigger class="px-4 bg-white rounded-base border-neutral-300-foreground">
                             <Select.DisplayValue />

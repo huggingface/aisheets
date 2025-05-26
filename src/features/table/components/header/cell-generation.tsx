@@ -9,7 +9,7 @@ export const CellGeneration = component$<{ column: Column }>(({ column }) => {
   const { onRegenerateCells } = useGenerateColumn();
 
   if (column.id === TEMPORAL_ID || column.kind !== 'dynamic') return null;
-  if (!column.process || column.process.isExecuting) return null;
+  if (!column.process) return null;
 
   const { modelEndpointEnabled } = useContext(configContext);
 

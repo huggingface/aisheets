@@ -65,6 +65,8 @@ export const useGenerateColumn = () => {
   });
 
   const onRegenerateCells = $(async (column: Column) => {
+    if (column.process?.isExecuting) return;
+
     const response = await regenerateCells(column);
 
     for await (const cell of response) {

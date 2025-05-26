@@ -336,16 +336,25 @@ export default component$(() => {
       </div>
       <Tips>
         <p>
-          <b>Write detailed prompts</b> to help the tool generate rich,
-          interconnected information across different aspects of your topic.
+          Describe your desired table or upload data to enrich it. Later, you
+          can refine your table and columns using prompts and different AI
+          models.
         </p>
         <p>
-          <b>Use Active Search</b> when brainstorming to get contextually
-          accurate information and reduce hallucinations.
+          <b>Describe Your Table:</b> Be detailed about what you want. Example:
+          "French painters, birth year, most famous work."
         </p>
         <p>
-          <b>For niche topics</b>, start with structured data (uploading a CSV)
-          to build a solid foundation for content generation.
+          <b>Use "Search the web":</b> For fact-checking and up-to-date info.
+        </p>
+        <p>
+          <b>Upload Your Data:</b> Drag and drop a CSV or Excel file to enrich
+          it (transform, extract, summarize, translate, etc.)
+        </p>
+        <p>
+          <b>Specify Columns:</b> Include column names in your description.
+          Example: "Popular dog breeds with columns: Breed Name, Lifespan,
+          Temperament."
         </p>
       </Tips>
     </ActiveDatasetProvider>

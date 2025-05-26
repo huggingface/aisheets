@@ -19,6 +19,7 @@ import {
   LuUndo2,
   LuX,
 } from '@qwikest/icons/lucide';
+
 import { Button, Select, triggerLooks } from '~/components';
 import { nextTick } from '~/components/hooks/tick';
 import { Tooltip } from '~/components/ui/tooltip/tooltip';
@@ -67,29 +68,20 @@ export const ExecutionForm = component$<SidebarProps>(
 
     const isModelDropdownOpen = useSignal(false);
     const modelSearchQuery = useSignal<string>('');
-    const selectedModel = useSignal<Model>();
-    const selectedProvider = useSignal<string>();
+    const selectedModelId = useSignal<string>('');
+    const selectedProvider = useSignal<string>('');
 
     const endpointURLSelected = useSignal(modelEndpointEnabled);
-
-    const inputModelId = useSignal<string | undefined>();
 
     const onSelectedVariables = $((variables: { id: string }[]) => {
       columnsReferences.value = variables.map((v) => v.id);
     });
 
-    const filteredModels = useComputed$(() => {
-      let filteredModels = models;
-      if (
-        modelSearchQuery.value &&
-        modelSearchQuery.value !== selectedModel.value?.id
-      ) {
-        filteredModels = models.filter((model) =>
-          model.id.toLowerCase().includes(modelSearchQuery.value.toLowerCase()),
-        );
-      }
+    const filteredModels = useSignal<Model[]>(models);
 
-      return filteredModels;
+    const modelProviders = useComputed$(() => {
+      const model = models.find((m: Model) => m.id === selectedModelId.value);
+      return model ? model.providers : [];
     });
 
     useTask$(({ track }) => {
@@ -97,10 +89,33 @@ export const ExecutionForm = component$<SidebarProps>(
 
       if (modelSearchQuery.value.length <= 1) return;
 
+      if (modelSearchQuery.value === selectedModelId.value) {
+        filteredModels.value = models;
+        return;
+      }
+
+      filteredModels.value = models.filter((model: Model) =>
+        model.id.toLowerCase().includes(modelSearchQuery.value.toLowerCase()),
+      );
+
       nextTick(() => {
         isModelDropdownOpen.value =
-          filteredModels.value && filteredModels.value.length !== models.length;
+          filteredModels.value.length > 0 &&
+          filteredModels.value.length !== models.length;
       }, 300);
+    });
+
+    useVisibleTask$(({ track }) => {
+      track(selectedModelId);
+
+      const model = models.find((m: Model) => m.id === selectedModelId.value);
+      if (!model) return;
+
+      if (model.providers.includes(DEFAULT_MODEL_PROVIDER)) {
+        selectedProvider.value = DEFAULT_MODEL_PROVIDER;
+      } else {
+        selectedProvider.value = model.providers[0] || '';
+      }
     });
 
     useVisibleTask$(() => {
@@ -123,14 +138,9 @@ export const ExecutionForm = component$<SidebarProps>(
       prompt.value = process.prompt;
       searchOnWeb.value = process.searchEnabled || false;
 
-      // If there's a previously selected model, use that
       if (process.modelName) {
-        selectedModel.value = models.find(
-          (m: Model) => m.id === process.modelName,
-        ) || {
-          id: process.modelName,
-          providers: [process.modelProvider!],
-        };
+        // If there's a previously selected model, use that
+        selectedModelId.value = process.modelName;
         selectedProvider.value = process.modelProvider!;
       } else {
         const defaultModel = models?.find((m: Model) => m.id === DEFAULT_MODEL);
@@ -139,12 +149,10 @@ export const ExecutionForm = component$<SidebarProps>(
             (provider) => provider === DEFAULT_MODEL_PROVIDER,
           );
 
-          selectedModel.value = defaultModel;
+          selectedModelId.value = defaultModel.id;
           selectedProvider.value = defaultProvider || defaultModel.providers[0];
         }
       }
-
-      inputModelId.value = process.modelName;
     });
 
     useVisibleTask$(({ track }) => {
@@ -152,19 +160,18 @@ export const ExecutionForm = component$<SidebarProps>(
 
       isModelDropdownOpen.value = !isOpenModel.value;
       if (!isOpenModel.value) {
-        modelSearchQuery.value = selectedModel.value?.id || '';
+        modelSearchQuery.value = selectedModelId.value || '';
       }
     });
 
     useVisibleTask$(({ track }) => {
-      track(() => selectedModel.value?.id);
+      track(selectedModelId);
 
-      modelSearchQuery.value =
-        selectedModel.value?.id || modelSearchQuery.value;
+      modelSearchQuery.value = selectedModelId.value || modelSearchQuery.value;
     });
 
     useVisibleTask$(({ track }) => {
-      track(selectedModel);
+      track(selectedModelId);
       track(selectedProvider);
       track(prompt);
       track(columnsReferences);
@@ -202,8 +209,7 @@ export const ExecutionForm = component$<SidebarProps>(
       updateColumn(column);
 
       try {
-        // If we have a selectedModel, always use that. Only fall back to inputModelId if models failed to load
-        const modelName = selectedModel.value?.id || inputModelId.value!;
+        const modelName = selectedModelId.value!;
         const modelProvider = selectedProvider.value!;
 
         const columnToSave = {
@@ -322,7 +328,7 @@ export const ExecutionForm = component$<SidebarProps>(
                   <div class="flex items-center justify-start gap-1">
                     Model
                     <p class="text-neutral-500 underline">
-                      {selectedModel.value?.id}
+                      {selectedModelId.value}
                     </p>
                     {modelEndpointEnabled && !endpointURLSelected.value && (
                       <Tooltip text="Reset default model">
@@ -365,8 +371,9 @@ export const ExecutionForm = component$<SidebarProps>(
                     <div class="flex gap-4">
                       <div class="flex-[2]">
                         <Select.Root
+                          key={modelSearchQuery.value}
                           bind:open={isModelDropdownOpen}
-                          value={selectedModel.value?.id}
+                          value={selectedModelId.value}
                         >
                           <Select.Label>Model</Select.Label>
                           <div
@@ -379,7 +386,7 @@ export const ExecutionForm = component$<SidebarProps>(
                               class="h-8 w-full outline-none"
                               onFocusIn$={() => {
                                 if (
-                                  selectedModel.value?.id ===
+                                  selectedModelId.value ===
                                   modelSearchQuery.value
                                 ) {
                                   modelSearchQuery.value = '';
@@ -394,29 +401,24 @@ export const ExecutionForm = component$<SidebarProps>(
                             <Select.Trigger look="headless" />
                           </div>
                           <Select.Popover
+                            key={modelSearchQuery.value}
                             floating="bottom-end"
                             gutter={8}
                             class={cn(
                               'border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto',
-                              {
-                                'opacity-0 hidden':
-                                  !filteredModels.value.length,
-                              },
                             )}
                           >
                             {filteredModels.value.map((model) => (
                               <Select.Item
                                 key={model.id}
-                                class="text-foreground hover:bg-accent"
                                 value={model.id}
-                                onClick$={$(() => {
-                                  selectedModel.value = model;
-                                  selectedProvider.value = model.providers[0];
-                                  endpointURLSelected.value = false;
-
-                                  modelSearchQuery.value = model.id;
+                                class="text-foreground hover:bg-accent"
+                                onClick$={() => {
                                   isModelDropdownOpen.value = false;
-                                })}
+
+                                  selectedModelId.value = model.id;
+                                  modelSearchQuery.value = model.id;
+                                }}
                               >
                                 <Select.ItemLabel>{model.id}</Select.ItemLabel>
                                 {model.size && (
@@ -425,7 +427,7 @@ export const ExecutionForm = component$<SidebarProps>(
                                   </span>
                                 )}
                                 {modelSearchQuery.value ===
-                                  selectedModel.value?.id && (
+                                  selectedModelId.value && (
                                   <Select.ItemIndicator />
                                 )}
                               </Select.Item>
@@ -433,35 +435,23 @@ export const ExecutionForm = component$<SidebarProps>(
                           </Select.Popover>
                         </Select.Root>
                       </div>
-                      <div class="flex-1" key={selectedModel.value?.id}>
-                        <Select.Root
-                          value={selectedProvider.value}
-                          onChange$={$((value: string | string[]) => {
-                            const provider = Array.isArray(value)
-                              ? value[0]
-                              : value;
-                            selectedProvider.value = provider;
-                          })}
-                        >
+                      <div class="flex-1">
+                        <Select.Root bind:value={selectedProvider}>
                           <Select.Label>Inference Providers</Select.Label>
                           <Select.Trigger class="px-4 bg-white rounded-base border-neutral-300-foreground">
                             <Select.DisplayValue />
                           </Select.Trigger>
                           <Select.Popover class="border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto">
-                            {selectedModel.value?.providers?.map(
-                              (provider, idx) => (
-                                <Select.Item
-                                  key={idx}
-                                  class="text-foreground hover:bg-accent"
-                                  value={provider}
-                                >
-                                  <Select.ItemLabel>
-                                    {provider}
-                                  </Select.ItemLabel>
-                                  <Select.ItemIndicator />
-                                </Select.Item>
-                              ),
-                            ) || []}
+                            {modelProviders.value.map((provider, idx) => (
+                              <Select.Item
+                                key={idx}
+                                value={provider}
+                                class="text-foreground hover:bg-accent"
+                              >
+                                <Select.ItemLabel>{provider}</Select.ItemLabel>
+                                <Select.ItemIndicator />
+                              </Select.Item>
+                            ))}
                           </Select.Popover>
                         </Select.Root>
                       </div>

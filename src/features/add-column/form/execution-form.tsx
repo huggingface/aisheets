@@ -12,6 +12,7 @@ import {
 
 import { cn } from '@qwik-ui/utils';
 import {
+  LuCheck,
   LuEgg,
   LuGlobe,
   LuSettings,
@@ -21,6 +22,7 @@ import {
 } from '@qwikest/icons/lucide';
 
 import { Button, Select, triggerLooks } from '~/components';
+import { useClickOutside } from '~/components/hooks/click/outside';
 import { nextTick } from '~/components/hooks/tick';
 import { Tooltip } from '~/components/ui/tooltip/tooltip';
 
@@ -83,6 +85,12 @@ export const ExecutionForm = component$<SidebarProps>(
       const model = models.find((m: Model) => m.id === selectedModelId.value);
       return model ? model.providers : [];
     });
+
+    const modelSearchContainerRef = useClickOutside(
+      $(() => {
+        modelSearchQuery.value = selectedModelId.value || '';
+      }),
+    );
 
     useTask$(({ track }) => {
       track(modelSearchQuery);
@@ -371,6 +379,7 @@ export const ExecutionForm = component$<SidebarProps>(
                     <div class="flex gap-4">
                       <div class="flex-[2]">
                         <Select.Root
+                          ref={modelSearchContainerRef}
                           key={modelSearchQuery.value}
                           bind:open={isModelDropdownOpen}
                           value={selectedModelId.value}
@@ -426,9 +435,9 @@ export const ExecutionForm = component$<SidebarProps>(
                                     {model.size}
                                   </span>
                                 )}
-                                {modelSearchQuery.value ===
-                                  selectedModelId.value && (
-                                  <Select.ItemIndicator />
+
+                                {model.id === selectedModelId.value && (
+                                  <LuCheck class="h-4 w4 text-primary-500 absolute right-2 top-1/2 -translate-y-1/2" />
                                 )}
                               </Select.Item>
                             ))}

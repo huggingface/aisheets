@@ -113,19 +113,6 @@ export const ExecutionForm = component$<SidebarProps>(
       }, 300);
     });
 
-    useVisibleTask$(({ track }) => {
-      track(selectedModelId);
-
-      const model = models.find((m: Model) => m.id === selectedModelId.value);
-      if (!model) return;
-
-      if (model.providers.includes(DEFAULT_MODEL_PROVIDER)) {
-        selectedProvider.value = DEFAULT_MODEL_PROVIDER;
-      } else {
-        selectedProvider.value = model.providers[0] || '';
-      }
-    });
-
     useVisibleTask$(() => {
       if (initialPrompt.value) {
         prompt.value = initialPrompt.value;
@@ -424,9 +411,17 @@ export const ExecutionForm = component$<SidebarProps>(
                                 class="text-foreground hover:bg-accent"
                                 onClick$={() => {
                                   isModelDropdownOpen.value = false;
+                                  endpointURLSelected.value = false;
 
                                   selectedModelId.value = model.id;
                                   modelSearchQuery.value = model.id;
+
+                                  selectedProvider.value =
+                                    model.providers.includes(
+                                      DEFAULT_MODEL_PROVIDER,
+                                    )
+                                      ? DEFAULT_MODEL_PROVIDER
+                                      : model.providers[0];
                                 }}
                               >
                                 <Select.ItemLabel>{model.id}</Select.ItemLabel>

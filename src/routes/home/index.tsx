@@ -5,6 +5,7 @@ import { LuEgg, LuGlobe } from '@qwikest/icons/lucide';
 import { Button, Textarea } from '~/components';
 import { Login } from '~/components/ui/login/Login';
 import { MainLogo, SecondLogo } from '~/components/ui/logo/logo';
+import { Tips } from '~/components/ui/tips/tips';
 import { StepsStatus } from '~/features/autodataset/steps-status';
 import { DragAndDrop } from '~/features/import/drag-n-drop';
 import { MainSidebarButton } from '~/features/main-sidebar';
@@ -333,6 +334,20 @@ export default component$(() => {
           </div>
         </div>
       </div>
+      <Tips>
+        <p>
+          <b>Write detailed prompts</b> to help the tool generate rich,
+          interconnected information across different aspects of your topic.
+        </p>
+        <p>
+          <b>Use Active Search</b> when brainstorming to get contextually
+          accurate information and reduce hallucinations.
+        </p>
+        <p>
+          <b>For niche topics</b>, start with structured data (uploading a CSV)
+          to build a solid foundation for content generation.
+        </p>
+      </Tips>
     </ActiveDatasetProvider>
   );
 });

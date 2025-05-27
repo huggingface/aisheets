@@ -5,6 +5,7 @@ import { LuEgg, LuGlobe } from '@qwikest/icons/lucide';
 import { Button, Textarea } from '~/components';
 import { Login } from '~/components/ui/login/Login';
 import { MainLogo, SecondLogo } from '~/components/ui/logo/logo';
+import { BigTips } from '~/components/ui/tips/big-tips';
 import { Tips } from '~/components/ui/tips/tips';
 import { StepsStatus } from '~/features/autodataset/steps-status';
 import { DragAndDrop } from '~/features/import/drag-n-drop';
@@ -208,7 +209,20 @@ export default component$(() => {
     <ActiveDatasetProvider>
       <div class="flex justify-between w-full">
         <MainSidebarButton />
-        {session.value.anonymous ? <Login /> : <Username />}
+
+        <div class="flex items-center gap-2">
+          <BigTips>
+            <p>
+              <b>Tip:</b> Use the search feature to find relevant information
+              online and enhance your dataset.
+            </p>
+            <p>
+              <b>Note:</b> You can also import existing data files to kickstart
+              your dataset creation.
+            </p>
+          </BigTips>
+          {session.value.anonymous ? <Login /> : <Username />}
+        </div>
       </div>
       <div class="w-full min-h-screen flex flex-col items-center justify-center">
         <div class="flex flex-col justify-between min-h-screen w-full items-center">

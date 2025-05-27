@@ -336,25 +336,13 @@ export default component$(() => {
       </div>
       <Tips>
         <p>
-          Describe your desired table or upload data to enrich it. Later, you
-          can refine your table and columns using prompts and different AI
-          models.
+          <b>Write a good prompt:</b> Be detailed about the topic and content
+          you want. Use "Search the web" for fact-checking and up-to-date info.
         </p>
         <p>
-          <b>Describe Your Table:</b> Be detailed about what you want. Example:
-          "French painters, birth year, most famous work."
-        </p>
-        <p>
-          <b>Use "Search the web":</b> For fact-checking and up-to-date info.
-        </p>
-        <p>
-          <b>Upload Your Data:</b> Drag and drop a CSV or Excel file to enrich
-          it (transform, extract, summarize, translate, etc.)
-        </p>
-        <p>
-          <b>Specify Columns:</b> Include column names in your description.
-          Example: "Popular dog breeds with columns: Breed Name, Lifespan,
-          Temperament."
+          <b>Start with existing data:</b> Generating new content from
+          structured data helps improve accuracy. Import a file, then transform,
+          augment, or enrich its content to suit your use case.
         </p>
       </Tips>
     </ActiveDatasetProvider>

@@ -8,6 +8,7 @@ import {
 import { cn } from '@qwik-ui/utils';
 import { LuPlus } from '@qwikest/icons/lucide';
 import { Button, Popover, buttonVariants } from '~/components';
+import { Tooltip } from '~/components/ui/tooltip/tooltip';
 import { useExecution } from '~/features/add-column';
 import { TEMPORAL_ID, useColumnsStore } from '~/state';
 
@@ -79,18 +80,20 @@ export const TableAddCellHeaderPlaceHolder = component$(() => {
         gutter={8}
         floating={isVisible() ? 'bottom-end' : 'bottom-start'}
       >
-        <Popover.Trigger
-          ref={ref}
-          class={cn(
-            buttonVariants({ look: 'ghost' }),
-            'w-[30px] h-[30px] bg-transparent text-primary rounded-full hover:bg-primary-100 flex items-center justify-center p-0',
-            {
-              'bg-primary-100': isOpen.value,
-            },
-          )}
-        >
-          <LuPlus class="text-lg" />
-        </Popover.Trigger>
+        <Tooltip text="Add column">
+          <Popover.Trigger
+            ref={ref}
+            class={cn(
+              buttonVariants({ look: 'ghost' }),
+              'w-[30px] h-[30px] bg-transparent text-primary rounded-full hover:bg-primary-100 flex items-center justify-center p-0',
+              {
+                'bg-primary-100': isOpen.value,
+              },
+            )}
+          >
+            <LuPlus class="text-lg" />
+          </Popover.Trigger>
+        </Tooltip>
 
         <Popover.Panel
           class="shadow-lg w-86 text-sm p-2"

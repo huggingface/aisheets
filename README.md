@@ -1,19 +1,16 @@
-# dataground
+# Sheets
 
-`dataground` is a tool for building datasets using AI models. It offers:
+`Sheets` is a tool for building datasets using AI models. It offers:
 
-- **Real-time iteration**: Building high-quality and diverse datasets involves carefully designing and combining prompts, trying out different models, a lot of trial and error, and spending time looking at your data. `dataground` accelerates dataset iteration with an interactive and progressive workflow, enabling you to test many things and see the results instantly.
-- **In-context learning using human demonstrations**: One of the biggest frustrations when building datasets with AI is prompts' brittleness. You often need to spend hours tuning the language of your prompt to avoid specific failures, ensure correct formatting, etc. Adding few-shot examples to your prompt is one of the most effective solutions to these issues. However, writing these examples by hand is time-consuming and challenging. In `dataground`, you just need to edit/select good examples, which are automatically included in the data generation process.
-- **The latest open-source models**: `dataground` enables you to use the latest and most powerful models, thanks to [Hugging Face Inference Providers](https://huggingface.co/blog/inference-providers).
-- **Cost-efficiency**: Instead of launching 100s of inference calls to experiment with prompts and pipelines, `dataground` enables you to test and build in smol steps (a few rows at a time!). This saves money and energy and leads to higher-quality datasets; you get to look at your data and tune the generation process as you go.
-- **Go from smol to great**:  Many big things, like the universe, start from something very smol. To build great datasets, it's better to build the perfect small dataset for your use case and then scale it up. `Dataground` enables you to build datasets and pipelines progressively. Once you're satisfied with your dataset, you can use the generated configuration to scale up the size of your dataset (if needed).
+- **Real-time iteration**: Building high-quality and diverse datasets involves carefully designing and combining prompts, trying out different models, a lot of trial and error, and spending time looking at your data. `Sheets` accelerates dataset iteration with an interactive and progressive workflow, enabling you to test many things and see the results instantly.
+- **In-context learning using human demonstrations**: One of the biggest frustrations when building datasets with AI is prompts' brittleness. You often need to spend hours tuning the language of your prompt to avoid specific failures, ensure correct formatting, etc. Adding few-shot examples to your prompt is one of the most effective solutions to these issues. However, writing these examples by hand is time-consuming and challenging. In `Sheets`, you just need to edit/select good examples, which are automatically included in the data generation process.
+- **The latest open-source models**: `Sheets` enables you to use the latest and most powerful models, thanks to [Hugging Face Inference Providers](https://huggingface.co/blog/inference-providers).
+- **Cost-efficiency**: Instead of launching 100s of inference calls to experiment with prompts and pipelines, `Sheets` enables you to test and build in smol steps (a few rows at a time!). This saves money and energy and leads to higher-quality datasets; you get to look at your data and tune the generation process as you go.
+- **Go from smol to great**:  Many big things, like the universe, start from something very smol. To build great datasets, it's better to build the perfect small dataset for your use case and then scale it up. `Sheets` enables you to build datasets and pipelines progressively. Once you're satisfied with your dataset, you can use the generated configuration to scale up the size of your dataset (if needed).
 
 ## Quick demo (TBD)
 
-
-https://github.com/user-attachments/assets/29e790d4-df29-4452-96f1-0069d45a1da9
-
-
+<https://github.com/user-attachments/assets/29e790d4-df29-4452-96f1-0069d45a1da9>
 
 ## Developer docs
 

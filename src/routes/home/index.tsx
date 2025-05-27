@@ -212,7 +212,106 @@ export default component$(() => {
 
         <div class="flex items-center gap-2">
           <BigTips>
+            <h2>What is Sheets?</h2>
             <p>
+              Sheets is an AI-native app that builds structured tables from
+              prompts, web information, or existing data. The table is fully
+              dynamic and modular, so you can make it evolve in multiple ways,
+              including:
+            </p>
+            <ul class="list-disc pl-5 space-y-2">
+              <li>Expanding the number of examples by column</li>
+              <li>Translating, extracting, or summarizing specific columns</li>
+              <li>Edit the model used at the column level</li>
+              <li>Edit the output at the cell level</li>
+            </ul>
+
+            <h2>How can Sheets help you?</h2>
+            <ul class="list-disc pl-5 space-y-2">
+              <li>
+                <b>Conduct Deeper Research:</b> Build structured knowledge bases
+                from web sources and your data, facilitating analysis and
+                synthesis.
+              </li>
+              <li>
+                <b>Supercharge Brainstorming:</b> Capture and organize
+                free-flowing ideas into structured tables.
+              </li>
+              <li>
+                <b>Enrich Datasets with AI and the Web:</b> Automatically
+                identify and add relevant information, synthesize, extract, fill
+                in missing data, or restructure existing and expand datasets.
+              </li>
+            </ul>
+
+            <h2>See some use cases:</h2>
+            <ul class="list-disc pl-5 space-y-1">
+              <li>Build a curated dataset</li>
+              <li>Explore and brainstorm topics</li>
+              <li>
+                Select the Open Source model that works better for your case
+              </li>
+              <li>Leverage the quality of your prompt</li>
+            </ul>
+
+            <h2>We made it for you.</h2>
+            <ul class="list-disc pl-5 space-y-2">
+              <li>
+                <b>Researchers:</b> Systematically organize information from
+                diverse sources (web, documents, datasets) for analysis,
+                literature reviews, and knowledge synthesis.
+              </li>
+              <li>
+                <b>Data Analysts and Scientists:</b> Require efficient ways to
+                enrich, restructure, and explore data for insights, valuing
+                control over column definitions and scalable data organization.
+              </li>
+              <li>
+                <b>Knowledge Workers & Strategists:</b> Benefit from quickly
+                structuring ideas, market intelligence, and other information
+                for clarity and decision-making.
+              </li>
+              <li>
+                <b>Content Creators & Writers:</b> Need a structured way to
+                organize research, brainstorming, outlines, keywords, and
+                supporting information, emphasizing factual accuracy.
+              </li>
+              <li>
+                <b>AI Builders & Early Adopters:</b> Interested in leveraging AI
+                for AI development and data management.
+              </li>
+            </ul>
+
+            <h2>Why should you try it?</h2>
+            <ul class="list-disc pl-5 space-y-2">
+              <li>
+                <b>Save time:</b> Significantly faster than purely agentic deep
+                research tools for generating structured data.
+              </li>
+              <li>
+                <b>Stay in control:</b> Offers per-column prompt configuration
+                and in-context learning using validated cell data, surpassing
+                the limitations of chat-based UIs for precise table creation and
+                refinement.
+              </li>
+              <li>
+                <b>Scale with ease:</b> Capable of building and expanding tables
+                beyond the size constraints of typical AI assistants, with a
+                familiar interface for managing larger datasets.
+              </li>
+              <li>
+                <b>Get accurate results:</b> Grounds table content using web
+                search to mitigate hallucinated information and ensure data is
+                sourced and verifiable.
+              </li>
+            </ul>
+
+            <p class="italic mt-4">
+              Soon, we'll open-source the tool. For questions or feedback, join
+              the community channel
+            </p>
+
+            <p class="mt-4">
               <b>Tip:</b> Use the search feature to find relevant information
               online and enhance your dataset.
             </p>

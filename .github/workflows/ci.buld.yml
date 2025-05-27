@@ -54,10 +54,10 @@ jobs:
           echo "DOCKER_USERNAME=$DOCKER_USERNAME" >> $GITHUB_ENV
           echo "DOCKER_PASSWORD=$DOCKER_PASSWORD" >> $GITHUB_ENV
           if [[ $IS_RELEASE == 'true' ]]; then
-            echo "DOCKER_IMAGE=huggingfacedg/dataground" >> $GITHUB_ENV
+            echo "DOCKER_IMAGE=huggingfacedg/sheets" >> $GITHUB_ENV
             echo "PLATFORMS=linux/amd64,linux/arm64" >> $GITHUB_ENV
           else
-            echo "DOCKER_IMAGE=huggingfacedg/dataground-dev" >> $GITHUB_ENV
+            echo "DOCKER_IMAGE=huggingfacedg/sheets-dev" >> $GITHUB_ENV
             echo "PLATFORMS=linux/amd64" >> $GITHUB_ENV
           fi
         env:

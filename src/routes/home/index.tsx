@@ -337,7 +337,11 @@ export default component$(() => {
       <Tips>
         <p>
           <b>Write a good prompt:</b> Be detailed about the topic and content
-          you want. Use "Search the web" for fact-checking and up-to-date info.
+          you want.
+        </p>
+        <p>
+          <b>Activate "Search the web":</b> For deep research, fact-checking and
+          up-to-date info.
         </p>
         <p>
           <b>Start with existing data:</b> Generating new content from

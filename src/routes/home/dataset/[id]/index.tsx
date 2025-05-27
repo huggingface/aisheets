@@ -1,6 +1,7 @@
 import { component$ } from '@builder.io/qwik';
 import type { DocumentHead } from '@builder.io/qwik-city';
 import { Login } from '~/components/ui/login/Login';
+import { Tips } from '~/components/ui/tips/tips';
 import { DatasetName } from '~/features/datasets';
 import { SaveDataset } from '~/features/export';
 import { MainSidebarButton } from '~/features/main-sidebar';
@@ -29,6 +30,20 @@ export default component$(() => {
           </div>
         </div>
         <Table />
+        <Tips>
+          <p>
+            <b>Drag to generate:</b> Click and drag down from a cell's dot
+            handle to generate content for multiple cells at once.
+          </p>
+          <p>
+            <b>Validate and refine:</b> Mark good cells to improve others.
+          </p>
+          <p>
+            <b>Manage columns:</b> Use the column settings (⚙️) to edit names,
+            hide columns, or regenerate content. Click + to add new columns for
+            translation, keywords, summaries, or using a custom prompt.
+          </p>
+        </Tips>
       </div>
     </ActiveDatasetProvider>
   );

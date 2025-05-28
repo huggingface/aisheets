@@ -321,7 +321,7 @@ export default component$(() => {
         <div class="flex flex-col justify-between min-h-screen w-full items-center">
           {/* Show top section only when not loading */}
           {!isLoading.value && (
-            <div class="flex flex-col items-center justify-center space-y-4 mb-12">
+            <div class="flex flex-col items-center justify-center space-y-4 mb-6">
               <MainLogo class="w-[70px] h-[70px]" />
               <h1 class="text-neutral-600 text-2xl font-semibold">
                 Design your data in a sheet

@@ -27,8 +27,8 @@ export const Tips = component$(() => {
             </Button>
           </div>
           <div class="flex flex-col gap-3 p-6 text-primary-600 text-sm">
-            <h2 class="text-lg font-semibold">Helpful tips</h2>
-            <div class="flex flex-col gap-1">
+            <h2 class="text-lg font-medium">Helpful tips</h2>
+            <div class="flex flex-col gap-2">
               <Slot />
             </div>
           </div>

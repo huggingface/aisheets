@@ -241,14 +241,14 @@ export default component$(() => {
                 in missing data, or restructure existing and expand datasets.
               </li>
             </ul>
-            <h2 class="font-semibold text-lg">See some use cases:</h2>
+            <h2 class="font-semibold text-lg">Use cases:</h2>
             <ul class="space-y-1">
               <li>Build a curated dataset</li>
               <li>Explore and brainstorm topics</li>
               <li>
                 Select the Open Source model that works better for your case
               </li>
-              <li>Leverage the quality of your prompt</li>
+              <li>Improve the quality of prompt over your own data</li>
             </ul>
             <h1 class="font-semibold text-xl">We made it for you.</h1>
             <ul class="space-y-3">
@@ -301,8 +301,7 @@ export default component$(() => {
               </li>
             </ul>
             <p class="italic mt-4">
-              Soon, we'll open-source the tool. For questions or feedback, join
-              the community channel
+              For questions or feedback, join the community tab.
             </p>
             <p class="mt-4">
               <b>Tip:</b> Use the search feature to find relevant information

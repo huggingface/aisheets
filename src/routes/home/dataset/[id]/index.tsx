@@ -1,4 +1,5 @@
 import { component$ } from '@builder.io/qwik';
+import type { DocumentHead } from '@builder.io/qwik-city';
 import { Login } from '~/components/ui/login/Login';
 import { Tips } from '~/components/ui/tips/tips';
 import { DatasetName } from '~/features/datasets';

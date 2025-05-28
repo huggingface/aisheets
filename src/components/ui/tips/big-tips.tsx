@@ -12,7 +12,7 @@ export const BigTips = component$(() => {
   return (
     <div class="z-[51]">
       {isVisible.value && (
-        <div class="fixed top-0 left-0 w-full h-full bg-black/30 flex items-center justify-center z-[51]">
+        <div class="fixed top-0 left-0 w-full h-full flex items-center justify-center z-[51]">
           <div class="flex flex-col bg-neutral-50 shadow-xl w-[80vw] h-fit border border-neutral-100 rounded-md z-[51] relative">
             <div class="absolute w-full flex justify-end items-center px-3 py-4">
               <Button

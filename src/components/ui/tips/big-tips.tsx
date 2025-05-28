@@ -38,7 +38,7 @@ export const BigTips = component$(() => {
 
       <Button
         look="ghost"
-        class="flex items-center gap-2 font-s text-primary-600 px-2 py-1 h-[4vh] rounded-sm hover:bg-neutral-200"
+        class="flex items-center gap-2 font-s text-primary-600 px-2 py-1 h-[4vh] rounded-sm hover:text-primary-500"
         onClick$={() => {
           isVisible.value = true;
         }}

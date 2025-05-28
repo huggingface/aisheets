@@ -1,6 +1,7 @@
 import { component$, useComputed$ } from '@builder.io/qwik';
 import { cn } from '@qwik-ui/utils';
 import { Popover, buttonVariants } from '~/components';
+import { Tooltip } from '~/components/ui/tooltip/tooltip';
 import { useExecution } from '~/features/add-column';
 import { CellGeneration } from '~/features/table/components/header/cell-generation';
 import { CellSettings } from '~/features/table/components/header/cell-settings';
@@ -60,7 +61,9 @@ export const TableCellHeader = component$<{ column: Column }>(({ column }) => {
 
           <div class="flex items-center gap-1 w-[18%] h-fit pr-0">
             <CellGeneration column={column} />
-            <CellSettings column={column} />
+            <Tooltip text="Edit configuration">
+              <CellSettings column={column} />
+            </Tooltip>
           </div>
         </Popover.Trigger>
         <Popover.Panel>

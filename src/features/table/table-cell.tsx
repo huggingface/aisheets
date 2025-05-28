@@ -376,11 +376,6 @@ export const TableCell = component$<{
     }),
   );
 
-  const closeSourcesModal = $((e?: Event) => {
-    if (e) e.stopPropagation();
-    showSourcesModal.value = false;
-  });
-
   useVisibleTask$(() => {
     const handler = () => {
       showSourcesModal.value = false;

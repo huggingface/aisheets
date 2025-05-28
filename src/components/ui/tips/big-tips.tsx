@@ -27,7 +27,7 @@ export const BigTips = component$(() => {
                 <LuX class="text-lg text-neutral" />
               </Button>
             </div>
-            <div class="flex flex-col gap-3 p-10 text-primary-600 text-sm">
+            <div class="flex flex-col gap-3 p-10 text-primary-600 text-base">
               <div class="flex flex-col space-y-6 h-[75vh] overflow-y-auto">
                 <Slot />
               </div>

@@ -13,7 +13,7 @@ export const BigTips = component$(() => {
     <div class="z-[51]">
       {isVisible.value && (
         <div class="fixed top-0 left-0 w-full h-full bg-black/30 flex items-center justify-center z-[51]">
-          <div class="flex flex-col bg-neutral-50 shadow-xl w-fit h-fit border border-neutral-100 rounded-md z-[51] relative">
+          <div class="flex flex-col bg-neutral-50 shadow-xl w-[80%] h-fit border border-neutral-100 rounded-md z-[51] relative">
             <div class="absolute w-full flex justify-end items-center px-3 py-4">
               <Button
                 class="p-1.5 rounded-full hover:bg-neutral-200 cursor-pointer"
@@ -27,9 +27,8 @@ export const BigTips = component$(() => {
                 <LuX class="text-lg text-neutral" />
               </Button>
             </div>
-            <div class="flex flex-col gap-3 p-6 text-primary-600 text-sm">
-              <h2 class="text-lg font-semibold">Helpful tips</h2>
-              <div class="flex flex-col gap-1">
+            <div class="flex flex-col gap-3 p-10 text-primary-600 text-sm">
+              <div class="flex flex-col space-y-6 h-[600px] overflow-y-auto">
                 <Slot />
               </div>
             </div>

@@ -212,22 +212,21 @@ export default component$(() => {
 
         <div class="flex items-center gap-2">
           <BigTips>
-            <h2>What is Sheets?</h2>
+            <h1 class="font-semibold text-xl">What is Sheets?</h1>
             <p>
               Sheets is an AI-native app that builds structured tables from
               prompts, web information, or existing data. The table is fully
               dynamic and modular, so you can make it evolve in multiple ways,
               including:
             </p>
-            <ul class="list-disc pl-5 space-y-2">
+            <ul class="list-disc pl-5">
               <li>Expanding the number of examples by column</li>
               <li>Translating, extracting, or summarizing specific columns</li>
               <li>Edit the model used at the column level</li>
               <li>Edit the output at the cell level</li>
             </ul>
-
-            <h2>How can Sheets help you?</h2>
-            <ul class="list-disc pl-5 space-y-2">
+            <h1 class="font-semibold text-xl">How can Sheets help you?</h1>
+            <ul class="space-y-3">
               <li>
                 <b>Conduct Deeper Research:</b> Build structured knowledge bases
                 from web sources and your data, facilitating analysis and
@@ -243,9 +242,8 @@ export default component$(() => {
                 in missing data, or restructure existing and expand datasets.
               </li>
             </ul>
-
-            <h2>See some use cases:</h2>
-            <ul class="list-disc pl-5 space-y-1">
+            <h2 class="font-semibold text-lg">See some use cases:</h2>
+            <ul class="space-y-1">
               <li>Build a curated dataset</li>
               <li>Explore and brainstorm topics</li>
               <li>
@@ -253,9 +251,8 @@ export default component$(() => {
               </li>
               <li>Leverage the quality of your prompt</li>
             </ul>
-
-            <h2>We made it for you.</h2>
-            <ul class="list-disc pl-5 space-y-2">
+            <h1 class="font-semibold text-xl">We made it for you.</h1>
+            <ul class="space-y-3">
               <li>
                 <b>Researchers:</b> Systematically organize information from
                 diverse sources (web, documents, datasets) for analysis,
@@ -281,8 +278,7 @@ export default component$(() => {
                 for AI development and data management.
               </li>
             </ul>
-
-            <h2>Why should you try it?</h2>
+            <h1 class="font-semibold text-xl">Why should you try it?</h1>
             <ul class="list-disc pl-5 space-y-2">
               <li>
                 <b>Save time:</b> Significantly faster than purely agentic deep
@@ -305,12 +301,10 @@ export default component$(() => {
                 sourced and verifiable.
               </li>
             </ul>
-
             <p class="italic mt-4">
               Soon, we'll open-source the tool. For questions or feedback, join
               the community channel
             </p>
-
             <p class="mt-4">
               <b>Tip:</b> Use the search feature to find relevant information
               online and enhance your dataset.

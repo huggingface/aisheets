@@ -77,22 +77,21 @@ export default component$(() => {
     {
       title: 'Spanish-Speaking Countries & Regional Idioms',
       prompt:
-        'List of Spanish speaking countries with an example of a regional idiom',
+        'List of idioms in Spanish speaking countries, with the country where they are used',
     },
     {
       title: 'Climate-related disasters',
       prompt:
-        'Recent climate-related disasters worldwide. Include event and location, date, affected population, economic impact, and a detailed description of the event.',
+        'Recent climate related disasters with one column including the name/type of disaster, location and year',
     },
     {
       title: 'Endangered Plants',
-      prompt:
-        'Endangered plant species. Include scientific name, common name and habitat',
+      prompt: 'Endangered plant species. Include scientific name and habitat',
     },
     {
       title: 'Customer sentiment climbing shoes',
       prompt:
-        'Sentiment dataset about real climbing shoe models, including positive, negative, and neutral reviews',
+        'Sentiment dataset about real climbing shoe models, including a summary of positive and negative aspects',
     },
   ];
 

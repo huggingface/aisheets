@@ -343,7 +343,7 @@ export const ExecutionForm = component$<SidebarProps>(
                   look="ghost"
                   class="hover:bg-neutral-200"
                 >
-                  <Tooltip text="edit configuration">
+                  <Tooltip text="Change model">
                     <LuSettings class="text-neutral-500" />
                   </Tooltip>
                 </Button>

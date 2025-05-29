@@ -508,6 +508,7 @@ Given this prompt that will be used to generate a cell in a column of the datase
 {prompt}
 
 Create exactly {maxQueries} specific optimized Google search queries that will help gather relevant, accurate, and specific information for this prompt. The queries should be focused on finding information that would help generate high-quality content for this specific cell, taking into account the context of the dataset.
+Avoid using irrelevant adjectives (e.g., notable, best, etc.) unless explicitly specified in the prompt.
 
 Your response must follow this exact format:
 

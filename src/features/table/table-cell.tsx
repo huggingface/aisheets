@@ -376,11 +376,6 @@ export const TableCell = component$<{
     }),
   );
 
-  const closeSourcesModal = $((e?: Event) => {
-    if (e) e.stopPropagation();
-    showSourcesModal.value = false;
-  });
-
   useVisibleTask$(() => {
     const handler = () => {
       showSourcesModal.value = false;
@@ -478,7 +473,7 @@ export const TableCell = component$<{
                     }}
                   >
                     <Tooltip
-                      text="Mark this cell as correct. When you click regenerate 🥚, it will be used to improve other cells."
+                      text="Mark as correct to improve generation"
                       class="break-words w-48 text-left"
                     >
                       <LuThumbsUp class="text-sm" />

@@ -70,7 +70,7 @@ SEARCH QUERIES:
 - "specific search query 1"
 - "specific search query 2"
 
-Only include columns that are directly relevant to the request. Create exactly {maxSearchQueries} specific search queries that will help gather comprehensive information for all columns.
+Only include columns that are directly relevant to the request. Create exactly {maxSearchQueries} specific search queries that will help gather initial information, especially for the first column of the dataset. Don't use adjectives for the search query (e.g., "best") unless they are included in the user instruction. Make the query as simple and effective as possible, don't try to request the info for all columns in the query, it's just a starting point, later more webs will be retrieved for specific columns.
 
 Avoid adding columns with typical database things, like tweet_id, id, timestamp, etc.
 
@@ -78,19 +78,21 @@ Limit the number of columns to maximum 3 unless it's strictly required or the us
 
 ALWAYS include a prompt for each column.
 
-Here are some high-quality examples of dataset configurations:
+Here is a high-quality example of dataset configurations:
+
+USER REQUEST:
+recent movie reviews by genre
 
 DATASET NAME:
-Modern Movie Reviews Collection
+Recent Movie Reviews Collection
 
 COLUMNS:
-- movie_title : Identify one movie title from the provided sources. Don't repeat existing items in the dataset.
-- review : Write a detailed movie review for {{movie_title}} based on the provided sources.
+- movie_title : Identify one movie title from the provided sources.
+- reviews : Summarize the moview review for {{movie_title}} based on the provided sources.
 - genre : Identify the movie genre of {{movie_title}} based on the provided sources.
 
 SEARCH QUERIES:
-- "movie releases 2024 reviews"
-- "popular movie genres trends analysis"
+- "recent movie releases"
 `.trim();
 
 /**

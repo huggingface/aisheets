@@ -59,7 +59,7 @@ export const TableCellHeader = component$<{ column: Column }>(({ column }) => {
             </p>
           </div>
 
-          <div class="flex items-center gap-1 w-[18%] h-fit pr-0">
+          <div class="flex items-center gap-1 w-fit h-fit pr-0">
             <CellGeneration column={column} />
             <Tooltip text="Edit configuration">
               <CellSettings column={column} />

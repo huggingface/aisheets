@@ -62,6 +62,7 @@ export const configureEmbeddingsIndex = async () => {
   const { embeddingDim } = DEFAULT_EMBEDDING_MODEL;
 
   const schema = new arrow.Schema([
+    new arrow.Field('id', new arrow.Utf8()),
     new arrow.Field('dataset_id', new arrow.Utf8()),
     new arrow.Field('source_uri', new arrow.Utf8()),
     new arrow.Field('text', new arrow.Utf8()),
@@ -160,10 +161,11 @@ export const indexDatasetSources = async ({
 
   let rows: Record<string, any>[] = chunkedSources.flatMap(
     ({ source, chunks }) => {
-      return chunks.map((text) => ({
+      return chunks.map((text, idx) => ({
         text,
         source_uri: source.url,
         dataset_id: dataset.id,
+        id: `${dataset.id}-${source.url}-${idx}`,
       }));
     },
   );
@@ -227,7 +229,14 @@ export const indexDatasetSources = async ({
   }
   rows = rowsWithEmbeddings;
 
-  if (rows.length > 0) await embeddingsIndex.add(rows);
+  if (rows.length > 0) {
+    await embeddingsIndex
+      .mergeInsert('id')
+      .whenMatchedUpdateAll()
+      .whenNotMatchedInsertAll()
+      .execute(rows);
+  }
+
   return rows.length;
 };
 

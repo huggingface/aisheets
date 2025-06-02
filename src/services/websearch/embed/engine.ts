@@ -8,7 +8,13 @@ import {
   normalizeOptions,
 } from '~/services/inference/run-prompt-execution';
 import type { WebSource } from '~/services/websearch/search-sources';
-import { flattenTree, stringifyMarkdownElement } from '../markdown';
+import {
+  flattenTree,
+  markdownTreeToString,
+  stringifyMarkdownElement,
+} from '../markdown';
+import { MarkdownElementType } from '../types';
+import type { HeaderElement } from '../types';
 
 let processEmbeddings: (
   texts: string[],
@@ -133,7 +139,7 @@ export const indexDatasetSources = async ({
   dataset,
   sources,
   options,
-  maxChunks = 100, // Default to 100 chunks to prevent long processing times
+  maxChunks = 100,
 }: {
   dataset: {
     id: string;
@@ -143,43 +149,111 @@ export const indexDatasetSources = async ({
   options: {
     accessToken: string;
   };
-  maxChunks?: number; // Optional parameter to limit total chunks
+  maxChunks?: number;
 }): Promise<number> => {
-  const chunkedSources = sources
+  type DocumentRow = {
+    text: string;
+    source_uri: string;
+    dataset_id: string;
+    embedding?: number[];
+  };
+
+  const documents = sources
     .map((source) => {
-      if (!source.markdownTree) return { source, chunks: [] };
+      if (!source.markdownTree) return null;
 
-      const mdElements = flattenTree(source.markdownTree);
-      const chunks = mdElements
-        .map(stringifyMarkdownElement)
-        .filter((text) => text.length > 200); // Skip chunks with 200 or fewer characters
+      // Create metadata section
+      const metadata = [];
+      if (source.title) metadata.push(`# ${source.title}`);
+      if (source.snippet) metadata.push(`> ${source.snippet}`);
+      const metadataSection =
+        metadata.length > 0 ? metadata.join('\n\n') + '\n\n' : '';
 
-      return { source, chunks };
+      // Get all h1 and h2 sections
+      const sections: { header: HeaderElement; parent?: HeaderElement }[] = [];
+
+      // First find all h1s
+      const h1Sections = source.markdownTree.children.filter(
+        (child) =>
+          child.type === MarkdownElementType.Header &&
+          (child as any).level === 1,
+      ) as HeaderElement[];
+
+      if (h1Sections.length === 0) {
+        // No h1s found, use full document
+        const mdElements = flattenTree(source.markdownTree);
+        const content = mdElements.map(stringifyMarkdownElement).join('\n\n');
+        const fullDocument = metadataSection + content;
+
+        if (fullDocument.length <= 200) return null;
+
+        return [
+          {
+            text: fullDocument,
+            source_uri: source.url,
+            dataset_id: dataset.id,
+          },
+        ] as DocumentRow[];
+      }
+
+      // For each h1, find its h2s and create documents
+      for (const h1 of h1Sections) {
+        // Add the h1 section itself
+        sections.push({ header: h1 });
+
+        // Find h2s under this h1
+        const h2Sections = h1.children.filter(
+          (child) =>
+            child.type === MarkdownElementType.Header &&
+            (child as any).level === 2,
+        ) as HeaderElement[];
+
+        // Add each h2 with its parent h1
+        for (const h2 of h2Sections) {
+          sections.push({ header: h2, parent: h1 });
+        }
+      }
+
+      // Create documents for each section
+      return sections
+        .map(({ header, parent }) => {
+          let document = metadataSection;
+
+          // If this is an h2, include its parent h1 context
+          if (parent) {
+            document += `# ${parent.content}\n\n`;
+          }
+
+          // Add the section content
+          document += markdownTreeToString(header);
+
+          if (document.length <= 200) return null;
+
+          return {
+            text: document,
+            source_uri: source.url,
+            dataset_id: dataset.id,
+          } as DocumentRow;
+        })
+        .filter((doc): doc is DocumentRow => doc !== null);
     })
-    .filter(({ chunks }) => chunks.length > 0);
+    .filter((docs): docs is DocumentRow[] => docs !== null)
+    .flat();
 
-  let rows: Record<string, any>[] = chunkedSources.flatMap(
-    ({ source, chunks }) => {
-      return chunks.map((text) => ({
-        text,
-        source_uri: source.url,
-        dataset_id: dataset.id,
-      }));
-    },
-  );
+  let rows: DocumentRow[] = documents;
 
-  // Limit the total number of chunks if maxChunks is specified
+  // Limit the total number of documents if maxChunks is specified
   if (maxChunks && rows.length > maxChunks) {
     console.log(
-      `[indexDatasetSources] Limiting chunks from ${rows.length} to ${maxChunks} for dataset ${dataset.name}`,
+      `[indexDatasetSources] Limiting documents from ${rows.length} to ${maxChunks} for dataset ${dataset.name}`,
     );
     rows = rows.slice(0, maxChunks);
   }
 
   const processEmbeddingsBatch = async (
-    batch: Record<string, any>[],
+    batch: DocumentRow[],
     batchIdx: number,
-  ): Promise<Record<string, any>[]> => {
+  ): Promise<DocumentRow[]> => {
     console.log(
       `Processing batch ${batchIdx} with ${batch.length} rows for dataset ${dataset.name}`,
     );
@@ -188,16 +262,16 @@ export const indexDatasetSources = async ({
     try {
       const embeddings = await embedder(texts, options);
 
-      batch.forEach((text, index) => {
+      batch.forEach((row, index) => {
         const embedding = embeddings[index];
         if (!embedding) {
           console.warn(
-            `Skipping chunk due to missing embedding for text:\n${text}\n---END OF SKIPPED TEXT---`,
+            `Skipping document due to missing embedding for text:\n${row.text}\n---END OF SKIPPED TEXT---`,
           );
           return;
         }
 
-        batch[index].embedding = embedding;
+        row.embedding = embedding;
       });
 
       return batch.filter((row) => row.embedding);
@@ -217,7 +291,7 @@ export const indexDatasetSources = async ({
     promises.push(() => processEmbeddingsBatch(batch, i / chunkSize));
   }
 
-  const rowsWithEmbeddings = [];
+  const rowsWithEmbeddings: DocumentRow[] = [];
   const parallelRequests = 12; // Number of parallel requests
   for (let i = 0; i < promises.length; i += parallelRequests) {
     const batchPromises = promises.slice(i, i + parallelRequests);
@@ -275,7 +349,7 @@ export const queryDatasetSources = async ({
         .fullTextSearch(query)
         .nearestTo(embeddings[0])
         .rerank(await lancedb.rerankers.RRFReranker.create())
-        .limit(10)
+        .limit(3)
         .toArray();
 
       return results.map(
@@ -291,7 +365,7 @@ export const queryDatasetSources = async ({
     const results = await embeddingsIndex
       .search(embeddings[0], 'vector')
       .where(filterByDataset)
-      .limit(10)
+      .limit(3)
       .toArray();
 
     return results.map((result: { text: string; source_uri: string }) => ({

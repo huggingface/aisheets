@@ -6,7 +6,6 @@ import { MarkdownElementType } from '../types';
 /**
  * Chunk large markdown elements into smaller pieces
  * Uses sentence boundary detection for more natural chunks
- * Headers are included with their content for better context
  */
 export function chunkElements(
   elements: MarkdownElement[],
@@ -15,16 +14,15 @@ export function chunkElements(
   if (!maxCharsPerElem || maxCharsPerElem <= 0) return elements;
 
   return elements.flatMap((elem) => {
-    // Skip chunking for lists and headers
+    // Skip chunking for list items
     if (
       elem.type === MarkdownElementType.UnorderedListItem ||
-      elem.type === MarkdownElementType.OrderedListItem ||
-      elem.type === MarkdownElementType.Header
+      elem.type === MarkdownElementType.OrderedListItem
     ) {
       return [elem] as MarkdownElement[];
     }
 
-    // Only chunk regular paragraphs and other content
+    // Chunk all other content types
     const contentChunks = splitIntoChunks(elem.content, maxCharsPerElem);
     return contentChunks.map((chunk) => ({
       ...elem,

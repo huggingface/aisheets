@@ -133,88 +133,18 @@ export function markdownTreeToString(tree: HeaderElement): string {
  */
 export function flattenTree(elem: MarkdownElement): MarkdownElement[] {
   if ('children' in elem) {
-    // For header elements, only prepend their text to certain element types
+    // For header elements, don't include them directly
+    // Instead, prepend their text to their children's content
     const headerText =
       elem.type === MarkdownElementType.Header ? `${elem.content}\n\n` : '';
 
-    // Process children and selectively prepend header text
+    // Process children and prepend header text if this is a header
     return (elem as HeaderElement).children.flatMap((child) => {
       const flattenedChildren = flattenTree(child);
-
-      // Group consecutive list items together
-      const groupedChildren: MarkdownElement[] = [];
-      let currentListItems: MarkdownElement[] = [];
-      let currentListType: MarkdownElementType | null = null;
-
-      for (const childElem of flattenedChildren) {
-        const isListItem =
-          childElem.type === MarkdownElementType.UnorderedListItem ||
-          childElem.type === MarkdownElementType.OrderedListItem;
-
-        if (isListItem) {
-          // If this is a different list type than what we're collecting, flush current list
-          if (currentListType && childElem.type !== currentListType) {
-            if (currentListItems.length > 0) {
-              groupedChildren.push({
-                type: currentListType,
-                content: currentListItems
-                  .map((item) => item.content)
-                  .join('\n'),
-                parent: elem.parent,
-                depth: (currentListItems[0] as ListItemElement).depth,
-              });
-              currentListItems = [];
-            }
-          }
-
-          // Start or continue collecting list items
-          currentListType = childElem.type;
-          currentListItems.push(childElem);
-        } else {
-          // If we were collecting a list, flush it first
-          if (currentListItems.length > 0) {
-            groupedChildren.push({
-              type: currentListType!,
-              content: currentListItems.map((item) => item.content).join('\n'),
-              parent: elem.parent,
-              depth: (currentListItems[0] as ListItemElement).depth,
-            });
-            currentListItems = [];
-            currentListType = null;
-          }
-
-          // Add non-list element
-          groupedChildren.push(childElem);
-        }
-      }
-
-      // Don't forget to flush any remaining list items
-      if (currentListItems.length > 0) {
-        groupedChildren.push({
-          type: currentListType!,
-          content: currentListItems.map((item) => item.content).join('\n'),
-          parent: elem.parent,
-          depth: (currentListItems[0] as ListItemElement).depth,
-        });
-      }
-
-      // Now apply header inheritance to the grouped elements
-      return groupedChildren.map((childElem) => {
-        // Only prepend header text to certain element types
-        const shouldInheritHeader =
-          childElem.type === MarkdownElementType.Paragraph ||
-          childElem.type === MarkdownElementType.CodeBlock ||
-          childElem.type === MarkdownElementType.Table ||
-          childElem.type === MarkdownElementType.UnorderedList ||
-          childElem.type === MarkdownElementType.OrderedList;
-
-        return {
-          ...childElem,
-          content: shouldInheritHeader
-            ? headerText + childElem.content
-            : childElem.content,
-        };
-      });
+      return flattenedChildren.map((childElem) => ({
+        ...childElem,
+        content: headerText + childElem.content,
+      }));
     });
   }
 

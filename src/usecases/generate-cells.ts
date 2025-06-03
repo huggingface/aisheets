@@ -203,6 +203,7 @@ async function* generateCellsFromScratch({
       options: {
         accessToken: session.token,
       },
+      limit: limit - offset + existingCellsExamples.length,
     });
   }
 

@@ -160,6 +160,16 @@ async function* generateCellsFromScratch({
   const { modelName, modelProvider, prompt, searchEnabled, useEndpointURL } =
     process;
 
+  // Sequential execution for fromScratch to accumulate examples
+  // Get all existing cells in the column to achieve diversity
+  const existingCellsExamples = column.cells
+    .filter((cell) => cell.value)
+    .map((cell) => ({
+      output: cell.value,
+      validated: cell.validated,
+      inputs: {},
+    }));
+
   let sourcesContext = undefined;
   if (searchEnabled) {
     // 1. Build web search query from prompt
@@ -187,7 +197,7 @@ async function* generateCellsFromScratch({
     // 3. Search for relevant results
     sourcesContext = await queryDatasetSources({
       dataset: column.dataset,
-      query: prompt,
+      query: queries[0],
       options: {
         accessToken: session.token,
       },
@@ -201,16 +211,6 @@ async function* generateCellsFromScratch({
         snippet: source.text?.slice(0, MAX_SOURCE_SNIPPET_LENGTH) || '',
       }))
     : undefined;
-
-  // Sequential execution for fromScratch to accumulate examples
-  // Get all existing cells in the column to achieve diversity
-  const existingCellsExamples = column.cells
-    .filter((cell) => cell.value)
-    .map((cell) => ({
-      output: cell.value,
-      validated: cell.validated,
-      inputs: {},
-    }));
 
   const validatedIdxs = validatedCells?.map((cell) => cell.idx);
 
@@ -351,7 +351,7 @@ async function singleCellGeneration({
     // 3. Search for relevant results
     sourcesContext = await queryDatasetSources({
       dataset: column.dataset,
-      query: renderedInstruction,
+      query: queries[0],
       options: {
         accessToken: session.token,
       },

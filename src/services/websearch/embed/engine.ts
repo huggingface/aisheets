@@ -274,7 +274,7 @@ export const queryDatasetSources = async ({
         .fullTextSearch(query)
         .nearestTo(embeddings[0])
         .rerank(await lancedb.rerankers.RRFReranker.create())
-        .limit(10)
+        .limit(5)
         .toArray();
 
       return results.map(
@@ -290,7 +290,7 @@ export const queryDatasetSources = async ({
     const results = await embeddingsIndex
       .search(embeddings[0], 'vector')
       .where(filterByDataset)
-      .limit(10)
+      .limit(5)
       .toArray();
 
     return results.map((result: { text: string; source_uri: string }) => ({

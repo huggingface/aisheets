@@ -164,6 +164,10 @@ async function* generateCellsFromScratch({
   // Get all existing cells in the column to achieve diversity
   const existingCellsExamples = column.cells
     .filter((cell) => cell.value)
+    .filter(
+      (cell) =>
+        cell.validated || !(cell.idx >= offset && cell.idx < offset + limit),
+    )
     .map((cell) => ({
       output: cell.value,
       validated: cell.validated,

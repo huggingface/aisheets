@@ -87,9 +87,11 @@ Review these responses and **generate a new response that is NOT present in this
 
 {{formattedExamples}}
 
+Generate your response without repeting any of the responses above.
+If it's not possible to add a new response, tell the user: No more items and the reason.
+
 {{/hasExamples}}
 ## Your response
-Without repeting any of the responses above. If it's not possible to add a new response, tell the user: No more items and the reason.
 `,
     {
       instruction,

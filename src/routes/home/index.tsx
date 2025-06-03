@@ -315,11 +315,10 @@ export default component$(() => {
           {session.value.anonymous ? <Login /> : <Username />}
         </div>
       </div>
-      <div class="w-full min-h-screen flex flex-col items-center justify-center">
-        <div class="flex flex-col justify-between min-h-screen w-full items-center">
-          {/* Show top section only when not loading */}
+      <div class="w-full flex flex-col items-center justify-center">
+        <div class="flex flex-col w-full items-center gap-5">
           {!isLoading.value && (
-            <div class="flex flex-col items-center justify-center space-y-4 mb-6">
+            <div class="flex flex-col items-center justify-center space-y-4">
               <MainLogo class="w-[70px] h-[70px]" />
               <h1 class="text-neutral-600 text-2xl font-semibold">
                 Design your data in a sheet
@@ -334,7 +333,6 @@ export default component$(() => {
               preventdefault:submit
               onSubmit$={onSubmitHandler}
             >
-              {/* Status/progress section */}
               <StepsStatus
                 isLoading={isLoading.value}
                 currentStep={currentStep.value}

@@ -137,7 +137,7 @@ export const MainSidebar = component$(() => {
       ) : (
         <div class="flex-1 flex flex-col overflow-y-auto">
           {todayDatasets.length > 0 && (
-            <div>
+            <div class="mt-8">
               <p class="text-muted-foreground px-4 text-sm font-semibold mb-4">
                 Today
               </p>

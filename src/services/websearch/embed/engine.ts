@@ -8,8 +8,7 @@ import {
   normalizeOptions,
 } from '~/services/inference/run-prompt-execution';
 import type { WebSource } from '~/services/websearch/search-sources';
-import { flattenTree, stringifyMarkdownElement } from '../markdown';
-import { type MarkdownElement, MarkdownElementType } from '../types';
+import { flattenTree, groupListItemsIntoChunks } from '../markdown';
 
 let processEmbeddings: (
   texts: string[],
@@ -151,47 +150,7 @@ export const indexDatasetSources = async ({
       if (!source.markdownTree) return { source, chunks: [] };
 
       const mdElements = flattenTree(source.markdownTree);
-
-      const chunks: string[] = [];
-      let currentListItems: MarkdownElement[] = [];
-      let isUnorderedList = false;
-
-      for (const element of mdElements) {
-        // If it's a list item
-        if (
-          element.type === MarkdownElementType.UnorderedListItem ||
-          element.type === MarkdownElementType.OrderedListItem
-        ) {
-          const isCurrentUnordered =
-            element.type === MarkdownElementType.UnorderedListItem;
-          if (
-            currentListItems.length > 0 &&
-            isCurrentUnordered !== isUnorderedList
-          ) {
-            // Stringify the entire list at once to maintain proper ordering
-            chunks.push(
-              currentListItems.map(stringifyMarkdownElement).join(''),
-            );
-            currentListItems = [];
-          }
-
-          isUnorderedList = isCurrentUnordered;
-          currentListItems.push(element);
-        } else {
-          if (currentListItems.length > 0) {
-            chunks.push(
-              currentListItems.map(stringifyMarkdownElement).join(''),
-            );
-            currentListItems = [];
-          }
-          chunks.push(stringifyMarkdownElement(element));
-        }
-      }
-
-      if (currentListItems.length > 0) {
-        chunks.push(currentListItems.map(stringifyMarkdownElement).join(''));
-      }
-
+      const chunks = groupListItemsIntoChunks(mdElements);
       const filteredChunks = chunks.filter((text) => text.length > 100);
 
       return { source, chunks: filteredChunks };

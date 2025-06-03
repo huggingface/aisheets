@@ -203,7 +203,7 @@ async function* generateCellsFromScratch({
       options: {
         accessToken: session.token,
       },
-      limit: limit - offset + existingCellsExamples.length,
+      limit: (limit - offset + existingCellsExamples.length) * 2,
     });
   }
 
@@ -358,6 +358,7 @@ async function singleCellGeneration({
       options: {
         accessToken: session.token,
       },
+      limit: 15,
     });
     args.sourcesContext = sourcesContext;
   }

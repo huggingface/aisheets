@@ -37,7 +37,6 @@ process.on('exit', () => {
 export async function scrapeUrl(
   url: string,
   maxCharsPerElem = DEFAULT_MAX_CHARS_PER_ELEMENT,
-  aggressiveFiltering = true,
 ): Promise<ScrapedPage | null> {
   try {
     logger.info(`Scraping URL: ${url}`);
@@ -93,31 +92,6 @@ export async function scrapeUrl(
 
         try {
           pageData = await timeout(page.evaluate(spatialParser), 2000);
-
-          if (aggressiveFiltering) {
-            logger.info(`Applying aggressive filtering for ${url}`);
-            const beforeCount = pageData.elements.length;
-            pageData.elements = pageData.elements.filter((elem) => {
-              const content = elem.content.join('');
-              const keep =
-                content.length > 50 &&
-                !content.match(/^\s*$/) &&
-                !content.match(
-                  /^(Copyright|All rights reserved|Terms of Use|Privacy Policy)/i,
-                );
-              if (!keep) {
-                logger.debug(
-                  `Filtered out element: ${content.substring(0, 50)}...`,
-                );
-              }
-              return keep;
-            });
-            const afterCount = pageData.elements.length;
-            logger.info(
-              `Filtered ${beforeCount - afterCount} elements (${beforeCount} -> ${afterCount})`,
-            );
-          }
-
           markdownTree = htmlToMarkdownTree(
             pageData.title || title,
             pageData.elements,
@@ -172,7 +146,6 @@ export async function scrapeUrl(
 export async function* scrapeUrlsBatch(
   urls: string[],
   maxConcurrent = MAX_CONCURRENT_SCRAPES,
-  aggressiveFiltering = true,
 ) {
   logger.info(`Starting parallel scraping of ${urls.length} URLs`);
 
@@ -185,11 +158,7 @@ export async function* scrapeUrlsBatch(
 
     const promises = chunk.map(async (url) => {
       try {
-        const result = await scrapeUrl(
-          url,
-          DEFAULT_MAX_CHARS_PER_ELEMENT,
-          aggressiveFiltering,
-        );
+        const result = await scrapeUrl(url, DEFAULT_MAX_CHARS_PER_ELEMENT);
         return { url, result };
       } catch (error) {
         logger.error(`Failed to scrape ${url}:`, error);

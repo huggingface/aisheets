@@ -14,11 +14,88 @@ export function chunkElements(
 ): MarkdownElement[] {
   if (!maxCharsPerElem || maxCharsPerElem <= 0) return elements;
 
-  return elements.flatMap((elem) => {
-    // Skip chunking for lists and headers
+  // First, group list items together
+  const groupedElements: MarkdownElement[] = [];
+  let currentListItems: MarkdownElement[] = [];
+  let currentListType: MarkdownElementType | null = null;
+  let currentHeader: string | null = null;
+
+  for (const elem of elements) {
+    // If this is a header, store it for the next list
+    if (elem.type === MarkdownElementType.Header) {
+      currentHeader = elem.content;
+      groupedElements.push(elem);
+      continue;
+    }
+
+    // If this is a list item
     if (
       elem.type === MarkdownElementType.UnorderedListItem ||
-      elem.type === MarkdownElementType.OrderedListItem ||
+      elem.type === MarkdownElementType.OrderedListItem
+    ) {
+      // If we were collecting a different type of list, flush it
+      if (currentListType && elem.type !== currentListType) {
+        if (currentListItems.length > 0) {
+          groupedElements.push({
+            type:
+              currentListType === MarkdownElementType.UnorderedListItem
+                ? MarkdownElementType.UnorderedList
+                : MarkdownElementType.OrderedList,
+            content: currentHeader
+              ? `${currentHeader}\n\n${currentListItems.map((item) => item.content).join('\n')}`
+              : currentListItems.map((item) => item.content).join('\n'),
+            parent: elem.parent,
+          });
+          currentListItems = [];
+          currentHeader = null;
+        }
+      }
+
+      // Start or continue collecting list items
+      currentListType = elem.type;
+      currentListItems.push(elem);
+    } else {
+      // If we were collecting a list, flush it first
+      if (currentListItems.length > 0) {
+        groupedElements.push({
+          type:
+            currentListType === MarkdownElementType.UnorderedListItem
+              ? MarkdownElementType.UnorderedList
+              : MarkdownElementType.OrderedList,
+          content: currentHeader
+            ? `${currentHeader}\n\n${currentListItems.map((item) => item.content).join('\n')}`
+            : currentListItems.map((item) => item.content).join('\n'),
+          parent: elem.parent,
+        });
+        currentListItems = [];
+        currentHeader = null;
+      }
+
+      // Add non-list element
+      groupedElements.push(elem);
+    }
+  }
+
+  // Don't forget to flush any remaining list items
+  if (currentListItems.length > 0) {
+    groupedElements.push({
+      type:
+        currentListType === MarkdownElementType.UnorderedListItem
+          ? MarkdownElementType.UnorderedList
+          : MarkdownElementType.OrderedList,
+      content: currentHeader
+        ? `${currentHeader}\n\n${currentListItems.map((item) => item.content).join('\n')}`
+        : currentListItems.map((item) => item.content).join('\n'),
+      parent: currentListItems[0].parent,
+    });
+  }
+
+  // Now chunk the grouped elements
+  return groupedElements.flatMap((elem) => {
+    // Skip chunking for lists and headers
+    if (
+      elem.type === MarkdownElementType.UnorderedList ||
+      elem.type === MarkdownElementType.OrderedList ||
       elem.type === MarkdownElementType.Header
     ) {
       return [elem] as MarkdownElement[];

@@ -26,7 +26,7 @@ export const SaveDataset = component$(() => {
   }
 
   return (
-    <Popover.Root flip={false} floating="right-start" gutter={14}>
+    <Popover.Root floating="right-start" gutter={14}>
       <Popover.Trigger
         class={cn(
           buttonVariants({ look: 'secondary', size: 'sm' }),

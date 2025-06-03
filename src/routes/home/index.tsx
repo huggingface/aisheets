@@ -1,10 +1,10 @@
 import { $, component$, useSignal, useStore } from '@builder.io/qwik';
 import { server$, useNavigate } from '@builder.io/qwik-city';
 import { cn } from '@qwik-ui/utils';
-import { LuEgg, LuGlobe } from '@qwikest/icons/lucide';
+import { LuArrowUp, LuEgg, LuGlobe } from '@qwikest/icons/lucide';
 import { Button, Textarea } from '~/components';
 import { Login } from '~/components/ui/login/Login';
-import { MainLogo, SecondLogo } from '~/components/ui/logo/logo';
+import { MainLogo } from '~/components/ui/logo/logo';
 import { BigTips } from '~/components/ui/tips/big-tips';
 import { Tips } from '~/components/ui/tips/tips';
 import { StepsStatus } from '~/features/autodataset/steps-status';
@@ -410,14 +410,14 @@ export default component$(() => {
                     <Button
                       key={example.title}
                       look="secondary"
-                      class="flex gap-2 text-xs px-2 text-primary-600 rounded-xl bg-transparent hover:bg-neutral-100 whitespace-nowrap"
+                      class="flex items-center gap-2 text-xs px-2 text-primary-600 rounded-xl bg-transparent hover:bg-neutral-100 whitespace-nowrap"
                       onClick$={() => {
                         prompt.value = example.prompt;
                         document.getElementById('prompt')?.focus();
                       }}
                     >
-                      <SecondLogo class="w-4" />
                       {example.title}
+                      <LuArrowUp class="text-neutral" />
                     </Button>
                   ))}
                 </div>

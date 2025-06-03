@@ -5,7 +5,7 @@ import {
   MODEL_ENDPOINT_URL,
   NUM_CONCURRENT_REQUESTS,
 } from '~/config';
-import { getDatasetColumns, updateProcess } from '~/services';
+import { updateProcess } from '~/services';
 import { MAX_SOURCE_SNIPPET_LENGTH } from '~/services/db/models/cell';
 import { renderInstruction } from '~/services/inference/materialize-prompt';
 import type {
@@ -88,9 +88,7 @@ export const generateCells = async function* ({
   if (!limit) {
     const columnIds = columnsReferences?.length
       ? columnsReferences
-      : await getDatasetColumns(column.dataset).then((columns) =>
-          columns.filter((col) => col.id !== column.id).map((col) => col.id),
-        );
+      : [column.id];
 
     const columnSizes = await Promise.all(
       columnIds.map((colId) => {

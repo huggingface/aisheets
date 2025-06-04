@@ -158,8 +158,8 @@ async function* generateCellsFromScratch({
   const { modelName, modelProvider, prompt, searchEnabled, useEndpointURL } =
     process;
 
-  // Sequential execution for fromScratch to accumulate examples
-  // Get all existing cells in the column to achieve diversity
+  // Get all existing cells in the column, excluding those not validated that will
+  // be regenerated
   const existingCellsExamples = column.cells
     .filter((cell) => cell.value)
     .filter(

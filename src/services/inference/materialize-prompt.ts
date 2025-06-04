@@ -51,6 +51,7 @@ function materializePromptFromScratch(
 
   const examplesTemplate = `# Previous responses
 Review these responses and **generate a new response that is NOT present in this list. Provide only ONE new, unique entry.**
+Use the different source contexts indistinctly to generate a new response that is not present in the list below. DO NOT show the reasoning behind your response, just the output.
 
 {{#examples}}
 - {{output}}

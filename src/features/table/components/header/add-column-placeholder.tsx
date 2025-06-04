@@ -76,11 +76,11 @@ export const TableAddCellHeaderPlaceHolder = component$(() => {
         hidden: lastColumnId.value === TEMPORAL_ID,
       })}
     >
-      <Popover.Root
-        gutter={8}
-        floating={isVisible() ? 'bottom-end' : 'bottom-start'}
-      >
-        <Tooltip text="Add column">
+      <Tooltip text="Add column">
+        <Popover.Root
+          gutter={8}
+          floating={isVisible() ? 'bottom-end' : 'bottom-start'}
+        >
           <Popover.Trigger
             ref={ref}
             class={cn(
@@ -93,41 +93,41 @@ export const TableAddCellHeaderPlaceHolder = component$(() => {
           >
             <LuPlus class="text-lg" />
           </Popover.Trigger>
-        </Tooltip>
 
-        <Popover.Panel
-          class="shadow-lg w-86 text-sm p-2"
-          onToggle$={() => {
-            isOpen.value = !isOpen.value;
-          }}
-        >
-          <div class="flex flex-col gap-0.5">
-            <ActionButton
-              label="Translate"
-              column="column"
-              onClick$={() => handleNewColumn('translate')}
-            />
-            <hr class="border-t border-slate-200 dark:border-slate-700" />
-            <ActionButton
-              label="Extract keywords from"
-              column="column"
-              onClick$={() => handleNewColumn('extractKeywords')}
-            />
-            <hr class="border-t border-slate-200 dark:border-slate-700" />
-            <ActionButton
-              label="Summarize"
-              column="column"
-              onClick$={() => handleNewColumn('summarize')}
-            />
-            <hr class="border-t border-slate-200 dark:border-slate-700" />
-            <ActionButton
-              label="Do something with"
-              column="column"
-              onClick$={() => handleNewColumn('custom')}
-            />
-          </div>
-        </Popover.Panel>
-      </Popover.Root>
+          <Popover.Panel
+            class="shadow-lg w-86 text-sm p-2"
+            onToggle$={() => {
+              isOpen.value = !isOpen.value;
+            }}
+          >
+            <div class="flex flex-col gap-0.5">
+              <ActionButton
+                label="Translate"
+                column="column"
+                onClick$={() => handleNewColumn('translate')}
+              />
+              <hr class="border-t border-slate-200 dark:border-slate-700" />
+              <ActionButton
+                label="Extract keywords from"
+                column="column"
+                onClick$={() => handleNewColumn('extractKeywords')}
+              />
+              <hr class="border-t border-slate-200 dark:border-slate-700" />
+              <ActionButton
+                label="Summarize"
+                column="column"
+                onClick$={() => handleNewColumn('summarize')}
+              />
+              <hr class="border-t border-slate-200 dark:border-slate-700" />
+              <ActionButton
+                label="Do something with"
+                column="column"
+                onClick$={() => handleNewColumn('custom')}
+              />
+            </div>
+          </Popover.Panel>
+        </Popover.Root>
+      </Tooltip>
     </th>
   );
 });

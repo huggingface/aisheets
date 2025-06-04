@@ -7,8 +7,9 @@ import {
   normalizeFeatureExtractionArgs,
   normalizeOptions,
 } from '~/services/inference/run-prompt-execution';
-import type { WebSource } from '~/services/websearch/search-sources';
-import { flattenTree, stringifyMarkdownElement } from '../markdown';
+import { flattenTree, groupListItemsIntoChunks } from '../markdown';
+import type { WebSource } from '../search-sources';
+import type { MarkdownElement } from '../types';
 
 let processEmbeddings: (
   texts: string[],
@@ -133,7 +134,7 @@ export const indexDatasetSources = async ({
   dataset,
   sources,
   options,
-  maxChunks = 100, // Default to 100 chunks to prevent long processing times
+  maxChunks = 100,
 }: {
   dataset: {
     id: string;
@@ -143,18 +144,17 @@ export const indexDatasetSources = async ({
   options: {
     accessToken: string;
   };
-  maxChunks?: number; // Optional parameter to limit total chunks
+  maxChunks?: number;
 }): Promise<number> => {
   const chunkedSources = sources
     .map((source) => {
       if (!source.markdownTree) return { source, chunks: [] };
 
       const mdElements = flattenTree(source.markdownTree);
-      const chunks = mdElements
-        .map(stringifyMarkdownElement)
-        .filter((text) => text.length > 200); // Skip chunks with 200 or fewer characters
+      const chunks = chunkMdElements({ mdElements });
+      const filteredChunks = chunks.filter((text) => text.length > 100);
 
-      return { source, chunks };
+      return { source, chunks: filteredChunks };
     })
     .filter(({ chunks }) => chunks.length > 0);
 
@@ -236,6 +236,7 @@ export const queryDatasetSources = async ({
   query,
   options,
   useHybridSearch = true,
+  limit = 5,
 }: {
   dataset: {
     id: string;
@@ -245,6 +246,7 @@ export const queryDatasetSources = async ({
     accessToken: string;
   };
   useHybridSearch?: boolean;
+  limit?: number;
 }): Promise<
   {
     text: string;
@@ -275,7 +277,7 @@ export const queryDatasetSources = async ({
         .fullTextSearch(query)
         .nearestTo(embeddings[0])
         .rerank(await lancedb.rerankers.RRFReranker.create())
-        .limit(10)
+        .limit(limit)
         .toArray();
 
       return results.map(
@@ -291,7 +293,7 @@ export const queryDatasetSources = async ({
     const results = await embeddingsIndex
       .search(embeddings[0], 'vector')
       .where(filterByDataset)
-      .limit(10)
+      .limit(limit)
       .toArray();
 
     return results.map((result: { text: string; source_uri: string }) => ({
@@ -325,4 +327,34 @@ export const checkSourceExists = async ({
     // This is safer than assuming it does exist and skipping it
     return false;
   }
+};
+
+const chunkMdElements = ({
+  mdElements,
+  minChunkSize = 512, // Default chunk size in characters
+}: {
+  mdElements: MarkdownElement[];
+  minChunkSize?: number;
+}): string[] => {
+  const chunks: string[] = [];
+
+  let currentChunk = '';
+  for (const chunk of groupListItemsIntoChunks(mdElements)) {
+    if (currentChunk.length + chunk.length < minChunkSize) {
+      currentChunk += chunk;
+      continue;
+    }
+
+    if (currentChunk.length >= minChunkSize) {
+      chunks.push(currentChunk);
+      currentChunk = '';
+    }
+
+    if (currentChunk) currentChunk += '\n\n';
+    currentChunk += chunk;
+  }
+
+  if (currentChunk) chunks.push(currentChunk);
+
+  return chunks;
 };

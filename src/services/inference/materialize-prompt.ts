@@ -1,5 +1,8 @@
 import mustache from 'mustache';
-import { EXAMPLES_PROMPT_CONTEXT_SIZE } from '~/config';
+import {
+  EXAMPLES_PROMPT_CONTEXT_SIZE,
+  SOURCES_PROMPT_CONTEXT_SIZE,
+} from '~/config';
 
 export interface Example {
   output: string;
@@ -44,9 +47,20 @@ function materializePromptFromScratch(
   }[],
   examples?: Example[],
 ): string {
-  const hasExamples = examples && examples.length > 0;
-
   const uniqueExamples = new Map<string, Example>();
+
+  const examplesTemplate = `# Previous responses
+Review these responses and **generate a new response that is NOT present in this list. Provide only ONE new, unique entry.**
+Use the different source contexts indistinctly to generate a new response that is not present in the list below. DO NOT show the reasoning behind your response, just the output.
+
+{{#examples}}
+- {{output}}
+{{/examples}}
+
+Generate your response without repeting any of the responses above.
+If it's not possible to add a new response, tell the user: No more items and the reason.
+`;
+
   if (examples) {
     for (const example of examples) {
       if (!uniqueExamples.has(example.output) || example.validated) {
@@ -56,52 +70,23 @@ function materializePromptFromScratch(
   }
   const dedupedExamples = Array.from(uniqueExamples.values());
 
-  const formattedExamples = formatExamples(
-    dedupedExamples,
-    `
-{{#examples}}
-- {{output}}
-{{/examples}}
-`,
-  );
-
   return mustache.render(
     `
-You are a rigorous text-generation engine. Generate only the requested output format, with no explanations following the user instruction. Prioritize originality and diversity.
-
-{{#hasExamples}}
-## Avoid duplication
-
-Carefully review the existing responses and **generate a new response that is NOT present in this list. Provide only ONE new, unique entry.**
-
-### Previous responses
-{{formattedExamples}}
-
-{{/hasExamples}}
+You are a rigorous text-generation engine. Generate only the requested output format, with no explanations following the user instruction and avoiding repetition of the existing responses at the end of the prompt.
 
 # User Instruction
 {{instruction}}
 
-{{#hasSourcesContext}}
-## Sources
-Use the web sources below to accurately follow the user instruction. If the information is available in the source, you MUST NOT make up the requested information but instead extract and/or process the provided sources to ensure a truthful and accurate response. If the user instruction is about real-world facts or knowledge and can't be accurately fulfilled with the available sources, you can respond if you're sure about factuality but you have not used information provided in the sources.
-## Source extract
-{{#sourcesContext}}
-- {{source_uri}}: {{text}}
-{{/sourcesContext}}
-{{/hasSourcesContext}}
+{{sourcesSection}}
 
-## Output Format
-Generate **only** the output requested in the user instruction. No additional introductions, explanations, or labels. 
+{{examplesSection}}
 
-## Your response
+# Your response
 `,
     {
       instruction,
-      formattedExamples: formattedExamples,
-      hasExamples,
-      hasSourcesContext: sourcesContext && sourcesContext.length > 0,
-      sourcesContext: sourcesContext,
+      examplesSection: examplesSection(dedupedExamples, examplesTemplate),
+      sourcesSection: sourcesSection(sourcesContext),
     },
     undefined,
     { escape: escapeValues },
@@ -118,53 +103,30 @@ function materializePromptFromData(
   examples?: Example[],
   renderInstruction = true,
 ): string {
-  const hasExamples = examples && examples.length > 0;
+  const examplesTemplate = `# Examples
+The following are correct, accurate example outputs with respect to the user instruction:
 
-  const formattedExamples = formatExamples(
-    examples?.map((example) => ({
-      ...example,
-      inputs: Object.entries(example.inputs)
-        .map(([col, val]) => `${col}: ${val}`)
-        .join('\n'),
-    })),
-    `
 {{#examples}}
 ## Example
-
-**Input**:
+### Input
 {{inputs}}
-
-**Output**:
+### Output
 {{output}}
-  
 {{/examples}}
-`,
-  );
+`;
 
   return mustache.render(
     `
-You are a rigorous, intelligent data-processing engine. Generate only the requested output format, with no explanations following the user instruction. You might be provided with positive, accurate examples of how the user instruction must be completed.
+You are a rigorous, intelligent data-processing engine. Generate only the requested response format, with no explanations following the user instruction. You might be provided with positive, accurate examples of how the user instruction must be completed.
 
-{{#hasExamples}}
-# Examples
-The following are correct, accurate example outputs with respect to the user instruction:
+{{examplesSection}}
 
-{{{formattedExamples}}}
-
-{{/hasExamples}}
 # User instruction
 {{instruction}}
 
-{{#hasSourcesContext}}
-# Sources
-Use the web sources below to accurately follow the user instruction. If the information is available in the source, you MUST NOT make up the requested information but instead extract and/or process the provided sources to ensure a truthful and accurate response. If the user instruction is about real-world facts or knowledge and can't be accurately fulfilled with the available sources, you can respond if you're sure about factuality but you have not used information provided in the sources.
-## Source extract
-{{#sourcesContext}}
-- {{source_uri}}: {{text}}
-{{/sourcesContext}}
-{{/hasSourcesContext}}
+{{sourcesSection}}
 
-# Output
+# Your response
     `,
     {
       instruction: renderInstruction
@@ -172,10 +134,16 @@ Use the web sources below to accurately follow the user instruction. If the info
             escape: escapeValues,
           })
         : instruction,
-      hasExamples,
-      formattedExamples,
-      hasSourcesContext: sourcesContext && sourcesContext.length > 0,
-      sourcesContext: sourcesContext,
+      examplesSection: examplesSection(
+        examples?.map((example) => ({
+          ...example,
+          inputs: Object.entries(example.inputs)
+            .map(([col, val]) => `${col}: ${val}`)
+            .join('\n'),
+        })),
+        examplesTemplate,
+      ),
+      sourcesSection: sourcesSection(sourcesContext),
     },
   );
 }
@@ -197,7 +165,7 @@ const escapeValues = (value: any): string => {
   return value;
 };
 
-const formatExamples = (
+const examplesSection = (
   examples: Example[] | undefined,
   template: string,
 ): string => {
@@ -221,4 +189,43 @@ const formatExamples = (
   );
 
   return examplesText.slice(0, EXAMPLES_PROMPT_CONTEXT_SIZE);
+};
+
+const sourcesSection = (
+  sources: { source_uri: string; text: string }[] | undefined,
+): string => {
+  if (!sources || sources.length === 0) return '';
+
+  const uniqueSources = new Map<string, { source_uri: string; text: string }>();
+  for (const source of sources) {
+    const key = (source.source_uri + source.text).toLowerCase();
+    if (!uniqueSources.has(key)) {
+      uniqueSources.set(key, source);
+    }
+  }
+
+  if (uniqueSources.size === 0) return '';
+
+  const sourcesText = mustache.render(
+    `# Sources
+Use the web sources below to accurately follow the user instruction. If the information is available in the source, you MUST NOT make up the requested information but instead extract and/or process the provided sources to ensure a truthful and accurate response. If the user instruction is about real-world facts or knowledge and can't be accurately fulfilled with the available sources, you can respond if you're sure about factuality but you have not used information provided in the sources.
+
+## Sources extract
+{{#sourcesContext}}
+### URI
+{{source_uri}}
+### extract
+{{text}}
+{{/sourcesContext}}
+`,
+    {
+      sourcesContext: Array.from(uniqueSources.values()),
+    },
+    undefined,
+    {
+      escape: escapeValues,
+    },
+  );
+
+  return sourcesText.slice(0, SOURCES_PROMPT_CONTEXT_SIZE);
 };

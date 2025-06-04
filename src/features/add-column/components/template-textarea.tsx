@@ -205,7 +205,7 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
           ref={bracketTrigger}
           look="headless"
           hideIcon
-          class={`px-6 absolute border border-neutral-300 bg-neutral-100 p-2 rounded shadow-lg ${referenceVariables.variables.length === 0 ? 'invisible' : ''}`}
+          class={`z-50 px-6 absolute border border-neutral-300 bg-neutral-100 p-2 rounded shadow-lg ${referenceVariables.variables.length === 0 ? 'invisible' : ''}`}
           style={{
             left: '8px',
             top: `${referenceVariables.cursor.position}px`,

@@ -203,6 +203,20 @@ export const EXAMPLES_PROMPT_CONTEXT_SIZE: number =
       DEFAULT_EXAMPLES_PROMPT_CONTEXT_SIZE,
   ) || DEFAULT_EXAMPLES_PROMPT_CONTEXT_SIZE;
 
+/**
+ * This constant defines the maximum number of characters allowed in the context of the sources prompt.
+ * If the sources context exceeds this limit, it will be truncated.
+ *
+ * This is important for performance and to avoid exceeding the token limit of the model.
+ * Default value: 61440 (16k tokens)
+ */
+const DEFAULT_SOURCES_PROMPT_CONTEXT_SIZE = 61440; // 16k tokens
+export const SOURCES_PROMPT_CONTEXT_SIZE: number =
+  Number(
+    process.env.SOURCES_PROMPT_CONTEXT_SIZE ??
+      DEFAULT_SOURCES_PROMPT_CONTEXT_SIZE,
+  ) || DEFAULT_SOURCES_PROMPT_CONTEXT_SIZE;
+
 export const GOOGLE_CLIENT_ID: string | undefined =
   process.env.GOOGLE_CLIENT_ID;
 

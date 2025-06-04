@@ -5,7 +5,7 @@ import {
   MODEL_ENDPOINT_URL,
   NUM_CONCURRENT_REQUESTS,
 } from '~/config';
-import { getDatasetColumns, updateProcess } from '~/services';
+import { updateProcess } from '~/services';
 import { MAX_SOURCE_SNIPPET_LENGTH } from '~/services/db/models/cell';
 import { renderInstruction } from '~/services/inference/materialize-prompt';
 import type {
@@ -88,9 +88,7 @@ export const generateCells = async function* ({
   if (!limit) {
     const columnIds = columnsReferences?.length
       ? columnsReferences
-      : await getDatasetColumns(column.dataset).then((columns) =>
-          columns.filter((col) => col.id !== column.id).map((col) => col.id),
-        );
+      : [column.id];
 
     const columnSizes = await Promise.all(
       columnIds.map((colId) => {
@@ -160,6 +158,20 @@ async function* generateCellsFromScratch({
   const { modelName, modelProvider, prompt, searchEnabled, useEndpointURL } =
     process;
 
+  // Get all existing cells in the column, excluding those not validated that will
+  // be regenerated
+  const existingCellsExamples = column.cells
+    .filter((cell) => cell.value)
+    .filter(
+      (cell) =>
+        cell.validated || !(cell.idx >= offset && cell.idx < offset + limit),
+    )
+    .map((cell) => ({
+      output: cell.value,
+      validated: cell.validated,
+      inputs: {},
+    }));
+
   let sourcesContext = undefined;
   if (searchEnabled) {
     // 1. Build web search query from prompt
@@ -187,10 +199,11 @@ async function* generateCellsFromScratch({
     // 3. Search for relevant results
     sourcesContext = await queryDatasetSources({
       dataset: column.dataset,
-      query: prompt,
+      query: queries[0],
       options: {
         accessToken: session.token,
       },
+      limit: (limit - offset + existingCellsExamples.length) * 2,
     });
   }
 
@@ -201,16 +214,6 @@ async function* generateCellsFromScratch({
         snippet: source.text?.slice(0, MAX_SOURCE_SNIPPET_LENGTH) || '',
       }))
     : undefined;
-
-  // Sequential execution for fromScratch to accumulate examples
-  // Get all existing cells in the column to achieve diversity
-  const existingCellsExamples = column.cells
-    .filter((cell) => cell.value)
-    .map((cell) => ({
-      output: cell.value,
-      validated: cell.validated,
-      inputs: {},
-    }));
 
   const validatedIdxs = validatedCells?.map((cell) => cell.idx);
 
@@ -351,10 +354,11 @@ async function singleCellGeneration({
     // 3. Search for relevant results
     sourcesContext = await queryDatasetSources({
       dataset: column.dataset,
-      query: renderedInstruction,
+      query: queries[0],
       options: {
         accessToken: session.token,
       },
+      limit: 15,
     });
     args.sourcesContext = sourcesContext;
   }

@@ -1,10 +1,10 @@
 import { $, component$, useSignal, useStore } from '@builder.io/qwik';
 import { server$, useNavigate } from '@builder.io/qwik-city';
 import { cn } from '@qwik-ui/utils';
-import { LuEgg, LuGlobe } from '@qwikest/icons/lucide';
+import { LuArrowUp, LuEgg, LuGlobe } from '@qwikest/icons/lucide';
 import { Button, Textarea } from '~/components';
 import { Login } from '~/components/ui/login/Login';
-import { MainLogo, SecondLogo } from '~/components/ui/logo/logo';
+import { MainLogo } from '~/components/ui/logo/logo';
 import { BigTips } from '~/components/ui/tips/big-tips';
 import { Tips } from '~/components/ui/tips/tips';
 import { StepsStatus } from '~/features/autodataset/steps-status';
@@ -315,11 +315,10 @@ export default component$(() => {
           {session.value.anonymous ? <Login /> : <Username />}
         </div>
       </div>
-      <div class="w-full min-h-screen flex flex-col items-center justify-center">
-        <div class="flex flex-col justify-between min-h-screen w-full items-center">
-          {/* Show top section only when not loading */}
+      <div class="w-full flex flex-col items-center justify-center">
+        <div class="flex flex-col w-full items-center gap-5">
           {!isLoading.value && (
-            <div class="flex flex-col items-center justify-center space-y-4 mb-6">
+            <div class="flex flex-col items-center justify-center space-y-4">
               <MainLogo class="w-[70px] h-[70px]" />
               <h1 class="text-neutral-600 text-2xl font-semibold">
                 Design your data in a sheet
@@ -334,7 +333,6 @@ export default component$(() => {
               preventdefault:submit
               onSubmit$={onSubmitHandler}
             >
-              {/* Status/progress section */}
               <StepsStatus
                 isLoading={isLoading.value}
                 currentStep={currentStep.value}
@@ -378,7 +376,7 @@ export default component$(() => {
                       type="button"
                       look="secondary"
                       class={cn(
-                        'flex px-[10px] py-[8px] gap-[10px] bg-white text-neutral-600 hover:bg-neutral-100 h-[30px] rounded-[8px]',
+                        'flex px-[10px] py-[8px] gap-[10px] bg-white text-primary-600 hover:bg-neutral-100 h-[30px] rounded-[8px]',
                         {
                           'border-primary-100 outline-primary-100 bg-primary-50 hover:bg-primary-50 text-primary-500 hover:text-primary-400':
                             searchOnWeb.value,
@@ -405,7 +403,6 @@ export default component$(() => {
               </div>
             </form>
 
-            {/* Show examples and drag-and-drop only when not loading */}
             {!isLoading.value && (
               <div class="flex flex-col items-center justify-center space-y-8 mt-8">
                 <div class="w-[700px] flex flex-row flex-wrap justify-start items-center gap-2">
@@ -413,14 +410,14 @@ export default component$(() => {
                     <Button
                       key={example.title}
                       look="secondary"
-                      class="flex gap-2 text-xs px-2 rounded-xl bg-transparent hover:bg-neutral-100 whitespace-nowrap"
+                      class="flex items-center gap-2 text-xs px-2 text-primary-600 rounded-xl bg-transparent hover:bg-neutral-100 whitespace-nowrap"
                       onClick$={() => {
                         prompt.value = example.prompt;
                         document.getElementById('prompt')?.focus();
                       }}
                     >
-                      <SecondLogo class="w-4" />
                       {example.title}
+                      <LuArrowUp class="text-neutral" />
                     </Button>
                   ))}
                 </div>

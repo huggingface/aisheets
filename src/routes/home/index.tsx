@@ -321,7 +321,7 @@ export default component$(() => {
             <div class="flex flex-col items-center justify-center space-y-4">
               <MainLogo class="w-[70px] h-[70px]" />
               <h1 class="text-neutral-600 text-2xl font-semibold">
-                Design your data in a sheet
+                AI-powered spreadsheets
               </h1>
               <h2 class="text-neutral-500 font-medium">From a simple idea</h2>
             </div>

@@ -70,7 +70,7 @@
   "dependencies": {
     "@duckdb/node-api": "1.2.2-alpha.19",
     "@huggingface/hub": "^1.1.2",
-    "@huggingface/inference": "^3.12.1",
+    "@huggingface/inference": "^3.15.0",
     "@huggingface/tasks": "^0.19.5",
     "@huggingface/transformers": "^3.5.1",
     "@lancedb/lancedb": "^0.18.2",

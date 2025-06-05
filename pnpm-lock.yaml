@@ -12,8 +12,8 @@ importers:
         specifier: 1.2.2-alpha.19
         version: 1.2.2-alpha.19
       '@huggingface/hub':
-        specifier: ^1.1.2
-        version: 1.1.2
+        specifier: ~2.0.0
+        version: 2.0.2
       '@huggingface/inference':
         specifier: ^3.15.0
         version: 3.15.0
@@ -457,8 +457,8 @@ packages:
   '@gar/promisify@1.1.3':
     resolution: {integrity: sha512-k2Ty1JcVojjJFwrg/ThKi2ujJ7XNLYaFGNB/bWT9wGR+oSMJHMa5w+CUq6p/pVrKeNNgA7pCqEcjSnHVoqJQFw==}
 
-  '@huggingface/hub@1.1.2':
-    resolution: {integrity: sha512-Jf4GhvVj9ABDw4Itb3BV1T7f22iewuZva476qTicQ4kOTbosuUuFDhsVH7ZH6rVNgg20Ll9kaNBF5CXjySIT+w==}
+  '@huggingface/hub@2.0.2':
+    resolution: {integrity: sha512-2ii3hE+K/mwUOyecm9rW6diBfsxNUDUHrNWJzqeFgMAWJ2ShAICxF9HtvYUKK7y0FS8Xnq6F1W+tRZYbnW0PcQ==}
     engines: {node: '>=18'}
 
   '@huggingface/inference@3.15.0':
@@ -472,9 +472,6 @@ packages:
   '@huggingface/jinja@0.5.0':
     resolution: {integrity: sha512-Ptc03/jGRiYRoi0bUYKZ14MkDslsBRT24oxmsvUlfYrvQMldrxCevhPnT+hfX8awKTT8/f/0ZBBWldoeAcMHdQ==}
     engines: {node: '>=18'}
-
-  '@huggingface/tasks@0.18.12':
-    resolution: {integrity: sha512-hUEYhXJzJCUhLSBNglW+Sji5fuzMnpBimp3kbdcGor+MaN9xb+qrcLnMC7X8aOcZaZdCErwYYIqz2oSP2EM4Bg==}
 
   '@huggingface/tasks@0.19.11':
     resolution: {integrity: sha512-oBhSgVlg7Pp643MsH8BiI3OAXIMJNxdSiMtv4mApRZV8dmAz8oasKhg6CVKIplO7vAO7F6dkmMn4bYM64I2A9w==}
@@ -4156,9 +4153,9 @@ snapshots:
   '@gar/promisify@1.1.3':
     optional: true
 
-  '@huggingface/hub@1.1.2':
+  '@huggingface/hub@2.0.2':
     dependencies:
-      '@huggingface/tasks': 0.18.12
+      '@huggingface/tasks': 0.19.11
 
   '@huggingface/inference@3.15.0':
     dependencies:
@@ -4168,8 +4165,6 @@ snapshots:
   '@huggingface/jinja@0.4.1': {}
 
   '@huggingface/jinja@0.5.0': {}
-
-  '@huggingface/tasks@0.18.12': {}
 
   '@huggingface/tasks@0.19.11': {}
 

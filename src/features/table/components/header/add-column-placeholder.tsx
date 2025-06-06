@@ -9,7 +9,7 @@ import { cn } from '@qwik-ui/utils';
 import { LuPlus } from '@qwikest/icons/lucide';
 import { Button, Popover, buttonVariants } from '~/components';
 import { Tooltip } from '~/components/ui/tooltip/tooltip';
-import { useExecution } from '~/features/add-column';
+import { hasBlobContent, useExecution } from '~/features/add-column';
 import { TEMPORAL_ID, useColumnsStore } from '~/state';
 
 const COLUMN_PROMPTS = {
@@ -43,7 +43,7 @@ export const TableAddCellHeaderPlaceHolder = component$(() => {
   const ref = useSignal<HTMLElement>();
   const isOpen = useSignal(false);
   const { open } = useExecution();
-  const { firstColumn, columns, addTemporalColumn } = useColumnsStore();
+  const { columns, addTemporalColumn } = useColumnsStore();
 
   const lastColumnId = useComputed$(
     () => columns.value[columns.value.length - 1].id,
@@ -54,12 +54,20 @@ export const TableAddCellHeaderPlaceHolder = component$(() => {
 
     await addTemporalColumn();
 
-    const initialPrompt = COLUMN_PROMPTS[promptType].replace(
-      '{{REPLACE_ME}}',
-      `{{${firstColumn.value.name}}}`,
-    );
+    const validColumns = columns.value.filter((c) => !hasBlobContent(c));
 
-    open(TEMPORAL_ID, 'add', initialPrompt);
+    const firstValidColumnToReference = validColumns[0];
+
+    if (firstValidColumnToReference) {
+      const initialPrompt = COLUMN_PROMPTS[promptType].replace(
+        '{{REPLACE_ME}}',
+        `{{${firstValidColumnToReference.name}}}`,
+      );
+
+      open(TEMPORAL_ID, 'add', initialPrompt);
+    } else {
+      open(TEMPORAL_ID, 'add', '');
+    }
   });
 
   const isVisible = () => {

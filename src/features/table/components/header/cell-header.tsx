@@ -84,6 +84,7 @@ export const TableCellHeader = component$<{ column: Column }>(({ column }) => {
   );
 });
 
+//Refactor, duplicated
 export const hasBlobContent = (column: Column): boolean => {
   return column.type.includes('BLOB');
 };

@@ -43,7 +43,6 @@ export const useExecution = () => {
         mode: Execution['mode'],
         prompt?: string,
       ) => {
-        console.log('open execution', columnId, mode, prompt);
         context.value = { columnId, mode, prompt };
       },
     ),

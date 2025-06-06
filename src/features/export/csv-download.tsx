@@ -86,6 +86,7 @@ export const CSVDownload = component$<{ showText?: boolean; toolTip?: string }>(
   },
 );
 
+//Refactor, duplicated
 const hasBlobContent = (column: Column): boolean => {
   return column.type.includes('BLOB');
 };

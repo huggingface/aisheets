@@ -39,6 +39,7 @@ const loadCell = server$(async (cellId: string) => {
   };
 });
 
+//Refactor, duplicated
 export const hasBlobContent = (column: Column | undefined): boolean => {
   return column?.type?.includes('BLOB') ?? false;
 };

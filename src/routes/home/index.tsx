@@ -436,7 +436,7 @@ export default component$(() => {
           </div>
         </div>
       </div>
-      <Tips>
+      <Tips id="home-tips">
         <p>
           <b>Write a good prompt:</b> Be detailed about the topic and content
           you want.

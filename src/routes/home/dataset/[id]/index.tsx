@@ -30,7 +30,7 @@ export default component$(() => {
           </div>
         </div>
         <Table />
-        <Tips>
+        <Tips id="dataset-tips">
           <p>
             <b>Drag to generate:</b> Click and drag down from a cell's dot
             handle to generate content for multiple cells at once.

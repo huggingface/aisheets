@@ -204,8 +204,8 @@ export const ExecutionForm = component$<SidebarProps>(
       updateColumn(column);
 
       try {
-        const modelName = selectedModelId.value!;
-        const modelProvider = selectedProvider.value!;
+        const modelName = selectedModelId.value;
+        const modelProvider = selectedProvider.value;
 
         const columnToSave = {
           ...column,

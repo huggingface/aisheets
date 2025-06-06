@@ -23,15 +23,15 @@ let processEmbeddings: (
 const { provider, endpointUrl, model } = DEFAULT_EMBEDDING_MODEL;
 
 if (provider === undefined && endpointUrl === undefined) {
-  const extractor = await pipeline('feature-extraction', model);
-
   processEmbeddings = async (
     texts: string[],
     options: {
       accessToken: string;
     },
   ): Promise<number[][]> => {
+    const extractor = await pipeline('feature-extraction', model);
     const results = await extractor(texts, { pooling: 'cls' });
+
     return results.tolist();
   };
 } else {

@@ -5,15 +5,22 @@ import { HTooltipRoot } from '~/components/ui/tooltip/headless/tooltip-root';
 import { HTooltipTrigger } from '~/components/ui/tooltip/headless/tooltip-trigger';
 
 type TooltipProps = {
+  open?: boolean;
   text: string;
   floating?: Parameters<typeof Popover.Root>['0']['floating'];
   gutter?: number;
 } & PropsOf<'div'>;
 
 export const Tooltip = component$<TooltipProps>(
-  ({ text, floating, gutter = 8, ...props }) => {
+  ({ text, floating, gutter = 8, open = false, ...props }) => {
     return (
-      <HTooltipRoot gutter={gutter} flip placement={floating}>
+      <HTooltipRoot
+        gutter={gutter}
+        flip
+        placement={floating}
+        open={open}
+        {...props}
+      >
         <HTooltipTrigger>
           <Slot />
         </HTooltipTrigger>

@@ -456,6 +456,10 @@ export const TableBody = component$(() => {
                                 }
                               >
                                 <Tooltip
+                                  open={
+                                    firstColumn.value.id === cell.column?.id &&
+                                    item.index === 4
+                                  }
                                   text="Drag down to fill cells"
                                   gutter={1}
                                   floating="right-start"

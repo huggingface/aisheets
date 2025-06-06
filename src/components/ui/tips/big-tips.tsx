@@ -1,13 +1,9 @@
-import { Slot, component$, useSignal, useVisibleTask$ } from '@builder.io/qwik';
+import { Slot, component$, useSignal } from '@builder.io/qwik';
 import { LuArrowUpRight, LuX } from '@qwikest/icons/lucide';
 import { Button } from '~/components/ui/button/button';
 
 export const BigTips = component$(() => {
   const isVisible = useSignal(false);
-
-  useVisibleTask$(() => {
-    isVisible.value = localStorage.getItem('tips') !== 'false';
-  });
 
   return (
     <div class="z-[51]">

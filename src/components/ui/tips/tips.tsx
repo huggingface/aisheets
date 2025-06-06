@@ -2,11 +2,15 @@ import { Slot, component$, useSignal, useVisibleTask$ } from '@builder.io/qwik';
 import { LuLifeBuoy, LuX } from '@qwikest/icons/lucide';
 import { Button } from '~/components/ui/button/button';
 
-export const Tips = component$(() => {
+interface TipsProps {
+  id: string;
+}
+
+export const Tips = component$<TipsProps>(({ id }) => {
   const isVisible = useSignal(false);
 
   useVisibleTask$(() => {
-    isVisible.value = localStorage.getItem('tips') !== 'false';
+    isVisible.value = localStorage.getItem(`tips_${id}`) !== 'false';
   });
 
   return (
@@ -20,7 +24,7 @@ export const Tips = component$(() => {
               onClick$={() => {
                 isVisible.value = false;
 
-                localStorage.setItem('tips', 'false');
+                localStorage.setItem(`tips_${id}`, 'false');
               }}
             >
               <LuX class="text-lg text-neutral" />

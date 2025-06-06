@@ -427,59 +427,58 @@ export const TableCell = component$<{
           ) : (
             <>
               {!isStatic.value && (
-                <div class="absolute z-10 top-0 right-0 flex gap-0.5">
-                  <Button
-                    look="ghost"
-                    hover={false}
-                    size="sm"
-                    class={cn(
-                      'opacity-0 group-hover:opacity-100 transition-opacity visible',
-                      {
-                        'hover:bg-gray-100 text-gray-400': true,
-                        '!opacity-0': !cell.id,
-                        hidden: !cell.value || !cell.sources?.length,
-                      },
-                    )}
-                    onClick$={(e) => {
-                      e.stopPropagation();
-                      if (cell.sources?.length) {
-                        window.dispatchEvent(
-                          new CustomEvent('closeAllSourcesModals'),
-                        );
-                        showSourcesModal.value = true;
-                      }
-                    }}
-                  >
-                    <Tooltip text="View sources" class="text-left">
-                      <LuGlobe class="text-sm" />
-                    </Tooltip>
-                  </Button>
-                  <Button
-                    look="ghost"
-                    hover={false}
-                    size="sm"
-                    class={cn(
-                      'opacity-0 group-hover:opacity-100 transition-opacity visible',
-                      {
-                        'bg-green-50/50 text-green-400 hover:bg-green-100':
-                          cell.validated,
-                        'hover:bg-gray-100 text-gray-400': !cell.validated,
-                        '!opacity-0': !cell.id,
-                        hidden: !cell.value,
-                      },
-                    )}
-                    onClick$={(e) => {
-                      e.stopPropagation();
-                      onValidateCell(originalValue.value, !cell.validated);
-                    }}
-                  >
-                    <Tooltip
-                      text="Mark as correct to improve generation"
-                      class="break-words w-48 text-left"
+                <div class="absolute w-full z-10 top-0 right-0">
+                  <div class="flex items-center justify-end w-full gap-1 h-fit pr-1">
+                    <Button
+                      look="ghost"
+                      hover={false}
+                      size="sm"
+                      class={cn(
+                        'opacity-0 group-hover:opacity-100 transition-opacity visible',
+                        {
+                          'hover:bg-gray-100 text-gray-400': true,
+                          '!opacity-0': !cell.id,
+                          hidden: !cell.value || !cell.sources?.length,
+                        },
+                      )}
+                      onClick$={(e) => {
+                        e.stopPropagation();
+                        if (cell.sources?.length) {
+                          window.dispatchEvent(
+                            new CustomEvent('closeAllSourcesModals'),
+                          );
+                          showSourcesModal.value = true;
+                        }
+                      }}
                     >
-                      <LuThumbsUp class="text-sm" />
-                    </Tooltip>
-                  </Button>
+                      <Tooltip text="View sources">
+                        <LuGlobe class="text-sm" />
+                      </Tooltip>
+                    </Button>
+                    <Button
+                      look="ghost"
+                      hover={false}
+                      size="sm"
+                      class={cn(
+                        'opacity-0 group-hover:opacity-100 transition-opacity visible',
+                        {
+                          'bg-green-50/50 text-green-400 hover:bg-green-100':
+                            cell.validated,
+                          'hover:bg-gray-100 text-gray-400': !cell.validated,
+                          '!opacity-0': !cell.id,
+                          hidden: !cell.value,
+                        },
+                      )}
+                      onClick$={(e) => {
+                        e.stopPropagation();
+                        onValidateCell(originalValue.value, !cell.validated);
+                      }}
+                    >
+                      <Tooltip text="Mark as correct to improve generation">
+                        <LuThumbsUp class="text-sm" />
+                      </Tooltip>
+                    </Button>
+                  </div>
                 </div>
               )}
               <div class="h-full mt-2 p-4">

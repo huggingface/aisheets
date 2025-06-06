@@ -22,3 +22,15 @@ export const escapeValue = (value: any) => {
 
   return value;
 };
+
+export const readFuncFromFile = (file: string) => {
+  switch (file.split('.').pop()?.toLowerCase()) {
+    case 'csv':
+    case 'tsv':
+      return `read_csv('${file}', ignore_errors=true, auto_detect=true)`;
+    case 'jsonl':
+      return `read_json('${file}', ignore_errors=true, auto_detect=true)`;
+    default:
+      return `'${file}'`;
+  }
+};

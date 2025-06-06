@@ -66,7 +66,7 @@ export const CSVDownload = component$<{ showText?: boolean; toolTip?: string }>(
         disabled={downloading.value || !canDownloadCSV.value}
       >
         {toolTip && <Tooltip text="Download as CSV" floating="right-start" />}
-        <div class="w-full flex items-center justify-start hover:bg-neutral-100 gap-2 p-1 rounded-none rounded-bl-md rounded-br-md">
+        <div class="w-full flex items-center justify-start hover:bg-neutral-100 gap-2 p-2 rounded-none rounded-bl-md rounded-br-md">
           <LuDownload class="w-4 h-4" />
           {showText && 'Download CSV'}
         </div>

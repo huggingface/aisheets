@@ -8,7 +8,9 @@ import {
   useContextProvider,
   useId,
   useSignal,
+  useVisibleTask$,
 } from '@builder.io/qwik';
+import { usePopover } from '@qwik-ui/headless';
 import { Popover } from '~/components/ui/popover/popover';
 import {
   type TooltipContext,
@@ -66,6 +68,7 @@ export const HTooltipRoot = component$((props: TooltipProps) => {
     gutter,
     delayDuration = 0,
     flip,
+    open,
     onOpenChange$,
     ...rest
   } = props;
@@ -86,6 +89,18 @@ export const HTooltipRoot = component$((props: TooltipProps) => {
   };
 
   useContextProvider(TooltipContextId, context);
+
+  const { showPopover, hidePopover } = usePopover(context.localId);
+
+  useVisibleTask$(() => {
+    if (open) {
+      setTimeout(() => {
+        showPopover();
+      }, 100);
+    } else {
+      hidePopover();
+    }
+  });
 
   return (
     <Popover.Root

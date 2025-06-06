@@ -42,9 +42,15 @@ export const INFERENCE_TIMEOUT = 90000;
  *
  * This constant defines the number of concurrent requests to be sent to the endpoint while generating cells
  *
- * Default value: 4, max. number of concurrent requests 8
+ * Default value: 4, max. number of concurrent requests
  */
-export const NUM_CONCURRENT_REQUESTS = 4;
+const DEFAULT_CONCURRENT_REQUESTS = 5;
+const DEFAULT_MAX_CONCURRENT_REQUESTS = 10;
+
+export const NUM_CONCURRENT_REQUESTS = Math.min(
+  Number(process.env.NUM_CONCURRENT_REQUESTS || DEFAULT_CONCURRENT_REQUESTS),
+  DEFAULT_MAX_CONCURRENT_REQUESTS,
+);
 
 /**
  * The Serper API key used for web searches.
@@ -65,6 +71,26 @@ export const DEFAULT_MODEL_PROVIDER: string =
  */
 export const DEFAULT_MODEL: string =
   process.env.DEFAULT_MODEL ?? 'meta-llama/Llama-3.3-70B-Instruct';
+
+/**
+ * The URL of the model endpoint for inference operations.
+ * This value is retrieved from the environment variable `MODEL_ENDPOINT_URL`.
+ * If this value is defined, it will be used to send requests and the default model and provider will be ignored.
+ * Otherwise, the default model and provider will be used.
+ * Default value: undefined
+ */
+export const MODEL_ENDPOINT_URL: string | undefined =
+  process.env.MODEL_ENDPOINT_URL;
+
+/**
+ * The name of the model endpoint for inference operations.
+ *
+ * This value is retrieved from the environment variable `MODEL_ENDPOINT_NAME`.
+ *
+ * Default value: 'unknown'
+ */
+export const MODEL_ENDPOINT_NAME: string =
+  process.env.MODEL_ENDPOINT_NAME ?? 'unknown';
 
 /**
  * List of model IDs that should be excluded from the model list.
@@ -97,13 +123,65 @@ export const EXCLUDED_MODELS: string[] = process.env.EXCLUDED_MODELS?.split(
 ];
 
 /**
+ * The model ID for the embedding model.
+ *
+ * This value is retrieved from the environment variable `EMBEDDING_MODEL`.
+ *
+ *
+ * Default value: 'Xenova/all-MiniLM-L6-v2'
+ */
+export const EMBEDDING_MODEL_ID: string =
+  process.env.EMBEDDING_MODEL || 'Xenova/all-MiniLM-L6-v2';
+
+/**
+ * The dimension of the embedding model.
+ *
+ * This value is retrieved from the environment variable `EMBEDDING_DIM`.
+ *
+ * The embedding dimension is the size of the vector representation of the input data. It must be
+ * consistent with the model used for embedding.
+ *
+ * Default value: 384 (See default model: 'Xenova/all-MiniLM-L6-v2')
+ */
+export const EMBEDDING_MODEL_DIM: number = Number(
+  process.env.EMBEDDING_DIM ?? 384,
+);
+
+/**
+ * The provider for the embedding model.
+ * This value is retrieved from the environment variable `EMBEDDING_MODEL_PROVIDER`.
+ *
+ * If defined, it will be used to call inference endpoints for embedding models. Othewise, the
+ * transfomers library will be used to load the model from Hugging Face.
+ *
+ * Default value: undefined
+ */
+export const EMBEDDING_MODEL_PROVIDER: string | undefined =
+  process.env.EMBEDDING_MODEL_PROVIDER;
+
+/**
+ * The URL for the embedding model endpoint.
+ *
+ * This value is retrieved from the environment variable `EMBEDDING_ENDPOINT_URL`.
+ *
+ * If defined, it will be used to call inference endpoints for embedding models. Othewise, the
+ * transfomers library will be used to load the model from Hugging Face.
+ *
+ * Default value: undefined
+ */
+export const EMBEDDING_ENDPOINT_URL: string | undefined =
+  process.env.EMBEDDING_ENDPOINT_URL;
+
+/**
  * Default configuration for embedding operations
  */
 export const DEFAULT_EMBEDDING_MODEL = {
-  provider: process.env.EMBEDDING_MODEL_PROVIDER ?? 'hf-inference',
-  model: process.env.EMBEDDING_MODEL ?? 'mixedbread-ai/mxbai-embed-large-v1',
-  endpointUrl: process.env.EMBEDDING_ENDPOINT_URL,
-  embeddingDim: Number(process.env.EMBEDDING_DIM ?? 1024),
+  model: EMBEDDING_MODEL_ID,
+  embeddingDim: EMBEDDING_MODEL_DIM,
+
+  provider: EMBEDDING_MODEL_PROVIDER,
+  endpointUrl: EMBEDDING_ENDPOINT_URL,
+
   isInstruct: process.env.EMBEDDING_IS_INSTRUCT
     ? process.env.EMBEDDING_IS_INSTRUCT === 'true'
     : true,
@@ -125,6 +203,20 @@ export const EXAMPLES_PROMPT_CONTEXT_SIZE: number =
       DEFAULT_EXAMPLES_PROMPT_CONTEXT_SIZE,
   ) || DEFAULT_EXAMPLES_PROMPT_CONTEXT_SIZE;
 
+/**
+ * This constant defines the maximum number of characters allowed in the context of the sources prompt.
+ * If the sources context exceeds this limit, it will be truncated.
+ *
+ * This is important for performance and to avoid exceeding the token limit of the model.
+ * Default value: 61440 (16k tokens)
+ */
+const DEFAULT_SOURCES_PROMPT_CONTEXT_SIZE = 61440; // 16k tokens
+export const SOURCES_PROMPT_CONTEXT_SIZE: number =
+  Number(
+    process.env.SOURCES_PROMPT_CONTEXT_SIZE ??
+      DEFAULT_SOURCES_PROMPT_CONTEXT_SIZE,
+  ) || DEFAULT_SOURCES_PROMPT_CONTEXT_SIZE;
+
 export const GOOGLE_CLIENT_ID: string | undefined =
   process.env.GOOGLE_CLIENT_ID;
 
@@ -145,7 +237,7 @@ export const ORG_BILLING = process.env.ORG_BILLING ?? undefined;
  */
 export const BLOCKED_URLS: string[] = process.env.BLOCKED_URLS?.split(',').map(
   (u) => u.trim(),
-) ?? ['youtube.com', 'twitter.com'];
+) ?? ['youtube.com', 'x.com', 'bloomberg.com', 'nytimes.com'];
 
 const RUNTIME_ENV = join(DATA_DIR, process.env.NODE_ENV ?? 'development');
 

@@ -8,7 +8,8 @@ import {
 import { cn } from '@qwik-ui/utils';
 import { LuPlus } from '@qwikest/icons/lucide';
 import { Button, Popover, buttonVariants } from '~/components';
-import { useExecution } from '~/features/add-column';
+import { Tooltip } from '~/components/ui/tooltip/tooltip';
+import { hasBlobContent, useExecution } from '~/features/add-column';
 import { TEMPORAL_ID, useColumnsStore } from '~/state';
 
 const COLUMN_PROMPTS = {
@@ -42,7 +43,7 @@ export const TableAddCellHeaderPlaceHolder = component$(() => {
   const ref = useSignal<HTMLElement>();
   const isOpen = useSignal(false);
   const { open } = useExecution();
-  const { firstColumn, columns, addTemporalColumn } = useColumnsStore();
+  const { columns, addTemporalColumn } = useColumnsStore();
 
   const lastColumnId = useComputed$(
     () => columns.value[columns.value.length - 1].id,
@@ -53,12 +54,20 @@ export const TableAddCellHeaderPlaceHolder = component$(() => {
 
     await addTemporalColumn();
 
-    const initialPrompt = COLUMN_PROMPTS[promptType].replace(
-      '{{REPLACE_ME}}',
-      `{{${firstColumn.value.name}}}`,
-    );
+    const validColumns = columns.value.filter((c) => !hasBlobContent(c));
 
-    open(TEMPORAL_ID, 'add', initialPrompt);
+    const firstValidColumnToReference = validColumns[0];
+
+    if (firstValidColumnToReference) {
+      const initialPrompt = COLUMN_PROMPTS[promptType].replace(
+        '{{REPLACE_ME}}',
+        `{{${firstValidColumnToReference.name}}}`,
+      );
+
+      open(TEMPORAL_ID, 'add', initialPrompt);
+    } else {
+      open(TEMPORAL_ID, 'add', '');
+    }
   });
 
   const isVisible = () => {
@@ -75,56 +84,58 @@ export const TableAddCellHeaderPlaceHolder = component$(() => {
         hidden: lastColumnId.value === TEMPORAL_ID,
       })}
     >
-      <Popover.Root
-        gutter={8}
-        floating={isVisible() ? 'bottom-end' : 'bottom-start'}
-      >
-        <Popover.Trigger
-          ref={ref}
-          class={cn(
-            buttonVariants({ look: 'ghost' }),
-            'w-[30px] h-[30px] bg-transparent text-primary rounded-full hover:bg-primary-100 flex items-center justify-center p-0',
-            {
-              'bg-primary-100': isOpen.value,
-            },
-          )}
+      <Tooltip text="Add column">
+        <Popover.Root
+          gutter={8}
+          floating={isVisible() ? 'bottom-end' : 'bottom-start'}
         >
-          <LuPlus class="text-lg" />
-        </Popover.Trigger>
+          <Popover.Trigger
+            ref={ref}
+            class={cn(
+              buttonVariants({ look: 'ghost' }),
+              'w-[30px] h-[30px] bg-transparent text-primary rounded-full hover:bg-primary-100 flex items-center justify-center p-0',
+              {
+                'bg-primary-100': isOpen.value,
+              },
+            )}
+          >
+            <LuPlus class="text-lg" />
+          </Popover.Trigger>
 
-        <Popover.Panel
-          class="shadow-lg w-86 text-sm p-2"
-          onToggle$={() => {
-            isOpen.value = !isOpen.value;
-          }}
-        >
-          <div class="flex flex-col gap-0.5">
-            <ActionButton
-              label="Translate"
-              column="column"
-              onClick$={() => handleNewColumn('translate')}
-            />
-            <hr class="border-t border-slate-200 dark:border-slate-700" />
-            <ActionButton
-              label="Extract keywords from"
-              column="column"
-              onClick$={() => handleNewColumn('extractKeywords')}
-            />
-            <hr class="border-t border-slate-200 dark:border-slate-700" />
-            <ActionButton
-              label="Summarize"
-              column="column"
-              onClick$={() => handleNewColumn('summarize')}
-            />
-            <hr class="border-t border-slate-200 dark:border-slate-700" />
-            <ActionButton
-              label="Do something with"
-              column="column"
-              onClick$={() => handleNewColumn('custom')}
-            />
-          </div>
-        </Popover.Panel>
-      </Popover.Root>
+          <Popover.Panel
+            class="shadow-lg w-86 text-sm p-2"
+            onToggle$={() => {
+              isOpen.value = !isOpen.value;
+            }}
+          >
+            <div class="flex flex-col gap-0.5">
+              <ActionButton
+                label="Translate"
+                column="column"
+                onClick$={() => handleNewColumn('translate')}
+              />
+              <hr class="border-t border-slate-200 dark:border-slate-700" />
+              <ActionButton
+                label="Extract keywords from"
+                column="column"
+                onClick$={() => handleNewColumn('extractKeywords')}
+              />
+              <hr class="border-t border-slate-200 dark:border-slate-700" />
+              <ActionButton
+                label="Summarize"
+                column="column"
+                onClick$={() => handleNewColumn('summarize')}
+              />
+              <hr class="border-t border-slate-200 dark:border-slate-700" />
+              <ActionButton
+                label="Do something with"
+                column="column"
+                onClick$={() => handleNewColumn('custom')}
+              />
+            </div>
+          </Popover.Panel>
+        </Popover.Root>
+      </Tooltip>
     </th>
   );
 });

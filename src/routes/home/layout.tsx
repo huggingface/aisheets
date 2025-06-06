@@ -7,7 +7,8 @@ import {
 
 import { ModalsProvider } from '~/components';
 import { MainSidebar } from '~/features/main-sidebar';
-import { useClientConfig } from '~/loaders';
+import { type Model, useClientConfig } from '~/loaders';
+import { useHubModels } from '~/loaders';
 import { ActiveDatasetProvider } from '~/state';
 
 export * from '~/loaders';
@@ -15,9 +16,14 @@ export * from '~/loaders';
 export const configContext =
   createContextId<Record<string, any>>('config.context');
 
+export const modelsContext = createContextId<Model[]>('models.context');
+
 export default component$(() => {
   const config = useClientConfig();
+  const models = useHubModels();
+
   useContextProvider(configContext, config.value);
+  useContextProvider(modelsContext, models.value);
 
   return (
     <ModalsProvider>

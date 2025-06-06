@@ -90,10 +90,6 @@ export const HTooltipTrigger = component$((props: PropsOf<'button'>) => {
     });
   });
 
-  useVisibleTask$(() => {
-    hidePopover();
-  });
-
   return (
     <span
       ref={context.triggerRef as any}

@@ -1,6 +1,10 @@
 import type { RequestEventBase } from '@builder.io/qwik-city';
 import { chatCompletion } from '@huggingface/inference';
-import { DEFAULT_MODEL, DEFAULT_MODEL_PROVIDER } from '~/config';
+import {
+  DEFAULT_MODEL,
+  DEFAULT_MODEL_PROVIDER,
+  MODEL_ENDPOINT_URL,
+} from '~/config';
 import {
   normalizeChatCompletionArgs,
   normalizeOptions,
@@ -28,6 +32,7 @@ export interface AssistantParams {
   searchEnabled?: boolean;
   timeout?: number;
   maxSearchQueries?: number;
+  maxSources?: number;
 }
 
 export interface WebSearchQuery {
@@ -57,7 +62,7 @@ DATASET NAME:
 Short Descriptive Name
 
 COLUMNS:
-- column_name1 : prompt1 (this first column is always the main object and the only one not referencing other columns)
+- column_name1 : prompt1 (this first column is always the main object and the only one not referencing other columns). This colum should generate a single value. For listing items avoid using words like Describe, Generate, etc. and instead use: Identify one, Extract one, Name one etc.
 - column_name2 : prompt2 (referencing {{column_name}} if needed)
 - column_name3 : prompt3...
 
@@ -65,26 +70,29 @@ SEARCH QUERIES:
 - "specific search query 1"
 - "specific search query 2"
 
-Only include columns that are directly relevant to the request. Create exactly {maxSearchQueries} specific search queries that will help gather comprehensive information for all columns.
+Only include columns that are directly relevant to the request. Create exactly {maxSearchQueries} specific search queries that will help gather initial information, especially for the first column of the dataset. Don't use adjectives for the search query (e.g., "best") unless they are included in the user instruction. Make the query as simple and effective as possible, don't try to request the info for all columns in the query, it's just a starting point, later more webs will be retrieved for specific columns.
 
 Avoid adding columns with typical database things, like tweet_id, id, timestamp, etc.
 
+Limit the number of columns to maximum 3 unless it's strictly required or the user specifies the columns themselves.
+
 ALWAYS include a prompt for each column.
 
-Here are some high-quality examples of dataset configurations:
+Here is a high-quality example of dataset configurations:
+
+USER REQUEST:
+recent movie reviews by genre
 
 DATASET NAME:
-Modern Movie Reviews Collection
+Recent Movie Reviews Collection
 
 COLUMNS:
-- movie_title : Generate a movie title in the style of recent releases
-- review : Write a detailed movie review for {{movie_title}}
-- rating : Rate {{movie_title}} from 1-5 stars based on {{review}}
-- genre : Identify the movie genre based on {{review}}
+- movie_title : Identify one movie title from the provided sources.
+- reviews : Summarize the moview review for {{movie_title}} based on the provided sources.
+- genre : Identify the movie genre of {{movie_title}} based on the provided sources.
 
 SEARCH QUERIES:
-- "recent movie releases 2024 reviews"
-- "popular movie genres trends analysis"
+- "recent movie releases"
 `.trim();
 
 /**
@@ -112,6 +120,8 @@ COLUMNS:
 Only include columns that are directly relevant to the request.
 
 Avoid adding columns with typical database things, like tweet_id, id, timestamp, etc.
+
+Limit the number of columns to maximum 3 unless it's strictly required or the user specifies the columns themselves.
 
 Here are some high-quality examples of dataset configurations:
 
@@ -176,6 +186,7 @@ async function extractDatasetConfig({
       modelName,
       modelProvider,
       accessToken: session.token,
+      endpointUrl: MODEL_ENDPOINT_URL,
     }),
     normalizeOptions(timeout),
   );
@@ -353,7 +364,10 @@ async function populateDataset(
 
       for await (const _ of generateCells({
         column,
-        process: column.process,
+        process: {
+          ...column.process,
+          useEndpointURL: MODEL_ENDPOINT_URL !== undefined,
+        },
         session,
         offset: 0,
         limit: 5,
@@ -404,6 +418,7 @@ async function* createSourcesFromWebQueries({
   dataset,
   queries,
   options,
+  maxSources = 5,
 }: {
   dataset: {
     id: string;
@@ -413,8 +428,12 @@ async function* createSourcesFromWebQueries({
   options: {
     accessToken: string;
   };
+  maxSources?: number;
 }): AsyncGenerator<Event> {
-  const { sources: webSources, errors } = await searchQueriesToSources(queries);
+  const { sources: webSources, errors } = await searchQueriesToSources(
+    queries,
+    maxSources,
+  );
 
   yield {
     event: EVENTS.datasetSearchSuccess,
@@ -462,7 +481,7 @@ async function* createSourcesFromWebQueries({
 
   const indexedChunks = await indexDatasetSources({
     dataset,
-    sources: webSources,
+    sources: sources,
     options,
   });
 
@@ -491,6 +510,7 @@ export const runAutoDataset = async function* (
     modelProvider = DEFAULT_MODEL_PROVIDER,
     searchEnabled = false,
     maxSearchQueries = 1,
+    maxSources = 5,
     timeout,
   }: AssistantParams,
 ): AsyncGenerator<Event> {
@@ -547,6 +567,7 @@ export const runAutoDataset = async function* (
         options: {
           accessToken: session.token,
         },
+        maxSources,
       });
     }
 

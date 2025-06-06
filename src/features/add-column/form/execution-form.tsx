@@ -1,15 +1,15 @@
 import {
   $,
   type QRL,
-  Resource,
   component$,
   noSerialize,
+  useComputed$,
   useContext,
-  useResource$,
   useSignal,
   useTask$,
   useVisibleTask$,
 } from '@builder.io/qwik';
+
 import { cn } from '@qwik-ui/utils';
 import {
   LuCheck,
@@ -17,24 +17,28 @@ import {
   LuGlobe,
   LuSettings,
   LuStopCircle,
+  LuUndo2,
   LuX,
 } from '@qwikest/icons/lucide';
 
-import { Button, Input, Label, Select } from '~/components';
+import { Button, Select, triggerLooks } from '~/components';
+import { useClickOutside } from '~/components/hooks/click/outside';
+import { nextTick } from '~/components/hooks/tick';
+import { Tooltip } from '~/components/ui/tooltip/tooltip';
 
 import {
   TemplateTextArea,
   type Variable,
 } from '~/features/add-column/components/template-textarea';
 import { useExecution } from '~/features/add-column/form/execution';
-import { configContext } from '~/routes/home/layout';
+import type { Model } from '~/loaders/hub-models';
+import { configContext, modelsContext } from '~/routes/home/layout';
 import {
   type Column,
   type CreateColumn,
   TEMPORAL_ID,
   useColumnsStore,
 } from '~/state';
-import { type Model, useListModels } from '~/usecases/list-models';
 
 interface SidebarProps {
   column: Column;
@@ -48,7 +52,14 @@ export const ExecutionForm = component$<SidebarProps>(
     const { firstColumn, columns, removeTemporalColumn, updateColumn } =
       useColumnsStore();
 
-    const { DEFAULT_MODEL, DEFAULT_MODEL_PROVIDER } = useContext(configContext);
+    const {
+      DEFAULT_MODEL,
+      DEFAULT_MODEL_PROVIDER,
+      modelEndpointEnabled,
+      MODEL_ENDPOINT_NAME,
+    } = useContext(configContext);
+
+    const models = useContext(modelsContext);
 
     const isOpenModel = useSignal(false);
 
@@ -57,16 +68,49 @@ export const ExecutionForm = component$<SidebarProps>(
     const variables = useSignal<Variable[]>([]);
     const searchOnWeb = useSignal(false);
 
-    const selectedModel = useSignal<Model>();
-    const selectedProvider = useSignal<string>();
-    const inputModelId = useSignal<string | undefined>();
+    const isModelDropdownOpen = useSignal(false);
+    const modelSearchQuery = useSignal<string>('');
+    const selectedModelId = useSignal<string>('');
+    const selectedProvider = useSignal<string>('');
 
-    const loadModels = useResource$(async () => {
-      return await useListModels();
-    });
+    const endpointURLSelected = useSignal(modelEndpointEnabled);
 
     const onSelectedVariables = $((variables: { id: string }[]) => {
       columnsReferences.value = variables.map((v) => v.id);
+    });
+
+    const filteredModels = useSignal<Model[]>(models);
+
+    const modelProviders = useComputed$(() => {
+      const model = models.find((m: Model) => m.id === selectedModelId.value);
+      return model ? model.providers : [];
+    });
+
+    const modelSearchContainerRef = useClickOutside(
+      $(() => {
+        modelSearchQuery.value = selectedModelId.value || '';
+      }),
+    );
+
+    useTask$(({ track }) => {
+      track(modelSearchQuery);
+
+      if (modelSearchQuery.value.length <= 1) return;
+
+      if (modelSearchQuery.value === selectedModelId.value) {
+        filteredModels.value = models;
+        return;
+      }
+
+      filteredModels.value = models.filter((model: Model) =>
+        model.id.toLowerCase().includes(modelSearchQuery.value.toLowerCase()),
+      );
+
+      nextTick(() => {
+        isModelDropdownOpen.value =
+          filteredModels.value.length > 0 &&
+          filteredModels.value.length !== models.length;
+      }, 300);
     });
 
     useVisibleTask$(() => {
@@ -75,9 +119,7 @@ export const ExecutionForm = component$<SidebarProps>(
       }
     });
 
-    useTask$(async () => {
-      const models = await loadModels.value;
-
+    useTask$(() => {
       variables.value = columns.value
         .filter((c) => c.id !== column.id && !hasBlobContent(c))
         .map((c) => ({
@@ -91,36 +133,44 @@ export const ExecutionForm = component$<SidebarProps>(
       prompt.value = process.prompt;
       searchOnWeb.value = process.searchEnabled || false;
 
-      // If there's a previously selected model, use that
       if (process.modelName) {
-        selectedModel.value = models?.find(
-          (m: Model) => m.id === process.modelName,
-        ) || {
-          id: process.modelName,
-          providers: [process.modelProvider!],
-        };
+        // If there's a previously selected model, use that
+        selectedModelId.value = process.modelName;
         selectedProvider.value = process.modelProvider!;
-      }
-      // Otherwise pre-select the default model
-      else if (models) {
-        const defaultModel = models.find((m: Model) => m.id === DEFAULT_MODEL);
+      } else {
+        const defaultModel = models?.find((m: Model) => m.id === DEFAULT_MODEL);
         if (defaultModel) {
-          selectedModel.value = defaultModel;
-          selectedProvider.value =
-            defaultModel.providers.find(
-              (provider) => provider === DEFAULT_MODEL_PROVIDER,
-            ) || defaultModel.providers[0];
+          const defaultProvider = defaultModel.providers.find(
+            (provider) => provider === DEFAULT_MODEL_PROVIDER,
+          );
+
+          selectedModelId.value = defaultModel.id;
+          selectedProvider.value = defaultProvider || defaultModel.providers[0];
         }
       }
-
-      inputModelId.value = process.modelName;
     });
 
     useVisibleTask$(({ track }) => {
-      track(selectedModel);
+      track(isOpenModel);
+
+      isModelDropdownOpen.value = !isOpenModel.value;
+      if (!isOpenModel.value) {
+        modelSearchQuery.value = selectedModelId.value || '';
+      }
+    });
+
+    useVisibleTask$(({ track }) => {
+      track(selectedModelId);
+
+      modelSearchQuery.value = selectedModelId.value || modelSearchQuery.value;
+    });
+
+    useVisibleTask$(({ track }) => {
+      track(selectedModelId);
       track(selectedProvider);
       track(prompt);
       track(columnsReferences);
+      track(endpointURLSelected);
 
       updateColumn({
         ...column,
@@ -140,23 +190,22 @@ export const ExecutionForm = component$<SidebarProps>(
       });
     });
 
+    const onStop = $(async () => {
+      column.process!.cancellable!.abort();
+      column.process!.isExecuting = false;
+
+      updateColumn(column);
+    });
+
     const onGenerate = $(async () => {
-      if (column.process?.cancellable) {
-        column.process.cancellable.abort();
-        column.process.isExecuting = false;
-
-        return;
-      }
-
       column.process!.cancellable = noSerialize(new AbortController());
       column.process!.isExecuting = true;
 
       updateColumn(column);
 
       try {
-        // If we have a selectedModel, always use that. Only fall back to inputModelId if models failed to load
-        const modelName = selectedModel.value?.id || inputModelId.value!;
-        const modelProvider = selectedProvider.value!;
+        const modelName = selectedModelId.value;
+        const modelProvider = selectedProvider.value;
 
         const columnToSave = {
           ...column,
@@ -164,6 +213,7 @@ export const ExecutionForm = component$<SidebarProps>(
             ...column.process,
             modelName,
             modelProvider,
+            useEndpointURL: endpointURLSelected.value,
             prompt: prompt.value,
             columnsReferences: columnsReferences.value,
             searchEnabled: searchOnWeb.value,
@@ -207,9 +257,9 @@ export const ExecutionForm = component$<SidebarProps>(
 
         <div class="relative h-full w-full">
           <div class="absolute h-full w-full flex flex-col">
-            <div class="flex flex-col gap-4 px-8 bg-neutral-100">
+            <div class="flex flex-col gap-2 px-8 bg-neutral-100">
               <div class="relative">
-                <div class="h-96 min-h-96 max-h-96 bg-white border border-secondary-foreground rounded-sm">
+                <div class="h-72 min-h-72 max-h-72 bg-white border border-secondary-foreground rounded-sm">
                   <TemplateTextArea
                     bind:value={prompt}
                     variables={variables}
@@ -237,44 +287,75 @@ export const ExecutionForm = component$<SidebarProps>(
                   {column.process?.isExecuting && (
                     <div class="h-4 w-4 animate-spin rounded-full border-2 border-primary-100 border-t-transparent" />
                   )}
-                  <Button
-                    key={column.process?.isExecuting?.toString()}
-                    look="primary"
-                    class="w-[30px] h-[30px] rounded-full flex items-center justify-center p-0"
-                    onClick$={onGenerate}
-                    disabled={
-                      (column.process?.isExecuting &&
-                        column.id === TEMPORAL_ID) ||
-                      !prompt.value.trim()
-                    }
-                  >
-                    {column.process?.isExecuting ? (
+                  {column.process?.isExecuting ? (
+                    <Button
+                      look="primary"
+                      class="w-[30px] h-[30px] rounded-full flex items-center justify-center p-0"
+                      onClick$={onStop}
+                      disabled={
+                        (column.process?.isExecuting &&
+                          column.id === TEMPORAL_ID) ||
+                        !prompt.value.trim()
+                      }
+                    >
                       <LuStopCircle class="text-lg" />
-                    ) : (
+                    </Button>
+                  ) : (
+                    <Button
+                      look="primary"
+                      class="w-[30px] h-[30px] rounded-full flex items-center justify-center p-0"
+                      onClick$={onGenerate}
+                    >
                       <LuEgg class="text-lg" />
-                    )}
-                  </Button>
+                    </Button>
+                  )}
                 </div>
               </div>
 
               <div class="flex items-center justify-start gap-1">
-                Model
-                <p class="text-neutral-500 underline">
-                  {selectedModel.value?.id}
-                </p>
-                with inference provider
-                <p class="italic">{selectedProvider.value}</p>
+                {endpointURLSelected.value ? (
+                  <div
+                    onClick$={() => (isOpenModel.value = !isOpenModel.value)}
+                    class="flex items-center justify-start gap-1 cursor-pointer"
+                  >
+                    Model
+                    <p class="text-neutral-500 underline">
+                      {MODEL_ENDPOINT_NAME}
+                    </p>
+                    with custom endpoint
+                  </div>
+                ) : (
+                  <div class="flex items-center justify-start gap-1">
+                    Model
+                    <p class="text-neutral-500 underline">
+                      {selectedModelId.value}
+                    </p>
+                    {modelEndpointEnabled && !endpointURLSelected.value && (
+                      <Tooltip text="Reset default model">
+                        <LuUndo2
+                          class="w-4 h-4 rounded-full gap-2 text-neutral-500 cursor-pointer hover:bg-neutral-200"
+                          onClick$={() => (endpointURLSelected.value = true)}
+                        />
+                      </Tooltip>
+                    )}
+                    with provider
+                    <p class="italic">{selectedProvider.value}</p>
+                  </div>
+                )}
+
                 <Button
+                  onClick$={() => (isOpenModel.value = !isOpenModel.value)}
                   look="ghost"
                   class="hover:bg-neutral-200"
-                  onClick$={() => (isOpenModel.value = true)}
                 >
-                  <LuSettings class="text-neutral-500" />
+                  <Tooltip text="Change model">
+                    <LuSettings class="text-neutral-500" />
+                  </Tooltip>
                 </Button>
               </div>
 
               {isOpenModel.value && (
-                <div class="px-3 pb-4 pt-2 bg-white border border-secondary-foreground rounded-sm">
+                <div class="px-3 pb-12 pt-2 bg-white border border-secondary-foreground rounded-sm">
                   <div class="flex justify-end items-center">
                     <Button
                       look="ghost"
@@ -286,106 +367,107 @@ export const ExecutionForm = component$<SidebarProps>(
                     </Button>
                   </div>
 
-                  <Resource
-                    value={loadModels}
-                    onPending={() => (
-                      <Select.Disabled>Loading models...</Select.Disabled>
-                    )}
-                    onResolved={(models) => {
-                      if (!selectedModel.value?.id) {
-                        selectedModel.value = models[0];
-                        selectedProvider.value = models[0].providers[0];
-                      }
-
-                      return (
-                        <div class="flex flex-col gap-4">
-                          <div class="flex gap-4">
-                            <div class="flex-[2]">
-                              <Label class="flex gap-1 mb-2 font-normal">
-                                Model
-                              </Label>
-                              <Select.Root value={selectedModel.value?.id}>
-                                <Select.Trigger class="px-4 bg-white rounded-base border-neutral-300-foreground">
-                                  <Select.DisplayValue />
-                                </Select.Trigger>
-                                <Select.Popover class="border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto">
-                                  {models.map((model) => (
-                                    <Select.Item
-                                      key={model.id}
-                                      class="text-foreground hover:bg-accent"
-                                      value={model.id}
-                                      onClick$={$(() => {
-                                        selectedModel.value = model;
-                                        selectedProvider.value =
-                                          model.providers[0];
-                                      })}
-                                    >
-                                      <Select.ItemLabel>
-                                        {model.id}
-                                      </Select.ItemLabel>
-                                      {model.size && (
-                                        <span class="ml-2 bg-gray-100 text-gray-700 px-2 py-0.5 rounded text-sm">
-                                          {model.size}
-                                        </span>
-                                      )}
-                                      <Select.ItemIndicator>
-                                        <LuCheck class="h-4 w-4" />
-                                      </Select.ItemIndicator>
-                                    </Select.Item>
-                                  ))}
-                                </Select.Popover>
-                              </Select.Root>
-                            </div>
-                            <div class="flex-1" key={selectedModel.value.id}>
-                              <Label class="flex gap-1 mb-2 font-normal">
-                                Inference Providers
-                              </Label>
-                              <Select.Root
-                                value={selectedProvider.value}
-                                onChange$={$((value: string | string[]) => {
-                                  const provider = Array.isArray(value)
-                                    ? value[0]
-                                    : value;
-                                  selectedProvider.value = provider;
-                                })}
-                              >
-                                <Select.Trigger class="px-4 bg-white rounded-base border-neutral-300-foreground">
-                                  <Select.DisplayValue />
-                                </Select.Trigger>
-                                <Select.Popover class="border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto">
-                                  {selectedModel.value?.providers?.map(
-                                    (provider, idx) => (
-                                      <Select.Item
-                                        key={idx}
-                                        class="text-foreground hover:bg-accent"
-                                        value={provider}
-                                      >
-                                        <Select.ItemLabel>
-                                          {provider}
-                                        </Select.ItemLabel>
-                                        <Select.ItemIndicator>
-                                          <LuCheck class="h-4 w-4" />
-                                        </Select.ItemIndicator>
-                                      </Select.Item>
-                                    ),
-                                  ) || []}
-                                </Select.Popover>
-                              </Select.Root>
-                            </div>
+                  <div class="flex flex-col gap-4">
+                    <div class="flex gap-4">
+                      <div class="flex-[2]">
+                        <Select.Root
+                          ref={modelSearchContainerRef}
+                          key={modelSearchQuery.value}
+                          bind:open={isModelDropdownOpen}
+                          value={selectedModelId.value}
+                        >
+                          <Select.Label>Model</Select.Label>
+                          <div
+                            class={cn(
+                              'w-full flex flex-row justify-between items-center',
+                              triggerLooks('default'),
+                            )}
+                          >
+                            <input
+                              class="h-8 w-full outline-none"
+                              onFocusIn$={() => {
+                                if (
+                                  selectedModelId.value ===
+                                  modelSearchQuery.value
+                                ) {
+                                  modelSearchQuery.value = '';
+                                }
+                              }}
+                              onClick$={() => {
+                                isModelDropdownOpen.value = false;
+                              }}
+                              placeholder="Search models..."
+                              bind:value={modelSearchQuery}
+                            />
+                            <Select.Trigger look="headless" />
                           </div>
-                        </div>
-                      );
-                    }}
-                    onRejected={() => {
-                      return (
-                        <Input
-                          bind:value={inputModelId}
-                          class="bg-white px-4 h-10 border-neutral-300-foreground"
-                          placeholder="Cannot load model suggestions. Please enter the model ID manually."
-                        />
-                      );
-                    }}
-                  />
+                          <Select.Popover
+                            key={modelSearchQuery.value}
+                            floating="bottom-end"
+                            gutter={8}
+                            class={cn(
+                              'border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto',
+                            )}
+                          >
+                            {filteredModels.value.map((model) => (
+                              <Select.Item
+                                key={model.id}
+                                value={model.id}
+                                class="text-foreground hover:bg-accent"
+                                onClick$={() => {
+                                  isModelDropdownOpen.value = false;
+                                  endpointURLSelected.value = false;
+
+                                  selectedModelId.value = model.id;
+                                  modelSearchQuery.value = model.id;
+
+                                  selectedProvider.value =
+                                    model.providers.includes(
+                                      DEFAULT_MODEL_PROVIDER,
+                                    )
+                                      ? DEFAULT_MODEL_PROVIDER
+                                      : model.providers[0];
+                                }}
+                              >
+                                <Select.ItemLabel>{model.id}</Select.ItemLabel>
+                                {model.size && (
+                                  <span class="ml-2 bg-gray-100 text-gray-700 px-2 py-0.5 rounded text-sm">
+                                    {model.size}
+                                  </span>
+                                )}
+
+                                {model.id === selectedModelId.value && (
+                                  // We cannot use the Select.ItemIndicator here
+                                  // because it doesn't work when the model list changes
+                                  <LuCheck class="h-4 w4 text-primary-500 absolute right-2 top-1/2 -translate-y-1/2" />
+                                )}
+                              </Select.Item>
+                            ))}
+                          </Select.Popover>
+                        </Select.Root>
+                      </div>
+                      <div class="flex-1">
+                        <Select.Root bind:value={selectedProvider}>
+                          <Select.Label>Inference Providers</Select.Label>
+                          <Select.Trigger class="px-4 bg-white rounded-base border-neutral-300-foreground">
+                            <Select.DisplayValue />
+                          </Select.Trigger>
+                          <Select.Popover class="border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto">
+                            {modelProviders.value.map((provider, idx) => (
+                              <Select.Item
+                                key={idx}
+                                value={provider}
+                                class="text-foreground hover:bg-accent"
+                              >
+                                <Select.ItemLabel>{provider}</Select.ItemLabel>
+                                <Select.ItemIndicator />
+                              </Select.Item>
+                            ))}
+                          </Select.Popover>
+                        </Select.Root>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
@@ -396,6 +478,7 @@ export const ExecutionForm = component$<SidebarProps>(
   },
 );
 
+//Refactor, duplicated
 export const hasBlobContent = (column: Column): boolean => {
   return column.type.includes('BLOB');
 };

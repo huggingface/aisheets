@@ -1,4 +1,5 @@
 import {
+  type BaseArgs,
   type FeatureExtractionArgs,
   type InferenceProvider,
   type Options,
@@ -6,11 +7,12 @@ import {
   chatCompletionStream,
 } from '@huggingface/inference';
 
+import type { ChatCompletionInput } from '@huggingface/tasks';
+
 import { HF_TOKEN, INFERENCE_TIMEOUT, ORG_BILLING } from '~/config';
 import { type Example, materializePrompt } from './materialize-prompt';
 
 export interface PromptExecutionParams {
-  accessToken?: string;
   modelName: string;
   modelProvider: string;
   instruction: string;
@@ -20,9 +22,12 @@ export interface PromptExecutionParams {
   }[];
   data: Record<string, any>;
   examples?: Array<Example>;
-  stream?: boolean;
-  timeout?: number;
   idx?: number;
+  stream?: boolean;
+
+  timeout?: number;
+  accessToken?: string;
+  endpointUrl?: string;
 }
 
 export interface PromptExecutionResponse {
@@ -45,6 +50,7 @@ export const runPromptExecution = async ({
   data,
   examples,
   timeout,
+  endpointUrl,
 }: PromptExecutionParams): Promise<PromptExecutionResponse> => {
   const inputPrompt = materializePrompt({
     instruction,
@@ -54,9 +60,10 @@ export const runPromptExecution = async ({
   });
   const args = normalizeChatCompletionArgs({
     messages: [{ role: 'user', content: inputPrompt }],
-    modelName,
     modelProvider,
+    modelName,
     accessToken,
+    endpointUrl,
   });
   const options = normalizeOptions(timeout);
 
@@ -64,14 +71,19 @@ export const runPromptExecution = async ({
 
   try {
     const response = await chatCompletion(args, options);
-    return { value: response.choices[0].message.content };
+    return {
+      value: response.choices[0].message.content,
+      done: true,
+    };
   } catch (e) {
-    return { error: handleError(e) };
+    return {
+      error: handleError(e),
+      done: true,
+    };
   }
 };
 
 export const runPromptExecutionStream = async function* ({
-  accessToken,
   modelName,
   modelProvider,
   instruction,
@@ -79,6 +91,8 @@ export const runPromptExecutionStream = async function* ({
   data,
   examples,
   timeout,
+  accessToken,
+  endpointUrl,
 }: PromptExecutionParams): AsyncGenerator<PromptExecutionResponse> {
   const inputPrompt = materializePrompt({
     instruction,
@@ -91,6 +105,7 @@ export const runPromptExecutionStream = async function* ({
     modelProvider,
     modelName,
     accessToken,
+    endpointUrl,
   });
   const options = normalizeOptions(timeout);
 
@@ -110,72 +125,6 @@ export const runPromptExecutionStream = async function* ({
     yield { value: accumulated, done: true };
   } catch (e) {
     yield { error: handleError(e), done: true };
-  }
-};
-
-export const runPromptExecutionStreamBatch = async function* (
-  params: PromptExecutionParams[],
-): AsyncGenerator<{ idx: number; response: PromptExecutionResponse }> {
-  const queue = [...params];
-  const activeStreams = new Map<
-    number,
-    AsyncGenerator<PromptExecutionResponse>
-  >();
-  const activePromises = new Map<
-    number,
-    Promise<IteratorResult<PromptExecutionResponse>>
-  >();
-  let streamIdCounter = 0;
-
-  const startNewStream = () => {
-    if (queue.length === 0) return false;
-
-    const param = queue.shift()!;
-    const streamId = streamIdCounter++;
-    const stream = runPromptExecutionStream(param);
-
-    activeStreams.set(streamId, stream);
-    activePromises.set(streamId, stream.next());
-
-    return { streamId, idx: param.idx! };
-  };
-
-  const initialStreamCount = queue.length;
-  const streamIdxMap = new Map<number, number>();
-
-  for (let i = 0; i < initialStreamCount; i++) {
-    const result = startNewStream();
-    if (result) {
-      streamIdxMap.set(result.streamId, result.idx);
-    }
-  }
-
-  while (activePromises.size > 0) {
-    const streamIds = Array.from(activePromises.keys());
-    const promises = streamIds.map((id) => activePromises.get(id)!);
-
-    const { value: result, index } = await Promise.race(
-      promises.map((promise, index) =>
-        promise.then((value) => ({ value, index })),
-      ),
-    );
-
-    const streamId = streamIds[index];
-    const idx = streamIdxMap.get(streamId)!;
-
-    if (result.done) {
-      activeStreams.delete(streamId);
-      activePromises.delete(streamId);
-      streamIdxMap.delete(streamId);
-
-      const newStream = startNewStream();
-      if (newStream) {
-        streamIdxMap.set(newStream.streamId, newStream.idx);
-      }
-    } else {
-      yield { idx, response: result.value };
-      activePromises.set(streamId, activeStreams.get(streamId)!.next());
-    }
   }
 };
 
@@ -214,17 +163,28 @@ export const normalizeChatCompletionArgs = ({
   modelName,
   modelProvider,
   accessToken,
+  endpointUrl,
 }: {
   messages: any[];
   modelName: string;
   modelProvider: string;
   accessToken?: string;
-}) => ({
-  messages,
-  model: modelName,
-  provider: modelProvider as InferenceProvider,
-  accessToken: HF_TOKEN ?? accessToken,
-});
+  endpointUrl?: string;
+}): BaseArgs & ChatCompletionInput => {
+  const args: BaseArgs & ChatCompletionInput = {
+    messages,
+    accessToken: HF_TOKEN ?? accessToken,
+  };
+
+  if (endpointUrl) {
+    args.endpointUrl = endpointUrl;
+  } else {
+    args.model = modelName;
+    args.provider = modelProvider as InferenceProvider;
+  }
+
+  return args;
+};
 
 export const normalizeOptions = (timeout?: number | undefined): Options => {
   const options: Record<string, any> = {

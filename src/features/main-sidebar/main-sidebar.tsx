@@ -96,7 +96,7 @@ export const MainSidebar = component$(() => {
             'w-[274px]': isOpenMainSidebar.value,
           })}
         >
-          <span class="text-base font-semibold px-4 font-inter">AISheets</span>
+          <span class="text-base font-semibold px-4 font-inter">Sheets</span>
         </div>
         <div class="block space-y-4 px-4 mt-6">
           <Link
@@ -137,7 +137,7 @@ export const MainSidebar = component$(() => {
       ) : (
         <div class="flex-1 flex flex-col overflow-y-auto">
           {todayDatasets.length > 0 && (
-            <div>
+            <div class="mt-8">
               <p class="text-muted-foreground px-4 text-sm font-semibold mb-4">
                 Today
               </p>

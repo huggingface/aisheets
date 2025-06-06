@@ -106,11 +106,11 @@ export const DragAndDrop = component$(() => {
       >
         <span class="text-neutral-500 font-medium">From real-world data</span>
 
-        <Popover.Root flip={false} floating="bottom-start" gutter={14}>
+        <Popover.Root floating="bottom-start" gutter={14}>
           <Popover.Trigger
             class={cn(
               buttonVariants({ look: 'outline', size: 'sm' }),
-              'disabled:text-neutral-300 disabled:cursor-not-allowed',
+              'text-primary-600 disabled:text-neutral-300 disabled:cursor-not-allowed',
             )}
           >
             <LuFilePlus2 class="text-lg mr-2" />

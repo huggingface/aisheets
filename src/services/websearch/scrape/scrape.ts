@@ -60,6 +60,9 @@ export async function scrapeUrl(
       let pageData: ReturnType<typeof spatialParser> = {
         title: '',
         elements: [],
+        metrics: {
+          clusterCount: 0,
+        },
       };
 
       title = await page.title();
@@ -82,14 +85,13 @@ export async function scrapeUrl(
       } else {
         // For HTML content
         try {
-          await page.waitForLoadState('networkidle', { timeout: 5000 });
+          await page.waitForLoadState('networkidle', { timeout: 500 });
         } catch (e) {
           // Continue with what we have
         }
 
         try {
-          pageData = await timeout(page.evaluate(spatialParser), 10000);
-
+          pageData = await timeout(page.evaluate(spatialParser), 2000);
           markdownTree = htmlToMarkdownTree(
             pageData.title || title,
             pageData.elements,
@@ -156,7 +158,7 @@ export async function* scrapeUrlsBatch(
 
     const promises = chunk.map(async (url) => {
       try {
-        const result = await scrapeUrl(url);
+        const result = await scrapeUrl(url, DEFAULT_MAX_CHARS_PER_ELEMENT);
         return { url, result };
       } catch (error) {
         logger.error(`Failed to scrape ${url}:`, error);

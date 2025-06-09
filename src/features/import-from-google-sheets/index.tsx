@@ -16,13 +16,14 @@ export const ImportFromGoogleSheets = component$(() => {
   const importFromGoogle = useImportFromGoogle();
 
   const googleOauthURL = useComputed$(() => {
-    const { GOOGLE_CLIENT_ID, GOOGLE_REDIRECT_URI } = config.value;
+    const { GOOGLE_CLIENT_ID, GOOGLE_REDIRECT_URI, GOOGLE_OAUTH_SCOPE } =
+      config.value;
 
     const params = new URLSearchParams({
       client_id: GOOGLE_CLIENT_ID!,
       redirect_uri: GOOGLE_REDIRECT_URI!,
       response_type: 'token',
-      scope: 'https://www.googleapis.com/auth/spreadsheets.readonly',
+      scope: GOOGLE_OAUTH_SCOPE,
     });
 
     return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;

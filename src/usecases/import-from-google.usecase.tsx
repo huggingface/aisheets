@@ -7,7 +7,7 @@ import { type Dataset, useServerSession } from '~/state';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { GOOGLE_CLIENT_ID } from '~/config';
+import { GOOGLE_CLIENT_ID, GOOGLE_OAUTH_SCOPE } from '~/config';
 
 import { default as papa } from 'papaparse';
 
@@ -28,7 +28,7 @@ const readSpreadsheetContent = async (
 
   oauth2Client.setCredentials({
     access_token: token,
-    scope: 'https://www.googleapis.com/auth/spreadsheets.readonly',
+    scope: GOOGLE_OAUTH_SCOPE,
   });
 
   const service = google.sheets({

@@ -18,6 +18,7 @@ import {
 import { type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
 
 export const TableHeader = component$(() => {
+  const MAX_WIDTH = 1000;
   const { columns } = useColumnsStore();
 
   const resizingColumn = useSignal<{
@@ -34,8 +35,8 @@ export const TableHeader = component$(() => {
     const handleResize = (event: MouseEvent) => {
       if (resizingColumn.value) {
         const deltaX = event.clientX - resizingColumn.value.startX;
-        const newWidth = Math.max(
-          236,
+        const newWidth = Math.min(
+          MAX_WIDTH,
           resizingColumn.value.startWidth + deltaX,
         );
         columnsWidths[resizingColumn.value.columnId] = newWidth;

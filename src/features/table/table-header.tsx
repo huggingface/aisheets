@@ -9,7 +9,8 @@ import {
 } from '@builder.io/qwik';
 import { cn } from '@qwik-ui/utils';
 import { nextTick } from '~/components/hooks/tick';
-import { useExecution } from '~/features/add-column';
+import { ExecutionForm, useExecution } from '~/features/add-column';
+import { useGenerateColumn } from '~/features/execution';
 import {
   TableAddCellHeaderPlaceHolder,
   TableCellHeader,
@@ -181,9 +182,27 @@ export const TableHeader = component$(() => {
   );
 });
 
-const ExecutionFormDebounced = component$<{ column: Column }>(
-  ({ column }) => {},
-);
+const ExecutionFormDebounced = component$<{ column: Column }>(({ column }) => {
+  const { onGenerateColumn } = useGenerateColumn();
+  const { columnId } = useExecution();
+
+  const state = useStore({
+    isVisible: columnId.value === column.id,
+  });
+
+  useTask$(({ track }) => {
+    track(() => columnId.value);
+    const isVisible = columnId.value === column.id;
+
+    nextTick(() => {
+      state.isVisible = isVisible;
+    }, 100);
+  });
+
+  if (!state.isVisible) return null;
+
+  return <ExecutionForm column={column} onGenerateColumn={onGenerateColumn} />;
+});
 
 const ExecutionHeaderDebounced = component$<{ column: Column }>(
   ({ column }) => {

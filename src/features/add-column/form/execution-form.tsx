@@ -163,6 +163,13 @@ export const ExecutionForm = component$<SidebarProps>(
       track(selectedModelId);
 
       modelSearchQuery.value = selectedModelId.value || modelSearchQuery.value;
+
+      const model = models.find((m: Model) => m.id === selectedModelId.value);
+      if (!model) return;
+
+      selectedProvider.value = model.providers.includes(DEFAULT_MODEL_PROVIDER)
+        ? DEFAULT_MODEL_PROVIDER
+        : model.providers[0];
     });
 
     useVisibleTask$(({ track }) => {
@@ -460,7 +467,11 @@ export const ExecutionForm = component$<SidebarProps>(
                                 class="text-foreground hover:bg-accent"
                               >
                                 <Select.ItemLabel>{provider}</Select.ItemLabel>
-                                <Select.ItemIndicator />
+                                {provider === selectedProvider.value && (
+                                  // We cannot use the Select.ItemIndicator here
+                                  // because it doesn't work when the model list changes
+                                  <LuCheck class="h-4 w4 text-primary-500 absolute right-2 top-1/2 -translate-y-1/2" />
+                                )}
                               </Select.Item>
                             ))}
                           </Select.Popover>

@@ -16,12 +16,14 @@ import type { MarkdownElement } from '../types';
 
 const { provider, endpointUrl, model } = DEFAULT_EMBEDDING_MODEL;
 
+const transfomersCacheDir =
+  (process.env.HF_HOME || '~/.cache/huggingface') + '/transformers';
+
 let extractor: FeatureExtractionPipeline;
 const defaultEmbeddings = async (texts: string[]): Promise<number[][]> => {
-  extractor ??= (await pipeline(
-    'feature-extraction',
-    model,
-  )) as any as FeatureExtractionPipeline;
+  extractor ??= (await pipeline('feature-extraction', model, {
+    cache_dir: transfomersCacheDir,
+  })) as any as FeatureExtractionPipeline;
   const results = await extractor(texts, { pooling: 'cls' });
 
   return results.tolist();

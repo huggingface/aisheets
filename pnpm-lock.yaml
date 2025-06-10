@@ -21,8 +21,8 @@ importers:
         specifier: ^0.19.5
         version: 0.19.5
       '@huggingface/transformers':
-        specifier: ^3.5.1
-        version: 3.5.1
+        specifier: ^3.5.2
+        version: 3.5.2
       '@lancedb/lancedb':
         specifier: ^0.18.2
         version: 0.18.2(apache-arrow@19.0.1)
@@ -480,8 +480,8 @@ packages:
   '@huggingface/tasks@0.19.5':
     resolution: {integrity: sha512-WEwM/tZsRqw0TinTkQwqPsK5pdaGffAV6Nu6xxSTSZUsBvkDJxE9kTiMNSwvjeHvt9/MYAJKjZ+CMSo6Rugs4g==}
 
-  '@huggingface/transformers@3.5.1':
-    resolution: {integrity: sha512-qWsPoJMBPYcrGuzRMVL//3dwcLXED9r+j+Hzw+hZpBfrMPdyq57ehNs7lew0D34Paj0DO0E0kZQjOZcIVN17hQ==}
+  '@huggingface/transformers@3.5.2':
+    resolution: {integrity: sha512-mfRXkmcL99+ibpjM++pvZmc2h3po8i1ZgSRI5Rtgh++P15GU0lY8UQteYt/w5V+GQw+Jpao93MoipcePzh3mKg==}
 
   '@humanwhocodes/config-array@0.11.14':
     resolution: {integrity: sha512-3T8LkOmg45BV5FICb15QQMsyUSWrQ8AygVfC7ZG32zOalnqrilm018ZVCw0eapXux8FtA33q8PSRSstjee3jSg==}
@@ -4171,7 +4171,7 @@ snapshots:
 
   '@huggingface/tasks@0.19.5': {}
 
-  '@huggingface/transformers@3.5.1':
+  '@huggingface/transformers@3.5.2':
     dependencies:
       '@huggingface/jinja': 0.4.1
       onnxruntime-node: 1.21.0

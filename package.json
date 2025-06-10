@@ -72,7 +72,7 @@
     "@huggingface/hub": "~2.1.0",
     "@huggingface/inference": "~4.0.0",
     "@huggingface/tasks": "^0.19.5",
-    "@huggingface/transformers": "^3.5.1",
+    "@huggingface/transformers": "^3.5.2",
     "@lancedb/lancedb": "^0.18.2",
     "apache-arrow": "^19.0.1",
     "consola": "^3.4.0",

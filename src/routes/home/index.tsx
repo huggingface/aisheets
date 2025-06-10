@@ -213,19 +213,25 @@ export default component$(() => {
           <BigTips>
             <h1 class="font-semibold text-xl">What is Sheets?</h1>
             <p>
-              Sheets is an AI-native app that builds structured tables from
-              prompts, web information, or existing data. The table is fully
-              dynamic and modular, so you can make it evolve in multiple ways,
-              including:
+              Sheets is a tool to build and transform structured tables using AI
+              and web search. You can build tables from scratch or augment your
+              own spreadsheets by:
             </p>
             <ul class="list-disc pl-5">
-              <li>Expanding the number of examples by column</li>
+              <li>
+                Expanding the number of examples by column (using drag and fill)
+              </li>
               <li>Translating, extracting, or summarizing specific columns</li>
-              <li>Edit the model used at the column level</li>
-              <li>Edit the output at the cell level</li>
+              <li>Using different open models</li>
+              <li>Editing individual cells</li>
             </ul>
             <h1 class="font-semibold text-xl">How can Sheets help you?</h1>
             <ul class="space-y-3">
+              <li>
+                <b>Enrich Datasets with AI and the Web:</b> Automatically
+                identify and add relevant information, synthesize, extract, fill
+                in missing data, or restructure existing and expand datasets.
+              </li>
               <li>
                 <b>Conduct Deeper Research:</b> Build structured knowledge bases
                 from web sources and your data, facilitating analysis and
@@ -235,28 +241,26 @@ export default component$(() => {
                 <b>Supercharge Brainstorming:</b> Capture and organize
                 free-flowing ideas into structured tables.
               </li>
-              <li>
-                <b>Enrich Datasets with AI and the Web:</b> Automatically
-                identify and add relevant information, synthesize, extract, fill
-                in missing data, or restructure existing and expand datasets.
-              </li>
             </ul>
-            <h2 class="font-semibold text-lg">Use cases:</h2>
-            <ul class="space-y-1">
-              <li>Build a curated dataset</li>
+            <h2 class="font-semibold text-lg">Some use cases</h2>
+            <ul class="list-disc pl-5">
               <li>Explore and brainstorm topics</li>
               <li>
-                Select the Open Source model that works better for your case
+                Create a high quality tables for your work and hobbies, using
+                web information and the power of AI models
               </li>
-              <li>Improve the quality of prompt over your own data</li>
-            </ul>
-            <h1 class="font-semibold text-xl">We made it for you.</h1>
-            <ul class="space-y-3">
+              <li>Find the best open source model for your use cases</li>
               <li>
-                <b>Researchers:</b> Systematically organize information from
-                diverse sources (web, documents, datasets) for analysis,
-                literature reviews, and knowledge synthesis.
+                Build small, high quality datasets for AI development (evals and
+                fine tuning){' '}
               </li>
+              <li>
+                Run prompts on your own data to test the latest models and
+                improve your prompts
+              </li>
+            </ul>
+            <h1 class="font-semibold text-xl">We made it for you</h1>
+            <ul class="space-y-3">
               <li>
                 <b>Data Analysts and Scientists:</b> Require efficient ways to
                 enrich, restructure, and explore data for insights, valuing
@@ -268,13 +272,18 @@ export default component$(() => {
                 for clarity and decision-making.
               </li>
               <li>
+                <b>AI Builders & Early Adopters:</b> Testing the latest models,
+                and running prompts on your own datasets.
+              </li>
+              <li>
+                <b>Researchers:</b> Systematically organize information from
+                diverse sources (web, documents, datasets) for analysis,
+                literature reviews, and knowledge synthesis.
+              </li>
+              <li>
                 <b>Content Creators & Writers:</b> Need a structured way to
                 organize research, brainstorming, outlines, keywords, and
                 supporting information, emphasizing factual accuracy.
-              </li>
-              <li>
-                <b>AI Builders & Early Adopters:</b> Interested in leveraging AI
-                for AI development and data management.
               </li>
             </ul>
             <h1 class="font-semibold text-xl">Why should you try it?</h1>
@@ -290,6 +299,11 @@ export default component$(() => {
                 refinement.
               </li>
               <li>
+                <b>Hundreds of models</b> Powered by Hugging Face Inference
+                Providers, Sheets provides access to the latest models and the
+                fastest inference providers.
+              </li>
+              <li>
                 <b>Scale with ease:</b> Capable of building and expanding tables
                 beyond the size constraints of typical AI assistants, with a
                 familiar interface for managing larger datasets.
@@ -301,15 +315,16 @@ export default component$(() => {
               </li>
             </ul>
             <p class="italic mt-4">
-              For questions or feedback, join the community tab.
-            </p>
-            <p class="mt-4">
-              <b>Tip:</b> Use the search feature to find relevant information
-              online and enhance your dataset.
-            </p>
-            <p>
-              <b>Note:</b> You can also import existing data files to kickstart
-              your dataset creation.
+              For questions and feedback, drop a message{' '}
+              <a
+                href="https://huggingface.co/spaces/aisheets/sheets/discussions"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="underline"
+              >
+                here
+              </a>
+              .
             </p>
           </BigTips>
           {session.value.anonymous ? <Login /> : <Username />}

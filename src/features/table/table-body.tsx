@@ -350,7 +350,7 @@ export const TableBody = component$(() => {
 
       return (
         <tr
-          class={cn({
+          class={cn('min-w-[326px] w-[326px]', {
             'bg-gray-50/50 hover:bg-gray-50/50': selectedRows.value.includes(
               item.index,
             ),

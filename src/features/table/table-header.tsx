@@ -68,7 +68,7 @@ export const TableHeader = component$(() => {
             `td[data-column-id="${column.id}"]`,
           );
 
-          const newWidth = headerElement.clientWidth + 2;
+          const newWidth = headerElement.getBoundingClientRect().width;
 
           for (const cell of bodyCells) {
             (cell as HTMLElement).style.width = `${newWidth}px`;
@@ -100,7 +100,7 @@ export const TableHeader = component$(() => {
           `td[data-column-id="${column.id}"]`,
         );
 
-        const newWidth = headerElement.clientWidth + 2;
+        const newWidth = headerElement.getBoundingClientRect().width;
         columnsWidths[column.id] = newWidth;
 
         for (const cell of bodyCells) {

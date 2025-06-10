@@ -10,13 +10,14 @@ export const DatasetName = component$(() => {
 
   const state = useStore({
     isEditing: false,
+    error: '',
     name: '',
     displayName: activeDataset.value.name,
   });
 
   const { updateOnActiveDataset } = useDatasetsStore();
 
-  const handleSave = $(() => {
+  const handleSave = $(async () => {
     if (!state.isEditing) return;
 
     if (state.name.trim() === '') {
@@ -27,12 +28,25 @@ export const DatasetName = component$(() => {
 
     const newName = state.name;
     state.displayName = newName;
-    state.isEditing = false;
+
     updateOnActiveDataset({ name: newName });
 
-    server$(async (datasetId: string, newName: string) => {
+    const error = await server$(async (datasetId: string, newName: string) => {
+      if (newName.length === 0) {
+        return 'Dataset name cannot be empty.';
+      }
+
+      if (newName.length > 100) {
+        return 'Dataset name cannot exceed 100 characters.';
+      }
+
       await updateDataset({ id: datasetId, name: newName });
     })(activeDataset.value.id, newName);
+
+    state.error = error ?? '';
+    if (!state.error) {
+      state.isEditing = false;
+    }
   });
 
   const inputRef = useClickOutside<HTMLInputElement>(handleSave);
@@ -44,7 +58,7 @@ export const DatasetName = component$(() => {
     state.displayName = activeDataset.value.name;
   });
 
-  useVisibleTask$(({ track, cleanup }) => {
+  useVisibleTask$(({ track }) => {
     track(() => state.isEditing);
     if (state.isEditing && inputRef.value) {
       inputRef.value.focus();
@@ -73,7 +87,7 @@ export const DatasetName = component$(() => {
   });
 
   return (
-    <div class="w-fit">
+    <div class="w-fit max-w-1/2">
       {state.isEditing ? (
         <Input
           ref={inputRef}
@@ -88,12 +102,13 @@ export const DatasetName = component$(() => {
         />
       ) : (
         <h1
-          class="text-md font-bold truncate leading-none h-5 mt-1"
+          class="text-md font-bold h-6 mt-1 leading-none"
           onClick$={handleEditClick}
         >
           {state.displayName}
         </h1>
       )}
+      <p class="text-red-300 absolute">{state.error}</p>
     </div>
   );
 });

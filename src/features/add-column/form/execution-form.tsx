@@ -465,6 +465,9 @@ export const ExecutionForm = component$<SidebarProps>(
                                 key={idx}
                                 value={provider}
                                 class="text-foreground hover:bg-accent"
+                                onClick$={() => {
+                                  endpointURLSelected.value = false;
+                                }}
                               >
                                 <Select.ItemLabel>{provider}</Select.ItemLabel>
                                 {provider === selectedProvider.value && (

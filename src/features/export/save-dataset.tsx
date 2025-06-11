@@ -12,7 +12,7 @@ export const SaveDataset = component$(() => {
   const session = useSession();
 
   return (
-    <Popover.Root floating="right-start" gutter={14}>
+    <Popover.Root floating="bottom" gutter={14}>
       <Popover.Trigger
         class={cn(
           buttonVariants({ look: 'secondary', size: 'sm' }),

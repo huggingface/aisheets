@@ -334,7 +334,7 @@ export default component$(() => {
         <div class="flex flex-col w-full items-center gap-5">
           {!isLoading.value && (
             <div class="flex flex-col items-center justify-center space-y-4">
-              <MainLogo class="w-[70px] h-[70px]" />
+              <MainLogo class="mt-6 md:mt-0 w-[70px] h-[70px]" />
               <h1 class="text-neutral-600 text-2xl font-semibold">
                 AI-powered spreadsheets
               </h1>
@@ -344,7 +344,7 @@ export default component$(() => {
 
           <div class="flex flex-col justify-between w-full h-full items-center">
             <form
-              class="relative w-[700px] flex flex-col h-full justify-between"
+              class="relative w-full md:w-[700px] flex flex-col h-full justify-between"
               preventdefault:submit
               onSubmit$={onSubmitHandler}
             >
@@ -421,7 +421,7 @@ export default component$(() => {
 
             {!isLoading.value && (
               <div class="flex flex-col items-center justify-center space-y-8 mt-8">
-                <div class="w-[700px] flex flex-row flex-wrap justify-start items-center gap-2">
+                <div class="w-full md:w-[700px] flex flex-col md:flex-row flex-wrap justify-start items-center gap-2">
                   {examples.map((example) => (
                     <Button
                       key={example.title}
@@ -438,13 +438,13 @@ export default component$(() => {
                   ))}
                 </div>
 
-                <div class="w-[697px] flex justify-center items-center">
+                <div class="w-full md:w-[697px] flex justify-center items-center">
                   <hr class="w-full border-t" />
                   <span class="mx-10 text-neutral-500">OR</span>
                   <hr class="w-full border-t" />
                 </div>
 
-                <div class="w-[530px] h-[230px]">
+                <div class="w-full md:w-[530px] h-[150px] lg:h-[230px]">
                   <DragAndDrop />
                 </div>
               </div>

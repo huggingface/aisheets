@@ -444,7 +444,7 @@ export default component$(() => {
                   <hr class="w-full border-t" />
                 </div>
 
-                <div class="w-full md:w-[530px] h-[230px]">
+                <div class="w-full md:w-[530px] h-[150px] lg:h-[230px]">
                   <DragAndDrop />
                 </div>
               </div>

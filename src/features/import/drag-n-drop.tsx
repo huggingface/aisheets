@@ -106,7 +106,7 @@ export const DragAndDrop = component$(() => {
       >
         <span class="text-neutral-500 font-medium">From real-world data</span>
 
-        <Popover.Root floating="bottom-start" gutter={14}>
+        <Popover.Root floating="bottom" gutter={14}>
           <Popover.Trigger
             class={cn(
               buttonVariants({ look: 'outline', size: 'sm' }),

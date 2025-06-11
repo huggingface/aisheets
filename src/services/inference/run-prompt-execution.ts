@@ -9,6 +9,7 @@ import {
 
 import type { ChatCompletionInput } from '@huggingface/tasks';
 
+import { isDev } from '@builder.io/qwik';
 import { HF_TOKEN, INFERENCE_TIMEOUT, ORG_BILLING } from '~/config';
 import { type Example, materializePrompt } from './materialize-prompt';
 
@@ -67,7 +68,7 @@ export const runPromptExecution = async ({
   });
   const options = normalizeOptions(timeout);
 
-  showPromptInfo(modelName, modelProvider, inputPrompt);
+  if (isDev) showPromptInfo(modelName, modelProvider, inputPrompt);
 
   try {
     const response = await chatCompletion(args, options);
@@ -109,7 +110,7 @@ export const runPromptExecutionStream = async function* ({
   });
   const options = normalizeOptions(timeout);
 
-  showPromptInfo(modelName, modelProvider, inputPrompt);
+  if (isDev) showPromptInfo(modelName, modelProvider, inputPrompt);
 
   try {
     let accumulated = '';

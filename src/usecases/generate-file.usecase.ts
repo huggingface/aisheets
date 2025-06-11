@@ -5,13 +5,15 @@ import { getDatasetById } from '~/services/repository/datasets';
 import { exportDatasetTableRows } from '~/services/repository/tables';
 import { type Dataset, useServerSession } from '~/state';
 
-export const useGenerateCSVFile = () =>
+export const useGenerateFile = () =>
   server$(async function (
     this: RequestEventBase<QwikCityPlatform>,
     {
       dataset,
+      format = 'csv',
     }: {
       dataset: Dataset;
+      format?: 'csv' | 'parquet';
     },
   ): Promise<any> {
     useServerSession(this);
@@ -19,20 +21,20 @@ export const useGenerateCSVFile = () =>
     const foundDataset = await getDatasetById(dataset.id);
     if (!foundDataset) throw new Error('Dataset not found');
 
-    let csvFile: string | undefined;
+    let file: string | undefined;
 
     try {
-      csvFile = await exportDatasetTableRows({
+      file = await exportDatasetTableRows({
         dataset,
         columns: dataset.columns.map((column) => ({
           id: column.id,
           name: column.name,
         })),
-        format: 'csv',
+        format,
       });
 
-      return await fs.readFile(csvFile, 'utf-8');
+      return await fs.readFile(file, 'utf-8');
     } finally {
-      if (csvFile) await fs.unlink(csvFile);
+      if (file) await fs.unlink(file);
     }
   });

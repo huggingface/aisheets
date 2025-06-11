@@ -86,7 +86,7 @@ export const MainSidebar = component$(() => {
     <div
       ref={ref}
       class={cn(
-        'transition-all absolute z-50 md:relative duration-300 shrink-0 overflow-hidden w-0',
+        'transition-all absolute z-[52] md:relative duration-300 shrink-0 overflow-hidden w-0',
         {
           'bg-gradient-to-r from-white to-gray-50 h-screen w-[274px] flex flex-col':
             isOpenMainSidebar.value,

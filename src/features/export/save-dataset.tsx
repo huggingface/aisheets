@@ -4,26 +4,12 @@ import { LuDownload } from '@qwikest/icons/lucide';
 import { Label, Popover, buttonVariants } from '~/components';
 import { useSession } from '~/loaders';
 import { TEMPORAL_ID, useDatasetsStore } from '~/state';
-import { CSVDownload } from './csv-download';
 import { ExportToHub } from './export-to-hub';
+import { FileDownload } from './file-download';
 
 export const SaveDataset = component$(() => {
   const { activeDataset } = useDatasetsStore();
-
   const session = useSession();
-
-  if (session.value.anonymous) {
-    return (
-      <div
-        class={cn(
-          buttonVariants({ look: 'secondary', size: 'sm' }),
-          'w-8 h-8 disabled:cursor-not-allowed bg-white',
-        )}
-      >
-        <CSVDownload showText={false} toolTip="Download as CSV" />
-      </div>
-    );
-  }
 
   return (
     <Popover.Root floating="right-start" gutter={14}>
@@ -42,9 +28,15 @@ export const SaveDataset = component$(() => {
         </Label>
       </Popover.Trigger>
       <Popover.Panel class="w-86 text-sm shadow-lg p-2">
-        <ExportToHub />
+        {!session.value.anonymous && (
+          <>
+            <ExportToHub />
+            <hr class="border-t border-slate-200 dark:border-slate-700" />
+          </>
+        )}
+        <FileDownload format="csv" />
         <hr class="border-t border-slate-200 dark:border-slate-700" />
-        <CSVDownload />
+        <FileDownload format="parquet" />
       </Popover.Panel>
     </Popover.Root>
   );

@@ -71,7 +71,7 @@ export const FileDownload = component$<{
       )}
       <div class="w-full flex items-center justify-start hover:bg-neutral-100 gap-2 p-2 rounded-none rounded-bl-md rounded-br-md">
         <LuDownload class="w-4 h-4" />
-        {showText && `Download ${format.toUpperCase()}`}
+        {showText && `Download ${format}`}
       </div>
     </Button>
   );

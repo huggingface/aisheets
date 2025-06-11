@@ -5,6 +5,17 @@ import { Tooltip } from '~/components/ui/tooltip/tooltip';
 import { type Column, useColumnsStore, useDatasetsStore } from '~/state';
 import { useGenerateFile } from '~/usecases/generate-file.usecase';
 
+const FORMAT_DISPLAY_NAMES = {
+  csv: 'CSV',
+  parquet: 'Parquet',
+} as const;
+
+const formatDisplayName = (
+  format: keyof typeof FORMAT_DISPLAY_NAMES,
+): string => {
+  return FORMAT_DISPLAY_NAMES[format];
+};
+
 export const FileDownload = component$<{
   format: 'csv' | 'parquet';
   showText?: boolean;
@@ -67,11 +78,14 @@ export const FileDownload = component$<{
       disabled={downloading.value || !canDownloadFile.value}
     >
       {toolTip && (
-        <Tooltip text={`Download as ${format}`} floating="right-start" />
+        <Tooltip
+          text={`Download as ${formatDisplayName(format)}`}
+          floating="right-start"
+        />
       )}
       <div class="w-full flex items-center justify-start hover:bg-neutral-100 gap-2 p-2 rounded-none rounded-bl-md rounded-br-md">
         <LuDownload class="w-4 h-4" />
-        {showText && `Download ${format}`}
+        {showText && `Download ${formatDisplayName(format)}`}
       </div>
     </Button>
   );

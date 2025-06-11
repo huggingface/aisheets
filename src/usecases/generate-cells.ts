@@ -293,8 +293,14 @@ async function singleCellGeneration({
 }): Promise<{
   cell: Cell;
 }> {
-  const { columnsReferences, modelName, modelProvider, prompt, searchEnabled } =
-    process;
+  const {
+    columnsReferences,
+    modelName,
+    modelProvider,
+    prompt,
+    searchEnabled,
+    useEndpointURL,
+  } = process;
 
   const rowCells = await getRowCells({
     rowIdx,
@@ -318,6 +324,8 @@ async function singleCellGeneration({
     accessToken: session.token,
     modelName,
     modelProvider,
+    endpointUrl:
+      useEndpointURL && MODEL_ENDPOINT_URL ? MODEL_ENDPOINT_URL : undefined,
     examples,
     instruction: prompt,
     timeout,

@@ -85,10 +85,13 @@ export const MainSidebar = component$(() => {
   return (
     <div
       ref={ref}
-      class={cn('transition-all duration-300 shrink-0 overflow-hidden w-0', {
-        'bg-gradient-to-r from-white to-gray-50 h-screen w-[274px] flex flex-col':
-          isOpenMainSidebar.value,
-      })}
+      class={cn(
+        'transition-all absolute z-50 md:relative duration-300 shrink-0 overflow-hidden w-0',
+        {
+          'bg-gradient-to-r from-white to-gray-50 h-screen w-[274px] flex flex-col':
+            isOpenMainSidebar.value,
+        },
+      )}
     >
       <div>
         <div
@@ -97,6 +100,9 @@ export const MainSidebar = component$(() => {
           })}
         >
           <span class="text-base font-semibold px-4 font-inter">Sheets</span>
+          <div class="md:hidden">
+            <MainSidebarButton />
+          </div>
         </div>
         <div class="block space-y-4 px-4 mt-6">
           <Link

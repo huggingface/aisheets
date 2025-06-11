@@ -173,6 +173,13 @@ export const ExecutionForm = component$<SidebarProps>(
     });
 
     useVisibleTask$(({ track }) => {
+      track(selectedProvider);
+      track(selectedModelId);
+
+      endpointURLSelected.value = false;
+    });
+
+    useVisibleTask$(({ track }) => {
       track(selectedModelId);
       track(selectedProvider);
       track(prompt);
@@ -423,7 +430,6 @@ export const ExecutionForm = component$<SidebarProps>(
                                 class="text-foreground hover:bg-accent"
                                 onClick$={() => {
                                   isModelDropdownOpen.value = false;
-                                  endpointURLSelected.value = false;
 
                                   selectedModelId.value = model.id;
                                   modelSearchQuery.value = model.id;

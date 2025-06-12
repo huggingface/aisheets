@@ -1,6 +1,7 @@
 import { component$ } from '@builder.io/qwik';
 import type { DocumentHead } from '@builder.io/qwik-city';
 import { Login } from '~/components/ui/login/Login';
+import { MobileBanner } from '~/components/ui/mobile/banner';
 import { Tips } from '~/components/ui/tips/tips';
 import { DatasetName } from '~/features/datasets';
 import { SaveDataset } from '~/features/export';
@@ -16,6 +17,7 @@ export default component$(() => {
 
   return (
     <ActiveDatasetProvider>
+      <MobileBanner />
       <div class="flex flex-col h-full w-full">
         <div class="sticky">
           <div class="flex flex-col gap-2">

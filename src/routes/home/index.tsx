@@ -5,7 +5,6 @@ import { LuArrowUp, LuEgg, LuGlobe } from '@qwikest/icons/lucide';
 import { Button, Textarea } from '~/components';
 import { Login } from '~/components/ui/login/Login';
 import { MainLogo } from '~/components/ui/logo/logo';
-import { MobileBanner } from '~/components/ui/mobile/banner';
 import { BigTips } from '~/components/ui/tips/big-tips';
 import { Tips } from '~/components/ui/tips/tips';
 import { StepsStatus } from '~/features/autodataset/steps-status';
@@ -207,7 +206,6 @@ export default component$(() => {
 
   return (
     <ActiveDatasetProvider>
-      <MobileBanner />
       <div class="flex justify-between w-full">
         <MainSidebarButton />
 

@@ -106,7 +106,10 @@ export const DatasetName = component$(() => {
           value={state.name}
           onInput$={handleChange}
           onKeyDown$={handleKeyDown}
-          class="text-md h-6 font-bold p-0 border-none outline-none leading-none w-96 max-w-96"
+          class="text-md h-6 font-bold p-0 border-none outline-none leading-none max-w-96"
+          style={{
+            width: `${state.name.length}ch`,
+          }}
         />
       ) : isNameTruncated.value ? (
         <Tooltip text={state.name} floating="bottom-end">
@@ -119,7 +122,7 @@ export const DatasetName = component$(() => {
         </Tooltip>
       ) : (
         <h1
-          class="text-md font-bold h-6 mt-2 leading-none w-96 truncate text-ellipsis whitespace-nowrap"
+          class="text-md font-bold h-6 mt-2 leading-none w-fit truncate text-ellipsis whitespace-nowrap"
           onClick$={handleEditClick}
         >
           {state.displayName}

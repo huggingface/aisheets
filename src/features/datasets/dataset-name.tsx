@@ -1,7 +1,14 @@
-import { $, component$, useStore, useVisibleTask$ } from '@builder.io/qwik';
+import {
+  $,
+  component$,
+  useComputed$,
+  useStore,
+  useVisibleTask$,
+} from '@builder.io/qwik';
 import { server$ } from '@builder.io/qwik-city';
 import { Input } from '~/components';
 import { useClickOutside } from '~/components/hooks/click/outside';
+import { Tooltip } from '~/components/ui/tooltip/tooltip';
 import { updateDataset } from '~/services/repository/datasets';
 import { useDatasetsStore } from '~/state';
 
@@ -66,6 +73,10 @@ export const DatasetName = component$(() => {
     }
   });
 
+  const isNameTruncated = useComputed$(() => {
+    return state.displayName.length > 40;
+  });
+
   const handleEditClick = $(() => {
     state.isEditing = true;
     state.name = activeDataset.value.name;
@@ -97,6 +108,15 @@ export const DatasetName = component$(() => {
           onKeyDown$={handleKeyDown}
           class="text-md h-6 font-bold p-0 border-none outline-none leading-none w-96 max-w-96"
         />
+      ) : isNameTruncated.value ? (
+        <Tooltip text={state.name} floating="bottom-end">
+          <h1
+            class="text-md font-bold h-6 mt-2 leading-none w-96 truncate text-ellipsis whitespace-nowrap"
+            onClick$={handleEditClick}
+          >
+            {state.displayName}
+          </h1>
+        </Tooltip>
       ) : (
         <h1
           class="text-md font-bold h-6 mt-2 leading-none w-96 truncate text-ellipsis whitespace-nowrap"

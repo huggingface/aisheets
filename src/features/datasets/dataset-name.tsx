@@ -2,7 +2,6 @@ import { $, component$, useStore, useVisibleTask$ } from '@builder.io/qwik';
 import { server$ } from '@builder.io/qwik-city';
 import { Input } from '~/components';
 import { useClickOutside } from '~/components/hooks/click/outside';
-import { Tooltip } from '~/components/ui/tooltip/tooltip';
 import { updateDataset } from '~/services/repository/datasets';
 import { useDatasetsStore } from '~/state';
 
@@ -99,14 +98,12 @@ export const DatasetName = component$(() => {
           class="text-md h-6 font-bold p-0 border-none outline-none leading-none w-96 max-w-96"
         />
       ) : (
-        <Tooltip text={state.name} floating="bottom-end">
-          <h1
-            class="text-md font-bold h-6 mt-2 leading-none w-96 truncate text-ellipsis whitespace-nowrap"
-            onClick$={handleEditClick}
-          >
-            {state.displayName}
-          </h1>
-        </Tooltip>
+        <h1
+          class="text-md font-bold h-6 mt-2 leading-none w-96 truncate text-ellipsis whitespace-nowrap"
+          onClick$={handleEditClick}
+        >
+          {state.displayName}
+        </h1>
       )}
       <p class="text-red-300 absolute">{state.error}</p>
     </div>

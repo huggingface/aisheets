@@ -33,7 +33,7 @@ export const useGenerateFile = () =>
         format,
       });
 
-      return await fs.readFile(file, 'utf-8');
+      return await fs.readFile(file);
     } finally {
       if (file) await fs.unlink(file);
     }

@@ -199,11 +199,6 @@ export default component$(() => {
     }
   });
 
-  const onSubmitHandler = $(async (e: Event) => {
-    e.preventDefault();
-    await handleAssistant();
-  });
-
   return (
     <ActiveDatasetProvider>
       <div class="flex justify-between w-full">
@@ -343,11 +338,7 @@ export default component$(() => {
           )}
 
           <div class="flex flex-col justify-between w-full h-full items-center">
-            <form
-              class="relative w-full md:w-[700px] flex flex-col h-full justify-between"
-              preventdefault:submit
-              onSubmit$={onSubmitHandler}
-            >
+            <div class="relative w-full md:w-[700px] flex flex-col h-full justify-between">
               <StepsStatus
                 isLoading={isLoading.value}
                 currentStep={currentStep.value}
@@ -373,13 +364,6 @@ export default component$(() => {
                       const target = e.target as HTMLTextAreaElement;
                       target.style.height = 'auto';
                       target.style.height = `${target.scrollHeight}px`;
-                    }}
-                    onKeyDown$={async (e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        await handleAssistant();
-                      }
-                      // Shift+Enter will insert a newline by default
                     }}
                   />
                 </div>
@@ -411,13 +395,14 @@ export default component$(() => {
                       type="submit"
                       class="w-[30px] h-[30px] rounded-full flex items-center justify-center p-0"
                       disabled={isLoading.value || !prompt.value.trim()}
+                      onClick$={handleAssistant}
                     >
                       <LuEgg class="text-lg" />
                     </Button>
                   </div>
                 </div>
               </div>
-            </form>
+            </div>
 
             {!isLoading.value && (
               <div class="flex flex-col items-center justify-center space-y-8 mt-8">

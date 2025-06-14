@@ -186,7 +186,7 @@ function readmeContent(dataset: Dataset): string {
 ---
 pretty_name: ${dataset.name}
 tags:
-- sheets
+- aisheets
 - synthetic data
 ---
 `;

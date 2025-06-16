@@ -35,7 +35,7 @@ export const HideColumn = component$<{
 
   return (
     <Button
-      class="flex flex-row gap-1 justify-start font-light py-1 h-auto"
+      class="p-2 cursor-pointer flex flex-row gap-1 items-center hover:bg-neutral-100 rounded-full"
       look="ghost"
       size="sm"
       onClick$={hideColumn}

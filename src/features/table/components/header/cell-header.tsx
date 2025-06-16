@@ -79,19 +79,17 @@ export const TableCellHeader = component$<{ column: Column }>(({ column }) => {
           </div>
         </Popover.Trigger>
         <Popover.Panel>
-          <div class="flex flex-col gap-0.5">
+          <div class="flex flex-col gap-0.5 font-normal">
             <ColumnNameEdition column={column} />
             <div class="rounded-sm hover:bg-neutral-100 transition-colors mt-2">
-              <CellSettings column={column}>
-                <span class="font-normal">Edit configuration</span>
-              </CellSettings>
+              <CellSettings column={column}>Edit configuration</CellSettings>
             </div>
             <div class="rounded-sm hover:bg-neutral-100 transition-colors">
               <HideColumn column={column} />
             </div>
             <div class="rounded-sm hover:bg-neutral-100 transition-colors">
               <Button
-                class="flex flex-row gap-1 justify-start font-light py-1 h-auto"
+                class="p-2 cursor-pointer flex flex-row gap-1 items-center hover:bg-neutral-100 rounded-full"
                 look="ghost"
                 size="sm"
                 onClick$={onDeleteColumn}

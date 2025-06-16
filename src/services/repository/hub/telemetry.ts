@@ -19,7 +19,6 @@ const hashedUsername = async (username: string): Promise<string> => {
 
   return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
 };
-// src/services/repository/hub/telemetry.ts
 
 export const sendTelemetry = async (
   topic: string,

@@ -12,7 +12,7 @@ export const buttonVariants = cva(
         secondary:
           'p-4 rounded-md h-10 w-fit select-none border bg-neutral-100 text-primary-foreground shadow-sm hover:bg-neutral-100 active:shadow-base active:press disabled:bg-neutral-100 disabled:text-neutral-400 disabled:border-neutral-200 disabled:opacity-100 disabled:pointer-events-none',
         alert:
-          'border-base bg-alert text-alert-foreground shadow-sm hover:bg-alert/90 active:shadow-base active:press',
+          'p-4 rounded-md h-10 w-fit select-none text-alert-foreground bg-alert hover:bg-alert/80 shadow-sm active:shadow-base active:press disabled:bg-alert/90 disabled:text-neutral-400 disabled:opacity-100 disabled:pointer-events-none',
         outline:
           'border bg-background text-foreground shadow-sm hover:bg-accent active:shadow-base active:press',
         ghost: 'text-accent-foreground hover:bg-accent',

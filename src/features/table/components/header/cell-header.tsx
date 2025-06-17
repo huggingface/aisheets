@@ -1,20 +1,17 @@
-import { $, component$, useComputed$ } from '@builder.io/qwik';
-import { server$ } from '@builder.io/qwik-city';
+import { component$, useComputed$ } from '@builder.io/qwik';
 import { cn } from '@qwik-ui/utils';
-import { LuTrash } from '@qwikest/icons/lucide';
-import { Button, Popover, buttonVariants } from '~/components';
+import { Popover, buttonVariants } from '~/components';
 import { Tooltip } from '~/components/ui/tooltip/tooltip';
 import { useExecution } from '~/features/add-column';
 import { CellGeneration } from '~/features/table/components/header/cell-generation';
 import { CellSettings } from '~/features/table/components/header/cell-settings';
 import { ColumnNameEdition } from '~/features/table/components/header/column-name-edition';
+import { DeleteColumn } from '~/features/table/components/header/delete-column';
 import { HideColumn } from '~/features/table/components/header/hide-column';
-import { deleteColumn } from '~/services';
-import { type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
+import { type Column, TEMPORAL_ID } from '~/state';
 
 export const TableCellHeader = component$<{ column: Column }>(({ column }) => {
   const { columnId } = useExecution();
-  const { removeColumn } = useColumnsStore();
 
   const classes = useComputed$(() =>
     cn({ 'bg-neutral-100': columnId.value === column.id }),
@@ -37,14 +34,6 @@ export const TableCellHeader = component$<{ column: Column }>(({ column }) => {
     }
 
     return columnType;
-  });
-
-  const onDeleteColumn = $(async () => {
-    await server$(async (columnId: string) => {
-      await deleteColumn(columnId);
-    })(column.id);
-
-    removeColumn(column);
   });
 
   return (
@@ -88,15 +77,7 @@ export const TableCellHeader = component$<{ column: Column }>(({ column }) => {
               <HideColumn column={column} />
             </div>
             <div class="rounded-sm hover:bg-neutral-100 transition-colors">
-              <Button
-                class="p-2 cursor-pointer flex flex-row gap-1 items-center hover:bg-neutral-100 rounded-full"
-                look="ghost"
-                size="sm"
-                onClick$={onDeleteColumn}
-              >
-                <LuTrash class="text-sm text-neutral" />
-                Delete column
-              </Button>
+              <DeleteColumn column={column} />
             </div>
           </div>
         </Popover.Panel>

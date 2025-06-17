@@ -16,7 +16,7 @@ import {
 import { type Session, useServerSession } from '~/state';
 
 // This list helps to exclude providers that are not supported by the endpoint
-const UNSUPPORTED_PROVIDERS = ['openai', 'groq', 'nscale', 'ovhcloud'];
+const UNSUPPORTED_PROVIDERS = ['openai', 'nscale', 'ovhcloud'];
 
 const MODEL_EXPANDABLE_KEYS = [
   'author',

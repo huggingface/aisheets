@@ -241,7 +241,7 @@ export const ExecutionForm = component$<SidebarProps>(
 
     return (
       <th
-        class="z-20 min-w-[660px] w-[660px] bg-neutral-100 font-normal border text-left"
+        class="z-20 min-w-[660px] w-[660px] bg-neutral-100 font-normal border text-left fixed top-100 h-screen"
         ref={executionFormRef}
       >
         <div class="flex justify-between items-center p-1 h-[38px]">
@@ -264,7 +264,7 @@ export const ExecutionForm = component$<SidebarProps>(
 
         <div class="relative h-full w-full">
           <div class="absolute h-full w-full flex flex-col">
-            <div class="flex flex-col gap-2 px-8 bg-neutral-100">
+            <div class="flex flex-col gap-2 px-8 bg-neutral-100 w-full">
               <div class="relative">
                 <div class="h-72 min-h-72 max-h-72 bg-white border border-secondary-foreground rounded-sm">
                   <TemplateTextArea

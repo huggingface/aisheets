@@ -11,6 +11,7 @@ import type { ChatCompletionInput } from '@huggingface/tasks';
 
 import { isDev } from '@builder.io/qwik';
 import { HF_TOKEN, INFERENCE_TIMEOUT, ORG_BILLING } from '~/config';
+import { cacheGet, cacheSet } from '~/services/cache';
 import { type Example, materializePrompt } from './materialize-prompt';
 
 export interface PromptExecutionParams {
@@ -71,11 +72,17 @@ export const runPromptExecution = async ({
   if (isDev) showPromptInfo(modelName, modelProvider, inputPrompt);
 
   try {
+    const cacheValue = cacheGet(args);
+    if (cacheValue) return cacheValue;
+
     const response = await chatCompletion(args, options);
-    return {
+
+    const value = {
       value: response.choices[0].message.content,
       done: true,
     };
+
+    return cacheSet(args, value);
   } catch (e) {
     return {
       error: handleError(e),
@@ -112,6 +119,9 @@ export const runPromptExecutionStream = async function* ({
 
   if (isDev) showPromptInfo(modelName, modelProvider, inputPrompt);
 
+  const cacheValue = cacheGet(args);
+  if (cacheValue) return cacheValue;
+
   try {
     let accumulated = '';
     const stream = chatCompletionStream(args, options);
@@ -123,7 +133,12 @@ export const runPromptExecutionStream = async function* ({
       }
     }
 
-    yield { value: accumulated, done: true };
+    const value = {
+      value: accumulated,
+      done: true,
+    };
+
+    yield cacheSet(args, value);
   } catch (e) {
     yield { error: handleError(e), done: true };
   }

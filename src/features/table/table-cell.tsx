@@ -202,10 +202,12 @@ export const TableCell = component$<{
               content.map((item) => processBlob(item)),
             );
             contentValue.value = `<div>${divs.join(' ')}</div>`;
-          }
-          // Only process if we have valid content
-          if (!content || !content.bytes) {
+
             return contentValue.value;
+          }
+
+          if (content && !content.bytes && !isObjectType(column)) {
+            content.bytes = content;
           }
 
           const processedInfo = await processMediaContent(
@@ -219,6 +221,7 @@ export const TableCell = component$<{
           } else {
             contentValue.value =
               '<div class="error-content">Unable to process media content</div>';
+            contentCategory.value = 'UNKNOWN';
           }
 
           return contentValue.value;

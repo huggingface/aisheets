@@ -1,4 +1,5 @@
 import { join } from 'node:path';
+import { isDev } from '@builder.io/qwik';
 
 /**
  * The OAuth client ID used for authentication.
@@ -20,6 +21,12 @@ export const HF_TOKEN: string | undefined = process.env.HF_TOKEN;
  */
 export const OAUTH_SCOPES: string =
   process.env.OAUTH_SCOPES ?? 'openid profile inference-api manage-repos';
+
+export const OAUTH_HTTPS_ONLY: boolean =
+  process.env.OAUTH_HTTPS_ONLY !== undefined
+    ? process.env.OAUTH_HTTPS_ONLY === 'true' ||
+      process.env.OAUTH_HTTPS_ONLY === '1'
+    : !isDev;
 
 /**
  * The directory where data is stored.

@@ -381,6 +381,7 @@ async function populateDataset(
           ...column.process,
           useEndpointURL: MODEL_ENDPOINT_URL !== undefined,
         },
+        stream: false,
         session,
         offset: 0,
         limit: 5,

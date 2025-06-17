@@ -120,7 +120,10 @@ export const runPromptExecutionStream = async function* ({
   if (isDev) showPromptInfo(modelName, modelProvider, inputPrompt);
 
   const cacheValue = cacheGet(args);
-  if (cacheValue) return cacheValue;
+  if (cacheValue) {
+    yield cacheValue;
+    return;
+  }
 
   try {
     let accumulated = '';

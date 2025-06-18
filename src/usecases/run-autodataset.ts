@@ -179,6 +179,7 @@ async function extractDatasetConfig({
   const result = processTextConfigResponse(
     response.choices[0].message.content || '',
     maxSearchQueries,
+    searchEnabled,
   );
 
   return cacheSet(args, result);

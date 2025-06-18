@@ -16,9 +16,7 @@ export const saveSession = async (event: RequestEvent, session: Session) => {
     console.error(e);
   }
 
-  cookie.delete('anonymous');
   cookie.delete('session');
-
   cookie.set('session', session, {
     sameSite: 'none',
     secure: true,
@@ -44,6 +42,7 @@ export const saveAnonymousSession = async (event: RequestEvent) => {
     sameSite: 'none',
     secure: true,
     httpOnly: !isDev,
+    maxAge: 60 * 60 * 24 * 365,
     path: '/',
   });
   sharedMap.set('anonymous', session);

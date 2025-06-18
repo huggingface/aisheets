@@ -1,7 +1,7 @@
 import { isDev } from '@builder.io/qwik';
 import type { RequestEvent } from '@builder.io/qwik-city';
 import * as hub from '@huggingface/hub';
-import { CLIENT_ID, HF_TOKEN, OAUTH_SCOPES } from '~/config';
+import { CLIENT_ID, HF_TOKEN, OAUTH_HTTPS_ONLY, OAUTH_SCOPES } from '~/config';
 import { saveSession } from '~/services/auth/session';
 import type { Session } from '~/state/session';
 
@@ -16,7 +16,7 @@ export const onGet = async (event: RequestEvent) => {
 const handleOAuthLogin = async ({ url, cookie, redirect }: RequestEvent) => {
   const sessionCode = crypto.randomUUID();
 
-  const redirectOrigin = !isDev
+  const redirectOrigin = OAUTH_HTTPS_ONLY
     ? url.origin.replace('http://', 'https://')
     : url.origin;
 

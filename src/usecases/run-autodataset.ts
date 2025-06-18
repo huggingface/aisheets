@@ -12,8 +12,6 @@ import {
 import { createColumn, getDatasetColumns } from '~/services/repository/columns';
 import { createDataset } from '~/services/repository/datasets';
 import { createProcess } from '~/services/repository/processes';
-
-import { sendTelemetry } from '~/services/repository/hub/telemetry';
 import { indexDatasetSources } from '~/services/websearch/embed';
 import { scrapeUrlsBatch } from '~/services/websearch/scrape';
 import {
@@ -275,10 +273,6 @@ async function createDatasetWithColumns(
   const dataset = await createDataset({
     name: datasetName,
     createdBy: session.user.username,
-  });
-
-  sendTelemetry('dataset.create', session.user.username, {
-    datasetId: dataset.id,
   });
 
   // Create all columns first

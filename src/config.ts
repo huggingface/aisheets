@@ -237,6 +237,12 @@ export const GOOGLE_REDIRECT_URI: string | undefined =
  */
 export const ORG_BILLING = process.env.ORG_BILLING ?? undefined;
 
+export const TELEMETRY_ENABLED: boolean =
+  process.env.TELEMETRY_ENABLED !== undefined
+    ? process.env.TELEMETRY_ENABLED === 'true' ||
+      process.env.TELEMETRY_ENABLED === '1'
+    : !isDev;
+
 /**
  * List of blocked domains or URL fragments for web search.
  * This value is retrieved from the environment variable `BLOCKED_URLS` as a comma-separated string.

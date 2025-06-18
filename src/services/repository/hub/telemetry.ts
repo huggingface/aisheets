@@ -1,3 +1,5 @@
+import { TELEMETRY_ENABLED } from '~/config';
+
 const _HF_DEFAULT_ENDPOINT = 'https://huggingface.co';
 const ENDPOINT = (process.env.HF_ENDPOINT ?? _HF_DEFAULT_ENDPOINT).trim();
 
@@ -25,6 +27,8 @@ export const sendTelemetry = async (
   username: string,
   userAgent: Record<string, any>,
 ) => {
+  if (!TELEMETRY_ENABLED) return;
+
   try {
     const hashedUser = await hashedUsername(username);
     const response = await fetch(`${ENDPOINT}/api/telemetry/${topic}`, {

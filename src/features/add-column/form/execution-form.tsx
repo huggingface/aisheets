@@ -241,7 +241,7 @@ export const ExecutionForm = component$<SidebarProps>(
 
     return (
       <th
-        class="z-20 min-w-[660px] w-[660px] bg-neutral-100 font-normal border text-left fixed top-100 h-screen"
+        class="z-20 min-w-[660px] w-[660px] bg-neutral-100 font-normal border text-left"
         ref={executionFormRef}
       >
         <div class="flex justify-between items-center p-1 h-[38px]">

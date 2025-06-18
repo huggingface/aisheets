@@ -11,7 +11,7 @@ export const Table = component$(() => {
         <TableView />
       </div>
 
-      <div class="overflow-auto max-h-full scrollable -mr-6 rounded-tl-sm relative">
+      <div class="overflow-auto max-h-full h-screen scrollable -mr-6 rounded-tl-sm relative">
         <table class="grid text-sm border-separate border-spacing-0 mr-2">
           <TableHeader />
           <TableBody />

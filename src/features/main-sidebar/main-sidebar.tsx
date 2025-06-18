@@ -85,20 +85,23 @@ export const MainSidebar = component$(() => {
   return (
     <div
       ref={ref}
-      class={cn('transition-all duration-300 shrink-0 overflow-hidden w-0', {
-        'bg-gradient-to-r from-white to-gray-50 h-screen w-[274px] flex flex-col':
-          isOpenMainSidebar.value,
-      })}
+      class={cn(
+        'transition-all absolute z-[52] md:relative duration-300 shrink-0 overflow-hidden w-0 h-screen bg-gradient-to-r from-white to-gray-50',
+        {
+          'w-[274px] flex flex-col': isOpenMainSidebar.value,
+        },
+      )}
     >
       <div>
         <div
-          class={cn('flex items-center justify-between px-2 mt-5 w-0', {
-            'w-[274px]': isOpenMainSidebar.value,
-          })}
+          class={cn('flex items-center justify-between px-2 mt-5 w-[274px]')}
         >
           <span class="text-base font-semibold px-4 font-inter">Sheets</span>
+          <div class="md:hidden">
+            <MainSidebarButton />
+          </div>
         </div>
-        <div class="block space-y-4 px-4 mt-6">
+        <div class="block space-y-4 px-4 mt-6 w-[274px]">
           <Link
             href="/"
             class="flex items-center gap-3 py-2 hover:bg-gray-100 rounded text-sm font-light truncate max-w-full pl-3"

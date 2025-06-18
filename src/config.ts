@@ -1,4 +1,5 @@
 import { join } from 'node:path';
+import { isDev } from '@builder.io/qwik';
 
 /**
  * The OAuth client ID used for authentication.
@@ -20,6 +21,12 @@ export const HF_TOKEN: string | undefined = process.env.HF_TOKEN;
  */
 export const OAUTH_SCOPES: string =
   process.env.OAUTH_SCOPES ?? 'openid profile inference-api manage-repos';
+
+export const OAUTH_HTTPS_ONLY: boolean =
+  process.env.OAUTH_HTTPS_ONLY !== undefined
+    ? process.env.OAUTH_HTTPS_ONLY === 'true' ||
+      process.env.OAUTH_HTTPS_ONLY === '1'
+    : !isDev;
 
 /**
  * The directory where data is stored.
@@ -232,6 +239,20 @@ export const GOOGLE_OAUTH_SCOPE: string =
  * Users must be part of the organiation in order to run inference calls. Default: undefined
  */
 export const ORG_BILLING = process.env.ORG_BILLING ?? undefined;
+
+/**
+ * This constant defines whether telemetry is enabled.
+ *
+ * It checks the environment variable `TELEMETRY_ENABLED` and defaults to false in development mode.
+ * If the variable is set to 'true' or '1', telemetry will be enabled.
+ * Otherwise, it will be disabled.
+ * Default value: false in development mode, true otherwise
+ */
+export const TELEMETRY_ENABLED: boolean =
+  process.env.TELEMETRY_ENABLED !== undefined
+    ? process.env.TELEMETRY_ENABLED === 'true' ||
+      process.env.TELEMETRY_ENABLED === '1'
+    : !isDev;
 
 /**
  * List of blocked domains or URL fragments for web search.

@@ -55,6 +55,12 @@ export const useExportDataset = () =>
         repo: { type: 'dataset', name: repoId },
         private: exportParams.private,
         accessToken: session.token,
+        files: [
+          {
+            path: 'README.md',
+            content: new Blob([readmeContent(dataset)]),
+          },
+        ],
       });
     } catch (error) {
       if ((error as HubApiError).statusCode !== 409) {
@@ -174,4 +180,14 @@ async function createDatasetConfig(dataset: Dataset): Promise<string> {
   await fs.writeFile(configPath, yaml.stringify({ columns: columnConfigs }));
 
   return configPath;
+}
+function readmeContent(dataset: Dataset): string {
+  return `
+---
+pretty_name: ${dataset.name}
+tags:
+- aisheets
+- synthetic data
+---
+`;
 }

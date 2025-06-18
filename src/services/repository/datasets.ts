@@ -2,6 +2,7 @@ import { DatasetModel } from '~/services/db/models';
 import type { Dataset } from '~/state';
 import { getColumnCells } from './cells';
 import { getDatasetColumns } from './columns';
+import { sendTelemetry } from './hub/telemetry';
 import {
   countDatasetTableRows,
   createDatasetTable,
@@ -75,6 +76,7 @@ export const importDatasetFromFile = async (
     name,
     createdBy,
   });
+
   try {
     const columns = await createDatasetTableFromFile(
       {
@@ -89,6 +91,10 @@ export const importDatasetFromFile = async (
     );
 
     const datasetSize = await countDatasetTableRows({ dataset: model });
+
+    sendTelemetry('dataset.import', createdBy, {
+      datasetId: model.id,
+    });
 
     return {
       id: model.id,
@@ -117,6 +123,10 @@ export const createDataset = async ({
 
   try {
     await createDatasetTable({ dataset: model });
+
+    sendTelemetry('dataset.create', createdBy, {
+      datasetId: model.id,
+    });
 
     return {
       id: model.id,

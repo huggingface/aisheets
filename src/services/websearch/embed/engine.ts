@@ -1,8 +1,5 @@
 import { featureExtraction } from '@huggingface/inference';
-import {
-  type FeatureExtractionPipeline,
-  pipeline,
-} from '@huggingface/transformers';
+import { pipeline } from '@huggingface/transformers';
 import * as lancedb from '@lancedb/lancedb';
 import * as arrow from 'apache-arrow';
 import { DEFAULT_EMBEDDING_MODEL, VECTOR_DB_DIR } from '~/config';
@@ -14,47 +11,54 @@ import { flattenTree, groupListItemsIntoChunks } from '../markdown';
 import type { WebSource } from '../search-sources';
 import type { MarkdownElement } from '../types';
 
-const { provider, endpointUrl, model } = DEFAULT_EMBEDDING_MODEL;
-
-let extractor: FeatureExtractionPipeline;
-const defaultEmbeddings = async (texts: string[]): Promise<number[][]> => {
-  extractor ??= (await pipeline(
-    'feature-extraction',
-    model,
-  )) as any as FeatureExtractionPipeline;
-  const results = await extractor(texts, { pooling: 'cls' });
-
-  return results.tolist();
-};
-
-const endpointEmbeddings = async (
+let processEmbeddings: (
   texts: string[],
   options: {
     accessToken: string;
   },
-): Promise<number[][]> => {
-  const results = await featureExtraction(
-    normalizeFeatureExtractionArgs({
-      inputs: texts,
-      accessToken: options.accessToken,
-      modelName: model,
-      modelProvider: provider!,
-      endpointUrl: endpointUrl,
-    }),
-    normalizeOptions(),
-  );
-
-  return results as number[][];
+) => Promise<number[][]> = async () => {
+  throw new Error('processEmbeddings function not initialized');
 };
 
-const processEmbeddings =
-  provider === undefined && endpointUrl === undefined
-    ? defaultEmbeddings
-    : endpointEmbeddings;
+const { provider, endpointUrl, model } = DEFAULT_EMBEDDING_MODEL;
+
+if (provider === undefined && endpointUrl === undefined) {
+  const extractor = await pipeline('feature-extraction', model);
+
+  processEmbeddings = async (
+    texts: string[],
+    options: {
+      accessToken: string;
+    },
+  ): Promise<number[][]> => {
+    const results = await extractor(texts, { pooling: 'cls' });
+    return results.tolist();
+  };
+} else {
+  processEmbeddings = async (
+    texts: string[],
+    options: {
+      accessToken: string;
+    },
+  ): Promise<number[][]> => {
+    const results = await featureExtraction(
+      normalizeFeatureExtractionArgs({
+        inputs: texts,
+        accessToken: options.accessToken,
+        modelName: model,
+        modelProvider: provider!,
+        endpointUrl: endpointUrl,
+      }),
+      normalizeOptions(),
+    );
+
+    return results as number[][];
+  };
+}
 
 export const configureEmbeddingsIndex = async () => {
-  const db = await lancedb.connect(VECTOR_DB_DIR);
   // Check if the database is empty
+  const db = await lancedb.connect(VECTOR_DB_DIR);
 
   const { embeddingDim } = DEFAULT_EMBEDDING_MODEL;
 

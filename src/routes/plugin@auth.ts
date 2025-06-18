@@ -8,7 +8,6 @@ export const onRequest = async (event: RequestEvent) => {
   const anonymous = cookie.get('anonymous');
 
   if (session) {
-    cookie.delete('anonymous');
     sharedMap.set('session', session.json());
 
     return;

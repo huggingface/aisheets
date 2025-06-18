@@ -9,14 +9,14 @@ importers:
   .:
     dependencies:
       '@duckdb/node-api':
-        specifier: 1.2.2-alpha.18
-        version: 1.2.2-alpha.18
+        specifier: 1.2.2-alpha.19
+        version: 1.2.2-alpha.19
       '@huggingface/hub':
-        specifier: ^1.1.2
-        version: 1.1.2
+        specifier: ~2.1.0
+        version: 2.1.0
       '@huggingface/inference':
-        specifier: ^3.12.1
-        version: 3.12.1
+        specifier: ~4.0.4
+        version: 4.0.4
       '@huggingface/tasks':
         specifier: ^0.19.5
         version: 0.19.5
@@ -240,36 +240,36 @@ packages:
     bundledDependencies:
       - is-unicode-supported
 
-  '@duckdb/node-api@1.2.2-alpha.18':
-    resolution: {integrity: sha512-9ke/DF7ZZzj6pzlswF34DDytYUn8fhAe4JdZGEvXpNJxnccf1l1Aisqg0fUtOxZkYrO4ALgSZHR0i3i4RLndUQ==}
+  '@duckdb/node-api@1.2.2-alpha.19':
+    resolution: {integrity: sha512-qH/PqK+Kp7TDZJU5SdS9+2jrYOJGHME4NcDsgrcbZk7fKTlXsDI8f8F0CnPxGCsBD35B+BEgphz9TTLoj1/vNA==}
 
-  '@duckdb/node-bindings-darwin-arm64@1.2.2-alpha.18':
-    resolution: {integrity: sha512-xNzfi/+swRiA1Rye25f33tKXmFYbyQcslN6bpB3nR/Wkiotjlu3dAc5wvTpUDiiJwNeZRTRdJM/OXtUO0YaAfw==}
+  '@duckdb/node-bindings-darwin-arm64@1.2.2-alpha.19':
+    resolution: {integrity: sha512-r+MDv7XFxl4eCZEthmHWV2mxnczUFVc+w2cH0KzdTWmCgtjT3jpDhEulDekOG9SP9lFvfsTRTRgKatE2TTqu6w==}
     cpu: [arm64]
     os: [darwin]
 
-  '@duckdb/node-bindings-darwin-x64@1.2.2-alpha.18':
-    resolution: {integrity: sha512-9vXgAJ2LFKRa53E7RmvGdhWtisLLPKIpSzeE/L3X4aD5zv1V4YnhYHuMOTgxZguj+eOT1pvG99geH1WQb3DdNQ==}
+  '@duckdb/node-bindings-darwin-x64@1.2.2-alpha.19':
+    resolution: {integrity: sha512-WibHtKNQVDFr8AQumML9HLdgkYIRiC0B+MSrLvfojcrYmupoHB0Nwyn/T2UoTXNnTsn3NOrZECHUZGwRFmmF9g==}
     cpu: [x64]
     os: [darwin]
 
-  '@duckdb/node-bindings-linux-arm64@1.2.2-alpha.18':
-    resolution: {integrity: sha512-WcgfkPDGRsMcKAVzDhL14BJB1lYD9YY7wEIoPdyXYwkK+c4WT7ublsx7diFqBk/jO0jFYTRmXIqpNyqGT0Lwjg==}
+  '@duckdb/node-bindings-linux-arm64@1.2.2-alpha.19':
+    resolution: {integrity: sha512-TfQ/k4YMAsDFpI5Y/nvA7yXs7KqzKsOZX4XzCyqWdfNPDQvheW+wRCxJVUE8kWqniMep62EkvbuX94yFtTZb8A==}
     cpu: [arm64]
     os: [linux]
 
-  '@duckdb/node-bindings-linux-x64@1.2.2-alpha.18':
-    resolution: {integrity: sha512-dPqVJwpu9SmKxuw7ZfebUzOLBMrZz24UzFXuHX0uwSXZS1ndUuHnqk7SWGcWafNJeDlMKV//uMQke+MGXt2LmQ==}
+  '@duckdb/node-bindings-linux-x64@1.2.2-alpha.19':
+    resolution: {integrity: sha512-KDGD50H/sA/HWZFVuZhZTVZEKB3N8+ZPhHxxPs67p46WNm/fiQ6/FlaLasQ/gEmOY+I3bWcwjrba4h6LhFXnAQ==}
     cpu: [x64]
     os: [linux]
 
-  '@duckdb/node-bindings-win32-x64@1.2.2-alpha.18':
-    resolution: {integrity: sha512-0BSRNH3JbvHDYd2LM/25uQlSaXzeJaJvBCJQZoIXttY5vq6stLknfQ9zWADLa8jwFYU+p87Ajqg415zs4SfMFQ==}
+  '@duckdb/node-bindings-win32-x64@1.2.2-alpha.19':
+    resolution: {integrity: sha512-jsHu/tORVBfJ6QQ02c1vVKEJM6aVSNwwmFtd1G7n9HGjJeE1Wclewpfp3k7R7qU9vxtQtHoAMHeTVsnC2d3ymQ==}
     cpu: [x64]
     os: [win32]
 
-  '@duckdb/node-bindings@1.2.2-alpha.18':
-    resolution: {integrity: sha512-1O/yBDevwMNGlv559sn3myOds0lM0D4e8ilHsDzOs3rDnpzEdzK6aSTPVG8APjjFjPjk+pEzBxUse7UsP6objA==}
+  '@duckdb/node-bindings@1.2.2-alpha.19':
+    resolution: {integrity: sha512-EZpUPCPNJaQVmI3jWa/SIrs7lV9SJYS5a1bV3SRSQ6ZBJYFMrr2Mik2RjCVepA9cIwD2KIrXaWV7jiSVM29zJA==}
 
   '@emnapi/core@1.3.1':
     resolution: {integrity: sha512-pVGjBIt1Y6gg3EJN8jTcfpP/+uuRksIo055oE/OBkDNcjZqVbfkWCksG1Jp4yZnj3iKWyWX8fdG/j6UDYPbFog==}
@@ -457,20 +457,28 @@ packages:
   '@gar/promisify@1.1.3':
     resolution: {integrity: sha512-k2Ty1JcVojjJFwrg/ThKi2ujJ7XNLYaFGNB/bWT9wGR+oSMJHMa5w+CUq6p/pVrKeNNgA7pCqEcjSnHVoqJQFw==}
 
-  '@huggingface/hub@1.1.2':
-    resolution: {integrity: sha512-Jf4GhvVj9ABDw4Itb3BV1T7f22iewuZva476qTicQ4kOTbosuUuFDhsVH7ZH6rVNgg20Ll9kaNBF5CXjySIT+w==}
+  '@huggingface/hub@2.1.0':
+    resolution: {integrity: sha512-L+125tAXwCOwVd8n4qQlT20ZJP7I5sEXOLNrIzpgkUG6eMIsGlxT+9hmmiCH/LGmjbXjlcRHoPB8GGT3zCws4A==}
     engines: {node: '>=18'}
+    hasBin: true
 
-  '@huggingface/inference@3.12.1':
-    resolution: {integrity: sha512-gRnRHZkVAb7mzmPnLcFrttA17yZdUiz+xLqk19FBwCsCjBBlcDCXVIrZ3RW1DdZq297PB6m6t995600sDq3T6g==}
+  '@huggingface/inference@4.0.4':
+    resolution: {integrity: sha512-Pz0l435mmlQNNOvIBqoDdG+ckdg9WdERFa8AiBnFX7ejY9DWxU31wr0sY8v9l+bsrmk6rZ3BqIXOlf5wjJf8Uw==}
     engines: {node: '>=18'}
 
   '@huggingface/jinja@0.4.1':
     resolution: {integrity: sha512-3WXbMFaPkk03LRCM0z0sylmn8ddDm4ubjU7X+Hg4M2GOuMklwoGAFXp9V2keq7vltoB/c7McE5aHUVVddAewsw==}
     engines: {node: '>=18'}
 
-  '@huggingface/tasks@0.18.12':
-    resolution: {integrity: sha512-hUEYhXJzJCUhLSBNglW+Sji5fuzMnpBimp3kbdcGor+MaN9xb+qrcLnMC7X8aOcZaZdCErwYYIqz2oSP2EM4Bg==}
+  '@huggingface/jinja@0.5.0':
+    resolution: {integrity: sha512-Ptc03/jGRiYRoi0bUYKZ14MkDslsBRT24oxmsvUlfYrvQMldrxCevhPnT+hfX8awKTT8/f/0ZBBWldoeAcMHdQ==}
+    engines: {node: '>=18'}
+
+  '@huggingface/tasks@0.19.11':
+    resolution: {integrity: sha512-oBhSgVlg7Pp643MsH8BiI3OAXIMJNxdSiMtv4mApRZV8dmAz8oasKhg6CVKIplO7vAO7F6dkmMn4bYM64I2A9w==}
+
+  '@huggingface/tasks@0.19.15':
+    resolution: {integrity: sha512-L4wB/iolKtsErke5yniXXNsGrSuaFmyREpcD4hL/wJox2UKtSEV5gE5gNrlvNaRLBOY41yN7/QmBF4y9byTM6Q==}
 
   '@huggingface/tasks@0.19.5':
     resolution: {integrity: sha512-WEwM/tZsRqw0TinTkQwqPsK5pdaGffAV6Nu6xxSTSZUsBvkDJxE9kTiMNSwvjeHvt9/MYAJKjZ+CMSo6Rugs4g==}
@@ -3993,32 +4001,32 @@ snapshots:
       picocolors: 1.1.1
       sisteransi: 1.0.5
 
-  '@duckdb/node-api@1.2.2-alpha.18':
+  '@duckdb/node-api@1.2.2-alpha.19':
     dependencies:
-      '@duckdb/node-bindings': 1.2.2-alpha.18
+      '@duckdb/node-bindings': 1.2.2-alpha.19
 
-  '@duckdb/node-bindings-darwin-arm64@1.2.2-alpha.18':
+  '@duckdb/node-bindings-darwin-arm64@1.2.2-alpha.19':
     optional: true
 
-  '@duckdb/node-bindings-darwin-x64@1.2.2-alpha.18':
+  '@duckdb/node-bindings-darwin-x64@1.2.2-alpha.19':
     optional: true
 
-  '@duckdb/node-bindings-linux-arm64@1.2.2-alpha.18':
+  '@duckdb/node-bindings-linux-arm64@1.2.2-alpha.19':
     optional: true
 
-  '@duckdb/node-bindings-linux-x64@1.2.2-alpha.18':
+  '@duckdb/node-bindings-linux-x64@1.2.2-alpha.19':
     optional: true
 
-  '@duckdb/node-bindings-win32-x64@1.2.2-alpha.18':
+  '@duckdb/node-bindings-win32-x64@1.2.2-alpha.19':
     optional: true
 
-  '@duckdb/node-bindings@1.2.2-alpha.18':
+  '@duckdb/node-bindings@1.2.2-alpha.19':
     optionalDependencies:
-      '@duckdb/node-bindings-darwin-arm64': 1.2.2-alpha.18
-      '@duckdb/node-bindings-darwin-x64': 1.2.2-alpha.18
-      '@duckdb/node-bindings-linux-arm64': 1.2.2-alpha.18
-      '@duckdb/node-bindings-linux-x64': 1.2.2-alpha.18
-      '@duckdb/node-bindings-win32-x64': 1.2.2-alpha.18
+      '@duckdb/node-bindings-darwin-arm64': 1.2.2-alpha.19
+      '@duckdb/node-bindings-darwin-x64': 1.2.2-alpha.19
+      '@duckdb/node-bindings-linux-arm64': 1.2.2-alpha.19
+      '@duckdb/node-bindings-linux-x64': 1.2.2-alpha.19
+      '@duckdb/node-bindings-win32-x64': 1.2.2-alpha.19
 
   '@emnapi/core@1.3.1':
     dependencies:
@@ -4149,18 +4157,22 @@ snapshots:
   '@gar/promisify@1.1.3':
     optional: true
 
-  '@huggingface/hub@1.1.2':
+  '@huggingface/hub@2.1.0':
     dependencies:
-      '@huggingface/tasks': 0.18.12
+      '@huggingface/tasks': 0.19.11
 
-  '@huggingface/inference@3.12.1':
+  '@huggingface/inference@4.0.4':
     dependencies:
-      '@huggingface/jinja': 0.4.1
-      '@huggingface/tasks': 0.19.5
+      '@huggingface/jinja': 0.5.0
+      '@huggingface/tasks': 0.19.15
 
   '@huggingface/jinja@0.4.1': {}
 
-  '@huggingface/tasks@0.18.12': {}
+  '@huggingface/jinja@0.5.0': {}
+
+  '@huggingface/tasks@0.19.11': {}
+
+  '@huggingface/tasks@0.19.15': {}
 
   '@huggingface/tasks@0.19.5': {}
 

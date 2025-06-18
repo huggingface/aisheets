@@ -68,9 +68,9 @@
     "vitest": "^3.0.7"
   },
   "dependencies": {
-    "@duckdb/node-api": "1.2.2-alpha.18",
-    "@huggingface/hub": "^1.1.2",
-    "@huggingface/inference": "^3.12.1",
+    "@duckdb/node-api": "1.2.2-alpha.19",
+    "@huggingface/hub": "~2.1.0",
+    "@huggingface/inference": "~4.0.4",
     "@huggingface/tasks": "^0.19.5",
     "@huggingface/transformers": "^3.5.1",
     "@lancedb/lancedb": "^0.18.2",

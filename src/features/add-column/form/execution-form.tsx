@@ -163,6 +163,13 @@ export const ExecutionForm = component$<SidebarProps>(
       track(selectedModelId);
 
       modelSearchQuery.value = selectedModelId.value || modelSearchQuery.value;
+
+      const model = models.find((m: Model) => m.id === selectedModelId.value);
+      if (!model) return;
+
+      selectedProvider.value = model.providers.includes(DEFAULT_MODEL_PROVIDER)
+        ? DEFAULT_MODEL_PROVIDER
+        : model.providers[0];
     });
 
     useVisibleTask$(({ track }) => {
@@ -190,22 +197,22 @@ export const ExecutionForm = component$<SidebarProps>(
       });
     });
 
+    const onStop = $(async () => {
+      column.process!.cancellable!.abort();
+      column.process!.isExecuting = false;
+
+      updateColumn(column);
+    });
+
     const onGenerate = $(async () => {
-      if (column.process?.cancellable) {
-        column.process.cancellable.abort();
-        column.process.isExecuting = false;
-
-        return;
-      }
-
       column.process!.cancellable = noSerialize(new AbortController());
       column.process!.isExecuting = true;
 
       updateColumn(column);
 
       try {
-        const modelName = selectedModelId.value!;
-        const modelProvider = selectedProvider.value!;
+        const modelName = selectedModelId.value;
+        const modelProvider = selectedProvider.value;
 
         const columnToSave = {
           ...column,
@@ -287,23 +294,28 @@ export const ExecutionForm = component$<SidebarProps>(
                   {column.process?.isExecuting && (
                     <div class="h-4 w-4 animate-spin rounded-full border-2 border-primary-100 border-t-transparent" />
                   )}
-                  <Button
-                    key={column.process?.isExecuting?.toString()}
-                    look="primary"
-                    class="w-[30px] h-[30px] rounded-full flex items-center justify-center p-0"
-                    onClick$={onGenerate}
-                    disabled={
-                      (column.process?.isExecuting &&
-                        column.id === TEMPORAL_ID) ||
-                      !prompt.value.trim()
-                    }
-                  >
-                    {column.process?.isExecuting ? (
+                  {column.process?.isExecuting ? (
+                    <Button
+                      look="primary"
+                      class="w-[30px] h-[30px] rounded-full flex items-center justify-center p-0"
+                      onClick$={onStop}
+                      disabled={
+                        (column.process?.isExecuting &&
+                          column.id === TEMPORAL_ID) ||
+                        !prompt.value.trim()
+                      }
+                    >
                       <LuStopCircle class="text-lg" />
-                    ) : (
+                    </Button>
+                  ) : (
+                    <Button
+                      look="primary"
+                      class="w-[30px] h-[30px] rounded-full flex items-center justify-center p-0"
+                      onClick$={onGenerate}
+                    >
                       <LuEgg class="text-lg" />
-                    )}
-                  </Button>
+                    </Button>
+                  )}
                 </div>
               </div>
 
@@ -453,9 +465,16 @@ export const ExecutionForm = component$<SidebarProps>(
                                 key={idx}
                                 value={provider}
                                 class="text-foreground hover:bg-accent"
+                                onClick$={() => {
+                                  endpointURLSelected.value = false;
+                                }}
                               >
                                 <Select.ItemLabel>{provider}</Select.ItemLabel>
-                                <Select.ItemIndicator />
+                                {provider === selectedProvider.value && (
+                                  // We cannot use the Select.ItemIndicator here
+                                  // because it doesn't work when the model list changes
+                                  <LuCheck class="h-4 w4 text-primary-500 absolute right-2 top-1/2 -translate-y-1/2" />
+                                )}
                               </Select.Item>
                             ))}
                           </Select.Popover>
@@ -473,6 +492,7 @@ export const ExecutionForm = component$<SidebarProps>(
   },
 );
 
+//Refactor, duplicated
 export const hasBlobContent = (column: Column): boolean => {
   return column.type.includes('BLOB');
 };

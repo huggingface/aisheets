@@ -653,7 +653,7 @@ const _generateImage = async ({
   args: PromptExecutionParams;
   session: Session;
 }): Promise<{
-  value?: Uint8Array;
+  value?: ArrayBuffer;
   error?: string;
 }> => {
   // For image generation, we can use the same runPromptExecution function
@@ -665,7 +665,7 @@ const _generateImage = async ({
   });
 
   return {
-    value: response.value ? new Uint8Array(response.value) : undefined,
+    value: response.value ?? undefined,
     error: response.error,
   };
 };

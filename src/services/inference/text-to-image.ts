@@ -1,6 +1,6 @@
 import { type InferenceProvider, textToImage } from '@huggingface/inference';
 import { HF_TOKEN } from '~/config';
-import { materializePrompt } from './materialize-prompt';
+import { renderInstruction } from './materialize-prompt';
 import {
   type PromptExecutionParams,
   handleError,
@@ -48,10 +48,7 @@ export const textToImageGeneration = async ({
   done: boolean;
   error?: string;
 }> => {
-  const inputPrompt = materializePrompt({
-    instruction,
-    data,
-  });
+  const inputPrompt = renderInstruction(instruction, data);
 
   try {
     const response = await textToImage(

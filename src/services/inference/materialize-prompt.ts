@@ -101,7 +101,6 @@ function materializePromptFromData(
     text: string;
   }[],
   examples?: Example[],
-  renderInstruction = true,
 ): string {
   const examplesTemplate = `# Examples
 The following are correct, accurate example outputs with respect to the user instruction:
@@ -129,11 +128,7 @@ You are a rigorous, intelligent data-processing engine. Generate only the reques
 # Your response
     `,
     {
-      instruction: renderInstruction
-        ? mustache.render(instruction, data, undefined, {
-            escape: escapeValues,
-          })
-        : instruction,
+      instruction: renderInstruction(instruction, data),
       examplesSection: examplesSection(
         examples?.map((example) => ({
           ...example,

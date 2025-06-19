@@ -29,7 +29,7 @@ export const HideColumn = component$<{
     })(column.id, column.visible);
   });
 
-  if (column.id === TEMPORAL_ID) {
+  if (column.id === TEMPORAL_ID || columns.value.length <= 1) {
     return null;
   }
 

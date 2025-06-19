@@ -37,7 +37,7 @@ export interface PromptExecutionResponse {
   done?: boolean;
 }
 
-const handleError = (e: unknown): string => {
+export const handleError = (e: unknown): string => {
   if (e instanceof Error) return e.message;
   return JSON.stringify(e);
 };

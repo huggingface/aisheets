@@ -63,10 +63,21 @@ const listModels = server$(async function (
 ): Promise<Model[]> {
   const session = useServerSession(this);
 
+  const filterConversational = (models: Model[]): Model[] => {
+    return models.filter((model) => model.tags?.includes('conversational'));
+  };
+
   // Fetch models for both pipeline tags
   const models = await Promise.all([
-    fetchModelsForPipeline('text-generation', session),
-    fetchModelsForPipeline('image-text-to-text', session),
+    fetchModelsForPipeline('text-generation', session).then(
+      filterConversational,
+    ),
+    fetchModelsForPipeline('image-text-to-text', session).then(
+      filterConversational,
+    ),
+    // TODO: Add pagination support since image generation models can be large
+    // and we might want to fetch more than just the first 1000 models.
+    fetchModelsForPipeline('text-to-image', session),
   ]);
 
   return models
@@ -122,11 +133,7 @@ const fetchModelsForPipeline = async (
       .filter((provider: any) => provider.status === 'live')
       .map((provider: any) => provider.provider);
 
-    if (
-      availableProviders.length > 0 &&
-      !EXCLUDED_MODELS.includes(model.id) &&
-      model.tags?.includes('conversational')
-    ) {
+    if (availableProviders.length > 0 && !EXCLUDED_MODELS.includes(model.id)) {
       let sizeInB = 0;
       if (model.safetensors) {
         const paramCounts = Object.entries(
@@ -137,7 +144,7 @@ const fetchModelsForPipeline = async (
       }
 
       let size: string | undefined;
-      if (Number.isFinite(sizeInB)) {
+      if (Number.isFinite(sizeInB) && sizeInB > 0) {
         size = `${Math.floor(sizeInB)}B`;
       }
 

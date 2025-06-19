@@ -72,7 +72,16 @@ export const runPromptExecution = async ({
   if (isDev) showPromptInfo(modelName, modelProvider, inputPrompt);
 
   try {
-    const cacheValue = cacheGet(args);
+    const cacheKey = {
+      modelName,
+      modelProvider,
+      endpointUrl,
+      instruction,
+      data,
+      examples,
+      sources: sourcesContext?.slice(0, 1),
+    };
+    const cacheValue = cacheGet(cacheKey);
     if (cacheValue) return cacheValue;
 
     const response = await chatCompletion(args, options);
@@ -82,7 +91,7 @@ export const runPromptExecution = async ({
       done: true,
     };
 
-    return cacheSet(args, value);
+    return cacheSet(cacheKey, value);
   } catch (e) {
     return {
       error: handleError(e),
@@ -119,7 +128,17 @@ export const runPromptExecutionStream = async function* ({
 
   if (isDev) showPromptInfo(modelName, modelProvider, inputPrompt);
 
-  const cacheValue = cacheGet(args);
+  const cacheKey = {
+    modelName,
+    modelProvider,
+    endpointUrl,
+    instruction,
+    data,
+    examples,
+    sources: sourcesContext?.slice(0, 1),
+  };
+
+  const cacheValue = cacheGet(cacheKey);
   if (cacheValue) {
     yield cacheValue;
     return;
@@ -141,7 +160,7 @@ export const runPromptExecutionStream = async function* ({
       done: true,
     };
 
-    yield cacheSet(args, value);
+    yield cacheSet(cacheKey, value);
   } catch (e) {
     yield { error: handleError(e), done: true };
   }

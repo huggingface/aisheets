@@ -29,13 +29,13 @@ export const HideColumn = component$<{
     })(column.id, column.visible);
   });
 
-  if (column.id === TEMPORAL_ID) {
+  if (column.id === TEMPORAL_ID || columns.value.length <= 1) {
     return null;
   }
 
   return (
     <Button
-      class="flex flex-row gap-1 justify-start font-light py-1 h-auto"
+      class="p-2 cursor-pointer flex flex-row gap-1 items-center hover:bg-neutral-100 rounded-full"
       look="ghost"
       size="sm"
       onClick$={hideColumn}

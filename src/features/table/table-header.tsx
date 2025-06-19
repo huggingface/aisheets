@@ -1,4 +1,12 @@
-import { $, Fragment, component$, useStore, useTask$ } from '@builder.io/qwik';
+import {
+  $,
+  Fragment,
+  component$,
+  useSignal,
+  useStore,
+  useTask$,
+  useVisibleTask$,
+} from '@builder.io/qwik';
 import { cn } from '@qwik-ui/utils';
 import { nextTick } from '~/components/hooks/tick';
 import { ExecutionForm, useExecution } from '~/features/add-column';
@@ -10,7 +18,104 @@ import {
 import { type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
 
 export const TableHeader = component$(() => {
+  const MAX_WIDTH = 1000;
   const { columns } = useColumnsStore();
+
+  const resizingColumn = useSignal<{
+    columnId: string;
+    startX: number;
+    startWidth: number;
+  } | null>(null);
+  const columnsWidths = useStore<{
+    [key: string]: number;
+  }>({});
+  const observers = useSignal(new Map());
+
+  const handleResizeStart = $((event: MouseEvent, columnId: string) => {
+    const handleResize = (event: MouseEvent) => {
+      if (resizingColumn.value) {
+        const deltaX = event.clientX - resizingColumn.value.startX;
+        const newWidth = Math.min(
+          MAX_WIDTH,
+          resizingColumn.value.startWidth + deltaX,
+        );
+        columnsWidths[resizingColumn.value.columnId] = newWidth;
+      }
+    };
+
+    const handleResizeEnd = () => {
+      resizingColumn.value = null;
+      document.removeEventListener('mousemove', handleResize);
+      document.removeEventListener('mouseup', handleResizeEnd);
+    };
+
+    resizingColumn.value = {
+      columnId,
+      startX: event.clientX,
+      startWidth: columnsWidths[columnId] || 326,
+    };
+
+    document.addEventListener('mousemove', handleResize);
+    document.addEventListener('mouseup', handleResizeEnd);
+  });
+
+  const setupMutationObserver = $(() => {
+    for (const column of columns.value.filter((c) => c.visible)) {
+      const headerElement = document.getElementById(`index-${column.id}`);
+      if (headerElement && !observers.value.has(column.id)) {
+        const observer = new MutationObserver(() => {
+          const bodyCells = document.querySelectorAll(
+            `td[data-column-id="${column.id}"]`,
+          );
+
+          const newWidth = headerElement.getBoundingClientRect().width;
+
+          for (const cell of bodyCells) {
+            (cell as HTMLElement).style.width = `${newWidth}px`;
+          }
+        });
+
+        observer.observe(headerElement, {
+          attributes: true,
+          attributeFilter: ['style'],
+        });
+
+        observers.value.set(column.id, observer);
+      }
+    }
+  });
+
+  useVisibleTask$(({ track }) => {
+    track(() => columns.value);
+    setupMutationObserver();
+  });
+
+  useVisibleTask$(({ cleanup }) => {
+    const handleResize = () => {
+      for (const column of columns.value.filter((c) => c.visible)) {
+        const headerElement = document.getElementById(`index-${column.id}`);
+        if (!headerElement) continue;
+
+        const bodyCells = document.querySelectorAll(
+          `td[data-column-id="${column.id}"]`,
+        );
+
+        const newWidth = headerElement.getBoundingClientRect().width;
+        columnsWidths[column.id] = newWidth;
+
+        for (const cell of bodyCells) {
+          (cell as HTMLElement).style.width = `${newWidth}px`;
+        }
+      }
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+
+    cleanup(() => {
+      window.removeEventListener('resize', handleResize);
+    });
+  });
 
   const indexToAlphanumeric = $((index: number): string => {
     let result = '';
@@ -35,15 +140,23 @@ export const TableHeader = component$(() => {
             column.visible && (
               <Fragment key={column.id}>
                 <th
+                  id={`index-${column.id}`}
                   key={column.id}
                   class={cn(
-                    'min-w-[326px] w-[326px] max-w-[326px] h-[38px] border bg-neutral-100 text-primary-600 font-normal',
+                    'min-w-[326px] w-[326px] h-[38px] border bg-neutral-100 text-primary-600 font-normal relative select-none',
                     {
                       'border-r-0': column.id === TEMPORAL_ID,
                     },
                   )}
+                  style={{
+                    width: `${columnsWidths[column.id] || 326}px`,
+                  }}
                 >
                   {indexToAlphanumeric(i + 1)}
+                  <span
+                    class="absolute top-0 -right-[3px] w-[4px] h-full cursor-col-resize bg-transparent hover:bg-primary-100 z-10"
+                    onMouseDown$={$((e) => handleResizeStart(e, column.id))}
+                  />
                 </th>
 
                 <ExecutionFormDebounced column={column} />

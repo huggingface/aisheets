@@ -264,7 +264,7 @@ export const ExecutionForm = component$<SidebarProps>(
 
         <div class="relative h-full w-full">
           <div class="absolute h-full w-full flex flex-col">
-            <div class="flex flex-col gap-2 px-8 bg-neutral-100">
+            <div class="flex flex-col gap-2 px-8 bg-neutral-100 w-full">
               <div class="relative">
                 <div class="h-72 min-h-72 max-h-72 bg-white border border-secondary-foreground rounded-sm">
                   <TemplateTextArea

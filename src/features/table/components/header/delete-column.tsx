@@ -3,7 +3,7 @@ import { server$ } from '@builder.io/qwik-city';
 import { LuTrash } from '@qwikest/icons/lucide';
 import { Button } from '~/components';
 import { deleteColumn } from '~/services';
-import { type Column, useColumnsStore } from '~/state';
+import { type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
 
 export const DeleteColumn = component$<{
   column: Column;
@@ -18,7 +18,7 @@ export const DeleteColumn = component$<{
     removeColumn(column);
   });
 
-  if (columns.value.length <= 1) {
+  if (column.id === TEMPORAL_ID || columns.value.length <= 1) {
     return null;
   }
 

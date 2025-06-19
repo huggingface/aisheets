@@ -52,7 +52,7 @@ export const TableBody = component$(() => {
   const selectedRows = useSignal<number[]>([]);
 
   const datasetSize = useComputed$(() => {
-    return activeDataset.value?.size || 0;
+    return Math.max(activeDataset.value?.size || 0, 100);
   });
 
   const data = useComputed$(() => {
@@ -81,7 +81,7 @@ export const TableBody = component$(() => {
     const visibleColumns = columns.value.filter((column) => column.visible);
 
     return Array.from(
-      { length: firstColumn.value.cells.length },
+      { length: Math.max(firstColumn.value.cells.length, 100) },
       (_, rowIndex) =>
         Array.from({ length: visibleColumns.length }, (_, colIndex) =>
           getCell(visibleColumns[colIndex], rowIndex),

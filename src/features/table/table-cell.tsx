@@ -39,9 +39,13 @@ const loadCell = server$(async (cellId: string) => {
   };
 });
 
+const isImage = (column: Column | undefined): boolean => {
+  return column?.type?.toLowerCase().includes('image') ?? false;
+};
+
 //Refactor, duplicated
 export const hasBlobContent = (column: Column | undefined): boolean => {
-  return column?.type?.includes('BLOB') ?? false;
+  return column?.type?.includes('BLOB') || isImage(column);
 };
 
 export const isArrayType = (column: Column): boolean => {

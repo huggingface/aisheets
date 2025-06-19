@@ -177,7 +177,10 @@ const examplesSection = (
   const examplesText = mustache.render(
     template,
     {
-      examples: [...validatedExamples, ...nonValidatedExamples],
+      examples: [
+        ...validatedExamples,
+        ...nonValidatedExamples.sort(() => Math.random() - 0.5),
+      ],
     },
     undefined,
     {

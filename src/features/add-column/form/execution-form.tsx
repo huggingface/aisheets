@@ -52,14 +52,25 @@ export const ExecutionForm = component$<SidebarProps>(
     const { firstColumn, columns, removeTemporalColumn, updateColumn } =
       useColumnsStore();
 
-    const {
+    const models = useContext<Model[]>(modelsContext);
+
+    let {
       DEFAULT_MODEL,
       DEFAULT_MODEL_PROVIDER,
       modelEndpointEnabled,
       MODEL_ENDPOINT_NAME,
     } = useContext(configContext);
 
-    const models = useContext(modelsContext);
+    const supportedModels = useComputed$(() => {
+      return models.filter((model: Model) =>
+        // TODO: improve this logic
+        column.type === 'image'
+          ? model.supportedType === 'image'
+          : model.supportedType === 'text',
+      );
+    });
+
+    if (column.type === 'image') modelEndpointEnabled = false;
 
     const isOpenModel = useSignal(false);
 
@@ -79,10 +90,12 @@ export const ExecutionForm = component$<SidebarProps>(
       columnsReferences.value = variables.map((v) => v.id);
     });
 
-    const filteredModels = useSignal<Model[]>(models);
+    const filteredModels = useSignal<Model[]>(supportedModels.value);
 
     const modelProviders = useComputed$(() => {
-      const model = models.find((m: Model) => m.id === selectedModelId.value);
+      const model = supportedModels.value.find(
+        (m: Model) => m.id === selectedModelId.value,
+      );
       return model ? model.providers : [];
     });
 
@@ -98,18 +111,18 @@ export const ExecutionForm = component$<SidebarProps>(
       if (modelSearchQuery.value.length <= 1) return;
 
       if (modelSearchQuery.value === selectedModelId.value) {
-        filteredModels.value = models;
+        filteredModels.value = supportedModels.value;
         return;
       }
 
-      filteredModels.value = models.filter((model: Model) =>
+      filteredModels.value = supportedModels.value.filter((model: Model) =>
         model.id.toLowerCase().includes(modelSearchQuery.value.toLowerCase()),
       );
 
       nextTick(() => {
         isModelDropdownOpen.value =
           filteredModels.value.length > 0 &&
-          filteredModels.value.length !== models.length;
+          filteredModels.value.length !== supportedModels.value.length;
       }, 300);
     });
 
@@ -138,15 +151,18 @@ export const ExecutionForm = component$<SidebarProps>(
         selectedModelId.value = process.modelName;
         selectedProvider.value = process.modelProvider!;
       } else {
-        const defaultModel = models?.find((m: Model) => m.id === DEFAULT_MODEL);
-        if (defaultModel) {
-          const defaultProvider = defaultModel.providers.find(
-            (provider) => provider === DEFAULT_MODEL_PROVIDER,
-          );
+        const defaultModel =
+          supportedModels.value?.find((m: Model) => m.id === DEFAULT_MODEL) ||
+          supportedModels.value[0];
 
-          selectedModelId.value = defaultModel.id;
-          selectedProvider.value = defaultProvider || defaultModel.providers[0];
-        }
+        if (!defaultModel) return;
+
+        const defaultProvider = defaultModel.providers.find(
+          (provider) => provider === DEFAULT_MODEL_PROVIDER,
+        );
+
+        selectedModelId.value = defaultModel.id;
+        selectedProvider.value = defaultProvider || defaultModel.providers[0];
       }
     });
 
@@ -164,7 +180,9 @@ export const ExecutionForm = component$<SidebarProps>(
 
       modelSearchQuery.value = selectedModelId.value || modelSearchQuery.value;
 
-      const model = models.find((m: Model) => m.id === selectedModelId.value);
+      const model = supportedModels.value.find(
+        (m: Model) => m.id === selectedModelId.value,
+      );
       if (!model) return;
 
       selectedProvider.value = model.providers.includes(DEFAULT_MODEL_PROVIDER)

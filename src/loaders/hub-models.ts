@@ -51,6 +51,7 @@ const MODEL_EXPANDABLE_KEYS = [
 export interface Model {
   id: string;
   providers: string[];
+  supportedType: string;
   tags?: string[];
   safetensors?: unknown;
   size?: string;
@@ -62,22 +63,32 @@ const listModels = server$(async function (
   this: RequestEventBase<QwikCityPlatform>,
 ): Promise<Model[]> {
   const session = useServerSession(this);
-
-  const filterConversational = (models: Model[]): Model[] => {
-    return models.filter((model) => model.tags?.includes('conversational'));
-  };
+  if (!session) return [];
 
   // Fetch models for both pipeline tags
   const models = await Promise.all([
-    fetchModelsForPipeline('text-generation', session).then(
-      filterConversational,
+    // All text generation models that support conversational
+    Promise.all([
+      fetchModelsForPipeline('text-generation', session),
+      fetchModelsForPipeline('image-text-to-text', session),
+    ]).then((models) =>
+      models
+        .flat()
+        .filter((model) => model.tags?.includes('conversational'))
+        .map((model) => ({
+          ...model,
+          supportedType: 'text',
+        })),
     ),
-    fetchModelsForPipeline('image-text-to-text', session).then(
-      filterConversational,
-    ),
+    // All image generation models
     // TODO: Add pagination support since image generation models can be large
     // and we might want to fetch more than just the first 1000 models.
-    fetchModelsForPipeline('text-to-image', session),
+    fetchModelsForPipeline('text-to-image', session).then((models) =>
+      models.map((model) => ({
+        ...model,
+        supportedType: 'image',
+      })),
+    ),
   ]);
 
   return models
@@ -175,6 +186,7 @@ export const useHubModels = routeLoader$(async function (
         tags: ['conversational'],
         safetensors: {},
         pipeline_tag: 'text-generation',
+        supportedType: 'text',
       },
     ];
   }

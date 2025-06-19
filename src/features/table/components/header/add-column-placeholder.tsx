@@ -35,7 +35,10 @@ Text to summarize: {{REPLACE_ME}}
 `,
 
   textToImage: `Generate a detailed and visually rich image based on the provided text description.
-Ensure the image captures the essence of the text, including key elements, colors, and overall mood. {{REPLACE_ME}}`,
+
+Ensure the image captures the essence of the text, including key elements, colors, and overall mood. 
+
+Description: {{REPLACE_ME}}`,
 
   custom: '',
 } as const;

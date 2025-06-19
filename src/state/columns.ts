@@ -258,6 +258,9 @@ export const useColumnsStore = () => {
         newbie,
       ]);
     }),
+    removeColumn: $((removed: Column) => {
+      replaceColumns(columns.value.filter((c) => c.id !== removed.id));
+    }),
     updateColumn: $((updated: Column) => {
       replaceColumns(
         columns.value.map((c) =>

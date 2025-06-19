@@ -79,7 +79,7 @@ export const runPromptExecution = async ({
       instruction,
       data,
       examples,
-      sources: sourcesContext?.slice(0, 1),
+      withSources: sourcesContext && sourcesContext.length > 0,
     };
     const cacheValue = cacheGet(cacheKey);
     if (cacheValue) return cacheValue;
@@ -135,7 +135,7 @@ export const runPromptExecutionStream = async function* ({
     instruction,
     data,
     examples,
-    sources: sourcesContext?.slice(0, 1),
+    withSources: sourcesContext && sourcesContext.length > 0,
   };
 
   const cacheValue = cacheGet(cacheKey);

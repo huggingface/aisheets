@@ -26,16 +26,9 @@ export function materializePrompt({
   sourcesContext,
   data,
   examples,
-  renderInstruction = true,
 }: MaterializePromptParams): string {
   return data && Object.keys(data).length > 0
-    ? materializePromptFromData(
-        instruction,
-        data,
-        sourcesContext,
-        examples,
-        renderInstruction,
-      )
+    ? materializePromptFromData(instruction, data, sourcesContext, examples)
     : materializePromptFromScratch(instruction, sourcesContext, examples);
 }
 

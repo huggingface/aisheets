@@ -135,15 +135,19 @@ async function generateDatasetConfig(
     });
 
     // Get data for prompt materialization
-    const data = column.process.columnsReferences?.length
+    let data: any | undefined = column.process.columnsReferences?.length
       ? await getFirstRowData(column.process.columnsReferences)
       : {};
 
+    if (Object.keys(data).length > 0) {
+      // We use a mock data to avoid rendering the actual data in the prompt
+      data = { '@mock': 'data' };
+    } else data = undefined;
+
     const prompt = materializePrompt({
       instruction: column.process.prompt,
+      data,
       examples: examples.length > 0 ? examples : undefined,
-      data: Object.keys(data).length > 0 ? data : undefined,
-      renderInstruction: false,
     });
 
     columnConfigs[column.name] = {

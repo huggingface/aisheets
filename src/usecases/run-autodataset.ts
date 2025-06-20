@@ -12,6 +12,8 @@ import {
 import { createColumn, getDatasetColumns } from '~/services/repository/columns';
 import { createDataset } from '~/services/repository/datasets';
 import { createProcess } from '~/services/repository/processes';
+
+import { cacheGet, cacheSet } from '~/services/cache';
 import { indexDatasetSources } from '~/services/websearch/embed';
 import { scrapeUrlsBatch } from '~/services/websearch/scrape';
 import {
@@ -154,13 +156,40 @@ async function extractDatasetConfig({
   session: Session;
   timeout?: number;
 }) {
-  // Define result structure with defaults
-  const result: any = {
-    datasetName: 'Auto-generated Dataset',
-    columns: [] as Array<{ name: string; prompt: string }>,
-    queries: [] as string[],
-  };
+  const promptText = searchEnabled
+    ? SEARCH_PROMPT_TEMPLATE.replace('{instruction}', instruction).replace(
+        '{maxSearchQueries}',
+        maxSearchQueries?.toString() || '',
+      )
+    : NO_SEARCH_PROMPT_TEMPLATE.replace('{instruction}', instruction);
 
+  const args = normalizeChatCompletionArgs({
+    messages: [{ role: 'user', content: promptText }],
+    modelName,
+    modelProvider,
+    accessToken: session.token,
+    endpointUrl: MODEL_ENDPOINT_URL,
+  });
+
+  const cacheValue = cacheGet(args);
+  if (cacheValue) return cacheValue;
+
+  const response = await chatCompletion(args, normalizeOptions(timeout));
+
+  const result = processTextConfigResponse(
+    response.choices[0].message.content || '',
+    maxSearchQueries,
+    searchEnabled,
+  );
+
+  return cacheSet(args, result);
+}
+
+const processTextConfigResponse = (
+  text: string,
+  maxSearchQueries: number,
+  searchEnabled = false,
+) => {
   // Define regex patterns for better maintainability
   const sectionPatterns = {
     name: /^DATASET NAME:$/i,
@@ -172,26 +201,12 @@ async function extractDatasetConfig({
 
   let currentSection: keyof typeof sectionPatterns | null = null;
 
-  const promptText = searchEnabled
-    ? SEARCH_PROMPT_TEMPLATE.replace('{instruction}', instruction).replace(
-        '{maxSearchQueries}',
-        maxSearchQueries?.toString() || '',
-      )
-    : NO_SEARCH_PROMPT_TEMPLATE.replace('{instruction}', instruction);
-
-  const response = await chatCompletion(
-    normalizeChatCompletionArgs({
-      messages: [{ role: 'user', content: promptText }],
-      modelName,
-      modelProvider,
-      accessToken: session.token,
-      endpointUrl: MODEL_ENDPOINT_URL,
-    }),
-    normalizeOptions(timeout),
-  );
-
-  const text = response.choices[0].message.content || '';
-  result.text = text;
+  const result: any = {
+    datasetName: 'Auto-generated Dataset',
+    columns: [] as Array<{ name: string; prompt: string }>,
+    queries: [] as string[],
+    text,
+  };
 
   // Process text line by line
   for (const line of text.split('\n').map((l) => l.trim())) {
@@ -256,7 +271,7 @@ async function extractDatasetConfig({
   }
 
   return result;
-}
+};
 
 /**
  * Creates a dataset with the suggested columns from the assistant
@@ -367,6 +382,7 @@ async function populateDataset(
           ...column.process,
           useEndpointURL: MODEL_ENDPOINT_URL !== undefined,
         },
+        stream: false,
         session,
         offset: 0,
         limit: 5,

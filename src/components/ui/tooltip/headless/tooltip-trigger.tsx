@@ -54,10 +54,13 @@ export const HTooltipTrigger = component$((props: PropsOf<'button'>) => {
 
   const setTooltipClosed$ = $(() => {
     clearTimeoutIfExists(openTimeout);
+    hidePopover();
+    setTooltipState(false, 'closing', closeTimeout);
+
     nextTick(() => {
       hidePopover();
       setTooltipState(false, 'closing', closeTimeout);
-    });
+    }, 100);
   });
 
   const preventDefaultSync$ = sync$((e: Event) => {

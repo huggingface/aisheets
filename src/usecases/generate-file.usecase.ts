@@ -26,10 +26,7 @@ export const useGenerateFile = () =>
     try {
       file = await exportDatasetTableRows({
         dataset,
-        columns: dataset.columns.map((column) => ({
-          id: column.id,
-          name: column.name,
-        })),
+        columns: dataset.columns,
         format,
       });
 

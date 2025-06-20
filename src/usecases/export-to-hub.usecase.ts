@@ -38,17 +38,16 @@ export const useExportDataset = () =>
       throw new Error('Dataset not found');
     }
 
-    const configPath = await createDatasetConfig(dataset);
+    const configPath = await createDatasetConfig(foundDataset);
     const parquetFile = await exportDatasetTableRows({
-      dataset,
-      columns: dataset.columns.map((column) => ({
-        id: column.id,
-        name: column.name,
-      })),
+      dataset: foundDataset,
+      columns: dataset.columns,
     });
 
     const owner = requestedOwner || session.user.username;
     const repoId = `${owner}/${name}`;
+
+    const readme = readmeContent(foundDataset);
 
     try {
       await createRepo({
@@ -58,7 +57,7 @@ export const useExportDataset = () =>
         files: [
           {
             path: 'README.md',
-            content: new Blob([readmeContent(dataset)]),
+            content: new Blob([readme]),
           },
         ],
       });
@@ -74,7 +73,7 @@ export const useExportDataset = () =>
         accessToken: session.token,
         files: [
           {
-            path: 'train.parquet',
+            path: 'data/train.parquet',
             content: new Blob([await fs.readFile(parquetFile)]),
           },
           {
@@ -192,6 +191,39 @@ pretty_name: ${dataset.name}
 tags:
 - aisheets
 - synthetic data
+
+${yaml.stringify({
+  dataset_info: {
+    features: generateFeaturesInfo(dataset.columns),
+  },
+})}
+  
+configs:
+- config_name: default
+  data_files:
+  - split: train
+    path: data/train*
 ---
 `;
 }
+
+const generateFeaturesInfo = (
+  columns: { id: string; name: string; type: string }[],
+) => {
+  return columns.map((column) => {
+    switch (column.type.toLowerCase()) {
+      case 'image': {
+        return {
+          name: column.name,
+          dtype: 'image',
+        };
+      }
+      default: {
+        return {
+          name: column.name,
+          dtype: 'string',
+        };
+      }
+    }
+  });
+};

@@ -157,12 +157,7 @@ export const ExecutionForm = component$<SidebarProps>(
 
         if (!defaultModel) return;
 
-        const defaultProvider = defaultModel.providers.find(
-          (provider) => provider === DEFAULT_MODEL_PROVIDER,
-        );
-
         selectedModelId.value = defaultModel.id;
-        selectedProvider.value = defaultProvider || defaultModel.providers[0];
       }
     });
 
@@ -183,11 +178,21 @@ export const ExecutionForm = component$<SidebarProps>(
       const model = supportedModels.value.find(
         (m: Model) => m.id === selectedModelId.value,
       );
+
       if (!model) return;
 
-      selectedProvider.value = model.providers.includes(DEFAULT_MODEL_PROVIDER)
-        ? DEFAULT_MODEL_PROVIDER
-        : model.providers[0];
+      const defaultProvider =
+        model.providers.find(
+          (provider) => provider === DEFAULT_MODEL_PROVIDER,
+        ) || model.providers[0];
+
+      if (
+        !selectedProvider.value ||
+        (selectedProvider.value &&
+          !model.providers.includes(selectedProvider.value))
+      ) {
+        selectedProvider.value = defaultProvider;
+      }
     });
 
     useVisibleTask$(({ track }) => {

@@ -82,16 +82,22 @@ export const runPromptExecution = async ({
       withSources: sourcesContext && sourcesContext.length > 0,
     };
     const cacheValue = cacheGet(cacheKey);
-    if (cacheValue) return cacheValue;
+    if (cacheValue) {
+      return {
+        value: cacheValue,
+        done: true,
+      };
+    }
 
     const response = await chatCompletion(args, options);
+    const result = response.choices[0].message.content;
 
-    const value = {
-      value: response.choices[0].message.content,
+    cacheSet(cacheKey, result);
+
+    return {
+      value: result,
       done: true,
     };
-
-    return cacheSet(cacheKey, value);
   } catch (e) {
     return {
       error: handleError(e),
@@ -140,7 +146,10 @@ export const runPromptExecutionStream = async function* ({
 
   const cacheValue = cacheGet(cacheKey);
   if (cacheValue) {
-    yield cacheValue;
+    yield {
+      value: cacheValue,
+      done: true,
+    };
     return;
   }
 
@@ -154,13 +163,12 @@ export const runPromptExecutionStream = async function* ({
         yield { value: accumulated, done: false };
       }
     }
+    cacheSet(cacheKey, accumulated);
 
-    const value = {
+    yield {
       value: accumulated,
       done: true,
     };
-
-    yield cacheSet(cacheKey, value);
   } catch (e) {
     yield { error: handleError(e), done: true };
   }

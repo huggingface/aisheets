@@ -122,7 +122,7 @@ const ImageRenderer = component$<MediaRendererProps>(({ src, path }) => {
     >
       <div class="flex flex-col">
         <div class="relative w-full h-full flex items-center justify-center">
-          <img src={src} alt={path} class="rounded-sm object-contain" />
+          <img src={src} alt={path} class="object-contain" />
         </div>
       </div>
 
@@ -142,11 +142,7 @@ const ImageRenderer = component$<MediaRendererProps>(({ src, path }) => {
               <div class="max-w-full max-h-full overflow-hidden">
                 <div class="flex flex-col">
                   <div class="relative w-full h-full flex items-center justify-center">
-                    <img
-                      src={src}
-                      alt={path}
-                      class="rounded-sm max-w-full h-auto"
-                    />
+                    <img src={src} alt={path} class="max-w-full h-auto" />
                   </div>
                 </div>
               </div>
@@ -193,9 +189,6 @@ export const CellBlobRenderer = component$<CellProps>((props) => {
 
       if (processedInfo) {
         contentValue.value = processedInfo.content;
-      } else {
-        contentValue.value =
-          '<div class="error-content">Unable to process media content</div>';
       }
 
       return contentValue.value;
@@ -206,8 +199,8 @@ export const CellBlobRenderer = component$<CellProps>((props) => {
 
   if (!contentValue.value) {
     return (
-      <div class="flex items-center justify-center h-full">
-        <div class="w-full h-full max-w-[120px] max-h-[80px] bg-gray-200 rounded animate-pulse" />
+      <div class="flex h-full min-h-[120px]">
+        <div class="w-full h-full bg-gray-200 animate-pulse" />
       </div>
     );
   }
@@ -247,6 +240,10 @@ export const CellBlobRenderer = component$<CellProps>((props) => {
     if (contentValue.value.includes('<img')) {
       return <ImageRenderer src={src} path={path} {...props} />;
     }
+  }
+
+  if (contentValue.value) {
+    return <div class="text-gray-500">{contentValue.value}</div>;
   }
 
   return <div class="text-gray-500">Invalid media content</div>;

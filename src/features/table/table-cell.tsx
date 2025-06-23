@@ -49,14 +49,9 @@ export const TableCell = component$<{
   });
 
   return (
-    <div class="min-h-[100px] h-[100px] group">
+    <div class="min-h-[100px] h-[100px] max-h-[100px] group">
       <div class="relative h-full">
-        <div
-          class="relative flex flex-col h-full overflow-hidden"
-          style={{
-            maxHeight: '8.5rem',
-          }}
-        >
+        <div class="relative flex flex-col h-full overflow-hidden">
           {cell.generating && (
             <div class="absolute inset-0 flex items-center justify-center">
               <Skeleton />
@@ -69,7 +64,7 @@ export const TableCell = component$<{
               <span>{cell.error}</span>
             </span>
           ) : (
-            <div class="h-full flex flex-col justify-between gap-2 p-2">
+            <div class="h-full flex flex-col justify-between p-1">
               <CellActions cell={cell} />
               <CellContentRenderer cell={cell} column={cellColumn.value!} />
             </div>

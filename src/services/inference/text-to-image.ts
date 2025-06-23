@@ -1,5 +1,6 @@
 import { type InferenceProvider, textToImage } from '@huggingface/inference';
 import { HF_TOKEN } from '~/config';
+import { cacheGet, cacheSet } from '../cache';
 import { renderInstruction } from './materialize-prompt';
 import {
   type PromptExecutionParams,
@@ -50,6 +51,22 @@ export const textToImageGeneration = async ({
 }> => {
   const inputPrompt = renderInstruction(instruction, data);
 
+  const cacheKey = {
+    modelName,
+    modelProvider,
+    endpointUrl,
+    instruction,
+    data,
+  };
+
+  const cachedResult = await cacheGet(cacheKey);
+  if (cachedResult) {
+    return {
+      value: cachedResult,
+      done: true,
+    };
+  }
+
   try {
     const response = await textToImage(
       normalizeTextToImageArgs({
@@ -62,8 +79,11 @@ export const textToImageGeneration = async ({
       normalizeOptions(timeout),
     );
 
+    const bytes = await response.bytes();
+    cacheSet(cacheKey, bytes);
+
     return {
-      value: await response.bytes(),
+      value: bytes,
       done: true,
     };
   } catch (e) {

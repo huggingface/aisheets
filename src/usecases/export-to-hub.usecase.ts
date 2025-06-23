@@ -11,8 +11,8 @@ import { getDatasetById } from '~/services/repository/datasets';
 import { exportDatasetTableRows } from '~/services/repository/tables';
 import {
   type Cell,
+  type Column,
   type Dataset,
-  type Process,
   useServerSession,
 } from '~/state';
 import { materializePrompt } from '../services/inference/materialize-prompt';
@@ -89,18 +89,20 @@ export const useExportDataset = () =>
     return repoId;
   });
 
-async function generateDatasetConfig(
-  dataset: Dataset,
-): Promise<
+async function generateDatasetConfig(dataset: Dataset): Promise<
   Record<
     string,
-    Omit<Process, 'offset' | 'limit' | 'updatedAt'> & { userPrompt: string }
+    {
+      modelName?: string;
+      modelProvider?: string;
+      userPrompt?: string;
+      prompt?: string;
+      searchEnabled?: boolean;
+      columnsReferences?: string[];
+    }
   >
 > {
-  const columnConfigs: Record<
-    string,
-    Omit<Process, 'offset' | 'limit' | 'updatedAt'> & { userPrompt: string }
-  > = {};
+  const columnConfigs: Record<string, any> = {};
 
   for (const column of dataset.columns) {
     if (!column.process) continue;
@@ -114,40 +116,7 @@ async function generateDatasetConfig(
       continue;
     }
 
-    // Fetch complete cell data for validated cells
-    const validatedCells = await Promise.all(
-      column.cells
-        .filter((cell) => cell.validated)
-        .map((cell) =>
-          getColumnCellByIdx({
-            idx: cell.idx,
-            columnId: column.id,
-          }),
-        ),
-    );
-
-    const examples = await collectValidatedExamples({
-      validatedCells: validatedCells.filter(
-        (cell): cell is Cell => cell !== null,
-      ),
-      columnsReferences: column.process.columnsReferences,
-    });
-
-    // Get data for prompt materialization
-    let data: any | undefined = column.process.columnsReferences?.length
-      ? await getFirstRowData(column.process.columnsReferences)
-      : {};
-
-    if (Object.keys(data).length > 0) {
-      // We use a mock data to avoid rendering the actual data in the prompt
-      data = { '@mock': 'data' };
-    } else data = undefined;
-
-    const prompt = materializePrompt({
-      instruction: column.process.prompt,
-      data,
-      examples: examples.length > 0 ? examples : undefined,
-    });
+    const prompt = await promptTemplateForColumn(column);
 
     columnConfigs[column.name] = {
       modelName: column.process.modelName,
@@ -225,5 +194,51 @@ const generateFeaturesInfo = (
         };
       }
     }
+  });
+};
+
+const promptTemplateForColumn = async (
+  column: Column,
+): Promise<string | undefined> => {
+  const { process } = column;
+  if (!process || !process.prompt) return undefined;
+
+  if (column.type === 'image') {
+    return undefined; // Image columns do not have prompt templates
+  }
+
+  // Fetch complete cell data for validated cells
+  const validatedCells = await Promise.all(
+    column.cells
+      .filter((cell) => cell.validated)
+      .map((cell) =>
+        getColumnCellByIdx({
+          idx: cell.idx,
+          columnId: column.id,
+        }),
+      ),
+  );
+
+  const examples = await collectValidatedExamples({
+    validatedCells: validatedCells.filter(
+      (cell): cell is Cell => cell !== null,
+    ),
+    columnsReferences: process.columnsReferences,
+  });
+
+  // Get data for prompt materialization
+  const data: any | undefined = process.columnsReferences?.length
+    ? await getFirstRowData(process.columnsReferences)
+    : {};
+
+  // Replace each value in data with its key wrapped in {{}}
+  for (const key of Object.keys(data)) {
+    data[key] = `{{${key}}}`;
+  }
+
+  return materializePrompt({
+    instruction: process.prompt,
+    data: data ?? undefined,
+    examples: examples?.length ? examples : undefined,
   });
 };

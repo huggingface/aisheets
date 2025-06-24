@@ -1,6 +1,6 @@
 import { $, component$, useSignal, useVisibleTask$ } from '@builder.io/qwik';
 import { Textarea } from '~/components';
-import type { CellProps } from '~/features/table/components/body/cell-props';
+import type { CellProps } from '~/features/table/components/body/renderer/cell-props';
 import { useValidateCellUseCase } from '~/usecases/validate-cell.usecase';
 
 export const CellRawRenderer = component$<CellProps>(({ cell }) => {

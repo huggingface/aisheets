@@ -1,5 +1,5 @@
 import { component$ } from '@builder.io/qwik';
-import type { CellProps } from '~/features/table/components/body/cell-props';
+import type { CellProps } from '~/features/table/components/body/renderer/cell-props';
 
 export const CellArrayRenderer = component$<CellProps>(({ cell }) => {
   return <pre>{JSON.stringify(cell.value, null, 2)}</pre>;

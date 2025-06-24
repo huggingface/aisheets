@@ -1,5 +1,5 @@
 import { component$, useSignal, useTask$ } from '@builder.io/qwik';
-import type { CellProps } from '~/features/table/components/body/cell-props';
+import type { CellProps } from '~/features/table/components/body/renderer/cell-props';
 import { processMediaContent } from '~/features/table/utils/binary-content';
 import { isObjectType } from '~/features/table/utils/kind';
 

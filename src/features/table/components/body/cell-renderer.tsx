@@ -1,9 +1,9 @@
 import { component$ } from '@builder.io/qwik';
-import { CellArrayRenderer } from '~/features/table/components/body/cell-array-renderer';
-import { CellBlobRenderer } from '~/features/table/components/body/cell-blob-renderer';
-import { CellObjectRenderer } from '~/features/table/components/body/cell-object-renderer';
 import type { CellProps } from '~/features/table/components/body/cell-props';
-import { CellRawRenderer } from '~/features/table/components/body/cell-raw-renderer';
+import { CellArrayRenderer } from '~/features/table/components/body/renderer/cell-array-renderer';
+import { CellBlobRenderer } from '~/features/table/components/body/renderer/cell-blob-renderer';
+import { CellObjectRenderer } from '~/features/table/components/body/renderer/cell-object-renderer';
+import { CellRawRenderer } from '~/features/table/components/body/renderer/cell-raw-renderer';
 import { type Column, useColumnsStore } from '~/state';
 
 const hasBlobContent = (column: Column | undefined): boolean => {
@@ -18,7 +18,7 @@ const isObjectType = (column: Column): boolean => {
   return column?.type?.startsWith('STRUCT') || column?.type?.startsWith('MAP');
 };
 
-export const CellContentRenderer = component$<CellProps>((props) => {
+export const CellRenderer = component$<CellProps>((props) => {
   const { cell } = props;
   const { columns } = useColumnsStore();
   const column = columns.value.find((col) => col.id === cell.column?.id);

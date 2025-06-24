@@ -7,7 +7,7 @@ import {
 import { server$ } from '@builder.io/qwik-city';
 import { CellActions } from '~/features/table/components/body/cell-actions';
 import { CellError } from '~/features/table/components/body/cell-error';
-import { CellContentRenderer } from '~/features/table/components/body/cell-renderer';
+import { CellRenderer } from '~/features/table/components/body/cell-renderer';
 import { CellSkeleton } from '~/features/table/components/body/cell-skeleton';
 import { getColumnCellById } from '~/services';
 import { type Cell, type Column, useColumnsStore } from '~/state';
@@ -58,7 +58,7 @@ export const TableCell = component$<{
 
           <div class="h-full flex flex-col justify-between p-1">
             <CellActions cell={cell} />
-            <CellContentRenderer cell={cell} column={cellColumn.value!} />
+            <CellRenderer cell={cell} column={cellColumn.value!} />
           </div>
         </div>
       </div>

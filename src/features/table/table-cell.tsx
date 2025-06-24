@@ -56,7 +56,7 @@ export const TableCell = component$<{
           <CellSkeleton cell={cell} />
           <CellError cell={cell} />
 
-          <div class="h-full flex flex-col justify-between p-1">
+          <div class="h-full flex flex-col justify-between p-2">
             <CellActions cell={cell} />
             <CellRenderer cell={cell} column={cellColumn.value!} />
           </div>

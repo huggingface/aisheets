@@ -131,7 +131,7 @@ export const TableHeader = component$(() => {
     <thead class="sticky top-0 bg-white z-50">
       <tr>
         <th
-          class="sticky left-0 z-[10] min-w-10 w-10 min-h-[50px] h-[50px] px-4 py-2 border rounded-tl-sm bg-neutral-100"
+          class="sticky left-0 z-[10] min-w-10 w-10 min-h-[50px] h-[50px] p-2 border rounded-tl-sm bg-neutral-100"
           rowSpan={2}
         />
 

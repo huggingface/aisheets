@@ -13,10 +13,10 @@ const VideoRenderer = component$<MediaRendererProps>(({ src }) => {
 
   return (
     <div
+      stoppropagation:click
+      stoppropagation:dblclick
       class="w-full h-full"
-      onDblClick$={(e) => {
-        e.stopPropagation();
-
+      onDblClick$={() => {
         isExpanded.value = true;
       }}
       onClick$={() => {
@@ -66,10 +66,10 @@ const AudioRenderer = component$<MediaRendererProps>(({ src }) => {
 
   return (
     <div
+      stoppropagation:click
+      stoppropagation:dblclick
       class="w-full h-full"
-      onDblClick$={(e) => {
-        e.stopPropagation();
-
+      onDblClick$={() => {
         isExpanded.value = true;
       }}
       onClick$={() => {
@@ -115,10 +115,10 @@ const ImageRenderer = component$<MediaRendererProps>(({ src, path }) => {
 
   return (
     <div
+      stoppropagation:click
+      stoppropagation:dblclick
       class="w-full h-full"
-      onDblClick$={(e) => {
-        e.stopPropagation();
-
+      onDblClick$={() => {
         isExpanded.value = true;
       }}
       onClick$={() => {
@@ -127,7 +127,7 @@ const ImageRenderer = component$<MediaRendererProps>(({ src, path }) => {
     >
       <div class="flex flex-col">
         <div class="relative w-full h-full flex items-center justify-center">
-          <img src={src} alt={path} class="object-contain" />
+          <img src={src} alt={path} class="w-32 h-auto" />
         </div>
       </div>
 
@@ -160,11 +160,11 @@ const ImageRenderer = component$<MediaRendererProps>(({ src, path }) => {
 });
 
 const UnsupportedContent = component$<{ content: string }>(({ content }) => {
-  return <div class="unsupported-content" dangerouslySetInnerHTML={content} />;
+  return <div class="unsupported-content" dangerouslySetInnerHTML={content} />; //Add sandbox where to prevent script execution
 });
 
 const ErrorContent = component$<{ content: string }>(({ content }) => {
-  return <div class="error-content" dangerouslySetInnerHTML={content} />;
+  return <div class="error-content" dangerouslySetInnerHTML={content} />; //Add sandbox where to prevent script execution
 });
 
 export const CellBlobRenderer = component$<CellProps>((props) => {

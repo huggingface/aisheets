@@ -203,15 +203,14 @@ export const TableBody = component$(() => {
   const handleMouseUp$ = $(async () => {
     if (!dragStartCell.value) return;
     if (!draggedColumn.value) return;
-
+    if (!draggedColumn.value.process?.id) return;
     if (selectedCellsId.value.length === 1) return;
 
     const column = draggedColumn.value;
+    dragStartCell.value = undefined;
 
     const offset = selectedCellsId.value[0].idx;
     const limit = latestCellSelected.value?.idx - offset + 1;
-
-    dragStartCell.value = undefined;
 
     column.process!.cancellable = noSerialize(new AbortController());
     column.process!.isExecuting = true;

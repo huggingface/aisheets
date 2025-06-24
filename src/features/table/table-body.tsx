@@ -424,7 +424,7 @@ export const TableBody = component$(() => {
                   <td
                     data-column-id={cell.column?.id}
                     class={cn(
-                      'relative transition-colors box-border min-w-[326px] w-[326px] h-[108px] cursor-pointer break-words align-top border',
+                      'relative transition-colors box-border min-w-[326px] w-[326px] h-[108px] break-words align-top border',
                       {
                         'bg-green-50 border-green-300': cell.validated,
                         'border-neutral-300 hover:bg-gray-50/50':
@@ -445,7 +445,7 @@ export const TableBody = component$(() => {
                         cell.column?.id &&
                         latestCellSelected.value &&
                         latestCellSelected.value?.idx === cell.idx && (
-                          <div class="absolute bottom-1 right-4 w-3 h-3 cursor-crosshair z-10">
+                          <div class="absolute bottom-1 right-4 w-3 h-3 z-10">
                             {columns.value.find((c) => c.id === cell.column?.id)
                               ?.kind !== 'static' && (
                               <Button

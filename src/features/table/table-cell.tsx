@@ -5,9 +5,10 @@ import {
   useVisibleTask$,
 } from '@builder.io/qwik';
 import { server$ } from '@builder.io/qwik-city';
-import { Skeleton } from '~/components';
 import { CellActions } from '~/features/table/components/body/cell-actions';
+import { CellError } from '~/features/table/components/body/cell-error';
 import { CellContentRenderer } from '~/features/table/components/body/cell-renderer';
+import { CellSkeleton } from '~/features/table/components/body/cell-skeleton';
 import { getColumnCellById } from '~/services';
 import { type Cell, type Column, useColumnsStore } from '~/state';
 
@@ -52,23 +53,13 @@ export const TableCell = component$<{
     <div class="min-h-[100px] h-[100px] max-h-[100px] group">
       <div class="relative h-full">
         <div class="relative flex flex-col h-full overflow-hidden">
-          {cell.generating && (
-            <div class="absolute inset-0 flex items-center justify-center">
-              <Skeleton />
-            </div>
-          )}
+          <CellSkeleton cell={cell} />
+          <CellError cell={cell} />
 
-          {cell.error ? (
-            <span class="mt-2 p-4 text-red-500 text-xs flex items-center gap-1">
-              <span>⚠</span>
-              <span>{cell.error}</span>
-            </span>
-          ) : (
-            <div class="h-full flex flex-col justify-between p-1">
-              <CellActions cell={cell} />
-              <CellContentRenderer cell={cell} column={cellColumn.value!} />
-            </div>
-          )}
+          <div class="h-full flex flex-col justify-between p-1">
+            <CellActions cell={cell} />
+            <CellContentRenderer cell={cell} column={cellColumn.value!} />
+          </div>
         </div>
       </div>
     </div>

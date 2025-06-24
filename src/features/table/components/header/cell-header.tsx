@@ -44,12 +44,9 @@ export const TableCellHeader = component$<{ column: Column }>(({ column }) => {
   return (
     <th
       id={column.id}
-      class={cn(
-        `min-w-80 w-80 max-w-80 min-h-[50px] h-[50px] p-2 text-left border ${classes.value}`,
-        {
-          'border-r-0': column.id === TEMPORAL_ID,
-        },
-      )}
+      class={cn(`min-h-[50px] h-[50px] p-2 text-left border ${classes.value}`, {
+        'border-r-0': column.id === TEMPORAL_ID,
+      })}
     >
       <Popover.Root flip={false} gutter={8} floating="bottom">
         <Popover.Trigger class="flex items-center justify-between w-full h-[20px] py-[10px]">

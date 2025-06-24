@@ -10,8 +10,10 @@ interface MediaRendererProps {
 
 const VideoRenderer = component$<MediaRendererProps>(({ src }) => {
   const isExpanded = useSignal(false);
+
   return (
     <div
+      class="w-full h-full"
       onDblClick$={(e) => {
         e.stopPropagation();
 
@@ -61,8 +63,10 @@ const VideoRenderer = component$<MediaRendererProps>(({ src }) => {
 
 const AudioRenderer = component$<MediaRendererProps>(({ src }) => {
   const isExpanded = useSignal(false);
+
   return (
     <div
+      class="w-full h-full"
       onDblClick$={(e) => {
         e.stopPropagation();
 
@@ -111,6 +115,7 @@ const ImageRenderer = component$<MediaRendererProps>(({ src, path }) => {
 
   return (
     <div
+      class="w-full h-full"
       onDblClick$={(e) => {
         e.stopPropagation();
 

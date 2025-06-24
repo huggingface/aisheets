@@ -93,6 +93,7 @@ export const CellRawRenderer = component$<CellProps>(({ cell }) => {
 
   return (
     <div
+      class="w-full h-full"
       onDblClick$={(e) => {
         e.stopPropagation();
 

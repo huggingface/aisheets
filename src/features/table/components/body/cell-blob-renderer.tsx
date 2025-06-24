@@ -197,13 +197,15 @@ export const CellBlobRenderer = component$<CellProps>((props) => {
     contentValue.value = await processBlob(cell.value);
   });
 
-  if (!contentValue.value) {
+  if (cell.generating) {
     return (
       <div class="flex h-full min-h-[120px]">
         <div class="w-full h-full bg-gray-200 animate-pulse" />
       </div>
     );
   }
+
+  if (!contentValue.value) return null;
 
   if (
     typeof contentValue.value === 'string' &&
@@ -240,10 +242,6 @@ export const CellBlobRenderer = component$<CellProps>((props) => {
     if (contentValue.value.includes('<img')) {
       return <ImageRenderer src={src} path={path} {...props} />;
     }
-  }
-
-  if (contentValue.value) {
-    return <div class="text-gray-500">{contentValue.value}</div>;
   }
 
   return <div class="text-gray-500">Invalid media content</div>;

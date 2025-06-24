@@ -79,10 +79,9 @@ export const CellActions = component$<{ cell: Cell }>(({ cell }) => {
             class={cn(
               'opacity-0 group-hover:opacity-100 transition-opacity visible',
               {
-                'bg-green-100 hover:bg-green-200/80 text-green-400':
+                'bg-green-100 hover:bg-green-200 text-green-400':
                   cell.validated,
-                'bg-gray-100 hover:bg-gray-200/80 text-gray-400':
-                  !cell.validated,
+                'bg-gray-100 hover:bg-gray-200 text-gray-400': !cell.validated,
                 hidden: !cell.value,
               },
             )}

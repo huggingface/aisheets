@@ -45,15 +45,12 @@ export const CellActions = component$<{ cell: Cell }>(({ cell }) => {
     return () => window.removeEventListener('closeAllSourcesModals', handler);
   });
 
-  if (isStatic.value) return null;
-
   return (
     <>
-      <div class="absolute w-full z-10 top-0 right-0">
+      <div class="absolute w-full z-40 top-0 right-0">
         <div class="flex items-center justify-end w-full gap-1 h-fit pr-1">
           <Button
             look="ghost"
-            hover={false}
             size="sm"
             class={cn(
               'opacity-0 group-hover:opacity-100 transition-opacity visible',
@@ -76,21 +73,20 @@ export const CellActions = component$<{ cell: Cell }>(({ cell }) => {
             </Tooltip>
           </Button>
           <Button
+            stoppropagation:click
             look="ghost"
-            hover={false}
             size="sm"
             class={cn(
               'opacity-0 group-hover:opacity-100 transition-opacity visible',
               {
-                'bg-green-50/50 text-green-400 hover:bg-green-100':
+                'bg-green-100 hover:bg-green-200/80 text-green-400':
                   cell.validated,
-                'hover:bg-gray-100 text-gray-400': !cell.validated,
-                '!opacity-0': !cell.id,
+                'bg-gray-100 hover:bg-gray-200/80 text-gray-400':
+                  !cell.validated,
                 hidden: !cell.value,
               },
             )}
-            onClick$={(e) => {
-              e.stopPropagation();
+            onClick$={() => {
               validateCell(cell, cell.value, !cell.validated);
             }}
           >

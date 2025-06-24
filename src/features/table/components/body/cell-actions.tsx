@@ -48,15 +48,14 @@ export const CellActions = component$<{ cell: Cell }>(({ cell }) => {
   return (
     <>
       <div class="absolute w-full z-40 top-0 right-0">
-        <div class="flex items-center justify-end w-full gap-1 h-fit pr-1">
+        <div class="flex items-center justify-end w-full gap-1 h-fit">
           <Button
             look="ghost"
             size="sm"
             class={cn(
               'opacity-0 group-hover:opacity-100 transition-opacity visible',
               {
-                'hover:bg-gray-100 text-gray-400': true,
-                '!opacity-0': !cell.id,
+                'rounded-full hover:bg-gray-100 text-gray-400': true,
                 hidden: !cell.value || !cell.sources?.length,
               },
             )}
@@ -81,7 +80,7 @@ export const CellActions = component$<{ cell: Cell }>(({ cell }) => {
               {
                 'bg-green-100 hover:bg-green-200 text-green-400':
                   cell.validated,
-                'bg-gray-100 hover:bg-gray-200 text-gray-400': !cell.validated,
+                'rounded-full hover:bg-gray-100 text-gray-400': !cell.validated,
                 hidden: !cell.value,
               },
             )}

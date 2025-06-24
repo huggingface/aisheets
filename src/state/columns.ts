@@ -240,7 +240,6 @@ export const useColumnsStore = () => {
     columns,
     firstColumn,
     replaceColumns,
-
     isDirty: $((column: Column) => isDirty(column)),
     addTemporalColumn: $(async () => {
       if (activeDataset.value.columns.some((c) => c.id === TEMPORAL_ID)) return;
@@ -251,6 +250,9 @@ export const useColumnsStore = () => {
     }),
     removeTemporalColumn: $(() => {
       replaceColumns(columns.value.filter((c) => c.id !== TEMPORAL_ID));
+    }),
+    getColumn: $((id: string) => {
+      return columns.value.find((c) => c.id === id);
     }),
     addColumn: $((newbie: Column) => {
       replaceColumns([

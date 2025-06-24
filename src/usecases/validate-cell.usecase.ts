@@ -15,7 +15,7 @@ interface EditCell {
 }
 
 export const useValidateCellUseCase = () => {
-  const { replaceCell } = useColumnsStore();
+  const { getColumn, replaceCell } = useColumnsStore();
 
   const validateCellServer$ = server$(
     async (editCell: EditCell): Promise<Cell> => {
@@ -31,13 +31,25 @@ export const useValidateCellUseCase = () => {
   );
 
   const validateCell = $(
-    async (cell: Cell, validatedContent: string, validated: boolean) => {
+    async (cell: Cell, validatedContent: string, isValidated: boolean) => {
+      if (!cell.column) {
+        throw new Error('Cell does not have a column associated with it.');
+      }
+
+      const column = await getColumn(cell.column.id);
+
+      if (!column) {
+        throw new Error(`Column with id ${cell.column.id} not found.`);
+      }
+
+      const validated = isValidated && column.kind === 'dynamic';
+
       const updatedCell = await validateCellServer$({
         id: cell.id,
         idx: cell.idx,
         value: validatedContent,
-        validated,
-        column: cell.column!,
+        validated: validated,
+        column: cell.column,
       });
 
       replaceCell({

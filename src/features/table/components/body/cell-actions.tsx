@@ -45,22 +45,25 @@ export const CellActions = component$<{ cell: Cell }>(({ cell }) => {
     return () => window.removeEventListener('closeAllSourcesModals', handler);
   });
 
+  if (isStatic.value) return null;
+
   return (
     <>
       <div class="absolute w-full z-40 top-0 right-0">
         <div class="flex items-center justify-end w-full gap-1 h-fit">
           <Button
+            stoppropagation:click
+            stoppropagation:dblclick
             look="ghost"
             size="sm"
             class={cn(
-              'opacity-0 group-hover:opacity-100 transition-opacity visible',
+              'opacity-0 group-hover:opacity-100 transition-opacity visible rounded-full',
               {
-                'rounded-full hover:bg-gray-100 text-gray-400': true,
+                'hover:bg-gray-100 text-gray-400': true,
                 hidden: !cell.value || !cell.sources?.length,
               },
             )}
-            onClick$={(e) => {
-              e.stopPropagation();
+            onClick$={() => {
               if (cell.sources?.length) {
                 window.dispatchEvent(new CustomEvent('closeAllSourcesModals'));
                 showSourcesModal.value = true;
@@ -73,6 +76,7 @@ export const CellActions = component$<{ cell: Cell }>(({ cell }) => {
           </Button>
           <Button
             stoppropagation:click
+            stoppropagation:dblclick
             look="ghost"
             size="sm"
             class={cn(

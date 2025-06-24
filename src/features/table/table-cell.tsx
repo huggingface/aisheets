@@ -20,6 +20,12 @@ import { getColumnCellById } from '~/services';
 import { type Cell, type Column, useColumnsStore } from '~/state';
 import { useValidateCellUseCase } from '~/usecases/validate-cell.usecase';
 import {
+  hasBlobContent,
+  isArrayType,
+  isEditableValue,
+  isObjectType,
+} from '../utils/columns';
+import {
   AudioRenderer,
   ErrorContent,
   ImageRenderer,
@@ -38,29 +44,6 @@ const loadCell = server$(async (cellId: string) => {
     validated: persistedCell.validated,
   };
 });
-
-const isImage = (column: Column | undefined): boolean => {
-  return column?.type?.toLowerCase().includes('image') ?? false;
-};
-
-//Refactor, duplicated
-export const hasBlobContent = (column: Column | undefined): boolean => {
-  return column?.type?.includes('BLOB') || isImage(column);
-};
-
-export const isArrayType = (column: Column): boolean => {
-  return column?.type?.includes('[]');
-};
-
-export const isObjectType = (column: Column): boolean => {
-  return column?.type?.startsWith('STRUCT') || column?.type?.startsWith('MAP');
-};
-
-export const isEditableValue = (column: Column): boolean => {
-  return (
-    !hasBlobContent(column) && !isArrayType(column) && !isObjectType(column)
-  );
-};
 
 export const CellContentRenderer = component$<{
   content: any;

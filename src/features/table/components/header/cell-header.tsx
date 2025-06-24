@@ -8,6 +8,11 @@ import { CellSettings } from '~/features/table/components/header/cell-settings';
 import { ColumnNameEdition } from '~/features/table/components/header/column-name-edition';
 import { DeleteColumn } from '~/features/table/components/header/delete-column';
 import { HideColumn } from '~/features/table/components/header/hide-column';
+import {
+  hasBlobContent,
+  isArrayType,
+  isObjectType,
+} from '~/features/utils/columns';
 import { type Column, TEMPORAL_ID } from '~/state';
 
 export const TableCellHeader = component$<{ column: Column }>(({ column }) => {
@@ -85,24 +90,3 @@ export const TableCellHeader = component$<{ column: Column }>(({ column }) => {
     </th>
   );
 });
-
-//Refactor, duplicated
-export const hasBlobContent = (column: Column): boolean => {
-  return column.type.includes('BLOB');
-};
-
-export const isArrayType = (column: Column): boolean => {
-  return column.type.includes('[]');
-};
-
-export const isObjectType = (column: Column): boolean => {
-  return column.type.startsWith('STRUCT') || column.type.startsWith('MAP');
-};
-
-export const isTextType = (column: Column): boolean => {
-  return (
-    column.type.startsWith('TEXT') ||
-    column.type.startsWith('STRING') ||
-    column.type.startsWith('VARCHAR')
-  );
-};

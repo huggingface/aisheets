@@ -31,6 +31,7 @@ import {
   type Variable,
 } from '~/features/add-column/components/template-textarea';
 import { useExecution } from '~/features/add-column/form/execution';
+import { hasBlobContent } from '~/features/utils/columns';
 import type { Model } from '~/loaders/hub-models';
 import { configContext, modelsContext } from '~/routes/home/layout';
 import {
@@ -514,8 +515,3 @@ export const ExecutionForm = component$<SidebarProps>(
     );
   },
 );
-
-//Refactor, duplicated
-export const hasBlobContent = (column: Column): boolean => {
-  return column.type.includes('BLOB');
-};

@@ -9,7 +9,9 @@ import { cn } from '@qwik-ui/utils';
 import { LuPlus } from '@qwikest/icons/lucide';
 import { Button, Popover, buttonVariants } from '~/components';
 import { Tooltip } from '~/components/ui/tooltip/tooltip';
-import { hasBlobContent, useExecution } from '~/features/add-column';
+import { useExecution } from '~/features/add-column/form';
+import { hasBlobContent } from '~/features/utils/columns';
+
 import { TEMPORAL_ID, useColumnsStore } from '~/state';
 
 const COLUMN_PROMPTS = {

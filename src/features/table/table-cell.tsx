@@ -5,7 +5,6 @@ import {
   useVisibleTask$,
 } from '@builder.io/qwik';
 import { server$ } from '@builder.io/qwik-city';
-import { CellActions } from '~/features/table/components/body/cell-actions';
 import { CellError } from '~/features/table/components/body/cell-error';
 import { CellRenderer } from '~/features/table/components/body/cell-renderer';
 import { CellSkeleton } from '~/features/table/components/body/cell-skeleton';
@@ -56,8 +55,7 @@ export const TableCell = component$<{
           <CellSkeleton cell={cell} />
           <CellError cell={cell} />
 
-          <div class="h-full flex flex-col justify-between p-2">
-            <CellActions cell={cell} />
+          <div class="flex-1 p-1">
             <CellRenderer cell={cell} column={cellColumn.value!} />
           </div>
         </div>

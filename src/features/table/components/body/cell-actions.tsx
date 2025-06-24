@@ -76,11 +76,11 @@ export const CellActions = component$<{ cell: Cell }>(({ cell }) => {
             look="ghost"
             size="sm"
             class={cn(
-              'opacity-0 group-hover:opacity-100 transition-opacity visible',
+              'opacity-0 group-hover:opacity-100 transition-opacity visible rounded-full',
               {
                 'bg-green-100 hover:bg-green-200 text-green-400':
                   cell.validated,
-                'rounded-full hover:bg-gray-100 text-gray-400': !cell.validated,
+                'hover:bg-gray-100 text-gray-400': !cell.validated,
                 hidden: !cell.value,
               },
             )}

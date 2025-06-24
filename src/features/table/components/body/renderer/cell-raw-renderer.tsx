@@ -1,5 +1,6 @@
 import { $, component$, useSignal, useVisibleTask$ } from '@builder.io/qwik';
 import { Textarea } from '~/components';
+import { CellActions } from '~/features/table/components/body/cell-actions';
 import type { CellProps } from '~/features/table/components/body/renderer/cell-props';
 import { useValidateCellUseCase } from '~/usecases/validate-cell.usecase';
 
@@ -105,7 +106,10 @@ export const CellRawRenderer = component$<CellProps>(({ cell }) => {
         }
       }}
     >
-      <p>{cell.value?.toString()}</p>
+      <div class="h-full flex flex-col justify-between">
+        <CellActions cell={cell} />
+        <p>{cell.value?.toString()}</p>
+      </div>
 
       {isEditing.value && (
         <>

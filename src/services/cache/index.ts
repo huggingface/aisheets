@@ -4,7 +4,7 @@ const serverCache = new NodeCache({
   stdTTL: 60 * 60, // Default time-to-live of 1 hour
   checkperiod: 60 * 5, // Check every 5 minutes
   maxKeys: 10000 * 5, // Limit the number of keys
-  useClones: true, // Enable cloning of values
+  useClones: false, // Disable cloning for performance
   deleteOnExpire: true, // Delete keys on expiration
 });
 

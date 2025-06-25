@@ -55,6 +55,14 @@ Then, identify the main columns needed for this dataset.
 
 Second, identify the prompts that would be needed to generate each cell in the column. For example, if the column is tweet, and the tweet is about a specific topic, event, or action, write: Tweet about X. If a column is related to another column, reference it using {{column_name}} in the prompt.
 
+For image columns, specify the type as "image" and provide a descriptive prompt for image generation. Image columns are useful for:
+- Product images based on descriptions
+- Illustrations for stories or concepts
+- Visual representations of data or concepts
+- Logos or designs based on text descriptions
+
+IMPORTANT: Do not reference image columns in the prompts for other columns. The current AI models do not have the ability to read or process images as input.
+
 Then, create specific search queries that will help gather information for the entire dataset.
 
 Your response must follow this exact format:
@@ -63,9 +71,10 @@ DATASET NAME:
 Short Descriptive Name
 
 COLUMNS:
-- column_name1 : prompt1 (this first column is always the main object and the only one not referencing other columns). This colum should generate a single value. For listing items avoid using words like Describe, Generate, etc. and instead use: Identify one, Extract one, Name one etc.
-- column_name2 : prompt2 (referencing {{column_name}} if needed)
-- column_name3 : prompt3...
+- column_name1 : prompt1 (type: text) (this first column is always the main object and the only one not referencing other columns). This colum should generate a single value. For listing items avoid using words like Describe, Generate, etc. and instead use: Identify one, Extract one, Name one etc.
+- column_name2 : prompt2 (type: text) (referencing {{column_name}} if needed)
+- column_name3 : prompt3 (type: image) (for image generation)
+- column_name4 : prompt4 (type: text)...
 
 SEARCH QUERIES:
 - "specific search query 1"
@@ -88,12 +97,26 @@ DATASET NAME:
 Recent Movie Reviews Collection
 
 COLUMNS:
-- movie_title : Identify one movie title from the provided sources.
-- reviews : Summarize the moview review for {{movie_title}} based on the provided sources.
-- genre : Identify the movie genre of {{movie_title}} based on the provided sources.
+- movie_title : Identify one movie title from the provided sources. (type: text)
+- reviews : Summarize the moview review for {{movie_title}} based on the provided sources. (type: text)
+- genre : Identify the movie genre of {{movie_title}} based on the provided sources. (type: text)
 
 SEARCH QUERIES:
 - "recent movie releases"
+
+USER REQUEST:
+product catalog with images
+
+DATASET NAME:
+Product Catalog with Visuals
+
+COLUMNS:
+- product_name : Identify one product name from the provided sources. (type: text)
+- description : Describe the product {{product_name}} based on the provided sources. (type: text)
+- product_image : Generate a professional product image for {{product_name}} based on {{description}}. (type: image)
+
+SEARCH QUERIES:
+- "latest tech products"
 `.trim();
 
 /**
@@ -108,15 +131,24 @@ First, provide a short, descriptive name for this dataset (2-5 words).
 
 Then, identify the main columns needed for this dataset.
 
+For image columns, specify the type as "image" and provide a descriptive prompt for image generation. Image columns are useful for:
+- Product images based on descriptions
+- Illustrations for stories or concepts
+- Visual representations of data or concepts
+- Logos or designs based on text descriptions
+
+IMPORTANT: Do not reference image columns in the prompts for other columns. The current AI models do not have the ability to read or process images as input.
+
 Your response must follow this exact format:
 
 DATASET NAME:
 Short Descriptive Name
 
 COLUMNS:
-- column_name1 : prompt1 (this first column is always the main object and the only one not referencing other columns)
-- column_name2 : prompt2 (referencing {{column_name}} if needed)
-- column_name3 : prompt3...
+- column_name1 : prompt1 (type: text) (this first column is always the main object and the only one not referencing other columns)
+- column_name2 : prompt2 (type: text) (referencing {{column_name}} if needed)
+- column_name3 : prompt3 (type: image) (for image generation)
+- column_name4 : prompt4 (type: text)...
 
 Only include columns that are directly relevant to the request.
 
@@ -130,10 +162,18 @@ DATASET NAME:
 Modern Movie Reviews Collection
 
 COLUMNS:
-- movie_title : Generate a movie title in the style of recent releases
-- review : Write a detailed movie review for {{movie_title}}
-- rating : Rate {{movie_title}} from 1-5 stars based on {{review}}
-- genre : Identify the movie genre based on {{review}}
+- movie_title : Generate a movie title in the style of recent releases (type: text)
+- review : Write a detailed movie review for {{movie_title}} (type: text)
+- rating : Rate {{movie_title}} from 1-5 stars based on {{review}} (type: text)
+- genre : Identify the movie genre based on {{review}} (type: text)
+
+DATASET NAME:
+Creative Story Illustrations
+
+COLUMNS:
+- story_title : Generate a creative story title (type: text)
+- story_content : Write a short story based on {{story_title}} (type: text)
+- story_illustration : Create a beautiful illustration for the story {{story_title}} based on {{story_content}} (type: image)
 `.trim();
 
 /**
@@ -203,7 +243,7 @@ const processTextConfigResponse = (
 
   const result: any = {
     datasetName: 'Auto-generated Dataset',
-    columns: [] as Array<{ name: string; prompt: string }>,
+    columns: [] as Array<{ name: string; prompt: string; type: string }>,
     queries: [] as string[],
     text,
   };
@@ -252,10 +292,23 @@ const processTextConfigResponse = (
       if (colonIndex === -1) continue;
 
       const columnName = item.substring(0, colonIndex).trim();
-      const prompt = item.substring(colonIndex + 1).trim();
+      const promptWithType = item.substring(colonIndex + 1).trim();
+
+      // Extract type from prompt (type: text) or (type: image)
+      const typeMatch = promptWithType.match(/\(type:\s*(text|image)\)/i);
+      const columnType = typeMatch ? typeMatch[1].toLowerCase() : 'text';
+
+      // Remove type specification from prompt
+      const prompt = promptWithType
+        .replace(/\(type:\s*(text|image)\)/gi, '')
+        .trim();
 
       if (columnName) {
-        result.columns.push({ name: columnName, prompt });
+        result.columns.push({
+          name: columnName,
+          prompt,
+          type: columnType,
+        });
       }
     }
 
@@ -277,7 +330,7 @@ const processTextConfigResponse = (
  * Creates a dataset with the suggested columns from the assistant
  */
 async function createDatasetWithColumns(
-  columns: Array<{ name: string; prompt: string }>,
+  columns: Array<{ name: string; prompt: string; type: string }>,
   session: Session,
   modelName: string = DEFAULT_MODEL,
   modelProvider: string = DEFAULT_MODEL_PROVIDER,
@@ -293,9 +346,11 @@ async function createDatasetWithColumns(
   // Create all columns first
   const createdColumns: Column[] = [];
   for (const column of columns) {
+    const isImage = column.type === 'image';
+    const logicalType = isImage ? 'image' : 'text';
     const newColumn = await createColumn({
       name: column.name,
-      type: 'VARCHAR',
+      type: logicalType,
       kind: 'dynamic' as ColumnKind,
       dataset,
     });
@@ -313,10 +368,17 @@ async function createDatasetWithColumns(
       columnNames,
     );
 
+    // Use special model/provider for image columns
+    const isImage = column.type === 'image';
+    const processModelName = isImage
+      ? 'black-forest-labs/FLUX.1-dev'
+      : modelName;
+    const processModelProvider = isImage ? 'fal-ai' : modelProvider;
+
     const process = await createProcess({
       process: {
-        modelName,
-        modelProvider,
+        modelName: processModelName,
+        modelProvider: processModelProvider,
         prompt: column.prompt,
         searchEnabled,
         columnsReferences: columnReferences.map((ref) => {
@@ -338,6 +400,7 @@ async function createDatasetWithColumns(
         col.process?.prompt ||
         columns.find((c) => c.name === col.name)?.prompt ||
         '',
+      type: col.type === 'image' ? 'image' : 'text',
     })),
     createdColumns,
   };
@@ -557,7 +620,16 @@ export const runAutoDataset = async function* (
 
     yield {
       event: EVENTS.datasetCreate,
-      data: { name: datasetName },
+      data: {
+        name: datasetName,
+        columns: columns.map(
+          (col: { name: string; prompt: string; type: string }) => ({
+            name: col.name,
+            type: col.type,
+            prompt: col.prompt,
+          }),
+        ),
+      },
     };
 
     // Step 1: Create dataset and columns

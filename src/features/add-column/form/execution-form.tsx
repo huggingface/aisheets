@@ -91,11 +91,6 @@ export const ExecutionForm = component$<SidebarProps>(
       );
     });
 
-    if (column.type === 'image') {
-      // Currently, we custom endpoint only for text models
-      modelEndpointEnabled = false;
-    }
-
     const isOpenModel = useSignal(false);
 
     const prompt = useSignal<string>('');
@@ -116,11 +111,24 @@ export const ExecutionForm = component$<SidebarProps>(
 
     const filteredModels = useSignal<Model[]>(models.value);
 
+    const isImageColumn = useComputed$(() => {
+      return column.type === 'image';
+    });
+
+    if (isImageColumn.value) {
+      // Currently, we custom endpoint only for text models
+      modelEndpointEnabled = false;
+    }
+
     const modelProviders = useComputed$(() => {
       const model = models.value.find(
         (m: Model) => m.id === selectedModelId.value,
       );
       return model ? model.providers : [];
+    });
+
+    const isSearchOnWebAvailable = useComputed$(() => {
+      return !isImageColumn.value;
     });
 
     const modelSearchContainerRef = useClickOutside(
@@ -322,22 +330,27 @@ export const ExecutionForm = component$<SidebarProps>(
                 </div>
 
                 <div class="w-full absolute bottom-0 p-4 flex flex-row items-center justify-between cursor-text">
-                  <Button
-                    look="secondary"
-                    class={cn(
-                      'flex px-[10px] py-[8px] gap-[10px] bg-white text-neutral-600 hover:bg-neutral-100 h-[30px] rounded-[8px]',
-                      {
-                        'border-primary-100 outline-primary-100 bg-primary-50 hover:bg-primary-50 text-primary-500 hover:text-primary-400':
-                          searchOnWeb.value,
-                      },
-                    )}
-                    onClick$={() => {
-                      searchOnWeb.value = !searchOnWeb.value;
-                    }}
-                  >
-                    <LuGlobe class="text-lg" />
-                    Search the web
-                  </Button>
+                  {isSearchOnWebAvailable.value ? (
+                    <Button
+                      look="secondary"
+                      class={cn(
+                        'flex px-[10px] py-[8px] gap-[10px] bg-white text-neutral-600 hover:bg-neutral-100 h-[30px] rounded-[8px]',
+                        {
+                          'border-primary-100 outline-primary-100 bg-primary-50 hover:bg-primary-50 text-primary-500 hover:text-primary-400':
+                            searchOnWeb.value,
+                        },
+                      )}
+                      onClick$={() => {
+                        searchOnWeb.value = !searchOnWeb.value;
+                      }}
+                    >
+                      <LuGlobe class="text-lg" />
+                      Search the web
+                    </Button>
+                  ) : (
+                    <div class="flex items-center gap-2 text-neutral-500" />
+                  )}
+
                   {column.process?.isExecuting && (
                     <div class="h-4 w-4 animate-spin rounded-full border-2 border-primary-100 border-t-transparent" />
                   )}

@@ -143,14 +143,8 @@ const ImageRenderer = component$<MediaRendererProps>(({ src, path }) => {
               transform: 'translate(-50%, -50%)',
             }}
           >
-            <div class="absolute inset-0 w-full h-full flex items-center justify-center p-4 bg-neutral-50">
-              <div class="max-w-full max-h-full overflow-hidden">
-                <div class="flex flex-col">
-                  <div class="relative w-full h-full flex items-center justify-center">
-                    <img src={src} alt={path} class="max-w-full h-auto" />
-                  </div>
-                </div>
-              </div>
+            <div class="absolute inset-0 flex items-center justify-center p-4 bg-neutral-50 overflow-hidden">
+              <img src={src} alt={path} class="object-contain w-full h-full" />
             </div>
           </div>
         </>

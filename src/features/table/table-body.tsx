@@ -203,15 +203,14 @@ export const TableBody = component$(() => {
   const handleMouseUp$ = $(async () => {
     if (!dragStartCell.value) return;
     if (!draggedColumn.value) return;
-
+    if (!draggedColumn.value.process?.id) return;
     if (selectedCellsId.value.length === 1) return;
 
     const column = draggedColumn.value;
+    dragStartCell.value = undefined;
 
     const offset = selectedCellsId.value[0].idx;
     const limit = latestCellSelected.value?.idx - offset + 1;
-
-    dragStartCell.value = undefined;
 
     column.process!.cancellable = noSerialize(new AbortController());
     column.process!.isExecuting = true;
@@ -350,7 +349,7 @@ export const TableBody = component$(() => {
 
       return (
         <tr
-          class={cn('min-w-[326px] w-[326px]', {
+          class={cn({
             'bg-gray-50/50 hover:bg-gray-50/50': selectedRows.value.includes(
               item.index,
             ),
@@ -424,7 +423,7 @@ export const TableBody = component$(() => {
                   <td
                     data-column-id={cell.column?.id}
                     class={cn(
-                      'relative transition-colors box-border min-w-[326px] w-[326px] h-[108px] cursor-pointer break-words align-top border',
+                      'relative transition-colors box-border w-[326px] h-[108px] break-words align-top border',
                       {
                         'bg-green-50 border-green-300': cell.validated,
                         'border-neutral-300 hover:bg-gray-50/50':
@@ -445,7 +444,7 @@ export const TableBody = component$(() => {
                         cell.column?.id &&
                         latestCellSelected.value &&
                         latestCellSelected.value?.idx === cell.idx && (
-                          <div class="absolute bottom-1 right-4 w-3 h-3 cursor-crosshair z-10">
+                          <div class="absolute bottom-1 right-4 w-3 h-3 z-10">
                             {columns.value.find((c) => c.id === cell.column?.id)
                               ?.kind !== 'static' && (
                               <Button

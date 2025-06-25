@@ -4,19 +4,12 @@ import { CellBlobRenderer } from '~/features/table/components/body/renderer/cell
 import { CellObjectRenderer } from '~/features/table/components/body/renderer/cell-object-renderer';
 import type { CellProps } from '~/features/table/components/body/renderer/cell-props';
 import { CellRawRenderer } from '~/features/table/components/body/renderer/cell-raw-renderer';
-import { type Column, useColumnsStore } from '~/state';
-
-const hasBlobContent = (column: Column | undefined): boolean => {
-  return column?.type?.includes('BLOB') ?? false;
-};
-
-const isArrayType = (column: Column): boolean => {
-  return column?.type?.includes('[]');
-};
-
-const isObjectType = (column: Column): boolean => {
-  return column?.type?.startsWith('STRUCT') || column?.type?.startsWith('MAP');
-};
+import {
+  hasBlobContent,
+  isArrayType,
+  isObjectType,
+} from '~/features/utils/columns';
+import { useColumnsStore } from '~/state';
 
 export const CellRenderer = component$<CellProps>((props) => {
   const { cell } = props;

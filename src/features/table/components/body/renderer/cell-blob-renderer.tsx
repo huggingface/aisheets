@@ -34,7 +34,7 @@ const VideoRenderer = component$<MediaRendererProps>(({ src }) => {
           <div class="fixed inset-0 bg-neutral-700/40 z-50" />
 
           <div
-            class="fixed z-[101] bg-white border border-neutral-500 w-3/4 h-3/4 max-w-[800px] max-h-[600px] rounded-sm"
+            class="fixed z-[101] bg-white border border-neutral-500 w-3/4 h-3/4 max-w-[800px] max-h-[600px]"
             style={{
               left: '50%',
               top: '50%',
@@ -85,7 +85,7 @@ const AudioRenderer = component$<MediaRendererProps>(({ src }) => {
           <div class="fixed inset-0 bg-neutral-700/40 z-50" />
 
           <div
-            class="fixed z-[101] bg-white border border-neutral-500 w-3/4 h-3/4 max-w-[800px] max-h-[600px] rounded-sm"
+            class="fixed z-[101] bg-white border border-neutral-500 w-3/4 h-3/4 max-w-[800px] max-h-[600px]"
             style={{
               left: '50%',
               top: '50%',
@@ -140,7 +140,7 @@ const ImageRenderer = component$<MediaRendererProps>(({ src, path }) => {
           <div class="fixed inset-0 bg-neutral-700/40 z-50" />
 
           <div
-            class="fixed z-[101] bg-white border border-neutral-500 w-full h-full max-w-full max-h-[40vh] md:max-w-[800px] md:max-h-[600px] rounded-sm overflow-hidden"
+            class="fixed z-[101] bg-white border border-neutral-500 w-full h-full max-w-full max-h-[40vh] md:max-w-[800px] md:max-h-[600px] overflow-hidden"
             style={{
               left: '50%',
               top: '50%',

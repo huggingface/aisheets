@@ -59,7 +59,7 @@ export interface Model {
   trendingScore?: number;
 }
 
-const listModels = server$(async function (
+const listAllModels = server$(async function (
   this: RequestEventBase<QwikCityPlatform>,
 ): Promise<Model[]> {
   const session = useServerSession(this);
@@ -176,7 +176,7 @@ const fetchModelsForPipeline = async (
 export const useHubModels = routeLoader$(async function (
   this: RequestEventLoader,
 ): Promise<Model[]> {
-  const models = await listModels();
+  const models = await listAllModels();
 
   if (models.length === 0) {
     return [
@@ -188,6 +188,7 @@ export const useHubModels = routeLoader$(async function (
         pipeline_tag: 'text-generation',
         supportedType: 'text',
       },
+      // TODO: Add default image model if needed
     ];
   }
 

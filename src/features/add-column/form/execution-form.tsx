@@ -46,6 +46,29 @@ interface SidebarProps {
   onGenerateColumn: QRL<(column: CreateColumn) => Promise<void>>;
 }
 
+type SupportedType = 'text' | 'image';
+
+class Models {
+  private models: Model[];
+
+  constructor(models: Model[]) {
+    this.models = models;
+  }
+
+  getModelsByType(type: SupportedType): Model[] {
+    if (type === 'image') return this.getImageModels();
+    return this.getTextModels();
+  }
+
+  private getTextModels(): Model[] {
+    return this.models.filter((model) => model.supportedType === 'text');
+  }
+
+  private getImageModels(): Model[] {
+    return this.models.filter((model) => model.supportedType === 'image');
+  }
+}
+
 export const ExecutionForm = component$<SidebarProps>(
   ({ column, onGenerateColumn }) => {
     const executionFormRef = useSignal<HTMLElement>();
@@ -53,7 +76,7 @@ export const ExecutionForm = component$<SidebarProps>(
     const { firstColumn, columns, removeTemporalColumn, updateColumn } =
       useColumnsStore();
 
-    const models = useContext<Model[]>(modelsContext);
+    const allModels = useContext<Model[]>(modelsContext);
 
     let {
       DEFAULT_MODEL,
@@ -62,16 +85,11 @@ export const ExecutionForm = component$<SidebarProps>(
       MODEL_ENDPOINT_NAME,
     } = useContext(configContext);
 
-    const supportedModels = useComputed$(() => {
-      return models.filter((model: Model) =>
-        // TODO: improve this logic
-        column.type === 'image'
-          ? model.supportedType === 'image'
-          : model.supportedType === 'text',
+    const models = useComputed$(() => {
+      return new Models(allModels).getModelsByType(
+        column.type as SupportedType,
       );
     });
-
-    if (column.type === 'image') modelEndpointEnabled = false;
 
     const isOpenModel = useSignal(false);
 
@@ -91,13 +109,26 @@ export const ExecutionForm = component$<SidebarProps>(
       columnsReferences.value = variables.map((v) => v.id);
     });
 
-    const filteredModels = useSignal<Model[]>(supportedModels.value);
+    const filteredModels = useSignal<Model[]>(models.value);
+
+    const isImageColumn = useComputed$(() => {
+      return column.type === 'image';
+    });
+
+    if (isImageColumn.value) {
+      // Currently, we custom endpoint only for text models
+      modelEndpointEnabled = false;
+    }
 
     const modelProviders = useComputed$(() => {
-      const model = supportedModels.value.find(
+      const model = models.value.find(
         (m: Model) => m.id === selectedModelId.value,
       );
       return model ? model.providers : [];
+    });
+
+    const isSearchOnWebAvailable = useComputed$(() => {
+      return !isImageColumn.value;
     });
 
     const modelSearchContainerRef = useClickOutside(
@@ -112,18 +143,18 @@ export const ExecutionForm = component$<SidebarProps>(
       if (modelSearchQuery.value.length <= 1) return;
 
       if (modelSearchQuery.value === selectedModelId.value) {
-        filteredModels.value = supportedModels.value;
+        filteredModels.value = models.value;
         return;
       }
 
-      filteredModels.value = supportedModels.value.filter((model: Model) =>
+      filteredModels.value = models.value.filter((model: Model) =>
         model.id.toLowerCase().includes(modelSearchQuery.value.toLowerCase()),
       );
 
       nextTick(() => {
         isModelDropdownOpen.value =
           filteredModels.value.length > 0 &&
-          filteredModels.value.length !== supportedModels.value.length;
+          filteredModels.value.length !== models.value.length;
       }, 300);
     });
 
@@ -153,8 +184,8 @@ export const ExecutionForm = component$<SidebarProps>(
         selectedProvider.value = process.modelProvider!;
       } else {
         const defaultModel =
-          supportedModels.value?.find((m: Model) => m.id === DEFAULT_MODEL) ||
-          supportedModels.value[0];
+          models.value?.find((m: Model) => m.id === DEFAULT_MODEL) ||
+          models.value[0];
 
         if (!defaultModel) return;
 
@@ -176,7 +207,7 @@ export const ExecutionForm = component$<SidebarProps>(
 
       modelSearchQuery.value = selectedModelId.value || modelSearchQuery.value;
 
-      const model = supportedModels.value.find(
+      const model = models.value.find(
         (m: Model) => m.id === selectedModelId.value,
       );
 
@@ -299,22 +330,27 @@ export const ExecutionForm = component$<SidebarProps>(
                 </div>
 
                 <div class="w-full absolute bottom-0 p-4 flex flex-row items-center justify-between cursor-text">
-                  <Button
-                    look="secondary"
-                    class={cn(
-                      'flex px-[10px] py-[8px] gap-[10px] bg-white text-neutral-600 hover:bg-neutral-100 h-[30px] rounded-[8px]',
-                      {
-                        'border-primary-100 outline-primary-100 bg-primary-50 hover:bg-primary-50 text-primary-500 hover:text-primary-400':
-                          searchOnWeb.value,
-                      },
-                    )}
-                    onClick$={() => {
-                      searchOnWeb.value = !searchOnWeb.value;
-                    }}
-                  >
-                    <LuGlobe class="text-lg" />
-                    Search the web
-                  </Button>
+                  {isSearchOnWebAvailable.value ? (
+                    <Button
+                      look="secondary"
+                      class={cn(
+                        'flex px-[10px] py-[8px] gap-[10px] bg-white text-neutral-600 hover:bg-neutral-100 h-[30px] rounded-[8px]',
+                        {
+                          'border-primary-100 outline-primary-100 bg-primary-50 hover:bg-primary-50 text-primary-500 hover:text-primary-400':
+                            searchOnWeb.value,
+                        },
+                      )}
+                      onClick$={() => {
+                        searchOnWeb.value = !searchOnWeb.value;
+                      }}
+                    >
+                      <LuGlobe class="text-lg" />
+                      Search the web
+                    </Button>
+                  ) : (
+                    <div class="flex items-center gap-2 text-neutral-500" />
+                  )}
+
                   {column.process?.isExecuting && (
                     <div class="h-4 w-4 animate-spin rounded-full border-2 border-primary-100 border-t-transparent" />
                   )}

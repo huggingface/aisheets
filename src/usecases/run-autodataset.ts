@@ -63,6 +63,8 @@ For image columns, specify the type as "image" and provide a descriptive prompt 
 
 IMPORTANT: Do not reference image columns in the prompts for other columns. The current AI models do not have the ability to read or process images as input.
 
+Only propose an image column if the user request clearly asks for images, illustrations, photos, or visual content, or if the type of data being requested obviously requires an image. Do not add image columns for generic or text-only datasets.
+
 Then, create specific search queries that will help gather information for the entire dataset.
 
 Your response must follow this exact format:
@@ -138,6 +140,8 @@ For image columns, specify the type as "image" and provide a descriptive prompt 
 - Logos or designs based on text descriptions
 
 IMPORTANT: Do not reference image columns in the prompts for other columns. The current AI models do not have the ability to read or process images as input.
+
+Only propose an image column if the user request clearly asks for images, illustrations, photos, or visual content, or if the type of data being requested obviously requires an image. Do not add image columns for generic or text-only datasets.
 
 Your response must follow this exact format:
 

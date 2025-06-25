@@ -620,16 +620,7 @@ export const runAutoDataset = async function* (
 
     yield {
       event: EVENTS.datasetCreate,
-      data: {
-        name: datasetName,
-        columns: columns.map(
-          (col: { name: string; prompt: string; type: string }) => ({
-            name: col.name,
-            type: col.type,
-            prompt: col.prompt,
-          }),
-        ),
-      },
+      data: { name: datasetName },
     };
 
     // Step 1: Create dataset and columns

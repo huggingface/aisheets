@@ -136,7 +136,7 @@ const ImageRenderer = component$<MediaRendererProps>(({ src, path }) => {
           <div class="fixed inset-0 bg-neutral-700/40 z-50" />
 
           <div
-            class="fixed z-[101] bg-white border border-neutral-500 w-3/4 h-3/4 max-w-[800px] max-h-[600px] rounded-sm"
+            class="fixed z-[101] bg-white border border-neutral-500 w-full h-full md:w-3/4 md:h-3/4 max-w-[800px] max-h-[400px] md:max-w-[800px] md:max-h-[600px] rounded-sm"
             style={{
               left: '50%',
               top: '50%',

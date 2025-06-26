@@ -200,14 +200,6 @@ export const CellBlobRenderer = component$<CellProps>((props) => {
     contentValue.value = await processBlob(cell.value);
   });
 
-  if (cell.generating) {
-    return (
-      <div class="flex h-full min-h-[120px]">
-        <div class="w-full h-full bg-gray-200 animate-pulse" />
-      </div>
-    );
-  }
-
   if (!contentValue.value) return null;
 
   if (

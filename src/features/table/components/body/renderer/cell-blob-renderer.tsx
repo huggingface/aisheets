@@ -125,12 +125,12 @@ const ImageRenderer = component$<MediaRendererProps>(({ src, path }) => {
         isExpanded.value = false;
       }}
     >
-      <div class="flex flex-col items-center">
-        <div class="relative w-full flex items-center justify-center overflow-hidden">
+      <div class="w-full h-[90px] flex flex-col items-center">
+        <div class="flex items-center justify-center overflow-hidden">
           <img
             src={src}
             alt={path}
-            class="max-w-[120px] max-h-[120px] h-auto object-contain rounded-sm"
+            class="w-full h-full object-contain rounded-sm"
           />
         </div>
       </div>

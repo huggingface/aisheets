@@ -49,16 +49,12 @@ export const TableCell = component$<{
   });
 
   return (
-    <div class="min-h-[100px] h-[100px] max-h-[100px] group">
-      <div class="relative h-full">
-        <div class="relative flex flex-col h-full overflow-hidden">
-          <CellSkeleton cell={cell} />
-          <CellError cell={cell} />
+    <div class="min-h-[100px] h-[100px] max-h-[100px] relative flex flex-col overflow-hidden group">
+      <CellSkeleton cell={cell} />
+      <CellError cell={cell} />
 
-          <div class="flex-1 p-2">
-            <CellRenderer cell={cell} column={cellColumn.value!} />
-          </div>
-        </div>
+      <div class="flex-1 p-2">
+        <CellRenderer cell={cell} column={cellColumn.value!} />
       </div>
     </div>
   );

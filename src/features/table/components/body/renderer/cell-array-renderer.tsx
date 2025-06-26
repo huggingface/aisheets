@@ -23,7 +23,7 @@ export const CellArrayRenderer = component$<CellProps>(({ cell }) => {
           <div class="fixed inset-0 bg-neutral-700/40 z-50" />
 
           <div
-            class="fixed z-[101] bg-white border border-neutral-500 w-3/4 h-3/4 max-w-[800px] max-h-[600px] rounded-sm"
+            class="fixed z-[101] bg-white border border-neutral-500 w-3/4 h-3/4 max-w-[800px] max-h-[600px]"
             style={{
               left: '50%',
               top: '50%',

@@ -165,10 +165,7 @@ const examplesSection = (
   const examplesText = mustache.render(
     template,
     {
-      examples: [
-        ...validatedExamples,
-        ...nonValidatedExamples.sort(() => Math.random() - 0.5),
-      ],
+      examples: [...validatedExamples, ...nonValidatedExamples],
     },
     undefined,
     {

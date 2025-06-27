@@ -26,6 +26,24 @@ export const isHTMLContent = (cell: Cell): boolean => {
   );
 };
 
+export const isMarkDown = (cell: Cell): boolean => {
+  const markdownPatterns = [
+    /^#{1,6}\s.+/,
+    /^\s*[-*+]\s.+/,
+    /^\d+\.\s.+/,
+    /(\*\*|__)(.*?)\1/,
+    /(_|\*)(.*?)\1/,
+    /~~(.*?)~~/,
+    /`[^`]*`/,
+    /^```[\s\S]*?```$/,
+    /\[.*?\]\(.*?\)/,
+    /!\[.*?\]\(.*?\)/,
+    /^>\s.+/,
+  ];
+
+  return markdownPatterns.some((pattern) => pattern.test(cell.value || ''));
+};
+
 export const isImage = (column: Column | undefined): boolean => {
   return column?.type?.toLowerCase().includes('image') ?? false;
 };

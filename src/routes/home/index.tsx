@@ -27,7 +27,7 @@ const runAutoDatasetAction = server$(async function* (
     instruction,
     searchEnabled,
     maxSearchQueries: 3,
-    maxSources: 9,
+    maxSources: 20,
   });
 });
 

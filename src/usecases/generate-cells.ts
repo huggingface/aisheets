@@ -174,6 +174,8 @@ async function* generateCellsFromScratch({
     }));
 
   let sourcesContext = undefined;
+  const sourcesLimit = Math.max(30, (limit + existingCellsExamples.length) * 2);
+
   if (searchEnabled) {
     // 1. Build web search query from prompt
     const queries = await buildWebSearchQueries({
@@ -182,7 +184,7 @@ async function* generateCellsFromScratch({
       options: {
         accessToken: session.token,
       },
-      maxQueries: 1,
+      maxQueries: 2,
     });
 
     // 2. Index web search results into the embbedding store
@@ -204,7 +206,7 @@ async function* generateCellsFromScratch({
       options: {
         accessToken: session.token,
       },
-      limit: (limit - offset + existingCellsExamples.length) * 2,
+      limit: sourcesLimit,
     });
   }
 

@@ -176,7 +176,10 @@ export const searchQueriesToSources = async (
     try {
       // Add blocklist to the query string
       const queryWithBlock = addBlockListToQuery(query, config.BLOCKED_URLS);
-      const webSearch = await serper.search(`${queryWithBlock} -filetype:pdf`);
+      const webSearch = await serper.search({
+        q: `${queryWithBlock} -filetype:pdf`,
+        num: maxSources,
+      });
 
       for (const result of webSearch) {
         if (!result.link) continue;

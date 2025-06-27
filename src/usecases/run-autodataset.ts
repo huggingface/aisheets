@@ -73,7 +73,7 @@ DATASET NAME:
 Short Descriptive Name
 
 COLUMNS:
-- column_name1 : prompt1 (type: text) (this first column is always the main object and the only one not referencing other columns). This colum should generate a single value. For listing items avoid using words like Describe, Generate, etc. and instead use: Identify one, Extract one, Name one etc.
+- column_name1 : prompt1 (type: text) (this first column is always the main object and the only one not referencing other columns). This column should generate a single value. For listing items avoid using words like Describe, Generate, etc. and instead use: Identify one, Extract one, Name one etc. Include the necessary words to avoid data duplication as much as possible.
 - column_name2 : prompt2 (type: text) (referencing {{column_name}} if needed)
 - column_name3 : prompt3 (type: image) (for image generation)
 - column_name4 : prompt4 (type: text)...
@@ -149,7 +149,7 @@ DATASET NAME:
 Short Descriptive Name
 
 COLUMNS:
-- column_name1 : prompt1 (type: text) (this first column is always the main object and the only one not referencing other columns)
+- column_name1 : prompt1 (type: text) (this first column is always the main object and the only one not referencing other columns). This column should generate a single value. For listing items avoid using words like Describe, Generate, etc. and instead use: Identify one, Extract one, Name one etc. Include the necessary words to avoid data duplication as much as possible.
 - column_name2 : prompt2 (type: text) (referencing {{column_name}} if needed)
 - column_name3 : prompt3 (type: image) (for image generation)
 - column_name4 : prompt4 (type: text)...

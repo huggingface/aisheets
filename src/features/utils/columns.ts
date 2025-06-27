@@ -1,6 +1,5 @@
-import type { Column } from '~/state/columns';
+import type { Cell, Column } from '~/state/columns';
 
-//Refactor, duplicated
 export const hasBlobContent = (column: Column | undefined): boolean => {
   return column?.type?.includes('BLOB') || isImage(column);
 };
@@ -18,6 +17,12 @@ export const isTextType = (column: Column): boolean => {
     column.type.startsWith('TEXT') ||
     column.type.startsWith('STRING') ||
     column.type.startsWith('VARCHAR')
+  );
+};
+
+export const isHTMLContent = (cell: Cell): boolean => {
+  return /<([a-z]+)([^>]*?)>(.*?)<\/\1>|<([a-z]+)([^>]*?)\/?>/i.test(
+    cell.value || '',
   );
 };
 

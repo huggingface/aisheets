@@ -66,7 +66,7 @@ export const CellRawRenderer = component$<CellProps>(({ cell }) => {
       return;
     }
 
-    const lines = content.split('\n');
+    const lines = `${content}`.split('\n');
     const lineHeight = 20;
     const padding = 64;
     const charsPerLine = 80;

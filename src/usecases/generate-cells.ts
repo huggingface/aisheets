@@ -6,6 +6,7 @@ import {
   NUM_CONCURRENT_REQUESTS,
 } from '~/config';
 import { updateProcess } from '~/services';
+import { cacheGet, cacheSet } from '~/services/cache';
 import { MAX_SOURCE_SNIPPET_LENGTH } from '~/services/db/models/cell';
 import {
   type Example,
@@ -534,6 +535,11 @@ async function buildWebSearchQueries({
       .replace('{maxQueries}', maxQueries.toString())
       .replace('{datasetName}', column.dataset.name);
 
+    const cacheKey = promptText;
+
+    const cachedResult = cacheGet(cacheKey);
+    if (cachedResult) return cachedResult.slice(0, maxQueries);
+
     const response = await chatCompletion(
       normalizeChatCompletionArgs({
         messages: [{ role: 'user', content: promptText }],
@@ -562,7 +568,15 @@ async function buildWebSearchQueries({
       }
     }
 
-    // Return only up to maxQueries queries, regardless of how many the model returned
+    if (queries.length === 0) {
+      console.warn(
+        '⚠️ [buildWebSearchQueries] No valid search queries found in the response.',
+      );
+      return [];
+    }
+
+    cacheSet(cacheKey, queries);
+
     return queries.slice(0, maxQueries);
   } catch (error) {
     console.error(

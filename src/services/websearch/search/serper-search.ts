@@ -1,3 +1,4 @@
+import { cacheGet, cacheSet } from '~/services/cache';
 import type { SearchResult } from './types';
 
 /**
@@ -27,6 +28,17 @@ export class SerperSearch {
   async search(query: string): Promise<SearchResult[]> {
     if (!query) {
       throw new Error('Query is required');
+    }
+
+    const cacheKey = query;
+    const cachedResult = cacheGet(cacheKey);
+
+    if (cachedResult) {
+      console.log(
+        '🔍 [SerperSearch] Returning cached results for query:',
+        query,
+      );
+      return cachedResult;
     }
 
     try {
@@ -63,11 +75,15 @@ export class SerperSearch {
         query,
       );
 
-      return organic.map((result: any) => ({
+      const results = organic.map((result: any) => ({
         title: result.title,
         link: result.link,
         snippet: result.snippet || result.description || '',
       }));
+
+      cacheSet(cacheKey, results);
+
+      return results;
     } catch (error: any) {
       console.error('❌ [SerperSearch] Error:', error.message);
       throw new Error(`SerperSearch failed: ${error.message}`);

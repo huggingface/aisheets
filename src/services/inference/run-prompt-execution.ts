@@ -92,6 +92,10 @@ export const runPromptExecution = async ({
     const response = await chatCompletion(args, options);
     const result = response.choices[0].message.content;
 
+    if (result?.toLocaleLowerCase().includes('no more items')) {
+      throw new Error(result);
+    }
+
     cacheSet(cacheKey, result);
 
     return {
@@ -163,7 +167,10 @@ export const runPromptExecutionStream = async function* ({
         yield { value: accumulated, done: false };
       }
     }
-    cacheSet(cacheKey, accumulated);
+
+    if (accumulated.toLocaleLowerCase().includes('no more items')) {
+      throw new Error(accumulated);
+    }
 
     yield {
       value: accumulated,

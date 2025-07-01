@@ -1,5 +1,7 @@
 import { component$, useSignal } from '@builder.io/qwik';
+import { ToggleGroup } from '~/components';
 import type { CellProps } from '~/features/table/components/body/renderer/cell-props';
+import { CellRawEditor } from '~/features/table/components/body/renderer/cell-raw-renderer';
 
 export const Sandbox = component$<{ content: string }>(({ content }) => {
   return (
@@ -47,8 +49,10 @@ export const PreviewSandbox = component$<{ content: string }>(({ content }) => {
   );
 });
 
-export const CellHTMLRenderer = component$<CellProps>(({ cell }) => {
+export const CellHTMLRenderer = component$<CellProps>((props) => {
+  const { cell } = props;
   const isExpanded = useSignal(false);
+  const mode = useSignal('preview');
 
   const content = (cell.value || '').replace('```html', '').replace(/```/g, '');
 
@@ -80,8 +84,32 @@ export const CellHTMLRenderer = component$<CellProps>(({ cell }) => {
               transform: 'translate(-50%, -50%)',
             }}
           >
-            <div class="flex items-center justify-center w-full h-full overflow-hidden bg-neutral-50">
-              <Sandbox content={content} />
+            <div class="flex flex-col items-center justify-center w-full h-full p-6 bg-neutral-50">
+              <div class="absolute top-1 right-6 flex items-center justify-end w-full h-5">
+                <ToggleGroup.Root bind:value={mode}>
+                  <ToggleGroup.Item
+                    stoppropagation:click
+                    value="raw"
+                    look="outline"
+                    class="h-5"
+                  >
+                    Raw
+                  </ToggleGroup.Item>
+                  <ToggleGroup.Item
+                    class="h-5"
+                    stoppropagation:click
+                    value="preview"
+                    look="outline"
+                  >
+                    Preview
+                  </ToggleGroup.Item>
+                </ToggleGroup.Root>
+              </div>
+              {mode.value === 'raw' ? (
+                <CellRawEditor isEditing={isExpanded} {...props} />
+              ) : (
+                <Sandbox content={content} />
+              )}
             </div>
           </div>
         </>

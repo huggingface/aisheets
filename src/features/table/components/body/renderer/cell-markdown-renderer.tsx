@@ -6,10 +6,12 @@ import hljs from 'highlight.js';
 import { marked } from 'marked';
 import { markedHighlight } from 'marked-highlight';
 import markedKatex from 'marked-katex-extension';
+import { ToggleGroup } from '~/components';
 import {
   PreviewSandbox,
   Sandbox,
 } from '~/features/table/components/body/renderer/cell-html-renderer';
+import { CellRawEditor } from '~/features/table/components/body/renderer/cell-raw-renderer';
 
 const preprocess = (html: string) => {
   return html.replace(/[^\S\r\n]+$/gm, '');
@@ -39,7 +41,9 @@ marked.use(
   }),
 );
 
-export const CellMarkDownRenderer = component$<CellProps>(({ cell }) => {
+export const CellMarkDownRenderer = component$<CellProps>((props) => {
+  const { cell } = props;
+  const mode = useSignal('preview');
   const isExpanded = useSignal(false);
   const htmlContent = useSignal<string | null>(null);
 
@@ -91,10 +95,32 @@ export const CellMarkDownRenderer = component$<CellProps>(({ cell }) => {
               transform: 'translate(-50%, -50%)',
             }}
           >
-            <div class="flex items-center justify-center w-full h-full overflow-hidden bg-neutral-50">
-              <div class="w-full h-full overflow-auto p-4">
-                <Sandbox content={htmlContent.value || ''} />
+            <div class="flex items-center justify-center w-full h-full p-4 bg-neutral-50">
+              <div class="absolute top-1 right-6 flex items-center justify-end w-full h-5">
+                <ToggleGroup.Root bind:value={mode}>
+                  <ToggleGroup.Item
+                    stoppropagation:click
+                    value="raw"
+                    look="outline"
+                    class="h-5"
+                  >
+                    Raw
+                  </ToggleGroup.Item>
+                  <ToggleGroup.Item
+                    class="h-5"
+                    stoppropagation:click
+                    value="preview"
+                    look="outline"
+                  >
+                    Preview
+                  </ToggleGroup.Item>
+                </ToggleGroup.Root>
               </div>
+              {mode.value === 'raw' ? (
+                <CellRawEditor isEditing={isExpanded} {...props} />
+              ) : (
+                <Sandbox content={htmlContent.value || ''} />
+              )}
             </div>
           </div>
         </>

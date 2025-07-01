@@ -6,6 +6,10 @@ import hljs from 'highlight.js';
 import { marked } from 'marked';
 import { markedHighlight } from 'marked-highlight';
 import markedKatex from 'marked-katex-extension';
+import {
+  PreviewSandbox,
+  Sandbox,
+} from '~/features/table/components/body/renderer/cell-html-renderer';
 
 const preprocess = (html: string) => {
   return html.replace(/[^\S\r\n]+$/gm, '');
@@ -72,7 +76,7 @@ export const CellMarkDownRenderer = component$<CellProps>(({ cell }) => {
       }}
     >
       <div class="h-full flex flex-col justify-between">
-        <p>{cell.value?.toString()}</p>
+        <PreviewSandbox content={htmlContent.value || ''} />
       </div>
 
       {isExpanded.value && (
@@ -89,10 +93,7 @@ export const CellMarkDownRenderer = component$<CellProps>(({ cell }) => {
           >
             <div class="flex items-center justify-center w-full h-full overflow-hidden bg-neutral-50">
               <div class="w-full h-full overflow-auto p-4">
-                <div
-                  class="markdown-body"
-                  dangerouslySetInnerHTML={htmlContent.value || ''}
-                />
+                <Sandbox content={htmlContent.value || ''} />
               </div>
             </div>
           </div>

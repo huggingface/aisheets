@@ -41,7 +41,10 @@ export const isMarkDown = (cell: Cell): boolean => {
     /^>\s.+/,
   ];
 
-  return markdownPatterns.some((pattern) => pattern.test(cell.value || ''));
+  return (
+    !isHTMLContent(cell) &&
+    markdownPatterns.some((pattern) => pattern.test(cell.value || ''))
+  );
 };
 
 export const isImage = (column: Column | undefined): boolean => {

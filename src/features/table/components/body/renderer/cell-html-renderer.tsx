@@ -1,11 +1,19 @@
 import { component$, useSignal } from '@builder.io/qwik';
 import type { CellProps } from '~/features/table/components/body/renderer/cell-props';
 
-const Sandbox = component$<{ content: string }>(({ content }) => {
+export const Sandbox = component$<{ content: string }>(({ content }) => {
   return (
     <iframe
       title="HTML"
-      srcdoc={content}
+      srcdoc={`<html>
+          <head>
+            <style>
+              body { margin: 0; padding: 0; overflow: hidden; maxHeight: 500px; maxWidth: 800px; }
+              iframe { width: 100%; height: 100%; border: none; }
+            </style>
+          </head>
+          <body>${content}</body>
+        </html>`}
       style={{
         zoom: 1.5,
         width: '100%',
@@ -16,14 +24,39 @@ const Sandbox = component$<{ content: string }>(({ content }) => {
   );
 });
 
+export const PreviewSandbox = component$<{ content: string }>(({ content }) => {
+  return (
+    <iframe
+      title="HTML"
+      srcdoc={`<html>
+          <head>
+            <style>
+              body { margin: 0; padding: 0; overflow: hidden; }
+              iframe { width: 100%; height: 100%; border: none; }
+            </style>
+          </head>
+          <body>${content}</body>
+        </html>`}
+      style={{
+        width: '100%',
+        height: '100%',
+        border: 'none',
+        overflow: 'hidden',
+      }}
+    />
+  );
+});
+
 export const CellHTMLRenderer = component$<CellProps>(({ cell }) => {
   const isExpanded = useSignal(false);
+
+  const content = (cell.value || '').replace('```html', '').replace(/```/g, '');
 
   return (
     <div
       stoppropagation:click
       stoppropagation:dblclick
-      class="w-full h-full"
+      class="w-full h-full z-10"
       onDblClick$={() => {
         isExpanded.value = true;
       }}
@@ -31,8 +64,8 @@ export const CellHTMLRenderer = component$<CellProps>(({ cell }) => {
         isExpanded.value = false;
       }}
     >
-      <div class="h-full flex flex-col justify-between">
-        <p>{cell.value?.toString()}</p>
+      <div class="h-full flex flex-col justify-between pointer-events-none select-none">
+        <PreviewSandbox content={content} />
       </div>
 
       {isExpanded.value && (
@@ -48,7 +81,7 @@ export const CellHTMLRenderer = component$<CellProps>(({ cell }) => {
             }}
           >
             <div class="flex items-center justify-center w-full h-full overflow-hidden bg-neutral-50">
-              <Sandbox content={cell.value} />
+              <Sandbox content={content} />
             </div>
           </div>
         </>

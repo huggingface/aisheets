@@ -36,12 +36,12 @@ export const CellRenderer = component$<CellProps>((props) => {
     return <CellArrayRenderer {...props} />;
   }
 
-  if (isHTMLContent(cell)) {
-    return <CellHTMLRenderer {...props} />;
-  }
-
   if (isMarkDown(cell)) {
     return <CellMarkDownRenderer {...props} />;
+  }
+
+  if (isHTMLContent(cell)) {
+    return <CellHTMLRenderer {...props} />;
   }
 
   return <CellRawRenderer {...props} />;

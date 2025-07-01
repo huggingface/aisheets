@@ -114,15 +114,15 @@ const UrlItem = component$<UrlItemProps>(({ url, status }) => (
     {status === 'pending' ? (
       <>
         <SmallLoadingSpinner />
-        <span class="text-neutral-500 text-sm">
-          {url.slice(0, 80)}
-          {url.length > 80 && '...'}
+        <span class="text-neutral-500 text-xs">
+          {url.slice(0, 100)}
+          {url.length > 100 && '...'}
         </span>
       </>
     ) : (
-      <span class="text-neutral-700 text-sm">
-        {url.slice(0, 80)}
-        {url.length > 80 && '...'}
+      <span class="text-neutral-700 text-xs">
+        {url.slice(0, 100)}
+        {url.length > 100 && '...'}
       </span>
     )}
   </div>
@@ -147,7 +147,7 @@ export const StepsStatus = component$<StepStatusProps>(
         >
           <div
             class="bg-neutral-100 rounded-md w-full pt-2 pb-4 border border-neutral-200 mt-2"
-            style="max-height: 440px; overflow-y: auto;"
+            style="max-height: 500px; overflow-y: auto;"
           >
             <StepItem
               isActive={currentStep === 'Configuring dataset...'}

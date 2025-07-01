@@ -26,8 +26,8 @@ const runAutoDatasetAction = server$(async function* (
   yield* runAutoDataset.call(this, {
     instruction,
     searchEnabled,
-    maxSearchQueries: 3,
-    maxSources: 15,
+    maxSearchQueries: 2,
+    maxSources: 12,
   });
 });
 

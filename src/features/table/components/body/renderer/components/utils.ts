@@ -11,3 +11,15 @@ export const unSelectText = $(() => {
     }
   }, 100);
 });
+
+export const stopScrolling = $((cleanup: (callback: () => void) => void) => {
+  const scrollable = document.querySelector('.scrollable');
+
+  scrollable?.classList.add('overflow-hidden');
+  scrollable?.classList.add('pr-[15px]');
+
+  cleanup(() => {
+    scrollable?.classList.remove('overflow-hidden');
+    scrollable?.classList.remove('pr-[15px]');
+  });
+});

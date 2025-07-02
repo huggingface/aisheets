@@ -5,7 +5,10 @@ import {
   useVisibleTask$,
 } from '@builder.io/qwik';
 import type { CellProps } from '~/features/table/components/body/renderer/cell-props';
-import { unSelectText } from '~/features/table/components/body/renderer/components/utils';
+import {
+  stopScrolling,
+  unSelectText,
+} from '~/features/table/components/body/renderer/components/utils';
 import { processMediaContent } from '~/features/table/utils/binary-content';
 import { isObjectType } from '~/features/utils/columns';
 
@@ -119,9 +122,10 @@ const AudioRenderer = component$<MediaRendererProps>(({ src }) => {
 const ImageRenderer = component$<MediaRendererProps>(({ src, path }) => {
   const isExpanded = useSignal(false);
 
-  useVisibleTask$(({ track }) => {
+  useVisibleTask$(({ track, cleanup }) => {
     track(isExpanded);
 
+    stopScrolling(cleanup);
     unSelectText();
   });
 
@@ -129,6 +133,8 @@ const ImageRenderer = component$<MediaRendererProps>(({ src, path }) => {
     <div
       stoppropagation:click
       stoppropagation:dblclick
+      preventdefault:mousedown
+      stoppropagation:mousedown
       class="w-full h-full"
       onDblClick$={() => {
         isExpanded.value = true;

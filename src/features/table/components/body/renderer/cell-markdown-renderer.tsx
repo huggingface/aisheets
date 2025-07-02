@@ -8,7 +8,10 @@ import { markedHighlight } from 'marked-highlight';
 import markedKatex from 'marked-katex-extension';
 import { ToggleGroup } from '~/components';
 import { CellRawEditor } from '~/features/table/components/body/renderer/cell-raw-renderer';
-import { unSelectText } from '~/features/table/components/body/renderer/components/utils';
+import {
+  stopScrolling,
+  unSelectText,
+} from '~/features/table/components/body/renderer/components/utils';
 import { PreviewSandbox } from './components/preview-sandbox';
 import { Sandbox } from './components/sandbox';
 
@@ -46,9 +49,10 @@ export const CellMarkDownRenderer = component$<CellProps>((props) => {
   const isExpanded = useSignal(false);
   const htmlContent = useSignal<string | null>(null);
 
-  useVisibleTask$(({ track }) => {
+  useVisibleTask$(({ track, cleanup }) => {
     track(isExpanded);
 
+    stopScrolling(cleanup);
     unSelectText();
   });
 
@@ -78,6 +82,8 @@ export const CellMarkDownRenderer = component$<CellProps>((props) => {
     <div
       stoppropagation:click
       stoppropagation:dblclick
+      preventdefault:mousedown
+      stoppropagation:mousedown
       class="w-full h-full"
       onDblClick$={() => {
         isExpanded.value = true;

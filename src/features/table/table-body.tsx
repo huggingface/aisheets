@@ -13,8 +13,7 @@ import {
 } from '@builder.io/qwik';
 import { server$ } from '@builder.io/qwik-city';
 import { cn } from '@qwik-ui/utils';
-import { LuDot } from '@qwikest/icons/lucide';
-import { LuTrash } from '@qwikest/icons/lucide';
+import { LuDot, LuTrash } from '@qwikest/icons/lucide';
 import type { VirtualItem } from '@tanstack/virtual-core';
 import { Button, Popover } from '~/components';
 import { nextTick } from '~/components/hooks/tick';

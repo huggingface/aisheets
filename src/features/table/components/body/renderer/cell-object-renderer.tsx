@@ -1,13 +1,17 @@
 import { component$, useSignal, useVisibleTask$ } from '@builder.io/qwik';
 import type { CellProps } from '~/features/table/components/body/renderer/cell-props';
-import { unSelectText } from '~/features/table/components/body/renderer/components/utils';
+import {
+  stopScrolling,
+  unSelectText,
+} from '~/features/table/components/body/renderer/components/utils';
 
 export const CellObjectRenderer = component$<CellProps>(({ cell }) => {
   const isExpanded = useSignal(false);
 
-  useVisibleTask$(({ track }) => {
+  useVisibleTask$(({ track, cleanup }) => {
     track(isExpanded);
 
+    stopScrolling(cleanup);
     unSelectText();
   });
 
@@ -15,6 +19,8 @@ export const CellObjectRenderer = component$<CellProps>(({ cell }) => {
     <div
       stoppropagation:click
       stoppropagation:dblclick
+      preventdefault:mousedown
+      stoppropagation:mousedown
       class="w-full h-full"
       onDblClick$={() => {
         isExpanded.value = true;

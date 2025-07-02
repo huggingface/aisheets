@@ -4,7 +4,10 @@ import type { CellProps } from '~/features/table/components/body/renderer/cell-p
 import { CellRawEditor } from '~/features/table/components/body/renderer/cell-raw-renderer';
 import { PreviewSandbox } from '~/features/table/components/body/renderer/components/preview-sandbox';
 import { Sandbox } from '~/features/table/components/body/renderer/components/sandbox';
-import { unSelectText } from '~/features/table/components/body/renderer/components/utils';
+import {
+  stopScrolling,
+  unSelectText,
+} from '~/features/table/components/body/renderer/components/utils';
 
 export const CellHTMLRenderer = component$<CellProps>((props) => {
   const { cell } = props;
@@ -13,9 +16,10 @@ export const CellHTMLRenderer = component$<CellProps>((props) => {
 
   const content = (cell.value || '').replace('```html', '').replace(/```/g, '');
 
-  useVisibleTask$(({ track }) => {
+  useVisibleTask$(({ track, cleanup }) => {
     track(isExpanded);
 
+    stopScrolling(cleanup);
     unSelectText();
   });
 
@@ -23,6 +27,8 @@ export const CellHTMLRenderer = component$<CellProps>((props) => {
     <div
       stoppropagation:click
       stoppropagation:dblclick
+      preventdefault:mousedown
+      stoppropagation:mousedown
       class="w-full h-full z-10"
       onDblClick$={() => {
         isExpanded.value = true;

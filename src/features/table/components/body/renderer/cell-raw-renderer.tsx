@@ -8,7 +8,10 @@ import {
 import { Textarea } from '~/components';
 import { CellActions } from '~/features/table/components/body/cell-actions';
 import type { CellProps } from '~/features/table/components/body/renderer/cell-props';
-import { unSelectText } from '~/features/table/components/body/renderer/components/utils';
+import {
+  stopScrolling,
+  unSelectText,
+} from '~/features/table/components/body/renderer/components/utils';
 import { useValidateCellUseCase } from '~/usecases/validate-cell.usecase';
 
 interface CellRawEditorProps extends CellProps {
@@ -33,9 +36,10 @@ export const CellRawEditor = component$<CellRawEditorProps>(
       isEditing.value = false;
     });
 
-    useVisibleTask$(({ track }) => {
+    useVisibleTask$(({ track, cleanup }) => {
       track(isEditing);
 
+      stopScrolling(cleanup);
       unSelectText();
     });
 
@@ -66,9 +70,9 @@ export const CellRawEditor = component$<CellRawEditorProps>(
 
     return (
       <div
+        stoppropagation:click
         class="w-full h-full scrollable overflow-hidden relative"
-        onClick$={(e) => {
-          e.stopPropagation();
+        onClick$={() => {
           if (editCellValueInput.value) {
             editCellValueInput.value.focus();
           }
@@ -100,9 +104,11 @@ export const CellRawRenderer = component$<CellProps>((props) => {
   return (
     <div
       class="w-full h-full"
-      onDblClick$={(e) => {
-        e.stopPropagation();
-
+      stoppropagation:click
+      stoppropagation:dblclick
+      preventdefault:mousedown
+      stoppropagation:mousedown
+      onDblClick$={() => {
         isEditing.value = true;
       }}
       onClick$={() => {

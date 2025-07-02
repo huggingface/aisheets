@@ -66,7 +66,14 @@ export const CellRawRenderer = component$<CellProps>(({ cell }) => {
       return;
     }
 
-    const lines = content.split('\n');
+    let contentValue = content;
+    if (typeof content !== 'string') {
+      contentValue = content.toString();
+    }
+
+    const lines = contentValue.split('\n');
+    const contentLength = contentValue.length;
+
     const lineHeight = 20;
     const padding = 64;
     const charsPerLine = 80;
@@ -80,7 +87,7 @@ export const CellRawRenderer = component$<CellProps>(({ cell }) => {
       }
     }
 
-    if (lines.length === 1 && content.length < 50) {
+    if (lines.length === 1 && contentLength < 50) {
       modalHeight.value = '100px';
       return;
     }

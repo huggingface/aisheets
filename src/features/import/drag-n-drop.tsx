@@ -8,13 +8,19 @@ import {
   useSignal,
 } from '@builder.io/qwik';
 import { Link, useNavigate } from '@builder.io/qwik-city';
+import { usePopover } from '@qwik-ui/headless';
 import { cn } from '@qwik-ui/utils';
 import { LuFilePlus2, LuUpload } from '@qwikest/icons/lucide';
 import { Button, Popover, buttonVariants } from '~/components';
+import { useClickOutside } from '~/components/hooks/click/outside';
 import { GoogleDrive, HFLogo } from '~/components/ui/logo/logo';
 import { configContext } from '~/routes/home/layout';
 
 export const DragAndDrop = component$(() => {
+  const popoverId = 'uploadFilePopover';
+  const anchorRef = useSignal<HTMLElement | undefined>();
+  const { hidePopover } = usePopover(popoverId);
+
   const { isGoogleAuthEnabled } = useContext(configContext);
 
   const file = useSignal<NoSerialize<File>>();
@@ -26,6 +32,8 @@ export const DragAndDrop = component$(() => {
   const uploadErrorMessage = useSignal<string | null>(null);
 
   const handleUploadFile$ = $(async () => {
+    hidePopover();
+
     uploadErrorMessage.value = null;
 
     if (!file.value) return;
@@ -67,8 +75,15 @@ export const DragAndDrop = component$(() => {
     navigate('/home/dataset/' + id);
   });
 
+  const container = useClickOutside(
+    $(() => {
+      hidePopover();
+    }),
+  );
+
   return (
     <div
+      ref={container}
       preventdefault:dragover
       preventdefault:drop
       class={cn('relative w-full h-full text-center transition z-10', {
@@ -113,7 +128,13 @@ export const DragAndDrop = component$(() => {
       >
         <span class="text-neutral-500 font-medium">From real-world data</span>
 
-        <Popover.Root floating="bottom" gutter={14}>
+        <Popover.Root
+          id={popoverId}
+          bind:anchor={anchorRef}
+          manual
+          floating="bottom"
+          gutter={14}
+        >
           <Popover.Trigger
             class={cn(
               buttonVariants({ look: 'outline', size: 'sm' }),

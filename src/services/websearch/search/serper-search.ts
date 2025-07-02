@@ -33,11 +33,14 @@ export class SerperSearch {
       throw new Error('Query is required');
     }
 
-    const cacheKey = q;
+    const cacheKey = query;
     const cachedResult = cacheGet(cacheKey);
 
     if (cachedResult) {
-      console.log('🔍 [SerperSearch] Returning cached results for query:', q);
+      console.log(
+        '🔍 [SerperSearch] Returning cached results for query:',
+        query,
+      );
       return cachedResult;
     }
 

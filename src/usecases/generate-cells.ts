@@ -185,7 +185,7 @@ async function* generateCellsFromScratch({
       options: {
         accessToken: session.token,
       },
-      maxQueries: 2,
+      maxQueries: 1,
     });
 
     // 2. Index web search results into the embbedding store

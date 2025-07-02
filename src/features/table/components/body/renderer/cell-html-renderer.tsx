@@ -12,6 +12,10 @@ export const Sandbox = component$<{ content: string }>(({ content }) => {
             <style>
               body { margin: 0; padding: 0; overflow: hidden; maxHeight: 500px; maxWidth: 800px; }
               iframe { width: 100%; height: 100%; border: none; }
+              svg { width: 100%; height: 100%; }
+              img { max-width: 100%; height: auto; }
+              pre { margin: 0; padding: 0; }
+              code { font-family: monospace; }
             </style>
           </head>
           <body>${content}</body>
@@ -88,20 +92,20 @@ export const CellHTMLRenderer = component$<CellProps>((props) => {
               <div class="absolute top-1 right-6 flex items-center justify-end w-full h-5">
                 <ToggleGroup.Root bind:value={mode}>
                   <ToggleGroup.Item
-                    stoppropagation:click
-                    value="raw"
-                    look="outline"
-                    class="h-5"
-                  >
-                    Raw
-                  </ToggleGroup.Item>
-                  <ToggleGroup.Item
                     class="h-5"
                     stoppropagation:click
                     value="preview"
                     look="outline"
                   >
                     Preview
+                  </ToggleGroup.Item>
+                  <ToggleGroup.Item
+                    stoppropagation:click
+                    value="raw"
+                    look="outline"
+                    class="h-5"
+                  >
+                    Raw
                   </ToggleGroup.Item>
                 </ToggleGroup.Root>
               </div>

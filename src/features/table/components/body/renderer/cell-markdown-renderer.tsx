@@ -99,20 +99,20 @@ export const CellMarkDownRenderer = component$<CellProps>((props) => {
               <div class="absolute top-1 right-6 flex items-center justify-end w-full h-5">
                 <ToggleGroup.Root bind:value={mode}>
                   <ToggleGroup.Item
-                    stoppropagation:click
-                    value="raw"
-                    look="outline"
-                    class="h-5"
-                  >
-                    Raw
-                  </ToggleGroup.Item>
-                  <ToggleGroup.Item
                     class="h-5"
                     stoppropagation:click
                     value="preview"
                     look="outline"
                   >
                     Preview
+                  </ToggleGroup.Item>
+                  <ToggleGroup.Item
+                    stoppropagation:click
+                    value="raw"
+                    look="outline"
+                    class="h-5"
+                  >
+                    Raw
                   </ToggleGroup.Item>
                 </ToggleGroup.Root>
               </div>

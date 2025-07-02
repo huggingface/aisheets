@@ -89,7 +89,7 @@ export const CellHTMLRenderer = component$<CellProps>((props) => {
             }}
           >
             <div class="flex flex-col items-center justify-center w-full h-full p-6 bg-neutral-50">
-              <div class="absolute top-1 right-6 flex items-center justify-end w-full h-5">
+              <div class="absolute top-1 right-6 flex items-center justify-end w-full h-5 z-50">
                 <ToggleGroup.Root bind:value={mode}>
                   <ToggleGroup.Item
                     class="h-5"

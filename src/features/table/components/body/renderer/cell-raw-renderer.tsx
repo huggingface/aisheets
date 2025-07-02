@@ -17,7 +17,6 @@ interface CellRawEditorProps extends CellProps {
 export const CellRawEditor = component$<CellRawEditorProps>(
   ({ cell, isEditing }) => {
     const validateCell = useValidateCellUseCase();
-    const modalHeight = useSignal('200px');
     const originalValue = useSignal(cell.value);
     const newCellValue = useSignal(cell.value);
     const editCellValueInput = useSignal<HTMLElement>();
@@ -58,46 +57,9 @@ export const CellRawEditor = component$<CellRawEditorProps>(
       }
     });
 
-    useVisibleTask$(({ track }) => {
-      track(() => newCellValue.value);
-
-      const content = newCellValue.value;
-      if (!content) {
-        return;
-      }
-
-      const lines = `${content}`.split('\n');
-      const lineHeight = 20;
-      const padding = 64;
-      const charsPerLine = 80;
-
-      let totalLines = 0;
-      for (const line of lines) {
-        if (line.length === 0) {
-          totalLines += 1;
-        } else {
-          totalLines += Math.max(1, Math.ceil(line.length / charsPerLine));
-        }
-      }
-
-      if (lines.length === 1 && content.length < 50) {
-        modalHeight.value = '100px';
-        return;
-      }
-
-      const calculatedHeight = Math.min(
-        totalLines * lineHeight + padding,
-        window.innerHeight * 0.85,
-      );
-      modalHeight.value = `${Math.max(100, calculatedHeight)}px`;
-    });
-
     return (
       <div
         class="w-full h-full scrollable overflow-hidden relative"
-        style={{
-          height: modalHeight.value,
-        }}
         onClick$={(e) => {
           e.stopPropagation();
           if (editCellValueInput.value) {
@@ -150,16 +112,16 @@ export const CellRawRenderer = component$<CellProps>((props) => {
           <div class="fixed inset-0 bg-neutral-700/40 z-50" />
 
           <div
-            class="fixed z-[100] bg-white border border-neutral-500 shadow-sm"
+            class="fixed z-[101] bg-white border border-neutral-500 w-full h-full max-w-full max-h-[40vh] md:max-w-[800px] md:max-h-[600px] overflow-hidden"
             style={{
               left: '50%',
               top: '50%',
               transform: 'translate(-50%, -50%)',
-              width: '660px',
-              borderWidth: '1px',
             }}
           >
-            <CellRawEditor isEditing={isEditing} {...props} />
+            <div class="flex items-center justify-center w-full h-full p-4 bg-neutral-50">
+              <CellRawEditor isEditing={isEditing} {...props} />
+            </div>
           </div>
         </>
       )}

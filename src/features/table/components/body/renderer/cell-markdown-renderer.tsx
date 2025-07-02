@@ -47,7 +47,9 @@ export const CellMarkDownRenderer = component$<CellProps>((props) => {
   const isExpanded = useSignal(false);
   const htmlContent = useSignal<string | null>(null);
 
-  useVisibleTask$(async () => {
+  useVisibleTask$(async ({ track }) => {
+    track(() => cell.value);
+
     DOMPurify.addHook('beforeSanitizeAttributes', (node) => {
       if (node instanceof SVGElement) {
         const width = node.getAttribute('width');
@@ -79,7 +81,7 @@ export const CellMarkDownRenderer = component$<CellProps>((props) => {
         isExpanded.value = false;
       }}
     >
-      <div class="h-full flex flex-col justify-between">
+      <div class="h-full flex flex-col justify-between pointer-events-none select-none">
         <PreviewSandbox content={htmlContent.value || ''} />
       </div>
 
@@ -96,7 +98,7 @@ export const CellMarkDownRenderer = component$<CellProps>((props) => {
             }}
           >
             <div class="flex items-center justify-center w-full h-full p-4 bg-neutral-50">
-              <div class="absolute top-1 right-6 flex items-center justify-end w-full h-5">
+              <div class="absolute top-1 right-6 flex items-center justify-end w-full h-5 z-50">
                 <ToggleGroup.Root bind:value={mode}>
                   <ToggleGroup.Item
                     class="h-5"

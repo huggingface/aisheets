@@ -8,6 +8,7 @@ import {
 import { Textarea } from '~/components';
 import { CellActions } from '~/features/table/components/body/cell-actions';
 import type { CellProps } from '~/features/table/components/body/renderer/cell-props';
+import { unSelectText } from '~/features/table/components/body/renderer/components/utils';
 import { useValidateCellUseCase } from '~/usecases/validate-cell.usecase';
 
 interface CellRawEditorProps extends CellProps {
@@ -30,6 +31,12 @@ export const CellRawEditor = component$<CellRawEditorProps>(
       }
 
       isEditing.value = false;
+    });
+
+    useVisibleTask$(({ track }) => {
+      track(isEditing);
+
+      unSelectText();
     });
 
     useVisibleTask$(({ track }) => {

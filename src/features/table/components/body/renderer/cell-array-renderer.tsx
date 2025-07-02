@@ -1,8 +1,15 @@
-import { component$, useSignal } from '@builder.io/qwik';
+import { component$, useSignal, useVisibleTask$ } from '@builder.io/qwik';
 import type { CellProps } from '~/features/table/components/body/renderer/cell-props';
+import { unSelectText } from '~/features/table/components/body/renderer/components/utils';
 
 export const CellArrayRenderer = component$<CellProps>(({ cell }) => {
   const isExpanded = useSignal(false);
+
+  useVisibleTask$(({ track }) => {
+    track(isExpanded);
+
+    unSelectText();
+  });
 
   return (
     <div

@@ -7,11 +7,10 @@ import { marked } from 'marked';
 import { markedHighlight } from 'marked-highlight';
 import markedKatex from 'marked-katex-extension';
 import { ToggleGroup } from '~/components';
-import {
-  PreviewSandbox,
-  Sandbox,
-} from '~/features/table/components/body/renderer/cell-html-renderer';
 import { CellRawEditor } from '~/features/table/components/body/renderer/cell-raw-renderer';
+import { unSelectText } from '~/features/table/components/body/renderer/components/utils';
+import { PreviewSandbox } from './components/preview-sandbox';
+import { Sandbox } from './components/sandbox';
 
 const preprocess = (html: string) => {
   return html.replace(/[^\S\r\n]+$/gm, '');
@@ -46,6 +45,12 @@ export const CellMarkDownRenderer = component$<CellProps>((props) => {
   const mode = useSignal('preview');
   const isExpanded = useSignal(false);
   const htmlContent = useSignal<string | null>(null);
+
+  useVisibleTask$(({ track }) => {
+    track(isExpanded);
+
+    unSelectText();
+  });
 
   useVisibleTask$(async ({ track }) => {
     track(() => cell.value);

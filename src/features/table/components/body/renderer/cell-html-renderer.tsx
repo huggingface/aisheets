@@ -1,57 +1,10 @@
-import { component$, useSignal } from '@builder.io/qwik';
+import { component$, useSignal, useVisibleTask$ } from '@builder.io/qwik';
 import { ToggleGroup } from '~/components';
 import type { CellProps } from '~/features/table/components/body/renderer/cell-props';
 import { CellRawEditor } from '~/features/table/components/body/renderer/cell-raw-renderer';
-
-export const Sandbox = component$<{ content: string }>(({ content }) => {
-  return (
-    <iframe
-      title="HTML"
-      srcdoc={`<html>
-          <head>
-            <style>
-              body { margin: 0; padding: 0; maxHeight: 500px; maxWidth: 800px; }
-              iframe { width: 100%; height: 100%; border: none; }
-              svg { width: 100%; height: 100%; }
-              img { max-width: 100%; height: auto; }
-              pre { margin: 0; padding: 0; }
-              code { font-family: monospace; }
-            </style>
-          </head>
-          <body>${content}</body>
-        </html>`}
-      style={{
-        zoom: 1.5,
-        width: '100%',
-        height: '100%',
-        border: 'none',
-      }}
-    />
-  );
-});
-
-export const PreviewSandbox = component$<{ content: string }>(({ content }) => {
-  return (
-    <iframe
-      title="HTML"
-      srcdoc={`<html>
-          <head>
-            <style>
-              body { margin: 0; padding: 0; overflow: hidden; }
-              iframe { width: 100%; height: 100%; border: none; }
-            </style>
-          </head>
-          <body>${content}</body>
-        </html>`}
-      style={{
-        width: '100%',
-        height: '100%',
-        border: 'none',
-        overflow: 'hidden',
-      }}
-    />
-  );
-});
+import { PreviewSandbox } from '~/features/table/components/body/renderer/components/preview-sandbox';
+import { Sandbox } from '~/features/table/components/body/renderer/components/sandbox';
+import { unSelectText } from '~/features/table/components/body/renderer/components/utils';
 
 export const CellHTMLRenderer = component$<CellProps>((props) => {
   const { cell } = props;
@@ -59,6 +12,12 @@ export const CellHTMLRenderer = component$<CellProps>((props) => {
   const mode = useSignal('preview');
 
   const content = (cell.value || '').replace('```html', '').replace(/```/g, '');
+
+  useVisibleTask$(({ track }) => {
+    track(isExpanded);
+
+    unSelectText();
+  });
 
   return (
     <div

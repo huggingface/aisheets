@@ -37,6 +37,13 @@ export const DragAndDrop = component$(() => {
       uploadErrorMessage.value = `Invalid file type. Supported types: ${allowedExtensions.join(', ')}`;
       return;
     }
+    const maxFileSizeMB = 25;
+    const maxFileSizeBytes = maxFileSizeMB * 1024 * 1024;
+
+    if (file.value.size > maxFileSizeBytes) {
+      uploadErrorMessage.value = `File is too large. Maximum allowed size is ${maxFileSizeMB} MB.`;
+      return;
+    }
 
     const value = await file.value.arrayBuffer();
 

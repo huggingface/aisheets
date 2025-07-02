@@ -10,7 +10,7 @@ export const Sandbox = component$<{ content: string }>(({ content }) => {
       srcdoc={`<html>
           <head>
             <style>
-              body { margin: 0; padding: 0; overflow: hidden; maxHeight: 500px; maxWidth: 800px; }
+              body { margin: 0; padding: 0; maxHeight: 500px; maxWidth: 800px; }
               iframe { width: 100%; height: 100%; border: none; }
               svg { width: 100%; height: 100%; }
               img { max-width: 100%; height: auto; }

@@ -38,41 +38,46 @@ export const DragAndDrop = component$(() => {
 
     if (!file.value) return;
 
-    const fileName = file.value.name;
-    const fileExtension = file.value.name.split('.').pop();
+    try {
+      const fileName = file.value.name;
+      const fileExtension = file.value.name.split('.').pop();
 
-    if (!fileExtension || !allowedExtensions.includes(fileExtension)) {
-      uploadErrorMessage.value = `Invalid file type. Supported types: ${allowedExtensions.join(', ')}`;
-      return;
+      if (!fileExtension || !allowedExtensions.includes(fileExtension)) {
+        uploadErrorMessage.value = `Invalid file type. Supported types: ${allowedExtensions.join(', ')}`;
+        return;
+      }
+      const maxFileSizeMB = 25;
+      const maxFileSizeBytes = maxFileSizeMB * 1024 * 1024;
+
+      if (file.value.size > maxFileSizeBytes) {
+        uploadErrorMessage.value = `File is too large. Maximum allowed size is ${maxFileSizeMB} MB.`;
+        return;
+      }
+
+      const value = await file.value.arrayBuffer();
+
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/octet-stream',
+          'X-Chunk-Size': value.byteLength.toString(),
+          'X-File-Name': encodeURIComponent(fileName),
+        },
+        body: value,
+      });
+
+      if (!response.ok) {
+        uploadErrorMessage.value =
+          'Failed to upload file. Please try again or provide another file.';
+        return;
+      }
+
+      const { id } = await response.json();
+      navigate('/home/dataset/' + id);
+    } finally {
+      file.value = undefined;
+      isDragging.value = false;
     }
-    const maxFileSizeMB = 25;
-    const maxFileSizeBytes = maxFileSizeMB * 1024 * 1024;
-
-    if (file.value.size > maxFileSizeBytes) {
-      uploadErrorMessage.value = `File is too large. Maximum allowed size is ${maxFileSizeMB} MB.`;
-      return;
-    }
-
-    const value = await file.value.arrayBuffer();
-
-    const response = await fetch('/api/upload', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/octet-stream',
-        'X-Chunk-Size': value.byteLength.toString(),
-        'X-File-Name': encodeURIComponent(fileName),
-      },
-      body: value,
-    });
-
-    if (!response.ok) {
-      uploadErrorMessage.value =
-        'Failed to upload file. Please try again or provide another file.';
-      return;
-    }
-
-    const { id } = await response.json();
-    navigate('/home/dataset/' + id);
   });
 
   const container = useClickOutside(
@@ -136,6 +141,7 @@ export const DragAndDrop = component$(() => {
           gutter={14}
         >
           <Popover.Trigger
+            disabled={!!file.value}
             class={cn(
               buttonVariants({ look: 'outline', size: 'sm' }),
               'text-primary-600 disabled:text-neutral-300 disabled:cursor-not-allowed',

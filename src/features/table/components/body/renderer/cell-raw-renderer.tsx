@@ -39,7 +39,7 @@ export const CellRawEditor = component$<CellRawEditorProps>(
     useVisibleTask$(({ track, cleanup }) => {
       track(isEditing);
 
-      stopScrolling(cleanup);
+      stopScrolling(isEditing, cleanup);
       unSelectText();
     });
 
@@ -106,7 +106,6 @@ export const CellRawRenderer = component$<CellProps>((props) => {
       class="w-full h-full"
       stoppropagation:click
       stoppropagation:dblclick
-      preventdefault:mousedown
       stoppropagation:mousedown
       onDblClick$={() => {
         isEditing.value = true;

@@ -52,7 +52,7 @@ export const CellMarkDownRenderer = component$<CellProps>((props) => {
   useVisibleTask$(({ track, cleanup }) => {
     track(isExpanded);
 
-    stopScrolling(cleanup);
+    stopScrolling(isExpanded, cleanup);
     unSelectText();
   });
 
@@ -82,7 +82,6 @@ export const CellMarkDownRenderer = component$<CellProps>((props) => {
     <div
       stoppropagation:click
       stoppropagation:dblclick
-      preventdefault:mousedown
       stoppropagation:mousedown
       class="w-full h-full"
       onDblClick$={() => {

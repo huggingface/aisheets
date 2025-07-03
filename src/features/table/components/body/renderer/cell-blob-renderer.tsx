@@ -125,7 +125,7 @@ const ImageRenderer = component$<MediaRendererProps>(({ src, path }) => {
   useVisibleTask$(({ track, cleanup }) => {
     track(isExpanded);
 
-    stopScrolling(cleanup);
+    stopScrolling(isExpanded, cleanup);
     unSelectText();
   });
 
@@ -133,7 +133,6 @@ const ImageRenderer = component$<MediaRendererProps>(({ src, path }) => {
     <div
       stoppropagation:click
       stoppropagation:dblclick
-      preventdefault:mousedown
       stoppropagation:mousedown
       class="w-full h-full"
       onDblClick$={() => {

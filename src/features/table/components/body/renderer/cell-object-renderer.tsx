@@ -11,7 +11,7 @@ export const CellObjectRenderer = component$<CellProps>(({ cell }) => {
   useVisibleTask$(({ track, cleanup }) => {
     track(isExpanded);
 
-    stopScrolling(cleanup);
+    stopScrolling(isExpanded, cleanup);
     unSelectText();
   });
 
@@ -19,7 +19,6 @@ export const CellObjectRenderer = component$<CellProps>(({ cell }) => {
     <div
       stoppropagation:click
       stoppropagation:dblclick
-      preventdefault:mousedown
       stoppropagation:mousedown
       class="w-full h-full"
       onDblClick$={() => {

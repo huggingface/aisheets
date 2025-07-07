@@ -1,4 +1,4 @@
-import type { Cell, Column } from '~/state/columns';
+import type { Column } from '~/state/columns';
 
 export const hasBlobContent = (column: Column | undefined): boolean => {
   return column?.type?.includes('BLOB') || isImage(column);
@@ -20,13 +20,13 @@ export const isTextType = (column: Column): boolean => {
   );
 };
 
-export const isHTMLContent = (cell: Cell): boolean => {
+export const isHTMLContent = (value?: string): boolean => {
   return /<([a-z]+)([^>]*?)>(.*?)<\/\1>|<([a-z]+)([^>]*?)\/?>/i.test(
-    cell.value || '',
+    value || '',
   );
 };
 
-export const isMarkDown = (cell: Cell): boolean => {
+export const isMarkDown = (value?: string): boolean => {
   const markdownPatterns = [
     /^#{1,6}\s.+/,
     /^\s*[-*+]\s.+/,
@@ -42,8 +42,8 @@ export const isMarkDown = (cell: Cell): boolean => {
   ];
 
   return (
-    !isHTMLContent(cell) &&
-    markdownPatterns.some((pattern) => pattern.test(cell.value || ''))
+    !isHTMLContent(value) &&
+    markdownPatterns.some((pattern) => pattern.test(value || ''))
   );
 };
 

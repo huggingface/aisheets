@@ -2,7 +2,6 @@ import {
   type PropsOf,
   Slot,
   component$,
-  useContext,
   useContextProvider,
 } from '@builder.io/qwik';
 import { ToggleGroup as HeadlessToggleGroup } from '@qwik-ui/headless';
@@ -20,6 +19,8 @@ const toggleVariants = cva(
         default: 'border border-input bg-transparent',
         outline:
           'border border-input bg-transparent hover:bg-accent hover:text-accent-foreground',
+        secondary:
+          'bg-transparent hover:bg-neutral-400 hover:text-secondary-foreground aria-[pressed=true]:bg-neutral-300 text-primary-600 rounded-sm p-2',
       },
 
       size: {
@@ -64,7 +65,7 @@ type ToggleGroupItemProps = PropsOf<typeof HeadlessToggleGroup.Item> &
   VariantProps<typeof toggleVariants>;
 
 const Item = component$<ToggleGroupItemProps>(({ ...props }) => {
-  const { size, look } = useContext(toggleGroupStyledContextId);
+  const { look, size } = props;
 
   return (
     <HeadlessToggleGroup.Item

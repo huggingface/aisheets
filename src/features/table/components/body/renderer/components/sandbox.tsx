@@ -18,7 +18,6 @@ export const Sandbox = component$<{ content: string }>(({ content }) => {
           <body>${content}</body>
         </html>`}
       style={{
-        zoom: 1.5,
         width: '100%',
         height: '100%',
         border: 'none',

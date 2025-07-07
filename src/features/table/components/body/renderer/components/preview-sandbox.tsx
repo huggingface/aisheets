@@ -4,6 +4,7 @@ export const PreviewSandbox = component$<{ content: string }>(({ content }) => {
   return (
     <iframe
       title="HTML"
+      class="pointer-events-none"
       srcdoc={`<html>
           <head>
             <style>

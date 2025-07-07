@@ -90,7 +90,7 @@ export const CellRenderer = component$<CellProps>((props) => {
           isExpanded.value = true;
         }}
       >
-        <div class="h-full flex flex-col justify-between pointer-events-none select-none">
+        <div class="h-full flex flex-col justify-between select-none">
           <TableRenderer {...props} />
         </div>
       </div>

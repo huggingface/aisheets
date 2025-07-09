@@ -1,13 +1,10 @@
 import {
-  type BaseArgs,
   type FeatureExtractionArgs,
   type InferenceProvider,
   type Options,
   chatCompletion,
   chatCompletionStream,
 } from '@huggingface/inference';
-
-import type { ChatCompletionInput } from '@huggingface/tasks';
 
 import { isDev } from '@builder.io/qwik';
 import { HF_TOKEN, INFERENCE_TIMEOUT, ORG_BILLING } from '~/config';
@@ -216,8 +213,8 @@ export const normalizeChatCompletionArgs = ({
   modelProvider: string;
   accessToken?: string;
   endpointUrl?: string;
-}): BaseArgs & ChatCompletionInput => {
-  const args: BaseArgs & ChatCompletionInput = {
+}) => {
+  const args: any = {
     messages,
     accessToken: HF_TOKEN ?? accessToken,
   };

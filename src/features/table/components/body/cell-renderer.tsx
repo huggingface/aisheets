@@ -71,24 +71,20 @@ export const CellRenderer = component$<CellProps>((props) => {
   return (
     <div
       stoppropagation:click
-      stoppropagation:dblclick
       stoppropagation:mousedown
       class="w-full h-full"
-      onDblClick$={() => {
-        isExpanded.value = true;
-      }}
       onClick$={() => {
         if (isEditing.value) return;
 
-        onClose();
+        const isExpanding = !isExpanded.value;
+
+        isExpanded.value = isExpanding;
+        if (!isExpanding) {
+          onClose();
+        }
       }}
     >
-      <div
-        class="h-full flex flex-col justify-between"
-        onDblClick$={() => {
-          isExpanded.value = true;
-        }}
-      >
+      <div class="h-full flex flex-col justify-between">
         <div class="h-full flex flex-col justify-between select-none">
           <TableRenderer {...props} />
         </div>
@@ -114,7 +110,6 @@ export const CellRenderer = component$<CellProps>((props) => {
                       look="ghost"
                       onClick$={onEdit}
                       stoppropagation:click
-                      stoppropagation:dblclick
                       stoppropagation:mousedown
                       class="flex items-center gap-1 bg-transparent hover:bg-neutral-300 hover:text-secondary-foreground aria-[pressed=true]:bg-neutral-300 text-primary-600 rounded-sm p-2"
                     >
@@ -161,7 +156,6 @@ export const CellRenderer = component$<CellProps>((props) => {
                       class="hover:bg-neutral-400 text-primary-600"
                       onClick$={onClose}
                       stoppropagation:click
-                      stoppropagation:dblclick
                       stoppropagation:mousedown
                     >
                       Cancel
@@ -172,7 +166,6 @@ export const CellRenderer = component$<CellProps>((props) => {
                       class="bg-neutral-600 text-white hover:bg-neutral-700"
                       onClick$={onUpdateCell}
                       stoppropagation:click
-                      stoppropagation:dblclick
                       stoppropagation:mousedown
                     >
                       Save

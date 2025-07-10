@@ -54,7 +54,6 @@ export const CellActions = component$<{ cell: Cell }>(({ cell }) => {
           <div class="flex flex-col justify-center items-center gap-3 h-full">
             <Button
               stoppropagation:click
-              stoppropagation:dblclick
               look="ghost"
               size="sm"
               class={cn(
@@ -76,7 +75,6 @@ export const CellActions = component$<{ cell: Cell }>(({ cell }) => {
             </Button>
             <Button
               stoppropagation:click
-              stoppropagation:dblclick
               look="ghost"
               size="sm"
               class={cn(

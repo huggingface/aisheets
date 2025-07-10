@@ -70,18 +70,12 @@ export const CellRenderer = component$<CellProps>((props) => {
 
   return (
     <div
-      stoppropagation:click
       stoppropagation:mousedown
       class="w-full h-full"
       onClick$={() => {
-        if (isEditing.value) return;
+        if (isExpanded.value) return;
 
-        const isExpanding = !isExpanded.value;
-
-        isExpanded.value = isExpanding;
-        if (!isExpanding) {
-          onClose();
-        }
+        isExpanded.value = true;
       }}
     >
       <div class="h-full flex flex-col justify-between">
@@ -92,7 +86,15 @@ export const CellRenderer = component$<CellProps>((props) => {
 
       {isExpanded.value && (
         <>
-          <div class="fixed inset-0 bg-neutral-700/40 z-50" />
+          <div
+            stoppropagation:click
+            class="fixed inset-0 bg-neutral-700/40 z-50"
+            onClick$={() => {
+              if (isEditing.value) return;
+
+              onClose();
+            }}
+          />
 
           <div
             class="fixed z-[101] bg-white border border-neutral-500 w-full h-full max-w-full max-h-[40vh] md:max-w-[800px] md:max-h-[600px] overflow-hidden"

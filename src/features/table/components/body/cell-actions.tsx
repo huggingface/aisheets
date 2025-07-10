@@ -53,7 +53,6 @@ export const CellActions = component$<{ cell: Cell }>(({ cell }) => {
         <div class="flex flex-col items-end justify-center gap-1 w-full h-full pr-2">
           <div class="flex flex-col justify-end items-center gap-3 h-full py-2">
             <Button
-              stoppropagation:click
               look="ghost"
               size="sm"
               class={cn(
@@ -76,7 +75,6 @@ export const CellActions = component$<{ cell: Cell }>(({ cell }) => {
               </Tooltip>
             </Button>
             <Button
-              stoppropagation:click
               look="ghost"
               size="sm"
               class={cn(
@@ -105,9 +103,9 @@ export const CellActions = component$<{ cell: Cell }>(({ cell }) => {
 
       {showSourcesModal.value && (
         <div
+          stoppropagation:click
           class="fixed top-0 right-0 h-full w-[400px] z-[100] bg-white border-l border-neutral-300 shadow-lg flex flex-col sources-side-modal"
           style={{ minHeight: '100vh' }}
-          onClick$={(e) => e.stopPropagation()}
           window:onCloseSourcesModal$={() => {
             showSourcesModal.value = false;
           }}

@@ -1,4 +1,5 @@
 import { $, component$, useSignal, useVisibleTask$ } from '@builder.io/qwik';
+import { cn } from '@qwik-ui/utils';
 import { LuPenSquare } from '@qwikest/icons/lucide';
 import { Button, ToggleGroup } from '~/components';
 import type { CellProps } from '~/features/table/components/body/renderer/cell-props';
@@ -9,6 +10,7 @@ import {
   stopScrolling,
   unSelectText,
 } from '~/features/table/components/body/renderer/components/utils';
+import { hasBlobContent } from '~/features/utils/columns';
 import { useColumnsStore } from '~/state';
 import { useValidateCellUseCase } from '~/usecases/validate-cell.usecase';
 
@@ -70,15 +72,19 @@ export const CellRenderer = component$<CellProps>((props) => {
 
   return (
     <div
-      stoppropagation:mousedown
-      class="w-full h-full "
-      onClick$={() => {
+      class="w-full h-full"
+      onDblClick$={() => {
+        if (!cell.value) return;
         if (isExpanded.value) return;
 
         isExpanded.value = true;
       }}
     >
-      <div class="h-full flex flex-col justify-between cursor-pointer">
+      <div
+        class={cn('h-full flex flex-col justify-between', {
+          'cursor-pointer': !!cell.value,
+        })}
+      >
         <div class="h-full flex flex-col justify-between select-none">
           <TableRenderer {...props} />
         </div>
@@ -87,7 +93,6 @@ export const CellRenderer = component$<CellProps>((props) => {
       {isExpanded.value && (
         <>
           <div
-            stoppropagation:click
             class="fixed inset-0 bg-neutral-700/40 z-50"
             onClick$={() => {
               if (isEditing.value) return;
@@ -107,18 +112,18 @@ export const CellRenderer = component$<CellProps>((props) => {
             <div class="flex items-center justify-center w-full h-full p-6 bg-neutral-50">
               {!isEditing.value ? (
                 <div class="w-full h-full flex flex-col gap-3">
-                  <div class="w-full h-9 flex justify-end">
-                    <Button
-                      look="ghost"
-                      onClick$={onEdit}
-                      stoppropagation:click
-                      stoppropagation:mousedown
-                      class="flex items-center gap-1 bg-transparent hover:bg-neutral-300 hover:text-secondary-foreground aria-[pressed=true]:bg-neutral-300 text-primary-600 rounded-sm p-2"
-                    >
-                      <LuPenSquare class="text-lg" />
-                      Edit
-                    </Button>
-                  </div>
+                  {!hasBlobContent(column) ? (
+                    <div class="w-full h-9 flex justify-end">
+                      <Button
+                        look="ghost"
+                        onClick$={onEdit}
+                        class="flex items-center gap-1 bg-transparent hover:bg-neutral-300 hover:text-secondary-foreground aria-[pressed=true]:bg-neutral-300 text-primary-600 rounded-sm p-2"
+                      >
+                        <LuPenSquare class="text-lg" />
+                        Edit
+                      </Button>
+                    </div>
+                  ) : null}
 
                   <PreviewRenderer {...props} value={cell.value} />
                 </div>
@@ -130,7 +135,6 @@ export const CellRenderer = component$<CellProps>((props) => {
                       class="flex items-center p-2"
                     >
                       <ToggleGroup.Item
-                        stoppropagation:click
                         value="write"
                         look="secondary"
                         class="h-8"
@@ -138,7 +142,6 @@ export const CellRenderer = component$<CellProps>((props) => {
                         Write
                       </ToggleGroup.Item>
                       <ToggleGroup.Item
-                        stoppropagation:click
                         value="preview"
                         look="secondary"
                         class="h-8"
@@ -157,8 +160,6 @@ export const CellRenderer = component$<CellProps>((props) => {
                       look="secondary"
                       class="hover:bg-neutral-400 text-primary-600"
                       onClick$={onClose}
-                      stoppropagation:click
-                      stoppropagation:mousedown
                     >
                       Cancel
                     </Button>
@@ -167,8 +168,6 @@ export const CellRenderer = component$<CellProps>((props) => {
                       look="secondary"
                       class="bg-neutral-600 text-white hover:bg-neutral-700"
                       onClick$={onUpdateCell}
-                      stoppropagation:click
-                      stoppropagation:mousedown
                     >
                       Save
                     </Button>

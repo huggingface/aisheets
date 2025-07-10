@@ -27,7 +27,6 @@ export const CellRawEditor = component$<CellRawEditorProps>(({ value }) => {
 
   return (
     <div
-      stoppropagation:click
       class="w-full h-full scrollable overflow-hidden"
       onClick$={() => {
         if (editCellValueInput.value) {

@@ -69,7 +69,11 @@ export const CellActions = component$<{ cell: Cell }>(({ cell }) => {
                 validateCell(cell, cell.value, !cell.validated);
               }}
             >
-              <Tooltip text="Mark as correct to improve generation">
+              <Tooltip
+                text="Mark as a good example"
+                floating="right"
+                gutter={12}
+              >
                 <LuThumbsUp class="text-sm" />
               </Tooltip>
             </Button>

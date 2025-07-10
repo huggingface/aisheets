@@ -52,6 +52,7 @@ export const CellRenderer = component$<CellProps>((props) => {
 
   const onClose = $(() => {
     isEditing.value = false;
+    isExpanded.value = false;
   });
 
   const onUpdateCell = $(async () => {
@@ -60,8 +61,7 @@ export const CellRenderer = component$<CellProps>((props) => {
       cell.value = newValue.value;
     }
 
-    isEditing.value = false;
-    isExpanded.value = false;
+    onClose();
   });
 
   if (!column) {
@@ -80,8 +80,7 @@ export const CellRenderer = component$<CellProps>((props) => {
       onClick$={() => {
         if (isEditing.value) return;
 
-        isEditing.value = false;
-        isExpanded.value = false;
+        onClose();
       }}
     >
       <div

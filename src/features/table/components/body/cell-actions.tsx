@@ -57,6 +57,29 @@ export const CellActions = component$<{ cell: Cell }>(({ cell }) => {
               look="ghost"
               size="sm"
               class={cn(
+                'opacity-0 group-hover:opacity-100 transition-opacity visible rounded-full text-white w-4 h-4 hover:bg-gray-900 bg-neutral-600 p-4',
+                {
+                  hidden: !cell.value || !cell.sources?.length,
+                },
+              )}
+              onClick$={() => {
+                if (cell.sources?.length) {
+                  window.dispatchEvent(
+                    new CustomEvent('closeAllSourcesModals'),
+                  );
+                  showSourcesModal.value = true;
+                }
+              }}
+            >
+              <Tooltip text="View sources">
+                <LuGlobe class="text-lg" />
+              </Tooltip>
+            </Button>
+            <Button
+              stoppropagation:click
+              look="ghost"
+              size="sm"
+              class={cn(
                 'opacity-0 group-hover:opacity-100 transition-opacity visible rounded-full w-4 h-4 text-white bg-neutral-600 hover:bg-gray-900 p-4 shadow-md',
                 {
                   'bg-secondary-400 hover:bg-secondary-600 opacity-100':
@@ -74,29 +97,6 @@ export const CellActions = component$<{ cell: Cell }>(({ cell }) => {
                 gutter={12}
               >
                 <LuThumbsUp class="text-lg" />
-              </Tooltip>
-            </Button>
-            <Button
-              stoppropagation:click
-              look="ghost"
-              size="sm"
-              class={cn(
-                'opacity-0 group-hover:opacity-100 transition-opacity visible rounded-full text-white w-4 h-4 hover:bg-gray-900 bg-neutral-600 p-4',
-                {
-                  hidden: !cell.value || !cell.sources?.length,
-                },
-              )}
-              onClick$={() => {
-                if (cell.sources?.length) {
-                  window.dispatchEvent(
-                    new CustomEvent('closeAllSourcesModals'),
-                  );
-                  showSourcesModal.value = true;
-                }
-              }}
-            >
-              <Tooltip text="View sources">
-                <LuGlobe class="text-lg" />
               </Tooltip>
             </Button>
           </div>

@@ -1,6 +1,6 @@
 import { component$ } from '@builder.io/qwik';
-import { TableBlobRenderer } from '~/features/table/components/body/renderer/components/cell/table-blob-renderer';
 import { PreviewArrayRenderer } from '~/features/table/components/body/renderer/components/preview/preview-array-renderer';
+import { PreviewBlobRenderer } from '~/features/table/components/body/renderer/components/preview/preview-blob-renderer';
 import { PreviewHtmlRenderer } from '~/features/table/components/body/renderer/components/preview/preview-html-renderer';
 import { PreviewMarkDownRenderer } from '~/features/table/components/body/renderer/components/preview/preview-markdown-renderer';
 import { PreviewObjectRenderer } from '~/features/table/components/body/renderer/components/preview/preview-object-renderer';
@@ -22,7 +22,7 @@ export const PreviewRenderer = component$<PreviewProps>((props) => {
   }
 
   if (hasBlobContent(column)) {
-    return <TableBlobRenderer {...props} />;
+    return <PreviewBlobRenderer {...props} />;
   }
 
   if (isObjectType(column)) {

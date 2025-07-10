@@ -28,12 +28,14 @@ const AudioRenderer = component$<MediaRendererProps>(({ src }) => {
 
 const ImageRenderer = component$<MediaRendererProps>(({ src, path }) => {
   return (
-    <div class="flex items-center justify-center overflow-hidden">
-      <img
-        src={src}
-        alt={path}
-        class="w-full h-full object-contain rounded-sm"
-      />
+    <div class="w-full h-[90px] flex flex-col items-center">
+      <div class="flex items-center justify-center overflow-hidden">
+        <img
+          src={src}
+          alt={path}
+          class="w-full h-full object-contain rounded-sm"
+        />
+      </div>
     </div>
   );
 });

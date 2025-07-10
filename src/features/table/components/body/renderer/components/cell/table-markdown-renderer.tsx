@@ -7,7 +7,7 @@ import { marked } from 'marked';
 import { markedHighlight } from 'marked-highlight';
 import markedKatex from 'marked-katex-extension';
 import { CellActions } from '~/features/table/components/body/cell-actions';
-import { PreviewSandbox } from '~/features/table/components/body/renderer/components/preview-sandbox';
+import { TableSandbox } from '~/features/table/components/body/renderer/components/table-sandbox';
 
 const preprocess = (html: string) => {
   return html.replace(/[^\S\r\n]+$/gm, '');
@@ -66,7 +66,7 @@ export const TableMarkDownRenderer = component$<CellProps>((props) => {
   return (
     <div class="h-full flex flex-col justify-between">
       <CellActions cell={cell} />
-      <PreviewSandbox content={htmlContent.value || ''} />
+      <TableSandbox content={htmlContent.value || ''} />
     </div>
   );
 });

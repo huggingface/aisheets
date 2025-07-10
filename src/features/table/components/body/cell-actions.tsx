@@ -45,7 +45,7 @@ export const CellActions = component$<{ cell: Cell }>(({ cell }) => {
     return () => window.removeEventListener('closeAllSourcesModals', handler);
   });
 
-  // if (isStatic.value) return null;
+  if (isStatic.value) return null;
 
   return (
     <>

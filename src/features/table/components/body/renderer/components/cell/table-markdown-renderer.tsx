@@ -6,6 +6,7 @@ import hljs from 'highlight.js';
 import { marked } from 'marked';
 import { markedHighlight } from 'marked-highlight';
 import markedKatex from 'marked-katex-extension';
+import { CellActions } from '~/features/table/components/body/cell-actions';
 import { PreviewSandbox } from '~/features/table/components/body/renderer/components/preview-sandbox';
 
 const preprocess = (html: string) => {
@@ -62,5 +63,10 @@ export const TableMarkDownRenderer = component$<CellProps>((props) => {
     htmlContent.value = html;
   });
 
-  return <PreviewSandbox content={htmlContent.value || ''} />;
+  return (
+    <div class="h-full flex flex-col justify-between">
+      <CellActions cell={cell} />
+      <PreviewSandbox content={htmlContent.value || ''} />
+    </div>
+  );
 });

@@ -71,14 +71,14 @@ export const CellRenderer = component$<CellProps>((props) => {
   return (
     <div
       stoppropagation:mousedown
-      class="w-full h-full"
+      class="w-full h-full "
       onClick$={() => {
         if (isExpanded.value) return;
 
         isExpanded.value = true;
       }}
     >
-      <div class="h-full flex flex-col justify-between">
+      <div class="h-full flex flex-col justify-between cursor-pointer">
         <div class="h-full flex flex-col justify-between select-none">
           <TableRenderer {...props} />
         </div>

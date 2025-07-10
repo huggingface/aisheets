@@ -50,18 +50,16 @@ export const CellActions = component$<{ cell: Cell }>(({ cell }) => {
   return (
     <>
       <div class="absolute h-[101px] w-full z-40 top-0 right-0">
-        <div class="flex flex-col items-end justify-center gap-1 w-full h-full pr-4">
-          <div class="flex flex-col justify-center items-center gap-3 h-full">
+        <div class="flex flex-col items-end justify-center gap-1 w-full h-full pr-2">
+          <div class="flex flex-col justify-end items-center gap-3 h-full py-2">
             <Button
               stoppropagation:click
               look="ghost"
               size="sm"
               class={cn(
-                'opacity-0 group-hover:opacity-100 transition-opacity visible rounded-full w-4 h-4 bg-neutral-600 p-4',
+                'opacity-0 group-hover:opacity-100 transition-opacity visible rounded-full w-4 h-4 text-white bg-neutral-600 hover:bg-gray-900 p-4 shadow-md',
                 {
-                  'bg-green-100 hover:bg-green-200 text-green-400':
-                    cell.validated,
-                  'hover:bg-gray-900 text-white': !cell.validated,
+                  'bg-secondary-400 hover:bg-secondary-600': cell.validated,
                   hidden: !cell.value,
                 },
               )}
@@ -74,7 +72,7 @@ export const CellActions = component$<{ cell: Cell }>(({ cell }) => {
                 floating="right"
                 gutter={12}
               >
-                <LuThumbsUp class="text-sm" />
+                <LuThumbsUp class="text-lg" />
               </Tooltip>
             </Button>
             <Button
@@ -97,7 +95,7 @@ export const CellActions = component$<{ cell: Cell }>(({ cell }) => {
               }}
             >
               <Tooltip text="View sources">
-                <LuGlobe class="text-sm" />
+                <LuGlobe class="text-lg" />
               </Tooltip>
             </Button>
           </div>

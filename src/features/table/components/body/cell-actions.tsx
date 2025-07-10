@@ -56,7 +56,7 @@ export const CellActions = component$<{ cell: Cell }>(({ cell }) => {
               look="ghost"
               size="sm"
               class={cn(
-                'opacity-0 group-hover:opacity-100 transition-opacity visible rounded-full text-white w-4 h-4 hover:bg-gray-900 bg-neutral-600 p-4',
+                'opacity-0 group-hover:opacity-100 transition-opacity visible rounded-full text-white w-4 h-4 bg-neutral-600 p-4 hover:shadow-lg shadow-neutral-600',
                 {
                   hidden: !cell.value || !cell.sources?.length,
                 },
@@ -78,9 +78,9 @@ export const CellActions = component$<{ cell: Cell }>(({ cell }) => {
               look="ghost"
               size="sm"
               class={cn(
-                'opacity-0 group-hover:opacity-100 transition-opacity visible rounded-full w-4 h-4 text-white bg-neutral-600 hover:bg-gray-900 p-4 shadow-md',
+                'opacity-0 group-hover:opacity-100 transition-opacity visible rounded-full w-4 h-4 text-white bg-neutral-600 p-4 hover:shadow-lg shadow-neutral-600',
                 {
-                  'bg-secondary-400 hover:bg-secondary-600 opacity-100':
+                  'bg-secondary-400 shadow-secondary-400 opacity-100':
                     cell.validated,
                   hidden: !cell.value,
                 },

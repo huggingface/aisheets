@@ -12,13 +12,11 @@ export const TableSandbox = component$<{ content: string }>(({ content }) => {
             html, body {
               margin: 0;
               padding: 0;
-              width: 100px;
-              height: 90px;
               overflow: hidden;
             }
             img, svg {
-              width: 100%;
-              height: 100%;
+              width: 100px;
+              height: 90px;
               object-fit: contain;
               display: block;
             }
@@ -27,8 +25,8 @@ export const TableSandbox = component$<{ content: string }>(({ content }) => {
         <body>${content}</body>
       </html>`}
       style={{
-        width: '100px',
-        height: '90px',
+        width: '100%',
+        height: '100%',
         border: 'none',
         overflow: 'hidden',
       }}

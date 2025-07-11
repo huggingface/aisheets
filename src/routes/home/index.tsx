@@ -398,6 +398,7 @@ export default component$(() => {
                             searchOnWeb.value,
                         },
                       )}
+                      disabled={isLoading.value}
                       onClick$={() => {
                         searchOnWeb.value = !searchOnWeb.value;
                       }}

@@ -10,3 +10,4 @@ export * from './tabs/tabs';
 export * from './textarea/textarea';
 export * from './textarea/textarea';
 export * from './checkbox/checkbox';
+export * from './toggle-group/toggle-group';

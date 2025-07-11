@@ -1,8 +1,10 @@
 # Use Debian-based Node.js image as the base for building
-FROM node:slim AS build
+FROM node:22-slim AS build
 
 # Set the working directory
 WORKDIR /usr/src/app
+
+ENV NODE_OPTIONS="--max-old-space-size=4096"
 
 # Install dependencies and SQLite
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -32,7 +34,7 @@ COPY ./ ./
 RUN pnpm build
 
 # Use a Debian-based Node.js image for production
-FROM node:slim AS production
+FROM node:22-slim AS production
 
 # Set the working directory
 WORKDIR /usr/src/app

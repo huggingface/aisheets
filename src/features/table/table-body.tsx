@@ -38,7 +38,6 @@ export const TableBody = component$(() => {
 
   const { modelEndpointEnabled } = useContext(configContext);
   const { activeDataset } = useDatasetsStore();
-  const userInteraction = useSignal(false);
 
   const {
     columns,
@@ -426,9 +425,6 @@ export const TableBody = component$(() => {
                     )}
                   >
                     <div
-                      onClick$={() => {
-                        userInteraction.value = true;
-                      }}
                       onMouseUp$={handleMouseUp$}
                       onMouseDown$={(e) => handleMouseDown$(cell, e)}
                       onMouseOver$={(e) => handleMouseOver$(cell, e)}
@@ -454,8 +450,7 @@ export const TableBody = component$(() => {
                                 <Tooltip
                                   open={
                                     firstColumn.value.id === cell.column?.id &&
-                                    item.index === 4 &&
-                                    !userInteraction.value
+                                    item.index === 4
                                   }
                                   text="Drag down to generate cells"
                                   gutter={1}

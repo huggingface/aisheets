@@ -12,7 +12,7 @@
   "trustedDependencies-annotation": "Needed for bun to allow running install scripts",
   "type": "module",
   "scripts": {
-    "postinstall": "npx playwright install",
+    "postinstall": "if [ -z \"$SKIP_POSTINSTALL\" ] || [ \"$SKIP_POSTINSTALL\" = \"0\" ]; then npx playwright install; else echo 'Skipping playwright installation.'; fi",
     "build": "qwik build",
     "build.client": "vite build",
     "build.preview": "vite build --ssr src/entry.preview.tsx",

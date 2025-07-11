@@ -5,6 +5,9 @@ FROM node:22-slim AS build
 WORKDIR /usr/src/app
 
 ENV NODE_OPTIONS="--max-old-space-size=4096"
+# This environment variable is used to skip the postinstall script during the build stage
+# See the package.json postinstall script for details
+ENV SKIP_POSTINSTALL=1 
 
 # Install dependencies and SQLite
 RUN apt-get update && apt-get install -y --no-install-recommends \

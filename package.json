@@ -12,7 +12,6 @@
   "trustedDependencies-annotation": "Needed for bun to allow running install scripts",
   "type": "module",
   "scripts": {
-    "postinstall": "npx playwright install",
     "build": "qwik build",
     "build.client": "vite build",
     "build.preview": "vite build --ssr src/entry.preview.tsx",
@@ -31,7 +30,8 @@
     "test": "vitest",
     "test.unit.ui": "vitest --ui",
     "qwik": "qwik",
-    "prepare": "husky"
+    "prepare": "husky",
+    "playwright-install": "playwright install"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
@@ -85,6 +85,7 @@
     "marked-katex-extension": "^5.1.4",
     "mustache": "^4.2.0",
     "node-cache": "^5.1.2",
+    "playwright": "^1.51.1",
     "playwright-core": "^1.51.1",
     "sbd": "^1.0.19",
     "sequelize": "^6.37.5",

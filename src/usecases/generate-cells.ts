@@ -2,6 +2,7 @@ import { chatCompletion } from '@huggingface/inference';
 import {
   DEFAULT_MODEL,
   DEFAULT_MODEL_PROVIDER,
+  MODEL_ENDPOINT_NAME,
   MODEL_ENDPOINT_URL,
   NUM_CONCURRENT_REQUESTS,
 } from '~/config';
@@ -221,6 +222,9 @@ async function* generateCellsFromScratch({
 
   const validatedIdxs = validatedCells?.map((cell) => cell.idx);
 
+  const endpointUrl =
+    useEndpointURL && MODEL_ENDPOINT_URL ? MODEL_ENDPOINT_URL : undefined;
+
   for (let i = offset; i < limit + offset; i++) {
     if (validatedIdxs?.includes(i)) continue;
 
@@ -235,10 +239,9 @@ async function* generateCellsFromScratch({
 
     const args = {
       accessToken: session.token,
-      modelName,
+      modelName: endpointUrl ? MODEL_ENDPOINT_NAME : modelName,
       modelProvider,
-      endpointUrl:
-        useEndpointURL && MODEL_ENDPOINT_URL ? MODEL_ENDPOINT_URL : undefined,
+      endpointUrl,
       examples: existingCellsExamples,
       instruction: prompt,
       sourcesContext,
@@ -324,12 +327,14 @@ async function singleCellGeneration({
     rowCells.map((cell) => [cell.column!.name, cell.value]),
   );
 
+  const endpointUrl =
+    useEndpointURL && MODEL_ENDPOINT_URL ? MODEL_ENDPOINT_URL : undefined;
+
   const args: PromptExecutionParams = {
     accessToken: session.token,
-    modelName,
+    modelName: endpointUrl ? MODEL_ENDPOINT_NAME : modelName,
     modelProvider,
-    endpointUrl:
-      useEndpointURL && MODEL_ENDPOINT_URL ? MODEL_ENDPOINT_URL : undefined,
+    endpointUrl,
     examples,
     instruction: prompt,
     timeout,

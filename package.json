@@ -12,6 +12,7 @@
   "trustedDependencies-annotation": "Needed for bun to allow running install scripts",
   "type": "module",
   "scripts": {
+    "postinstall": "if [ -z \"$SKIP_POSTINSTALL\" ] || [ \"$SKIP_POSTINSTALL\" = \"0\" ]; then npx playwright install; else echo 'Skipping playwright installation.'; fi",
     "build": "qwik build",
     "build.client": "vite build",
     "build.preview": "vite build --ssr src/entry.preview.tsx",
@@ -30,8 +31,7 @@
     "test": "vitest",
     "test.unit.ui": "vitest --ui",
     "qwik": "qwik",
-    "prepare": "husky",
-    "playwright-install": "playwright install"
+    "prepare": "husky"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
@@ -77,8 +77,12 @@
     "apache-arrow": "^19.0.1",
     "consola": "^3.4.0",
     "date-fns": "^4.1.0",
+    "dompurify": "^3.2.6",
     "express": "4.20.0",
-    "marked": "^15.0.7",
+    "highlight.js": "^11.11.1",
+    "marked": "^16.0.0",
+    "marked-highlight": "^2.2.1",
+    "marked-katex-extension": "^5.1.4",
     "mustache": "^4.2.0",
     "node-cache": "^5.1.2",
     "playwright": "^1.51.1",

@@ -49,61 +49,63 @@ export const CellActions = component$<{ cell: Cell }>(({ cell }) => {
 
   return (
     <>
-      <div class="absolute w-full z-40 top-0 right-0">
-        <div class="flex items-center justify-end w-full gap-1 h-fit">
-          <Button
-            stoppropagation:click
-            stoppropagation:dblclick
-            look="ghost"
-            size="sm"
-            class={cn(
-              'opacity-0 group-hover:opacity-100 transition-opacity visible rounded-full',
-              {
-                'hover:bg-gray-100 text-gray-400': true,
-                hidden: !cell.value || !cell.sources?.length,
-              },
-            )}
-            onClick$={() => {
-              if (cell.sources?.length) {
-                window.dispatchEvent(new CustomEvent('closeAllSourcesModals'));
-                showSourcesModal.value = true;
-              }
-            }}
-          >
-            <Tooltip text="View sources">
-              <LuGlobe class="text-sm" />
-            </Tooltip>
-          </Button>
-          <Button
-            stoppropagation:click
-            stoppropagation:dblclick
-            look="ghost"
-            size="sm"
-            class={cn(
-              'opacity-0 group-hover:opacity-100 transition-opacity visible rounded-full',
-              {
-                'bg-green-100 hover:bg-green-200 text-green-400':
-                  cell.validated,
-                'hover:bg-gray-100 text-gray-400': !cell.validated,
-                hidden: !cell.value,
-              },
-            )}
-            onClick$={() => {
-              validateCell(cell, cell.value, !cell.validated);
-            }}
-          >
-            <Tooltip text="Mark as correct to improve generation">
-              <LuThumbsUp class="text-sm" />
-            </Tooltip>
-          </Button>
+      <div class="absolute h-[101px] w-full z-40 top-0 right-0">
+        <div class="flex flex-col items-end justify-center gap-1 w-full h-full pr-2">
+          <div class="flex flex-col justify-end items-center gap-3 h-full py-2">
+            <Button
+              look="ghost"
+              size="sm"
+              class={cn(
+                'opacity-0 group-hover:opacity-100 transition-opacity visible rounded-full text-white w-4 h-4 bg-neutral-600 p-4 hover:shadow-lg shadow-neutral-600',
+                {
+                  hidden: !cell.value || !cell.sources?.length,
+                },
+              )}
+              onClick$={() => {
+                if (cell.sources?.length) {
+                  window.dispatchEvent(
+                    new CustomEvent('closeAllSourcesModals'),
+                  );
+                  showSourcesModal.value = true;
+                }
+              }}
+            >
+              <Tooltip text="View sources">
+                <LuGlobe class="text-lg" />
+              </Tooltip>
+            </Button>
+            <Button
+              look="ghost"
+              size="sm"
+              class={cn(
+                'opacity-0 group-hover:opacity-100 transition-opacity visible rounded-full w-4 h-4 text-white bg-neutral-600 p-4 hover:shadow-lg shadow-neutral-600',
+                {
+                  'bg-secondary-400 shadow-secondary-400 opacity-100':
+                    cell.validated,
+                  hidden: !cell.value,
+                },
+              )}
+              onClick$={() => {
+                validateCell(cell, cell.value, !cell.validated);
+              }}
+            >
+              <Tooltip
+                text="Mark as a good example"
+                floating="right"
+                gutter={12}
+              >
+                <LuThumbsUp class="text-lg" />
+              </Tooltip>
+            </Button>
+          </div>
         </div>
       </div>
 
       {showSourcesModal.value && (
         <div
+          stoppropagation:click
           class="fixed top-0 right-0 h-full w-[400px] z-[100] bg-white border-l border-neutral-300 shadow-lg flex flex-col sources-side-modal"
           style={{ minHeight: '100vh' }}
-          onClick$={(e) => e.stopPropagation()}
           window:onCloseSourcesModal$={() => {
             showSourcesModal.value = false;
           }}

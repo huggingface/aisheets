@@ -3,6 +3,7 @@ import { chatCompletion } from '@huggingface/inference';
 import {
   DEFAULT_MODEL,
   DEFAULT_MODEL_PROVIDER,
+  MODEL_ENDPOINT_NAME,
   MODEL_ENDPOINT_URL,
 } from '~/config';
 import {
@@ -209,7 +210,7 @@ async function extractDatasetConfig({
 
   const args = normalizeChatCompletionArgs({
     messages: [{ role: 'user', content: promptText }],
-    modelName,
+    modelName: MODEL_ENDPOINT_URL ? MODEL_ENDPOINT_NAME : modelName,
     modelProvider,
     accessToken: session.token,
     endpointUrl: MODEL_ENDPOINT_URL,
@@ -447,7 +448,9 @@ async function populateDataset(
         column,
         process: {
           ...column.process,
-          useEndpointURL: MODEL_ENDPOINT_URL !== undefined,
+          // Custom endpoint URL is only available for text columns
+          useEndpointURL:
+            MODEL_ENDPOINT_URL !== undefined && column.type !== 'image',
         },
         stream: false,
         session,

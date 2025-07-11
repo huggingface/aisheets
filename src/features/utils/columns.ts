@@ -1,6 +1,5 @@
 import type { Column } from '~/state/columns';
 
-//Refactor, duplicated
 export const hasBlobContent = (column: Column | undefined): boolean => {
   return column?.type?.includes('BLOB') || isImage(column);
 };
@@ -18,6 +17,33 @@ export const isTextType = (column: Column): boolean => {
     column.type.startsWith('TEXT') ||
     column.type.startsWith('STRING') ||
     column.type.startsWith('VARCHAR')
+  );
+};
+
+export const isHTMLContent = (value?: string): boolean => {
+  return /<([a-z]+)([^>]*?)>(.*?)<\/\1>|<([a-z]+)([^>]*?)\/?>/i.test(
+    value || '',
+  );
+};
+
+export const isMarkDown = (value?: string): boolean => {
+  const markdownPatterns = [
+    /^#{1,6}\s.+/,
+    /^\s*[-*+]\s.+/,
+    /^\d+\.\s.+/,
+    /(\*\*|__)(.*?)\1/,
+    /(_|\*)(.*?)\1/,
+    /~~(.*?)~~/,
+    /`[^`]*`/,
+    /^```[\s\S]*?```$/,
+    /\[.*?\]\(.*?\)/,
+    /!\[.*?\]\(.*?\)/,
+    /^>\s.+/,
+  ];
+
+  return (
+    !isHTMLContent(value) &&
+    markdownPatterns.some((pattern) => pattern.test(value || ''))
   );
 };
 

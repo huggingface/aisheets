@@ -92,7 +92,9 @@ export const HTooltipRoot = component$((props: TooltipProps) => {
 
   const { showPopover, hidePopover } = usePopover(context.localId);
 
-  useVisibleTask$(() => {
+  useVisibleTask$(({ track }) => {
+    track(() => open);
+
     if (open) {
       setTimeout(() => {
         showPopover();

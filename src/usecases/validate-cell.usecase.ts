@@ -31,7 +31,7 @@ export const useValidateCellUseCase = () => {
   );
 
   const validateCell = $(
-    async (cell: Cell, validatedContent: string, isValidated: boolean) => {
+    async (cell: Cell, validatedContent: string, isValidated = true) => {
       if (!cell.column) {
         throw new Error('Cell does not have a column associated with it.');
       }

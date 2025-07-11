@@ -66,7 +66,7 @@ export const runPromptExecution = async ({
   });
   const options = normalizeOptions(timeout);
 
-  if (isDev) showPromptInfo(modelName, modelProvider, inputPrompt);
+  if (isDev) showPromptInfo(modelName, modelProvider, endpointUrl, inputPrompt);
 
   try {
     const cacheKey = {
@@ -129,7 +129,7 @@ export const runPromptExecutionStream = async function* ({
   });
   const options = normalizeOptions(timeout);
 
-  if (isDev) showPromptInfo(modelName, modelProvider, inputPrompt);
+  if (isDev) showPromptInfo(modelName, modelProvider, endpointUrl, inputPrompt);
 
   const cacheKey = {
     modelName,
@@ -221,6 +221,10 @@ export const normalizeChatCompletionArgs = ({
 
   if (endpointUrl) {
     args.endpointUrl = endpointUrl;
+    // When using endpointUrl, we use the modelName as the endpoint name
+    // This is a required body parameter when using OpenAI-compatible endpoints
+    // See https://platform.openai.com/docs/api-reference/chat/create#chat-create-model
+    args.model = modelName;
   } else {
     args.model = modelName;
     args.provider = modelProvider as InferenceProvider;
@@ -242,12 +246,14 @@ export const normalizeOptions = (timeout?: number | undefined): Options => {
 function showPromptInfo(
   modelName: string,
   modelProvider: string,
+  endpointUrl: string | undefined,
   inputPrompt: string,
 ) {
   console.log('\n🔷 Prompt 🔷');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   console.log('Model:', modelName);
-  console.log('Provider:', modelProvider);
+  if (endpointUrl) console.log('Endpoint URL:', endpointUrl);
+  else console.log('Provider:', modelProvider);
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   console.log('Prompt:');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');

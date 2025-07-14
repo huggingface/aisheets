@@ -114,15 +114,15 @@ const UrlItem = component$<UrlItemProps>(({ url, status }) => (
     {status === 'pending' ? (
       <>
         <SmallLoadingSpinner />
-        <span class="text-neutral-500 text-xs">
-          {url.slice(0, 100)}
-          {url.length > 100 && '...'}
+        <span class="text-neutral-500 text-sm">
+          {url.slice(0, 80)}
+          {url.length > 80 && '...'}
         </span>
       </>
     ) : (
-      <span class="text-neutral-700 text-xs">
-        {url.slice(0, 100)}
-        {url.length > 100 && '...'}
+      <span class="text-neutral-700 text-sm">
+        {url.slice(0, 80)}
+        {url.length > 80 && '...'}
       </span>
     )}
   </div>

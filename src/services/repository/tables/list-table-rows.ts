@@ -96,6 +96,7 @@ export const exportDatasetTableRows = async ({
   columns: {
     id: string;
     name: string;
+    type: string;
   }[];
   format?: 'parquet' | 'csv';
 }): Promise<string> => {
@@ -111,15 +112,89 @@ export const exportDatasetTableRows = async ({
       .map((column) => `${getColumnName(column)} as "${column.name}"`)
       .join(', ');
 
+    let formatArgs = '';
+    if (duckdbFormat === 'PARQUET') {
+      const featuresInfo = generateFeaturesInfo(columns);
+      // Render featuresInfo as a single quote map with unquoted keys
+
+      formatArgs = `, KV_METADATA {
+        huggingface: '${JSON.stringify(featuresInfo)}',
+        generated_by: 'Sheets'
+      }`;
+    }
+
     await db.run(`
         COPY (
           SELECT ${selectedColumns} 
           FROM ${tableName}
           WHERE ${coalesceStatement}
           ORDER BY rowIdx ASC
-        ) TO '${filePath}' (FORMAT ${duckdbFormat})
+        ) TO '${filePath}' (
+          FORMAT ${duckdbFormat}
+          ${formatArgs}
+        )
     `);
 
     return filePath;
   });
+};
+
+const featuresInfoList = (
+  columns: { id: string; name: string; type: string }[],
+) => {
+  return columns.map((column) => {
+    switch (column.type.toLowerCase()) {
+      case 'image': {
+        return {
+          name: column.name,
+          dtype: 'image',
+        };
+      }
+      default: {
+        return {
+          name: column.name,
+          dtype: 'string',
+        };
+      }
+    }
+  });
+};
+
+const featuresInfoDict = (
+  columns: { id: string; name: string; type: string }[],
+) => {
+  columns.reduce(
+    (acc, column) => {
+      switch (column.type.toLowerCase()) {
+        case 'image': {
+          acc[column.name] = {
+            _type: 'Image',
+          };
+          break;
+        }
+        default: {
+          // TODO: Handle other types like 'text', 'audio', etc.
+          // For now, we treat everything else as a string
+          acc[column.name] = {
+            dtype: 'string',
+            _type: 'Value',
+          };
+          break;
+        }
+      }
+
+      return acc;
+    },
+    {} as Record<string, { dtype?: string; _type?: string }>,
+  );
+};
+
+const generateFeaturesInfo = (
+  columns: { id: string; name: string; type: string }[],
+) => {
+  return {
+    info: {
+      features: featuresInfoDict(columns),
+    },
+  };
 };

@@ -1,5 +1,4 @@
 import {
-  type BaseArgs,
   type FeatureExtractionArgs,
   type InferenceProvider,
   type Options,
@@ -7,10 +6,9 @@ import {
   chatCompletionStream,
 } from '@huggingface/inference';
 
-import type { ChatCompletionInput } from '@huggingface/tasks';
-
 import { isDev } from '@builder.io/qwik';
 import { HF_TOKEN, INFERENCE_TIMEOUT, ORG_BILLING } from '~/config';
+import { cacheGet, cacheSet } from '~/services/cache';
 import { type Example, materializePrompt } from './materialize-prompt';
 
 export interface PromptExecutionParams {
@@ -37,7 +35,7 @@ export interface PromptExecutionResponse {
   done?: boolean;
 }
 
-const handleError = (e: unknown): string => {
+export const handleError = (e: unknown): string => {
   if (e instanceof Error) return e.message;
   return JSON.stringify(e);
 };
@@ -68,12 +66,37 @@ export const runPromptExecution = async ({
   });
   const options = normalizeOptions(timeout);
 
-  if (isDev) showPromptInfo(modelName, modelProvider, inputPrompt);
+  if (isDev) showPromptInfo(modelName, modelProvider, endpointUrl, inputPrompt);
 
   try {
+    const cacheKey = {
+      modelName,
+      modelProvider,
+      endpointUrl,
+      instruction,
+      data,
+      examples,
+      withSources: sourcesContext && sourcesContext.length > 0,
+    };
+    const cacheValue = cacheGet(cacheKey);
+    if (cacheValue) {
+      return {
+        value: cacheValue,
+        done: true,
+      };
+    }
+
     const response = await chatCompletion(args, options);
+    const result = response.choices[0].message.content;
+
+    if (result?.toLocaleLowerCase().includes('no more items')) {
+      throw new Error(result);
+    }
+
+    cacheSet(cacheKey, result);
+
     return {
-      value: response.choices[0].message.content,
+      value: result,
       done: true,
     };
   } catch (e) {
@@ -110,7 +133,26 @@ export const runPromptExecutionStream = async function* ({
   });
   const options = normalizeOptions(timeout);
 
-  if (isDev) showPromptInfo(modelName, modelProvider, inputPrompt);
+  if (isDev) showPromptInfo(modelName, modelProvider, endpointUrl, inputPrompt);
+
+  const cacheKey = {
+    modelName,
+    modelProvider,
+    endpointUrl,
+    instruction,
+    data,
+    examples,
+    withSources: sourcesContext && sourcesContext.length > 0,
+  };
+
+  const cacheValue = cacheGet(cacheKey);
+  if (cacheValue) {
+    yield {
+      value: cacheValue,
+      done: true,
+    };
+    return;
+  }
 
   try {
     let accumulated = '';
@@ -123,7 +165,14 @@ export const runPromptExecutionStream = async function* ({
       }
     }
 
-    yield { value: accumulated, done: true };
+    if (accumulated.toLocaleLowerCase().includes('no more items')) {
+      throw new Error(accumulated);
+    }
+
+    yield {
+      value: accumulated,
+      done: true,
+    };
   } catch (e) {
     yield { error: handleError(e), done: true };
   }
@@ -171,14 +220,18 @@ export const normalizeChatCompletionArgs = ({
   modelProvider: string;
   accessToken?: string;
   endpointUrl?: string;
-}): BaseArgs & ChatCompletionInput => {
-  const args: BaseArgs & ChatCompletionInput = {
+}) => {
+  const args: any = {
     messages,
     accessToken: HF_TOKEN ?? accessToken,
   };
 
   if (endpointUrl) {
     args.endpointUrl = endpointUrl;
+    // When using endpointUrl, we use the modelName as the endpoint name
+    // This is a required body parameter when using OpenAI-compatible endpoints
+    // See https://platform.openai.com/docs/api-reference/chat/create#chat-create-model
+    args.model = modelName;
   } else {
     args.model = modelName;
     args.provider = modelProvider as InferenceProvider;
@@ -200,12 +253,14 @@ export const normalizeOptions = (timeout?: number | undefined): Options => {
 function showPromptInfo(
   modelName: string,
   modelProvider: string,
+  endpointUrl: string | undefined,
   inputPrompt: string,
 ) {
   console.log('\n🔷 Prompt 🔷');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   console.log('Model:', modelName);
-  console.log('Provider:', modelProvider);
+  if (endpointUrl) console.log('Endpoint URL:', endpointUrl);
+  else console.log('Provider:', modelProvider);
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   console.log('Prompt:');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');

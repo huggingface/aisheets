@@ -1,3 +1,4 @@
+import { cacheGet, cacheSet } from '~/services/cache';
 import type { SearchResult } from './types';
 
 /**
@@ -24,9 +25,20 @@ export class SerperSearch {
     this.baseUrl = 'https://google.serper.dev/search';
   }
 
-  async search(query: string): Promise<SearchResult[]> {
-    if (!query) {
+  async search({
+    q,
+    num,
+  }: { q: string; num: number }): Promise<SearchResult[]> {
+    if (!q) {
       throw new Error('Query is required');
+    }
+
+    const cacheKey = q;
+    const cachedResult = cacheGet(cacheKey);
+
+    if (cachedResult) {
+      console.log('🔍 [SerperSearch] Returning cached results for query:', q);
+      return cachedResult;
     }
 
     try {
@@ -36,7 +48,7 @@ export class SerperSearch {
           'X-API-KEY': this.apiKey,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ q: query }),
+        body: JSON.stringify({ q, num }),
       });
 
       if (!response.ok) {
@@ -60,46 +72,21 @@ export class SerperSearch {
         '✅ [SerperSearch] Got',
         organic.length,
         'results for query:',
-        query,
+        q,
       );
 
-      return organic.map((result: any) => ({
+      const results = organic.map((result: any) => ({
         title: result.title,
         link: result.link,
         snippet: result.snippet || result.description || '',
       }));
+
+      cacheSet(cacheKey, results);
+
+      return results;
     } catch (error: any) {
       console.error('❌ [SerperSearch] Error:', error.message);
       throw new Error(`SerperSearch failed: ${error.message}`);
     }
   }
 }
-
-/**
- * Creates a web search tool that can be used with AI assistants
- */
-export const createWebSearchTool = (serperSearch: SerperSearch) => ({
-  name: 'web_search',
-  description:
-    'Searches the web and returns relevant results. Each result includes title, link, and snippet.',
-  examples: [
-    {
-      prompt: 'What are the latest news about AI?',
-      code: "web_search('latest AI news and developments')",
-      tools: ['web_search'],
-    },
-  ],
-  call: async (input: any) => {
-    const query = await input;
-    if (typeof query !== 'string') {
-      throw new Error('Query must be a string');
-    }
-    try {
-      const results = await serperSearch.search(query);
-      return results;
-    } catch (error: any) {
-      console.error('Search error:', error);
-      throw new Error(`Search failed: ${error.message}`);
-    }
-  },
-});

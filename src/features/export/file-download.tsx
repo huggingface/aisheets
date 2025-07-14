@@ -2,8 +2,9 @@ import { $, component$, useComputed$, useSignal } from '@builder.io/qwik';
 import { LuDownload } from '@qwikest/icons/lucide';
 import { Button } from '~/components';
 import { Tooltip } from '~/components/ui/tooltip/tooltip';
-import { type Column, useColumnsStore, useDatasetsStore } from '~/state';
+import { useColumnsStore, useDatasetsStore } from '~/state';
 import { useGenerateFile } from '~/usecases/generate-file.usecase';
+import { hasBlobContent } from '../utils/columns';
 
 const FORMAT_DISPLAY_NAMES = {
   csv: 'CSV',
@@ -101,11 +102,6 @@ export const FileDownload = component$<{
 
   return body;
 });
-
-//Refactor, duplicated
-const hasBlobContent = (column: Column): boolean => {
-  return column.type.includes('BLOB');
-};
 
 const blobFormat = (format: string) => {
   switch (format) {

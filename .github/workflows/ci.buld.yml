@@ -54,20 +54,20 @@ jobs:
           echo "DOCKER_USERNAME=$DOCKER_USERNAME" >> $GITHUB_ENV
           echo "DOCKER_PASSWORD=$DOCKER_PASSWORD" >> $GITHUB_ENV
           if [[ $IS_MAIN == 'true' ]]; then
-            echo "DOCKER_IMAGE=huggingfacedg/sheets" >> $GITHUB_ENV
+            echo "DOCKER_IMAGE=aisheets/sheets" >> $GITHUB_ENV
             echo "PLATFORMS=linux/amd64,linux/arm64" >> $GITHUB_ENV
             echo "IMAGE_TAG=dev" >> $GITHUB_ENV
           elif [[ $IS_RELEASE == 'true' ]]; then
-            echo "DOCKER_IMAGE=huggingfacedg/sheets" >> $GITHUB_ENV
+            echo "DOCKER_IMAGE=aisheets/sheets" >> $GITHUB_ENV
             echo "PLATFORMS=linux/amd64,linux/arm64" >> $GITHUB_ENV
           else
-            echo "DOCKER_IMAGE=huggingfacedg/sheets-dev" >> $GITHUB_ENV
+            echo "DOCKER_IMAGE=aisheets/sheets-dev" >> $GITHUB_ENV
             echo "PLATFORMS=linux/amd64" >> $GITHUB_ENV
           fi
         env:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-          IS_RELEASE: ${{ startsWith(github.ref, 'refs/tags/v') }}
+          IS_RELEASE: ${{ startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/stable' }}
           IS_MAIN: ${{ github.ref == 'refs/heads/main' }}
           
 

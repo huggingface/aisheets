@@ -20,7 +20,6 @@ export const createDataURI = async (
 
 export const processMediaContent = async (
   value: any,
-  isExpanded = false,
 ): Promise<
   | {
       content: string;
@@ -54,30 +53,20 @@ export const processMediaContent = async (
         switch (category) {
           case 'VIDEO':
             return {
-              content: createVideoContent(
-                dataURI,
-                mimeType,
-                filenameDisplay,
-                isExpanded,
-              ),
+              content: createVideoContent(dataURI, mimeType, filenameDisplay),
               category,
               mimeType,
             };
           case 'AUDIO':
             return {
-              content: createAudioContent(dataURI, filenameDisplay, isExpanded),
+              content: createAudioContent(dataURI, filenameDisplay),
               category,
               mimeType,
             };
 
           case 'IMAGE':
             return {
-              content: createImageContent(
-                dataURI,
-                path,
-                filenameDisplay,
-                isExpanded,
-              ),
+              content: createImageContent(dataURI, path, filenameDisplay),
               category,
               mimeType,
             };
@@ -106,11 +95,10 @@ const createVideoContent = (
   dataURI: string,
   mimeType: string,
   filenameDisplay: string,
-  isExpanded: boolean,
 ): string => {
   return `<div class="flex flex-col">
     ${filenameDisplay}
-    <video controls playsinline style="width: 100%; max-width: ${isExpanded ? '100%' : '600px'};">
+    <video controls playsinline style="width: 100%; max-width: 100%">
       <source src="${dataURI}" type="${mimeType}">
       Your browser does not support the video tag.
     </video>
@@ -120,11 +108,10 @@ const createVideoContent = (
 const createAudioContent = (
   dataURI: string,
   filenameDisplay: string,
-  isExpanded: boolean,
 ): string => {
   return `<div class="flex flex-col">
     ${filenameDisplay}
-    <audio controls src="${dataURI}" style="width: 100%; max-width: ${isExpanded ? '100%' : '400px'};"></audio>
+    <audio controls src="${dataURI}" style="width: 100%; max-width: 400px"></audio>
   </div>`;
 };
 
@@ -132,15 +119,14 @@ const createImageContent = (
   dataURI: string,
   path: string,
   filenameDisplay: string,
-  isExpanded: boolean,
 ): string => {
   return `<div class="flex flex-col">
     ${filenameDisplay}
     <div class="relative w-full h-full flex items-center justify-center">
-      <img 
-        src="${dataURI}" 
-        alt="${path}" 
-        class="${isExpanded ? 'max-w-full h-auto' : 'max-w-full max-h-[80px] object-contain'} rounded-sm"
+      <img
+        src="${dataURI}"
+        alt="${path}"
+        class="max-w-full max-h-[80px] object-contain rounded-sm"
         style="width: auto;"
       />
     </div>

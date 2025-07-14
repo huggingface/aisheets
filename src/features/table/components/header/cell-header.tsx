@@ -6,7 +6,13 @@ import { useExecution } from '~/features/add-column';
 import { CellGeneration } from '~/features/table/components/header/cell-generation';
 import { CellSettings } from '~/features/table/components/header/cell-settings';
 import { ColumnNameEdition } from '~/features/table/components/header/column-name-edition';
+import { DeleteColumn } from '~/features/table/components/header/delete-column';
 import { HideColumn } from '~/features/table/components/header/hide-column';
+import {
+  hasBlobContent,
+  isArrayType,
+  isObjectType,
+} from '~/features/utils/columns';
 import { type Column, TEMPORAL_ID } from '~/state';
 
 export const TableCellHeader = component$<{ column: Column }>(({ column }) => {
@@ -38,16 +44,13 @@ export const TableCellHeader = component$<{ column: Column }>(({ column }) => {
   return (
     <th
       id={column.id}
-      class={cn(
-        `min-w-80 w-80 max-w-80 min-h-[50px] h-[50px] px-4 py-2 text-left border ${classes.value}`,
-        {
-          'border-r-0': column.id === TEMPORAL_ID,
-        },
-      )}
+      class={cn(`min-h-[50px] h-[50px] p-2 text-left border ${classes.value}`, {
+        'border-r-0': column.id === TEMPORAL_ID,
+      })}
     >
-      <Popover.Root flip={false} gutter={8} floating="bottom-start">
+      <Popover.Root flip={false} gutter={8} floating="bottom">
         <Popover.Trigger class="flex items-center justify-between w-full h-[20px] py-[10px]">
-          <div class="flex flex-col items-start text-wrap w-[82%]">
+          <div class="flex flex-col items-start text-wrap w-full">
             <span
               class={cn(buttonVariants({ look: 'ghost' }), 'text-neutral-600')}
             >
@@ -59,7 +62,7 @@ export const TableCellHeader = component$<{ column: Column }>(({ column }) => {
             </p>
           </div>
 
-          <div class="flex items-center gap-1 w-[18%] h-fit pr-0">
+          <div class="flex items-center gap-1 w-fit h-fit pr-0">
             <CellGeneration column={column} />
             <Tooltip text="Edit configuration">
               <CellSettings column={column} />
@@ -67,15 +70,16 @@ export const TableCellHeader = component$<{ column: Column }>(({ column }) => {
           </div>
         </Popover.Trigger>
         <Popover.Panel>
-          <div class="flex flex-col gap-0.5">
+          <div class="flex flex-col gap-0.5 font-normal">
             <ColumnNameEdition column={column} />
             <div class="rounded-sm hover:bg-neutral-100 transition-colors mt-2">
-              <CellSettings column={column}>
-                <span class="font-normal">Edit configuration</span>
-              </CellSettings>
+              <CellSettings column={column}>Edit configuration</CellSettings>
             </div>
             <div class="rounded-sm hover:bg-neutral-100 transition-colors">
               <HideColumn column={column} />
+            </div>
+            <div class="rounded-sm hover:bg-neutral-100 transition-colors">
+              <DeleteColumn column={column} />
             </div>
           </div>
         </Popover.Panel>
@@ -83,24 +87,3 @@ export const TableCellHeader = component$<{ column: Column }>(({ column }) => {
     </th>
   );
 });
-
-//Refactor, duplicated
-export const hasBlobContent = (column: Column): boolean => {
-  return column.type.includes('BLOB');
-};
-
-export const isArrayType = (column: Column): boolean => {
-  return column.type.includes('[]');
-};
-
-export const isObjectType = (column: Column): boolean => {
-  return column.type.startsWith('STRUCT') || column.type.startsWith('MAP');
-};
-
-export const isTextType = (column: Column): boolean => {
-  return (
-    column.type.startsWith('TEXT') ||
-    column.type.startsWith('STRING') ||
-    column.type.startsWith('VARCHAR')
-  );
-};

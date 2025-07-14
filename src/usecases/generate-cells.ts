@@ -2,15 +2,17 @@ import { chatCompletion } from '@huggingface/inference';
 import {
   DEFAULT_MODEL,
   DEFAULT_MODEL_PROVIDER,
+  MODEL_ENDPOINT_NAME,
   MODEL_ENDPOINT_URL,
   NUM_CONCURRENT_REQUESTS,
 } from '~/config';
 import { updateProcess } from '~/services';
+import { cacheGet, cacheSet } from '~/services/cache';
 import { MAX_SOURCE_SNIPPET_LENGTH } from '~/services/db/models/cell';
-import { renderInstruction } from '~/services/inference/materialize-prompt';
-import type {
-  Example,
-  MaterializePromptParams,
+import {
+  type Example,
+  type MaterializePromptParams,
+  renderInstruction,
 } from '~/services/inference/materialize-prompt';
 import {
   type PromptExecutionParams,
@@ -19,6 +21,7 @@ import {
   runPromptExecution,
   runPromptExecutionStream,
 } from '~/services/inference/run-prompt-execution';
+import { textToImageGeneration } from '~/services/inference/text-to-image';
 import {
   createCell,
   getColumnCellByIdx,
@@ -173,6 +176,8 @@ async function* generateCellsFromScratch({
     }));
 
   let sourcesContext = undefined;
+  const sourcesLimit = Math.max(30, (limit + existingCellsExamples.length) * 2);
+
   if (searchEnabled) {
     // 1. Build web search query from prompt
     const queries = await buildWebSearchQueries({
@@ -203,7 +208,7 @@ async function* generateCellsFromScratch({
       options: {
         accessToken: session.token,
       },
-      limit: (limit - offset + existingCellsExamples.length) * 2,
+      limit: sourcesLimit,
     });
   }
 
@@ -216,6 +221,9 @@ async function* generateCellsFromScratch({
     : undefined;
 
   const validatedIdxs = validatedCells?.map((cell) => cell.idx);
+
+  const endpointUrl =
+    useEndpointURL && MODEL_ENDPOINT_URL ? MODEL_ENDPOINT_URL : undefined;
 
   for (let i = offset; i < limit + offset; i++) {
     if (validatedIdxs?.includes(i)) continue;
@@ -231,10 +239,9 @@ async function* generateCellsFromScratch({
 
     const args = {
       accessToken: session.token,
-      modelName,
+      modelName: endpointUrl ? MODEL_ENDPOINT_NAME : modelName,
       modelProvider,
-      endpointUrl:
-        useEndpointURL && MODEL_ENDPOINT_URL ? MODEL_ENDPOINT_URL : undefined,
+      endpointUrl,
       examples: existingCellsExamples,
       instruction: prompt,
       sourcesContext,
@@ -320,12 +327,14 @@ async function singleCellGeneration({
     rowCells.map((cell) => [cell.column!.name, cell.value]),
   );
 
+  const endpointUrl =
+    useEndpointURL && MODEL_ENDPOINT_URL ? MODEL_ENDPOINT_URL : undefined;
+
   const args: PromptExecutionParams = {
     accessToken: session.token,
-    modelName,
+    modelName: endpointUrl ? MODEL_ENDPOINT_NAME : modelName,
     modelProvider,
-    endpointUrl:
-      useEndpointURL && MODEL_ENDPOINT_URL ? MODEL_ENDPOINT_URL : undefined,
+    endpointUrl,
     examples,
     instruction: prompt,
     timeout,
@@ -333,59 +342,39 @@ async function singleCellGeneration({
     idx: rowIdx,
   };
 
-  let sourcesContext: MaterializePromptParams['sourcesContext'];
-
-  if (searchEnabled) {
-    const renderedInstruction = renderInstruction(prompt, args.data);
-
-    const queries = await buildWebSearchQueries({
-      prompt: renderedInstruction,
-      column,
-      options: {
-        accessToken: session.token,
-      },
-      maxQueries: 1,
-    });
-
-    if (queries.length > 0) {
-      // 2. Index web search results into the embbedding store
-      await createSourcesFromWebQueries({
-        dataset: column.dataset,
-        queries,
-        options: {
-          accessToken: session.token,
-        },
-        maxSources: 2,
+  switch (column.type.toLowerCase().trim()) {
+    case 'image': {
+      const response = await _generateImage({
+        column,
+        prompt,
+        args,
+        session,
       });
-    }
 
-    // 3. Search for relevant results
-    sourcesContext = await queryDatasetSources({
-      dataset: column.dataset,
-      query: queries[0],
-      options: {
-        accessToken: session.token,
-      },
-      limit: 15,
-    });
-    args.sourcesContext = sourcesContext;
+      cell.value = response.value;
+      cell.error = response.error;
+      cell.generating = false;
+
+      break;
+    }
+    default: {
+      const response = await _generateText({
+        column,
+        prompt,
+        args,
+        searchEnabled,
+        session,
+      });
+
+      cell.value = response.value;
+      cell.error = response.error;
+      cell.generating = false;
+      if (cell.value && !cell.error) cell.sources = response.sources;
+
+      break;
+    }
   }
 
-  // Extract sources (url + snippet) if available
-  const sources = sourcesContext
-    ? sourcesContext.map((source) => ({
-        url: source.source_uri,
-        snippet: source.text?.slice(0, MAX_SOURCE_SNIPPET_LENGTH) || '',
-      }))
-    : undefined;
-
-  const response = await runPromptExecution(args);
-
-  cell.value = response.value;
-  cell.error = response.error;
-
-  cell.generating = false;
-  if (cell.value && !cell.error) cell.sources = sources;
   await updateCell(cell);
 
   return { cell };
@@ -553,6 +542,11 @@ async function buildWebSearchQueries({
       .replace('{maxQueries}', maxQueries.toString())
       .replace('{datasetName}', column.dataset.name);
 
+    const cacheKey = promptText;
+
+    const cachedResult = cacheGet(cacheKey);
+    if (cachedResult) return cachedResult.slice(0, maxQueries);
+
     const response = await chatCompletion(
       normalizeChatCompletionArgs({
         messages: [{ role: 'user', content: promptText }],
@@ -581,7 +575,15 @@ async function buildWebSearchQueries({
       }
     }
 
-    // Return only up to maxQueries queries, regardless of how many the model returned
+    if (queries.length === 0) {
+      console.warn(
+        '⚠️ [buildWebSearchQueries] No valid search queries found in the response.',
+      );
+      return [];
+    }
+
+    cacheSet(cacheKey, queries);
+
     return queries.slice(0, maxQueries);
   } catch (error) {
     console.error(
@@ -591,3 +593,100 @@ async function buildWebSearchQueries({
     return [];
   }
 }
+
+const _generateText = async ({
+  column,
+  prompt,
+  args,
+  searchEnabled,
+  session,
+}: {
+  column: Column;
+  prompt: string;
+  args: PromptExecutionParams;
+  searchEnabled: boolean;
+  session: Session;
+}): Promise<{
+  value?: string;
+  error?: string;
+  sources?: { url: string; snippet: string }[];
+}> => {
+  let sourcesContext: MaterializePromptParams['sourcesContext'];
+
+  if (searchEnabled) {
+    const renderedInstruction = renderInstruction(prompt, args.data);
+
+    const queries = await buildWebSearchQueries({
+      prompt: renderedInstruction,
+      column,
+      options: {
+        accessToken: session.token,
+      },
+      maxQueries: 1,
+    });
+
+    if (queries.length > 0) {
+      // 2. Index web search results into the embbedding store
+      await createSourcesFromWebQueries({
+        dataset: column.dataset,
+        queries,
+        options: {
+          accessToken: session.token,
+        },
+        maxSources: 2,
+      });
+    }
+
+    // 3. Search for relevant results
+    sourcesContext = await queryDatasetSources({
+      dataset: column.dataset,
+      query: queries[0],
+      options: {
+        accessToken: session.token,
+      },
+      limit: 15,
+    });
+
+    args.sourcesContext = sourcesContext;
+  }
+
+  const response = await runPromptExecution(args);
+
+  // Extract sources (url + snippet) if available
+  const sources = sourcesContext
+    ? sourcesContext.map((source) => ({
+        url: source.source_uri,
+        snippet: source.text?.slice(0, MAX_SOURCE_SNIPPET_LENGTH) || '',
+      }))
+    : undefined;
+
+  return { ...response, sources };
+};
+
+const _generateImage = async ({
+  column,
+  prompt,
+  args,
+  session,
+}: {
+  column: Column;
+  prompt: string;
+  args: PromptExecutionParams;
+  session: Session;
+}): Promise<{
+  value?: ArrayBuffer;
+  error?: string;
+}> => {
+  // For image generation, we can use the same runPromptExecution function
+  // but we need to ensure that the model supports image generation.
+  const response = await textToImageGeneration({
+    ...args,
+    instruction: prompt,
+    accessToken: session.token,
+  });
+
+  return {
+    value: response.value ?? undefined,
+    error: response.error,
+  };
+};

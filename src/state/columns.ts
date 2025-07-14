@@ -96,7 +96,7 @@ export const TEMPORAL_ID = '-1';
 export const useColumnsStore = () => {
   const { activeDataset } = useDatasetsStore();
 
-  const createPlaceholderColumn = $((): Column => {
+  const createPlaceholderColumn = $(({ type }: { type?: string }): Column => {
     const getNextColumnName = (counter = 1): string => {
       const manyColumnsWithName = activeDataset.value.columns.filter(
         (c) => c.id !== TEMPORAL_ID,
@@ -114,7 +114,7 @@ export const useColumnsStore = () => {
       id: TEMPORAL_ID,
       name: getNextColumnName(),
       kind: 'dynamic',
-      type: 'text',
+      type: type ?? 'text',
       visible: true,
       cells: [
         {
@@ -222,7 +222,7 @@ export const useColumnsStore = () => {
 
   const columns = useComputed$(async () => {
     if (activeDataset.value.columns.length === 0) {
-      activeDataset.value.columns = [await createPlaceholderColumn()];
+      activeDataset.value.columns = [await createPlaceholderColumn({})];
     }
     return activeDataset.value.columns;
   });
@@ -240,23 +240,28 @@ export const useColumnsStore = () => {
     columns,
     firstColumn,
     replaceColumns,
-
     isDirty: $((column: Column) => isDirty(column)),
-    addTemporalColumn: $(async () => {
+    addTemporalColumn: $(async (type?: string) => {
       if (activeDataset.value.columns.some((c) => c.id === TEMPORAL_ID)) return;
 
-      const newTemporalColumn = await createPlaceholderColumn();
+      const newTemporalColumn = await createPlaceholderColumn({ type });
 
       replaceColumns([...columns.value, newTemporalColumn]);
     }),
     removeTemporalColumn: $(() => {
       replaceColumns(columns.value.filter((c) => c.id !== TEMPORAL_ID));
     }),
+    getColumn: $((id: string) => {
+      return columns.value.find((c) => c.id === id);
+    }),
     addColumn: $((newbie: Column) => {
       replaceColumns([
         ...columns.value.filter((c) => c.id !== TEMPORAL_ID),
         newbie,
       ]);
+    }),
+    removeColumn: $((removed: Column) => {
+      replaceColumns(columns.value.filter((c) => c.id !== removed.id));
     }),
     updateColumn: $((updated: Column) => {
       replaceColumns(

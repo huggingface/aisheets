@@ -3,6 +3,7 @@ import { chatCompletion } from '@huggingface/inference';
 import {
   DEFAULT_MODEL,
   DEFAULT_MODEL_PROVIDER,
+  MODEL_ENDPOINT_NAME,
   MODEL_ENDPOINT_URL,
 } from '~/config';
 import {
@@ -12,6 +13,8 @@ import {
 import { createColumn, getDatasetColumns } from '~/services/repository/columns';
 import { createDataset } from '~/services/repository/datasets';
 import { createProcess } from '~/services/repository/processes';
+
+import { cacheGet, cacheSet } from '~/services/cache';
 import { indexDatasetSources } from '~/services/websearch/embed';
 import { scrapeUrlsBatch } from '~/services/websearch/scrape';
 import {
@@ -53,6 +56,16 @@ Then, identify the main columns needed for this dataset.
 
 Second, identify the prompts that would be needed to generate each cell in the column. For example, if the column is tweet, and the tweet is about a specific topic, event, or action, write: Tweet about X. If a column is related to another column, reference it using {{column_name}} in the prompt.
 
+For image columns, specify the type as "image" and provide a descriptive prompt for image generation. Image columns are useful for:
+- Product images based on descriptions
+- Illustrations for stories or concepts
+- Visual representations of data or concepts
+- Logos or designs based on text descriptions
+
+IMPORTANT: Do not reference image columns in the prompts for other columns. The current AI models do not have the ability to read or process images as input.
+
+Only propose an image column if the user request clearly asks for images, illustrations, photos, or visual content, or if the type of data being requested obviously requires an image. Do not add image columns for generic or text-only datasets.
+
 Then, create specific search queries that will help gather information for the entire dataset.
 
 Your response must follow this exact format:
@@ -61,9 +74,10 @@ DATASET NAME:
 Short Descriptive Name
 
 COLUMNS:
-- column_name1 : prompt1 (this first column is always the main object and the only one not referencing other columns). This colum should generate a single value. For listing items avoid using words like Describe, Generate, etc. and instead use: Identify one, Extract one, Name one etc.
-- column_name2 : prompt2 (referencing {{column_name}} if needed)
-- column_name3 : prompt3...
+- column_name1 : prompt1 (type: text) (this first column is always the main object and the only one not referencing other columns). This column should generate a single value. For listing items avoid using words like Describe, Generate, etc. and instead use: Identify one, Extract one, Name one etc. Include the necessary words to avoid data duplication as much as possible.
+- column_name2 : prompt2 (type: text) (referencing {{column_name}} if needed)
+- column_name3 : prompt3 (type: image) (for image generation)
+- column_name4 : prompt4 (type: text)...
 
 SEARCH QUERIES:
 - "specific search query 1"
@@ -86,12 +100,26 @@ DATASET NAME:
 Recent Movie Reviews Collection
 
 COLUMNS:
-- movie_title : Identify one movie title from the provided sources.
-- reviews : Summarize the moview review for {{movie_title}} based on the provided sources.
-- genre : Identify the movie genre of {{movie_title}} based on the provided sources.
+- movie_title : Identify one movie title from the provided sources. (type: text)
+- reviews : Summarize the moview review for {{movie_title}} based on the provided sources. (type: text)
+- genre : Identify the movie genre of {{movie_title}} based on the provided sources. (type: text)
 
 SEARCH QUERIES:
 - "recent movie releases"
+
+USER REQUEST:
+product catalog with images
+
+DATASET NAME:
+Product Catalog with Visuals
+
+COLUMNS:
+- product_name : Identify one product name from the provided sources. (type: text)
+- description : Describe the product {{product_name}} based on the provided sources. (type: text)
+- product_image : Generate a professional product image for {{product_name}} based on {{description}}. (type: image)
+
+SEARCH QUERIES:
+- "latest tech products"
 `.trim();
 
 /**
@@ -106,15 +134,26 @@ First, provide a short, descriptive name for this dataset (2-5 words).
 
 Then, identify the main columns needed for this dataset.
 
+For image columns, specify the type as "image" and provide a descriptive prompt for image generation. Image columns are useful for:
+- Product images based on descriptions
+- Illustrations for stories or concepts
+- Visual representations of data or concepts
+- Logos or designs based on text descriptions
+
+IMPORTANT: Do not reference image columns in the prompts for other columns. The current AI models do not have the ability to read or process images as input.
+
+Only propose an image column if the user request clearly asks for images, illustrations, photos, or visual content, or if the type of data being requested obviously requires an image. Do not add image columns for generic or text-only datasets.
+
 Your response must follow this exact format:
 
 DATASET NAME:
 Short Descriptive Name
 
 COLUMNS:
-- column_name1 : prompt1 (this first column is always the main object and the only one not referencing other columns)
-- column_name2 : prompt2 (referencing {{column_name}} if needed)
-- column_name3 : prompt3...
+- column_name1 : prompt1 (type: text) (this first column is always the main object and the only one not referencing other columns). This column should generate a single value. For listing items avoid using words like Describe, Generate, etc. and instead use: Identify one, Extract one, Name one etc. Include the necessary words to avoid data duplication as much as possible.
+- column_name2 : prompt2 (type: text) (referencing {{column_name}} if needed)
+- column_name3 : prompt3 (type: image) (for image generation)
+- column_name4 : prompt4 (type: text)...
 
 Only include columns that are directly relevant to the request.
 
@@ -128,10 +167,18 @@ DATASET NAME:
 Modern Movie Reviews Collection
 
 COLUMNS:
-- movie_title : Generate a movie title in the style of recent releases
-- review : Write a detailed movie review for {{movie_title}}
-- rating : Rate {{movie_title}} from 1-5 stars based on {{review}}
-- genre : Identify the movie genre based on {{review}}
+- movie_title : Generate a movie title in the style of recent releases (type: text)
+- review : Write a detailed movie review for {{movie_title}} (type: text)
+- rating : Rate {{movie_title}} from 1-5 stars based on {{review}} (type: text)
+- genre : Identify the movie genre based on {{review}} (type: text)
+
+DATASET NAME:
+Creative Story Illustrations
+
+COLUMNS:
+- story_title : Generate a creative story title (type: text)
+- story_content : Write a short story based on {{story_title}} (type: text)
+- story_illustration : Create a beautiful illustration for the story {{story_title}} based on {{story_content}} (type: image)
 `.trim();
 
 /**
@@ -154,13 +201,40 @@ async function extractDatasetConfig({
   session: Session;
   timeout?: number;
 }) {
-  // Define result structure with defaults
-  const result: any = {
-    datasetName: 'Auto-generated Dataset',
-    columns: [] as Array<{ name: string; prompt: string }>,
-    queries: [] as string[],
-  };
+  const promptText = searchEnabled
+    ? SEARCH_PROMPT_TEMPLATE.replace('{instruction}', instruction).replace(
+        '{maxSearchQueries}',
+        maxSearchQueries?.toString() || '',
+      )
+    : NO_SEARCH_PROMPT_TEMPLATE.replace('{instruction}', instruction);
 
+  const args = normalizeChatCompletionArgs({
+    messages: [{ role: 'user', content: promptText }],
+    modelName: MODEL_ENDPOINT_URL ? MODEL_ENDPOINT_NAME : modelName,
+    modelProvider,
+    accessToken: session.token,
+    endpointUrl: MODEL_ENDPOINT_URL,
+  });
+
+  const cacheValue = cacheGet(args);
+  if (cacheValue) return cacheValue;
+
+  const response = await chatCompletion(args, normalizeOptions(timeout));
+
+  const result = processTextConfigResponse(
+    response.choices[0].message.content || '',
+    maxSearchQueries,
+    searchEnabled,
+  );
+
+  return cacheSet(args, result);
+}
+
+const processTextConfigResponse = (
+  text: string,
+  maxSearchQueries: number,
+  searchEnabled = false,
+) => {
   // Define regex patterns for better maintainability
   const sectionPatterns = {
     name: /^DATASET NAME:$/i,
@@ -172,26 +246,12 @@ async function extractDatasetConfig({
 
   let currentSection: keyof typeof sectionPatterns | null = null;
 
-  const promptText = searchEnabled
-    ? SEARCH_PROMPT_TEMPLATE.replace('{instruction}', instruction).replace(
-        '{maxSearchQueries}',
-        maxSearchQueries?.toString() || '',
-      )
-    : NO_SEARCH_PROMPT_TEMPLATE.replace('{instruction}', instruction);
-
-  const response = await chatCompletion(
-    normalizeChatCompletionArgs({
-      messages: [{ role: 'user', content: promptText }],
-      modelName,
-      modelProvider,
-      accessToken: session.token,
-      endpointUrl: MODEL_ENDPOINT_URL,
-    }),
-    normalizeOptions(timeout),
-  );
-
-  const text = response.choices[0].message.content || '';
-  result.text = text;
+  const result: any = {
+    datasetName: 'Auto-generated Dataset',
+    columns: [] as Array<{ name: string; prompt: string; type: string }>,
+    queries: [] as string[],
+    text,
+  };
 
   // Process text line by line
   for (const line of text.split('\n').map((l) => l.trim())) {
@@ -237,10 +297,23 @@ async function extractDatasetConfig({
       if (colonIndex === -1) continue;
 
       const columnName = item.substring(0, colonIndex).trim();
-      const prompt = item.substring(colonIndex + 1).trim();
+      const promptWithType = item.substring(colonIndex + 1).trim();
+
+      // Extract type from prompt (type: text) or (type: image)
+      const typeMatch = promptWithType.match(/\(type:\s*(text|image)\)/i);
+      const columnType = typeMatch ? typeMatch[1].toLowerCase() : 'text';
+
+      // Remove type specification from prompt
+      const prompt = promptWithType
+        .replace(/\(type:\s*(text|image)\)/gi, '')
+        .trim();
 
       if (columnName) {
-        result.columns.push({ name: columnName, prompt });
+        result.columns.push({
+          name: columnName,
+          prompt,
+          type: columnType,
+        });
       }
     }
 
@@ -256,13 +329,13 @@ async function extractDatasetConfig({
   }
 
   return result;
-}
+};
 
 /**
  * Creates a dataset with the suggested columns from the assistant
  */
 async function createDatasetWithColumns(
-  columns: Array<{ name: string; prompt: string }>,
+  columns: Array<{ name: string; prompt: string; type: string }>,
   session: Session,
   modelName: string = DEFAULT_MODEL,
   modelProvider: string = DEFAULT_MODEL_PROVIDER,
@@ -278,9 +351,11 @@ async function createDatasetWithColumns(
   // Create all columns first
   const createdColumns: Column[] = [];
   for (const column of columns) {
+    const isImage = column.type === 'image';
+    const logicalType = isImage ? 'image' : 'text';
     const newColumn = await createColumn({
       name: column.name,
-      type: 'VARCHAR',
+      type: logicalType,
       kind: 'dynamic' as ColumnKind,
       dataset,
     });
@@ -298,10 +373,17 @@ async function createDatasetWithColumns(
       columnNames,
     );
 
+    // Use special model/provider for image columns
+    const isImage = column.type === 'image';
+    const processModelName = isImage
+      ? 'black-forest-labs/FLUX.1-dev'
+      : modelName;
+    const processModelProvider = isImage ? 'fal-ai' : modelProvider;
+
     const process = await createProcess({
       process: {
-        modelName,
-        modelProvider,
+        modelName: processModelName,
+        modelProvider: processModelProvider,
         prompt: column.prompt,
         searchEnabled,
         columnsReferences: columnReferences.map((ref) => {
@@ -323,6 +405,7 @@ async function createDatasetWithColumns(
         col.process?.prompt ||
         columns.find((c) => c.name === col.name)?.prompt ||
         '',
+      type: col.type === 'image' ? 'image' : 'text',
     })),
     createdColumns,
   };
@@ -365,8 +448,11 @@ async function populateDataset(
         column,
         process: {
           ...column.process,
-          useEndpointURL: MODEL_ENDPOINT_URL !== undefined,
+          // Custom endpoint URL is only available for text columns
+          useEndpointURL:
+            MODEL_ENDPOINT_URL !== undefined && column.type !== 'image',
         },
+        stream: false,
         session,
         offset: 0,
         limit: 5,

@@ -51,6 +51,7 @@ const MODEL_EXPANDABLE_KEYS = [
 export interface Model {
   id: string;
   providers: string[];
+  supportedType: string;
   tags?: string[];
   safetensors?: unknown;
   size?: string;
@@ -58,15 +59,36 @@ export interface Model {
   trendingScore?: number;
 }
 
-const listModels = server$(async function (
+const listAllModels = server$(async function (
   this: RequestEventBase<QwikCityPlatform>,
 ): Promise<Model[]> {
   const session = useServerSession(this);
+  if (!session) return [];
 
   // Fetch models for both pipeline tags
   const models = await Promise.all([
-    fetchModelsForPipeline('text-generation', session),
-    fetchModelsForPipeline('image-text-to-text', session),
+    // All text generation models that support conversational
+    Promise.all([
+      fetchModelsForPipeline('text-generation', session),
+      fetchModelsForPipeline('image-text-to-text', session),
+    ]).then((models) =>
+      models
+        .flat()
+        .filter((model) => model.tags?.includes('conversational'))
+        .map((model) => ({
+          ...model,
+          supportedType: 'text',
+        })),
+    ),
+    // All image generation models
+    // TODO: Add pagination support since image generation models can be large
+    // and we might want to fetch more than just the first 1000 models.
+    fetchModelsForPipeline('text-to-image', session).then((models) =>
+      models.map((model) => ({
+        ...model,
+        supportedType: 'image',
+      })),
+    ),
   ]);
 
   return models
@@ -122,11 +144,7 @@ const fetchModelsForPipeline = async (
       .filter((provider: any) => provider.status === 'live')
       .map((provider: any) => provider.provider);
 
-    if (
-      availableProviders.length > 0 &&
-      !EXCLUDED_MODELS.includes(model.id) &&
-      model.tags?.includes('conversational')
-    ) {
+    if (availableProviders.length > 0 && !EXCLUDED_MODELS.includes(model.id)) {
       let sizeInB = 0;
       if (model.safetensors) {
         const paramCounts = Object.entries(
@@ -137,7 +155,7 @@ const fetchModelsForPipeline = async (
       }
 
       let size: string | undefined;
-      if (Number.isFinite(sizeInB)) {
+      if (Number.isFinite(sizeInB) && sizeInB > 0) {
         size = `${Math.floor(sizeInB)}B`;
       }
 
@@ -158,7 +176,7 @@ const fetchModelsForPipeline = async (
 export const useHubModels = routeLoader$(async function (
   this: RequestEventLoader,
 ): Promise<Model[]> {
-  const models = await listModels();
+  const models = await listAllModels();
 
   if (models.length === 0) {
     return [
@@ -168,7 +186,9 @@ export const useHubModels = routeLoader$(async function (
         tags: ['conversational'],
         safetensors: {},
         pipeline_tag: 'text-generation',
+        supportedType: 'text',
       },
+      // TODO: Add default image model if needed
     ];
   }
 

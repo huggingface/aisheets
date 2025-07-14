@@ -13,8 +13,7 @@ import {
 } from '@builder.io/qwik';
 import { server$ } from '@builder.io/qwik-city';
 import { cn } from '@qwik-ui/utils';
-import { LuDot } from '@qwikest/icons/lucide';
-import { LuTrash } from '@qwikest/icons/lucide';
+import { LuDot, LuTrash } from '@qwikest/icons/lucide';
 import type { VirtualItem } from '@tanstack/virtual-core';
 import { Button, Popover } from '~/components';
 import { nextTick } from '~/components/hooks/tick';
@@ -38,7 +37,6 @@ export const TableBody = component$(() => {
   const rowSize = 108; // px
 
   const { modelEndpointEnabled } = useContext(configContext);
-
   const { activeDataset } = useDatasetsStore();
 
   const {
@@ -52,7 +50,7 @@ export const TableBody = component$(() => {
   const selectedRows = useSignal<number[]>([]);
 
   const datasetSize = useComputed$(() => {
-    return activeDataset.value?.size || 0;
+    return Math.max(activeDataset.value?.size || 0, 100);
   });
 
   const data = useComputed$(() => {
@@ -81,7 +79,7 @@ export const TableBody = component$(() => {
     const visibleColumns = columns.value.filter((column) => column.visible);
 
     return Array.from(
-      { length: firstColumn.value.cells.length },
+      { length: Math.max(firstColumn.value.cells.length, 100) },
       (_, rowIndex) =>
         Array.from({ length: visibleColumns.length }, (_, colIndex) =>
           getCell(visibleColumns[colIndex], rowIndex),
@@ -91,7 +89,7 @@ export const TableBody = component$(() => {
   const scrollElement = useSignal<HTMLElement>();
   const dragStartCell = useSignal<Cell>();
   const lastMove = useSignal(0);
-  const selectedCellsId = useSignal<Cell[]>([]);
+  const selectedCellToDrag = useSignal<Cell[]>([]);
 
   const draggedColumn = useComputed$(() => {
     return columns.value.find(
@@ -100,7 +98,7 @@ export const TableBody = component$(() => {
   });
 
   const latestCellSelected = useComputed$(() => {
-    return selectedCellsId.value[selectedCellsId.value.length - 1];
+    return selectedCellToDrag.value[selectedCellToDrag.value.length - 1];
   });
 
   const handleDeleteClick$ = $(async (actualRowIndex: number) => {
@@ -136,7 +134,7 @@ export const TableBody = component$(() => {
 
   const handleMouseDown$ = $((cell: Cell, e: MouseEvent) => {
     dragStartCell.value = cell;
-    selectedCellsId.value = [cell];
+    selectedCellToDrag.value = [cell];
 
     const tableBeginning = window.innerHeight * 0.25;
     const tableEnding = window.innerHeight * 0.95;
@@ -153,7 +151,7 @@ export const TableBody = component$(() => {
   const handleMouseDragging$ = $((cell: Cell, e: MouseEvent) => {
     if (e.buttons !== 1 /* Primary button not pressed */) return;
 
-    selectedCellsId.value = [cell];
+    selectedCellToDrag.value = [cell];
   });
 
   const firstColumnsWithValue = useComputed$(() => {
@@ -169,7 +167,7 @@ export const TableBody = component$(() => {
     if (!cell?.id) return;
 
     dragStartCell.value = cell;
-    selectedCellsId.value = [cell];
+    selectedCellToDrag.value = [cell];
   });
 
   const handleMouseOver$ = $((cell: Cell, e: MouseEvent) => {
@@ -197,21 +195,20 @@ export const TableBody = component$(() => {
       );
     }
 
-    selectedCellsId.value = selectedCells.filter((c) => c) as Cell[];
+    selectedCellToDrag.value = selectedCells.filter((c) => c) as Cell[];
   });
 
   const handleMouseUp$ = $(async () => {
     if (!dragStartCell.value) return;
     if (!draggedColumn.value) return;
-
-    if (selectedCellsId.value.length === 1) return;
+    if (!draggedColumn.value.process?.id) return;
+    if (selectedCellToDrag.value.length === 1) return;
 
     const column = draggedColumn.value;
-
-    const offset = selectedCellsId.value[0].idx;
-    const limit = latestCellSelected.value?.idx - offset + 1;
-
     dragStartCell.value = undefined;
+
+    const offset = selectedCellToDrag.value[0].idx;
+    const limit = latestCellSelected.value?.idx - offset + 1;
 
     column.process!.cancellable = noSerialize(new AbortController());
     column.process!.isExecuting = true;
@@ -315,24 +312,23 @@ export const TableBody = component$(() => {
       props: HTMLAttributes<HTMLElement>,
     ) => {
       const getBoundary = (cell: Cell) => {
-        const sel = selectedCellsId.value;
         if (
-          sel.length === 0 ||
+          selectedCellToDrag.value.length === 0 ||
           columns.value.find((c) => c.id === cell.column?.id)?.kind === 'static'
         )
           return;
 
-        const rows = sel.map((c) => c.idx);
+        const rows = selectedCellToDrag.value.map((c) => c.idx);
         const rowMin = Math.min(...rows);
         const rowMax = Math.max(...rows);
 
-        const isColumnSelected = selectedCellsId.value.some(
+        const isColumnSelected = selectedCellToDrag.value.some(
           (c) => c.column?.id === cell.column?.id && c.idx === cell.idx,
         );
-        const isRowSelected = selectedCellsId.value.some(
+        const isRowSelected = selectedCellToDrag.value.some(
           (c) => c.column?.id === cell.column?.id && cell.idx === rowMin,
         );
-        const isRowMaxSelected = selectedCellsId.value.some(
+        const isRowMaxSelected = selectedCellToDrag.value.some(
           (c) => c.column?.id === cell.column?.id && cell.idx === rowMax,
         );
 
@@ -343,7 +339,7 @@ export const TableBody = component$(() => {
           'border-r-2 border-r-primary-300': isColumnSelected,
           'bg-primary-100/50 hover:bg-primary-100/50':
             !dragStartCell.value &&
-            selectedCellsId.value.length > 1 &&
+            selectedCellToDrag.value.length > 1 &&
             isColumnSelected,
         });
       };
@@ -360,7 +356,7 @@ export const TableBody = component$(() => {
         >
           <td
             class={cn(
-              'sticky left-0 z-30 w-10 text-sm flex justify-center items-center',
+              'sticky left-0 z-30 min-w-10 w-10 text-sm flex justify-center items-center',
               'px-1 text-center border bg-neutral-100 select-none',
               {
                 'bg-neutral-200': selectedRows.value.includes(item.index),
@@ -422,13 +418,9 @@ export const TableBody = component$(() => {
                   <td class="relative min-w-[326px] w-[326px] max-w-[326px] h-[108px] border" />
                 ) : (
                   <td
+                    data-column-id={cell.column?.id}
                     class={cn(
-                      'relative transition-colors box-border min-w-[326px] w-[326px] max-w-[326px] h-[108px] cursor-pointer break-words align-top border',
-                      {
-                        'bg-green-50 border-green-300': cell.validated,
-                        'border-neutral-300 hover:bg-gray-50/50':
-                          !cell.validated,
-                      },
+                      'relative transition-colors box-border w-[326px] h-[108px] break-words align-top border border-neutral-300 hover:bg-gray-50/50',
                       getBoundary(cell),
                     )}
                   >
@@ -444,7 +436,7 @@ export const TableBody = component$(() => {
                         cell.column?.id &&
                         latestCellSelected.value &&
                         latestCellSelected.value?.idx === cell.idx && (
-                          <div class="absolute bottom-1 right-4 w-3 h-3 cursor-crosshair z-10">
+                          <div class="absolute bottom-1 right-4 w-3 h-3 z-10">
                             {columns.value.find((c) => c.id === cell.column?.id)
                               ?.kind !== 'static' && (
                               <Button

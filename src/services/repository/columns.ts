@@ -208,3 +208,11 @@ export const getMaxRowIdxByColumnId = async (
 ): Promise<number> => {
   return await getMaxCellIdxByColumnId(columnId);
 };
+
+export const deleteColumn = async (columnId: string): Promise<void> => {
+  const model = await ColumnModel.findByPk(columnId);
+
+  if (!model) throw new Error('Column not found');
+
+  await model.destroy();
+};

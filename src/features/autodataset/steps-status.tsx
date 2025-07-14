@@ -145,7 +145,10 @@ export const StepsStatus = component$<StepStatusProps>(
           style={`height: ${isLoading && currentStep ? '510px' : '0'}; transition: height 0.75s cubic-bezier(0.4,0,0.2,1);`}
           class="w-full overflow-hidden mb-8"
         >
-          <div class="bg-neutral-100 rounded-md w-full pt-2 pb-4 border border-neutral-200 mt-2">
+          <div
+            class="bg-neutral-100 rounded-md w-full pt-2 pb-4 border border-neutral-200 mt-2"
+            style="max-height: 500px; overflow-y: auto;"
+          >
             <StepItem
               isActive={currentStep === 'Configuring dataset...'}
               isDone={creationFlow.datasetName.done}

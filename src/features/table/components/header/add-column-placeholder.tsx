@@ -9,7 +9,9 @@ import { cn } from '@qwik-ui/utils';
 import { LuPlus } from '@qwikest/icons/lucide';
 import { Button, Popover, buttonVariants } from '~/components';
 import { Tooltip } from '~/components/ui/tooltip/tooltip';
-import { hasBlobContent, useExecution } from '~/features/add-column';
+import { useExecution } from '~/features/add-column/form';
+import { hasBlobContent } from '~/features/utils/columns';
+
 import { TEMPORAL_ID, useColumnsStore } from '~/state';
 
 const COLUMN_PROMPTS = {
@@ -34,6 +36,12 @@ If the text is already very short, return it as is. Use your own words where pos
 Text to summarize: {{REPLACE_ME}}
 `,
 
+  textToImage: `Generate a detailed and visually rich image based on the provided text description.
+
+Ensure the image captures the essence of the text, including key elements, colors, and overall mood. 
+
+Description: {{REPLACE_ME}}`,
+
   custom: '',
 } as const;
 
@@ -52,7 +60,9 @@ export const TableAddCellHeaderPlaceHolder = component$(() => {
   const handleNewColumn = $(async (promptType: ColumnPromptType) => {
     if (lastColumnId.value === TEMPORAL_ID) return;
 
-    await addTemporalColumn();
+    const type = promptType === 'textToImage' ? 'image' : 'text';
+
+    await addTemporalColumn(type);
 
     const validColumns = columns.value.filter((c) => !hasBlobContent(c));
 
@@ -125,6 +135,12 @@ export const TableAddCellHeaderPlaceHolder = component$(() => {
                 label="Summarize"
                 column="column"
                 onClick$={() => handleNewColumn('summarize')}
+              />
+              <hr class="border-t border-slate-200 dark:border-slate-700" />
+              <ActionButton
+                label="Generate image from"
+                column="column"
+                onClick$={() => handleNewColumn('textToImage')}
               />
               <hr class="border-t border-slate-200 dark:border-slate-700" />
               <ActionButton

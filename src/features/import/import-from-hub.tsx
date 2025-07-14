@@ -227,12 +227,12 @@ const DatasetSearch = component$(
             )}
           >
             <input
+              stoppropagation:click
               class="h-8 w-full outline-none"
               placeholder="Type at least 3 characters to search datasets"
               bind:value={searchQuery}
-              onClick$={(e) => {
+              onClick$={() => {
                 isFocusing.value = true;
-                e.stopPropagation();
               }}
             />
             <Select.Trigger look="headless" />

@@ -11,8 +11,8 @@ import { getDatasetById } from '~/services/repository/datasets';
 import { exportDatasetTableRows } from '~/services/repository/tables';
 import {
   type Cell,
+  type Column,
   type Dataset,
-  type Process,
   useServerSession,
 } from '~/state';
 import { materializePrompt } from '../services/inference/materialize-prompt';
@@ -38,17 +38,16 @@ export const useExportDataset = () =>
       throw new Error('Dataset not found');
     }
 
-    const configPath = await createDatasetConfig(dataset);
+    const configPath = await createDatasetConfig(foundDataset);
     const parquetFile = await exportDatasetTableRows({
-      dataset,
-      columns: dataset.columns.map((column) => ({
-        id: column.id,
-        name: column.name,
-      })),
+      dataset: foundDataset,
+      columns: dataset.columns,
     });
 
     const owner = requestedOwner || session.user.username;
     const repoId = `${owner}/${name}`;
+
+    const readme = readmeContent(foundDataset);
 
     try {
       await createRepo({
@@ -58,7 +57,7 @@ export const useExportDataset = () =>
         files: [
           {
             path: 'README.md',
-            content: new Blob([readmeContent(dataset)]),
+            content: new Blob([readme]),
           },
         ],
       });
@@ -74,7 +73,7 @@ export const useExportDataset = () =>
         accessToken: session.token,
         files: [
           {
-            path: 'train.parquet',
+            path: 'data/train.parquet',
             content: new Blob([await fs.readFile(parquetFile)]),
           },
           {
@@ -90,18 +89,20 @@ export const useExportDataset = () =>
     return repoId;
   });
 
-async function generateDatasetConfig(
-  dataset: Dataset,
-): Promise<
+async function generateDatasetConfig(dataset: Dataset): Promise<
   Record<
     string,
-    Omit<Process, 'offset' | 'limit' | 'updatedAt'> & { userPrompt: string }
+    {
+      modelName?: string;
+      modelProvider?: string;
+      userPrompt?: string;
+      prompt?: string;
+      searchEnabled?: boolean;
+      columnsReferences?: string[];
+    }
   >
 > {
-  const columnConfigs: Record<
-    string,
-    Omit<Process, 'offset' | 'limit' | 'updatedAt'> & { userPrompt: string }
-  > = {};
+  const columnConfigs: Record<string, any> = {};
 
   for (const column of dataset.columns) {
     if (!column.process) continue;
@@ -115,36 +116,7 @@ async function generateDatasetConfig(
       continue;
     }
 
-    // Fetch complete cell data for validated cells
-    const validatedCells = await Promise.all(
-      column.cells
-        .filter((cell) => cell.validated)
-        .map((cell) =>
-          getColumnCellByIdx({
-            idx: cell.idx,
-            columnId: column.id,
-          }),
-        ),
-    );
-
-    const examples = await collectValidatedExamples({
-      validatedCells: validatedCells.filter(
-        (cell): cell is Cell => cell !== null,
-      ),
-      columnsReferences: column.process.columnsReferences,
-    });
-
-    // Get data for prompt materialization
-    const data = column.process.columnsReferences?.length
-      ? await getFirstRowData(column.process.columnsReferences)
-      : {};
-
-    const prompt = materializePrompt({
-      instruction: column.process.prompt,
-      examples: examples.length > 0 ? examples : undefined,
-      data: Object.keys(data).length > 0 ? data : undefined,
-      renderInstruction: false,
-    });
+    const prompt = await promptTemplateForColumn(column);
 
     columnConfigs[column.name] = {
       modelName: column.process.modelName,
@@ -188,6 +160,85 @@ pretty_name: ${dataset.name}
 tags:
 - aisheets
 - synthetic data
+
+${yaml.stringify({
+  dataset_info: {
+    features: generateFeaturesInfo(dataset.columns),
+  },
+})}
+  
+configs:
+- config_name: default
+  data_files:
+  - split: train
+    path: data/train*
 ---
 `;
 }
+
+const generateFeaturesInfo = (
+  columns: { id: string; name: string; type: string }[],
+) => {
+  return columns.map((column) => {
+    switch (column.type.toLowerCase()) {
+      case 'image': {
+        return {
+          name: column.name,
+          dtype: 'image',
+        };
+      }
+      default: {
+        return {
+          name: column.name,
+          dtype: 'string',
+        };
+      }
+    }
+  });
+};
+
+const promptTemplateForColumn = async (
+  column: Column,
+): Promise<string | undefined> => {
+  const { process } = column;
+  if (!process || !process.prompt) return undefined;
+
+  if (column.type === 'image') {
+    return undefined; // Image columns do not have prompt templates
+  }
+
+  // Fetch complete cell data for validated cells
+  const validatedCells = await Promise.all(
+    column.cells
+      .filter((cell) => cell.validated)
+      .map((cell) =>
+        getColumnCellByIdx({
+          idx: cell.idx,
+          columnId: column.id,
+        }),
+      ),
+  );
+
+  const examples = await collectValidatedExamples({
+    validatedCells: validatedCells.filter(
+      (cell): cell is Cell => cell !== null,
+    ),
+    columnsReferences: process.columnsReferences,
+  });
+
+  // Get data for prompt materialization
+  const data: any | undefined = process.columnsReferences?.length
+    ? await getFirstRowData(process.columnsReferences)
+    : {};
+
+  // Replace each value in data with its key wrapped in {{}}
+  for (const key of Object.keys(data)) {
+    data[key] = `{{${key}}}`;
+  }
+
+  return materializePrompt({
+    instruction: process.prompt,
+    data: data ?? undefined,
+    examples: examples?.length ? examples : undefined,
+  });
+};

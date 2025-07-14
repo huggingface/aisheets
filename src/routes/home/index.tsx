@@ -26,7 +26,8 @@ const runAutoDatasetAction = server$(async function* (
   yield* runAutoDataset.call(this, {
     instruction,
     searchEnabled,
-    maxSearchQueries: 1,
+    maxSearchQueries: 2,
+    maxSources: 10,
   });
 });
 
@@ -82,7 +83,7 @@ export default component$(() => {
     {
       title: 'Climate-related disasters',
       prompt:
-        'Recent climate related disasters with one column including the name/type of disaster, location and year',
+        'Recent climate related disasters including the name/type of disaster, location and year',
     },
     {
       title: 'Endangered Plants',
@@ -398,6 +399,7 @@ export default component$(() => {
                             searchOnWeb.value,
                         },
                       )}
+                      disabled={isLoading.value}
                       onClick$={() => {
                         searchOnWeb.value = !searchOnWeb.value;
                       }}

@@ -16,6 +16,7 @@ export const useClientConfig = routeLoader$(async function (
   isGoogleAuthEnabled: boolean;
   GOOGLE_CLIENT_ID?: string;
   GOOGLE_REDIRECT_URI?: string;
+  GOOGLE_OAUTH_SCOPE: string;
 }> {
   useServerSession(this);
 
@@ -29,5 +30,6 @@ export const useClientConfig = routeLoader$(async function (
     ),
     GOOGLE_CLIENT_ID: config.GOOGLE_CLIENT_ID,
     GOOGLE_REDIRECT_URI: config.GOOGLE_REDIRECT_URI,
+    GOOGLE_OAUTH_SCOPE: config.GOOGLE_OAUTH_SCOPE,
   };
 });

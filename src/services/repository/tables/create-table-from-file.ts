@@ -5,6 +5,7 @@ import {
   getColumnName,
   getDatasetRowSequenceName,
   getDatasetTableName,
+  readFuncFromFile,
 } from './utils';
 
 export const createDatasetTableFromFile = async (
@@ -30,26 +31,10 @@ export const createDatasetTableFromFile = async (
     const tableName = getDatasetTableName(dataset);
     const sequenceName = getDatasetRowSequenceName(dataset);
 
-    let secretDropStatement = '';
-
-    await db.run(`
-      BEGIN TRANSACTION;
-    `);
-
-    if (options?.secrets?.googleSheets) {
-      await db.run(`
-        CREATE OR REPLACE SECRET gsheet_secret(
-          TYPE gsheet,
-          PROVIDER access_token, 
-          TOKEN '${options.secrets.googleSheets}'
-        );  
-      `);
-
-      secretDropStatement = 'DROP SECRET gsheet_secret;';
-    }
+    const fileSourceStatement = readFuncFromFile(file);
 
     const results = await db.run(`
-      DESCRIBE (SELECT * FROM '${file}');
+      DESCRIBE (SELECT * FROM ${fileSourceStatement});
     `);
 
     const columns = await results.getRowObjects();
@@ -67,7 +52,7 @@ export const createDatasetTableFromFile = async (
       .map((column) => `"${column.name}" as ${getColumnName(column)}`)
       .join(', ');
 
-    let selectStatement = `SELECT ${selectColumnNames}, nextval('${sequenceName}') as rowIdx FROM '${file}'`;
+    let selectStatement = `SELECT ${selectColumnNames}, nextval('${sequenceName}') as rowIdx FROM ${fileSourceStatement}`;
 
     if (options?.limit) selectStatement += ` LIMIT ${options.limit}`;
 
@@ -77,10 +62,7 @@ export const createDatasetTableFromFile = async (
       CREATE TABLE ${tableName} AS (${selectStatement});
 
       SHOW ${tableName};
-
-      ${secretDropStatement}
-
-      COMMIT;
+      
     `);
 
     return dbColumns.map((column) => {

@@ -230,6 +230,9 @@ export const GOOGLE_CLIENT_ID: string | undefined =
 export const GOOGLE_REDIRECT_URI: string | undefined =
   process.env.GOOGLE_REDIRECT_URI;
 
+export const GOOGLE_OAUTH_SCOPE: string =
+  'https://www.googleapis.com/auth/spreadsheets.readonly';
+
 /**
  * If defined, the inference endpoint bill with by applied to the organization billing.
  *

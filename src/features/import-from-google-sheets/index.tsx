@@ -3,7 +3,7 @@ import { useNavigate } from '@builder.io/qwik-city';
 import { LuChevronRightSquare, LuExternalLink } from '@qwikest/icons/lucide';
 import { Button, Label } from '~/components';
 import { useClientConfig } from '~/loaders';
-import { useImportFromURL } from '~/usecases/import-from-url.usecase';
+import { useImportFromGoogle } from '~/usecases/import-from-google.usecase';
 
 export const ImportFromGoogleSheets = component$(() => {
   const config = useClientConfig();
@@ -13,16 +13,17 @@ export const ImportFromGoogleSheets = component$(() => {
   const googleSheetsToken = useSignal('');
   const isImporting = useSignal(false);
 
-  const importFromURI = useImportFromURL();
+  const importFromGoogle = useImportFromGoogle();
 
   const googleOauthURL = useComputed$(() => {
-    const { GOOGLE_CLIENT_ID, GOOGLE_REDIRECT_URI } = config.value;
+    const { GOOGLE_CLIENT_ID, GOOGLE_REDIRECT_URI, GOOGLE_OAUTH_SCOPE } =
+      config.value;
 
     const params = new URLSearchParams({
       client_id: GOOGLE_CLIENT_ID!,
       redirect_uri: GOOGLE_REDIRECT_URI!,
       response_type: 'token',
-      scope: 'https://www.googleapis.com/auth/spreadsheets',
+      scope: GOOGLE_OAUTH_SCOPE,
     });
 
     return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
@@ -45,40 +46,15 @@ export const ImportFromGoogleSheets = component$(() => {
     );
   });
 
-  const datasetName = $(async () => {
-    if (!url.value) return '';
-
-    try {
-      if (!isGoogleSheetsURL.value) return url.value.split('/').pop() || '';
-      if (isGoogleSheetsURL.value && !googleSheetsToken.value) return '';
-
-      const response = await fetch(url.value, {
-        headers: { Authorization: `Bearer ${googleSheetsToken.value}` },
-      });
-
-      const text = await response.text();
-      const parser = new DOMParser();
-
-      const doc = parser.parseFromString(text, 'text/html');
-      const title = doc.querySelector('title')?.innerText || 'Untitled';
-
-      return title;
-    } catch (error) {
-      console.error('Error getting dataset name:', error);
-      return url.value;
-    }
-  });
-
   const handleImport = $(async () => {
     isImporting.value = true;
 
     try {
-      const dataset = await importFromURI({
+      const dataset = await importFromGoogle({
         url: url.value,
-        name: await datasetName(),
         secretToken: googleSheetsToken.value,
       });
-      nav(`/home/dataset/${dataset.id}`);
+      await nav(`/home/dataset/${dataset.id}`);
     } catch (error) {
       console.error('Error importing dataset:', error);
     } finally {

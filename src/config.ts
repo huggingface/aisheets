@@ -11,7 +11,7 @@ const HF_TOKEN: string | undefined = process.env.HF_TOKEN;
  * The OAuth client ID used for authentication.
  * This value is retrieved from the environment variable `OAUTH_CLIENT_ID`.
  */
-const CLIENT_ID: string | undefined = process.env.OAUTH_CLIENT_ID;
+const OAUTH_CLIENT_ID: string | undefined = process.env.OAUTH_CLIENT_ID;
 
 /**
  * The OAuth scopes used for authentication.
@@ -246,7 +246,7 @@ const RUNTIME_ENV = join(DATA_DIR, process.env.NODE_ENV ?? 'development');
 
 export const appConfig = {
   authentication: {
-    clientId: CLIENT_ID,
+    clientId: OAUTH_CLIENT_ID,
     scopes: OAUTH_SCOPES,
     httpsOnly: OAUTH_HTTPS_ONLY,
     hfToken: HF_TOKEN,

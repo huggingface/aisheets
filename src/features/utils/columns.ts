@@ -1,7 +1,7 @@
 import type { Column } from '~/state/columns';
 
 export const hasBlobContent = (column: Column | undefined): boolean => {
-  return column?.type?.includes('BLOB') || isImage(column);
+  return column?.type?.toUpperCase().includes('BLOB') || isImage(column);
 };
 
 export const isArrayType = (column: Column): boolean => {
@@ -9,14 +9,17 @@ export const isArrayType = (column: Column): boolean => {
 };
 
 export const isObjectType = (column: Column): boolean => {
-  return column.type.startsWith('STRUCT') || column.type.startsWith('MAP');
+  return (
+    column.type.toUpperCase().startsWith('STRUCT') ||
+    column.type.toUpperCase().startsWith('MAP')
+  );
 };
 
 export const isTextType = (column: Column): boolean => {
   return (
-    column.type.startsWith('TEXT') ||
-    column.type.startsWith('STRING') ||
-    column.type.startsWith('VARCHAR')
+    column.type?.toUpperCase().startsWith('TEXT') ||
+    column.type?.toUpperCase().startsWith('STRING') ||
+    column.type?.toUpperCase().startsWith('VARCHAR')
   );
 };
 

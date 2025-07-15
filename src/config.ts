@@ -68,10 +68,10 @@ const DEFAULT_MODEL: string =
 
 /**
  * The default model provider for inference operations.
- * Default value: 'sambanova'
+ * Default value: 'nebius'
  */
 const DEFAULT_MODEL_PROVIDER: string =
-  process.env.DEFAULT_MODEL_PROVIDER ?? 'sambanova';
+  process.env.DEFAULT_MODEL_PROVIDER ?? 'nebius';
 
 /**
  * If defined, the inference endpoint bill with by applied to the organization billing.

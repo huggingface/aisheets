@@ -1,7 +1,7 @@
 import { SerperSearch } from './search/serper-search';
 import type { HeaderElement } from './types';
 
-import * as config from '~/config';
+import { appConfig } from '~/config';
 import { checkSourceExists, indexDatasetSources } from './embed/engine';
 import { scrapeUrlsBatch } from './scrape';
 import { trackTime } from './utils/track-time';
@@ -48,7 +48,9 @@ function addBlockListToQuery(query: string, blockList: string[]): string {
 function filterByBlockList<T extends { url: string }>(results: T[]): T[] {
   return results.filter(
     (result) =>
-      !config.BLOCKED_URLS.some((blocked) => result.url.includes(blocked)),
+      !appConfig.webSearch.blockedUrls.some((blocked) =>
+        result.url.includes(blocked),
+      ),
   );
 }
 
@@ -165,17 +167,21 @@ export const searchQueriesToSources = async (
   errors?: ErrorSource[];
 }> => {
   // Check if the API key is set
-  if (!config.SERPER_API_KEY) throw new Error('No SERPER API key provided');
+  const {
+    webSearch: { serperApiKey, blockedUrls },
+  } = appConfig;
+
+  if (!serperApiKey) throw new Error('No SERPER API key provided');
 
   const sourcesMap = new Map<string, WebSource>();
-  const serper = new SerperSearch(config.SERPER_API_KEY);
+  const serper = new SerperSearch(serperApiKey);
 
   const errors = [] as ErrorSource[];
 
   for (const query of queries) {
     try {
       // Add blocklist to the query string
-      const queryWithBlock = addBlockListToQuery(query, config.BLOCKED_URLS);
+      const queryWithBlock = addBlockListToQuery(query, blockedUrls);
       const webSearch = await serper.search({
         q: `${queryWithBlock} -filetype:pdf`,
         num: maxSources,

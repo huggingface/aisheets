@@ -4,7 +4,7 @@ import type { RequestHandler } from '@builder.io/qwik-city';
 import { importDatasetFromFile } from '~/services/repository/datasets';
 import { useServerSession } from '~/state';
 
-import { DATA_DIR } from '~/config';
+import { appConfig } from '~/config';
 
 import fs from 'node:fs/promises';
 
@@ -41,7 +41,11 @@ const writeRequestFileLocally = async (
 ): Promise<string> => {
   const chunk = await request.arrayBuffer();
 
-  const chunksDir = join(DATA_DIR, '/uploads/files');
+  const {
+    data: { dataDir },
+  } = appConfig;
+
+  const chunksDir = join(dataDir, '/uploads/files');
   mkdirSync(chunksDir, { recursive: true });
 
   const filePath = join(chunksDir, crypto.randomUUID()) + filename;

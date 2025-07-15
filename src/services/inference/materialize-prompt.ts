@@ -1,7 +1,7 @@
 import mustache from 'mustache';
 import {
-  EXAMPLES_PROMPT_CONTEXT_SIZE,
-  SOURCES_PROMPT_CONTEXT_SIZE,
+  EXAMPLES_PROMPT_MAX_CONTEXT_SIZE,
+  SOURCES_PROMPT_MAX_CONTEXT_SIZE,
 } from '~/config';
 
 export interface Example {
@@ -173,7 +173,7 @@ const examplesSection = (
     },
   );
 
-  return examplesText.slice(0, EXAMPLES_PROMPT_CONTEXT_SIZE);
+  return examplesText.slice(0, EXAMPLES_PROMPT_MAX_CONTEXT_SIZE);
 };
 
 const sourcesSection = (
@@ -212,5 +212,5 @@ Use the web sources below to accurately follow the user instruction. If the info
     },
   );
 
-  return sourcesText.slice(0, SOURCES_PROMPT_CONTEXT_SIZE);
+  return sourcesText.slice(0, SOURCES_PROMPT_MAX_CONTEXT_SIZE);
 };

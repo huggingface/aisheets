@@ -1,14 +1,18 @@
 import { isDev } from '@builder.io/qwik';
 import type { RequestEvent } from '@builder.io/qwik-city';
 import * as hub from '@huggingface/hub';
-import { CLIENT_ID, HF_TOKEN, OAUTH_HTTPS_ONLY, OAUTH_SCOPES } from '~/config';
+import { appConfig } from '~/config';
 import { saveSession } from '~/services/auth/session';
 import type { Session } from '~/state/session';
 
 export const onGet = async (event: RequestEvent) => {
-  if (CLIENT_ID) return handleOAuthLogin(event);
+  const {
+    authentication: { clientId, hfToken },
+  } = appConfig;
 
-  if (HF_TOKEN) return handleHFTokenLogin(event);
+  if (clientId) return handleOAuthLogin(event);
+
+  if (hfToken) return handleHFTokenLogin(event);
 
   throw Error('Missing HF_TOKEN or OAUTH_CLIENT_ID');
 };
@@ -16,14 +20,18 @@ export const onGet = async (event: RequestEvent) => {
 const handleOAuthLogin = async ({ url, cookie, redirect }: RequestEvent) => {
   const sessionCode = crypto.randomUUID();
 
-  const redirectOrigin = OAUTH_HTTPS_ONLY
+  const {
+    authentication: { clientId, scopes, httpsOnly },
+  } = appConfig;
+
+  const redirectOrigin = httpsOnly
     ? url.origin.replace('http://', 'https://')
     : url.origin;
 
   const authData = {
     state: sessionCode,
-    clientId: CLIENT_ID,
-    scopes: OAUTH_SCOPES,
+    clientId: clientId!,
+    scopes,
     redirectUrl: `${redirectOrigin}/auth/callback/`,
     localStorage: {
       codeVerifier: undefined,
@@ -52,12 +60,16 @@ const handleOAuthLogin = async ({ url, cookie, redirect }: RequestEvent) => {
 const handleHFTokenLogin = async (event: RequestEvent) => {
   const { redirect } = event;
 
+  const {
+    authentication: { hfToken },
+  } = appConfig;
+
   try {
-    const userInfo = (await hub.whoAmI({ accessToken: HF_TOKEN! })) as any;
+    const userInfo = (await hub.whoAmI({ accessToken: hfToken! })) as any;
 
     const session: Session = {
       anonymous: false,
-      token: HF_TOKEN!,
+      token: hfToken!,
       user: {
         name: userInfo.fullname,
         username: userInfo.name,

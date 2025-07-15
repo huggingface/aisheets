@@ -1,5 +1,9 @@
 import { type RequestEventLoader, routeLoader$ } from '@builder.io/qwik-city';
-import * as config from '~/config';
+import {
+  GOOGLE_OAUTH_CLIENT_ID,
+  GOOGLE_OAUTH_REDIRECT_URI,
+  appConfig,
+} from '~/config';
 import { useServerSession } from '~/state';
 
 /**
@@ -19,15 +23,17 @@ export const useClientConfig = routeLoader$(async function (
 }> {
   useServerSession(this);
 
+  const { textGeneration } = appConfig.inference.tasks;
+
   return {
-    DEFAULT_MODEL: config.DEFAULT_MODEL,
-    DEFAULT_MODEL_PROVIDER: config.DEFAULT_MODEL_PROVIDER,
-    modelEndpointEnabled: config.MODEL_ENDPOINT_URL !== undefined,
-    MODEL_ENDPOINT_NAME: config.MODEL_ENDPOINT_NAME,
+    DEFAULT_MODEL: textGeneration.defaultModel,
+    DEFAULT_MODEL_PROVIDER: textGeneration.defaultProvider,
+    modelEndpointEnabled: textGeneration.endpointUrl !== undefined,
+    MODEL_ENDPOINT_NAME: textGeneration.endpointName,
     isGoogleAuthEnabled: Boolean(
-      config.GOOGLE_CLIENT_ID && config.GOOGLE_REDIRECT_URI,
+      GOOGLE_OAUTH_CLIENT_ID && GOOGLE_OAUTH_REDIRECT_URI,
     ),
-    GOOGLE_CLIENT_ID: config.GOOGLE_CLIENT_ID,
-    GOOGLE_REDIRECT_URI: config.GOOGLE_REDIRECT_URI,
+    GOOGLE_CLIENT_ID: GOOGLE_OAUTH_CLIENT_ID,
+    GOOGLE_REDIRECT_URI: GOOGLE_OAUTH_REDIRECT_URI,
   };
 });

@@ -7,12 +7,7 @@ import {
 import type { RequestEventBase } from '@builder.io/qwik-city';
 
 import { INFERENCE_PROVIDERS } from '@huggingface/inference';
-import {
-  DEFAULT_MODEL,
-  DEFAULT_MODEL_PROVIDER,
-  EXCLUDED_MODELS,
-  HF_TOKEN,
-} from '~/config';
+import { appConfig } from '~/config';
 import { type Session, useServerSession } from '~/state';
 
 // This list helps to exclude providers that are not supported by the endpoint
@@ -115,7 +110,12 @@ const fetchModelsForPipeline = async (
     ...MODEL_EXPANDABLE_KEYS.map((key) => ['expand', key]),
   ]).toString();
 
-  const token = session.anonymous ? HF_TOKEN : session.token;
+  const {
+    authentication: { hfToken },
+    inference: { excludedHubModels },
+  } = appConfig;
+
+  const token = session.anonymous ? hfToken : session.token;
   const response = await fetch(`${url}?${params}`, {
     method: 'GET',
     headers: {
@@ -144,7 +144,10 @@ const fetchModelsForPipeline = async (
       .filter((provider: any) => provider.status === 'live')
       .map((provider: any) => provider.provider);
 
-    if (availableProviders.length > 0 && !EXCLUDED_MODELS.includes(model.id)) {
+    if (
+      availableProviders.length > 0 &&
+      !excludedHubModels.includes(model.id)
+    ) {
       let sizeInB = 0;
       if (model.safetensors) {
         const paramCounts = Object.entries(
@@ -178,11 +181,17 @@ export const useHubModels = routeLoader$(async function (
 ): Promise<Model[]> {
   const models = await listAllModels();
 
+  const {
+    inference: {
+      tasks: { textGeneration },
+    },
+  } = appConfig;
+
   if (models.length === 0) {
     return [
       {
-        id: DEFAULT_MODEL,
-        providers: [DEFAULT_MODEL_PROVIDER],
+        id: textGeneration.defaultModel,
+        providers: [textGeneration.defaultProvider],
         tags: ['conversational'],
         safetensors: {},
         pipeline_tag: 'text-generation',

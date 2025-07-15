@@ -2,7 +2,7 @@ import { featureExtraction } from '@huggingface/inference';
 import { pipeline } from '@huggingface/transformers';
 import * as lancedb from '@lancedb/lancedb';
 import * as arrow from 'apache-arrow';
-import { DEFAULT_EMBEDDING_MODEL, VECTOR_DB_DIR } from '~/config';
+import { appConfig } from '~/config';
 import {
   normalizeFeatureExtractionArgs,
   normalizeOptions,
@@ -20,7 +20,13 @@ let processEmbeddings: (
   throw new Error('processEmbeddings function not initialized');
 };
 
-const { provider, endpointUrl, model } = DEFAULT_EMBEDDING_MODEL;
+const {
+  inference: {
+    tasks: { featureExtraction: featExtractionTask },
+  },
+} = appConfig;
+
+const { provider, endpointUrl, model } = featExtractionTask;
 
 if (provider === undefined && endpointUrl === undefined) {
   const extractor = await pipeline('feature-extraction', model);
@@ -58,9 +64,15 @@ if (provider === undefined && endpointUrl === undefined) {
 
 export const configureEmbeddingsIndex = async () => {
   // Check if the database is empty
-  const db = await lancedb.connect(VECTOR_DB_DIR);
+  const db = await lancedb.connect(appConfig.data.vectorDbDir);
 
-  const { embeddingDim } = DEFAULT_EMBEDDING_MODEL;
+  const {
+    inference: {
+      tasks: { featureExtraction },
+    },
+  } = appConfig;
+
+  const { embeddingDim } = featureExtraction;
 
   const schema = new arrow.Schema([
     new arrow.Field('dataset_id', new arrow.Utf8()),
@@ -116,8 +128,14 @@ export const embedder = async (
 ): Promise<number[][]> => {
   if (texts.length === 0) return [];
 
+  const {
+    inference: {
+      tasks: { featureExtraction },
+    },
+  } = appConfig;
+
   const processedTexts =
-    options.isQuery && DEFAULT_EMBEDDING_MODEL.isInstruct
+    options.isQuery && featureExtraction.isInstruct
       ? texts.map(getDetailedInstruct)
       : texts;
 

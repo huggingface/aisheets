@@ -1,5 +1,5 @@
 import { type InferenceProvider, textToImage } from '@huggingface/inference';
-import { HF_TOKEN } from '~/config';
+import { appConfig } from '~/config';
 import { cacheGet, cacheSet } from '../cache';
 import { renderInstruction } from './materialize-prompt';
 import {
@@ -21,9 +21,13 @@ const normalizeTextToImageArgs = ({
   accessToken?: string;
   endpointUrl?: string;
 }) => {
+  const {
+    authentication: { hfToken },
+  } = appConfig;
+
   const args: any = {
     inputs,
-    accessToken: HF_TOKEN ?? accessToken,
+    accessToken: hfToken ?? accessToken,
   };
 
   if (endpointUrl) {

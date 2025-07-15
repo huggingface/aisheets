@@ -1,11 +1,6 @@
 import type { RequestEventBase } from '@builder.io/qwik-city';
 import { chatCompletion } from '@huggingface/inference';
-import {
-  DEFAULT_MODEL,
-  DEFAULT_MODEL_PROVIDER,
-  MODEL_ENDPOINT_NAME,
-  MODEL_ENDPOINT_URL,
-} from '~/config';
+import { appConfig } from '~/config';
 import {
   normalizeChatCompletionArgs,
   normalizeOptions,
@@ -201,6 +196,10 @@ async function extractDatasetConfig({
   session: Session;
   timeout?: number;
 }) {
+  const {
+    tasks: { textGeneration },
+  } = appConfig.inference;
+
   const promptText = searchEnabled
     ? SEARCH_PROMPT_TEMPLATE.replace('{instruction}', instruction).replace(
         '{maxSearchQueries}',
@@ -210,10 +209,12 @@ async function extractDatasetConfig({
 
   const args = normalizeChatCompletionArgs({
     messages: [{ role: 'user', content: promptText }],
-    modelName: MODEL_ENDPOINT_URL ? MODEL_ENDPOINT_NAME : modelName,
+    modelName: textGeneration.endpointUrl
+      ? textGeneration.endpointName
+      : modelName,
     modelProvider,
     accessToken: session.token,
-    endpointUrl: MODEL_ENDPOINT_URL,
+    endpointUrl: textGeneration.endpointUrl,
   });
 
   const cacheValue = cacheGet(args);
@@ -337,8 +338,9 @@ const processTextConfigResponse = (
 async function createDatasetWithColumns(
   columns: Array<{ name: string; prompt: string; type: string }>,
   session: Session,
-  modelName: string = DEFAULT_MODEL,
-  modelProvider: string = DEFAULT_MODEL_PROVIDER,
+  modelName: string = appConfig.inference.tasks.textGeneration.defaultModel,
+  modelProvider: string = appConfig.inference.tasks.textGeneration
+    .defaultProvider,
   datasetName = 'New Dataset',
   searchEnabled = false,
 ) {
@@ -436,6 +438,10 @@ async function populateDataset(
   dataset: { id: string; name: string },
   session: Session,
 ) {
+  const {
+    tasks: { textGeneration },
+  } = appConfig.inference;
+
   try {
     // Get the full column objects with processes
     const columns = await getDatasetColumns(dataset);
@@ -450,7 +456,7 @@ async function populateDataset(
           ...column.process,
           // Custom endpoint URL is only available for text columns
           useEndpointURL:
-            MODEL_ENDPOINT_URL !== undefined && column.type !== 'image',
+            textGeneration.endpointUrl !== undefined && column.type !== 'image',
         },
         stream: false,
         session,
@@ -591,8 +597,8 @@ export const runAutoDataset = async function* (
   this: RequestEventBase<QwikCityPlatform>,
   {
     instruction,
-    modelName = DEFAULT_MODEL,
-    modelProvider = DEFAULT_MODEL_PROVIDER,
+    modelName = appConfig.inference.tasks.textGeneration.defaultModel,
+    modelProvider = appConfig.inference.tasks.textGeneration.defaultProvider,
     searchEnabled = false,
     maxSearchQueries = 1,
     maxSources = 5,

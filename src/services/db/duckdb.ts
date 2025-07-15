@@ -1,7 +1,11 @@
 import { type DuckDBConnection, DuckDBInstance } from '@duckdb/node-api';
 import { appConfig } from '~/config';
 
-const duckDB = await DuckDBInstance.create(appConfig.data.duckDb, {
+const {
+  data: { duckDb },
+} = appConfig;
+
+const duckDB = await DuckDBInstance.create(duckDb, {
   threads: '10',
 });
 

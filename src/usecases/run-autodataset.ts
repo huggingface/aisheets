@@ -37,6 +37,12 @@ export interface WebSearchQuery {
   query: string;
 }
 
+const {
+  inference: {
+    tasks: { textGeneration },
+  },
+} = appConfig;
+
 /**
  * Template for the search-enabled prompt
  */
@@ -196,10 +202,6 @@ async function extractDatasetConfig({
   session: Session;
   timeout?: number;
 }) {
-  const {
-    tasks: { textGeneration },
-  } = appConfig.inference;
-
   const promptText = searchEnabled
     ? SEARCH_PROMPT_TEMPLATE.replace('{instruction}', instruction).replace(
         '{maxSearchQueries}',
@@ -338,9 +340,8 @@ const processTextConfigResponse = (
 async function createDatasetWithColumns(
   columns: Array<{ name: string; prompt: string; type: string }>,
   session: Session,
-  modelName: string = appConfig.inference.tasks.textGeneration.defaultModel,
-  modelProvider: string = appConfig.inference.tasks.textGeneration
-    .defaultProvider,
+  modelName: string = textGeneration.defaultModel,
+  modelProvider: string = textGeneration.defaultProvider,
   datasetName = 'New Dataset',
   searchEnabled = false,
 ) {
@@ -438,10 +439,6 @@ async function populateDataset(
   dataset: { id: string; name: string },
   session: Session,
 ) {
-  const {
-    tasks: { textGeneration },
-  } = appConfig.inference;
-
   try {
     // Get the full column objects with processes
     const columns = await getDatasetColumns(dataset);
@@ -597,8 +594,8 @@ export const runAutoDataset = async function* (
   this: RequestEventBase<QwikCityPlatform>,
   {
     instruction,
-    modelName = appConfig.inference.tasks.textGeneration.defaultModel,
-    modelProvider = appConfig.inference.tasks.textGeneration.defaultProvider,
+    modelName = textGeneration.defaultModel,
+    modelProvider = textGeneration.defaultProvider,
     searchEnabled = false,
     maxSearchQueries = 1,
     maxSources = 5,

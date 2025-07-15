@@ -45,12 +45,12 @@ function addBlockListToQuery(query: string, blockList: string[]): string {
 }
 
 // Utility function to filter results by blocklist
-function filterByBlockList<T extends { url: string }>(results: T[]): T[] {
+function filterByBlockList<T extends { url: string }>(
+  results: T[],
+  blockedUrls: string[],
+): T[] {
   return results.filter(
-    (result) =>
-      !appConfig.webSearch.blockedUrls.some((blocked) =>
-        result.url.includes(blocked),
-      ),
+    (result) => !blockedUrls.some((blocked) => result.url.includes(blocked)),
   );
 }
 
@@ -214,10 +214,12 @@ export const searchQueriesToSources = async (
   }
 
   return {
-    sources: filterByBlockList(Array.from(sourcesMap.values())).slice(
-      0,
-      maxSources,
-    ),
+    // Do we need to filter by blocklist here since we already filtered in the query?
+    // If so, we can remove the filterByBlockList function
+    sources: filterByBlockList(
+      Array.from(sourcesMap.values()),
+      blockedUrls,
+    ).slice(0, maxSources),
     errors,
   };
 };

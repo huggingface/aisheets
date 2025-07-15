@@ -4,8 +4,12 @@ import { appConfig } from '~/config';
 
 // https://sequelize.org/docs/v6/other-topics/typescript/
 
+const {
+  data: { sqliteDb },
+} = appConfig;
+
 export const db = new Sequelize({
-  storage: appConfig.data.sqliteDb,
+  storage: sqliteDb,
   dialect: 'sqlite',
   logging: false,
 });

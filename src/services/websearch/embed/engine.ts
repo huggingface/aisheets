@@ -22,11 +22,17 @@ let processEmbeddings: (
 
 const {
   inference: {
-    tasks: { featureExtraction: featExtractionTask },
+    tasks: {
+      featureExtraction: {
+        provider,
+        endpointUrl,
+        model,
+        embeddingDim,
+        isInstruct,
+      },
+    },
   },
 } = appConfig;
-
-const { provider, endpointUrl, model } = featExtractionTask;
 
 if (provider === undefined && endpointUrl === undefined) {
   const extractor = await pipeline('feature-extraction', model);
@@ -65,14 +71,6 @@ if (provider === undefined && endpointUrl === undefined) {
 export const configureEmbeddingsIndex = async () => {
   // Check if the database is empty
   const db = await lancedb.connect(appConfig.data.vectorDbDir);
-
-  const {
-    inference: {
-      tasks: { featureExtraction },
-    },
-  } = appConfig;
-
-  const { embeddingDim } = featureExtraction;
 
   const schema = new arrow.Schema([
     new arrow.Field('dataset_id', new arrow.Utf8()),
@@ -128,16 +126,8 @@ export const embedder = async (
 ): Promise<number[][]> => {
   if (texts.length === 0) return [];
 
-  const {
-    inference: {
-      tasks: { featureExtraction },
-    },
-  } = appConfig;
-
   const processedTexts =
-    options.isQuery && featureExtraction.isInstruct
-      ? texts.map(getDetailedInstruct)
-      : texts;
+    options.isQuery && isInstruct ? texts.map(getDetailedInstruct) : texts;
 
   const results = await processEmbeddings(processedTexts, options);
 

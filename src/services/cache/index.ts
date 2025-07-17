@@ -8,14 +8,19 @@ const serverCache = new NodeCache({
   deleteOnExpire: true, // Delete keys on expiration
 });
 
+const cacheKey = (key: any): string => {
+  if (typeof key === 'string') {
+    return key;
+  }
+  return JSON.stringify(key, (_, v) =>
+    typeof v === 'bigint' ? v.toString() : v,
+  );
+};
+
 export const cacheGet = (key: any): any | undefined => {
   if (!key) return undefined;
 
-  if (typeof key !== 'string') {
-    console.warn('Cache key is not a string, converting to JSON string');
-    key = JSON.stringify(key);
-  }
-
+  key = cacheKey(key);
   return serverCache.get(key);
 };
 
@@ -25,11 +30,7 @@ export const cacheSet = (key: any, value: any): any => {
     return undefined;
   }
 
-  if (typeof key !== 'string') {
-    console.warn('Cache key is not a string, converting to JSON string');
-    key = JSON.stringify(key);
-  }
-
+  key = cacheKey(key);
   serverCache.set(key, value);
 
   return value;

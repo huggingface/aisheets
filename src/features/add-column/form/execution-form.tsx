@@ -231,22 +231,6 @@ export const ExecutionForm = component$<SidebarProps>(
       }
     });
 
-    useVisibleTask$(({ track }) => {
-      track(selectedModelId);
-      track(selectedProvider);
-      track(prompt);
-      track(columnsReferences);
-      track(endpointURLSelected);
-
-      updateColumn({
-        ...column,
-        process: {
-          ...column.process!,
-          columnsReferences: columnsReferences.value,
-        },
-      });
-    });
-
     useVisibleTask$(() => {
       if (!executionFormRef.value) return;
 

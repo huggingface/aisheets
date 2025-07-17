@@ -38,26 +38,6 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
     variables: [],
   });
 
-  useVisibleTask$(({ track }) => {
-    track(props.variables);
-
-    referenceVariables.variables = props.variables.value.map(
-      (variable) => variable.name,
-    );
-  });
-
-  useVisibleTask$(({ track }) => {
-    track(props['bind:value']);
-
-    if (referenceVariables.variables.length === 0) return;
-
-    const matchedVariables = props.variables.value.filter((variable) =>
-      props['bind:value'].value.includes(`{{${variable.name}}}`),
-    );
-
-    props.onSelectedVariables(matchedVariables);
-  });
-
   const getCursorPosition = $((textarea: HTMLTextAreaElement) => {
     const cursorPosition = textarea.selectionStart || 0;
     const textBeforeCursor = props['bind:value'].value.slice(0, cursorPosition);
@@ -158,6 +138,26 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
         : textBeforeCursor + `{{${options}}}`) + textAfterCursor;
 
     props['bind:value'].value = updatedValue;
+  });
+
+  useVisibleTask$(({ track }) => {
+    track(props.variables);
+
+    referenceVariables.variables = props.variables.value.map(
+      (variable) => variable.name,
+    );
+  });
+
+  useVisibleTask$(({ track }) => {
+    track(props['bind:value']);
+
+    if (referenceVariables.variables.length === 0) return;
+
+    const matchedVariables = props.variables.value.filter((variable) =>
+      props['bind:value'].value.includes(`{{${variable.name}}}`),
+    );
+
+    props.onSelectedVariables(matchedVariables);
   });
 
   useVisibleTask$(async ({ track }) => {

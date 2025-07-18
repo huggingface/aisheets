@@ -1,11 +1,13 @@
 import NodeCache from 'node-cache';
 
+const FIVE_MINUTES = 60 * 5;
+const ONE_HOUR = 60 * 60;
 const serverCache = new NodeCache({
-  stdTTL: 60 * 60, // Default time-to-live of 1 hour
-  checkperiod: 60 * 5, // Check every 5 minutes
+  stdTTL: ONE_HOUR, // Default time-to-live of 1 hour
+  checkperiod: FIVE_MINUTES, // Check every 5 minutes
   maxKeys: 10000 * 5, // Limit the number of keys
   useClones: false, // Disable cloning for performance
-  deleteOnExpire: true, // Delete keys on expiration
+  deleteOnExpire: true,
 });
 
 export const cacheGet = (key: any): any | undefined => {

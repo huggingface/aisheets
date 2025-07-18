@@ -2,16 +2,16 @@ import { join } from 'node:path';
 import { isDev } from '@builder.io/qwik';
 
 /**
- * The OAuth client ID used for authentication.
- * This value is retrieved from the environment variable `OAUTH_CLIENT_ID`.
- */
-export const CLIENT_ID: string | undefined = process.env.OAUTH_CLIENT_ID;
-
-/**
  * The Hugging Face token used for authentication.
  * This value is retrieved from the environment variable `HF_TOKEN`.
  */
-export const HF_TOKEN: string | undefined = process.env.HF_TOKEN;
+const HF_TOKEN: string | undefined = process.env.HF_TOKEN;
+
+/**
+ * The OAuth client ID used for authentication.
+ * This value is retrieved from the environment variable `OAUTH_CLIENT_ID`.
+ */
+const OAUTH_CLIENT_ID: string | undefined = process.env.OAUTH_CLIENT_ID;
 
 /**
  * The OAuth scopes used for authentication.
@@ -19,10 +19,10 @@ export const HF_TOKEN: string | undefined = process.env.HF_TOKEN;
  *
  * Default value: 'openid profile inference-api manage-repos'
  */
-export const OAUTH_SCOPES: string =
+const OAUTH_SCOPES: string =
   process.env.OAUTH_SCOPES ?? 'openid profile inference-api manage-repos';
 
-export const OAUTH_HTTPS_ONLY: boolean =
+const OAUTH_HTTPS_ONLY: boolean =
   process.env.OAUTH_HTTPS_ONLY !== undefined
     ? process.env.OAUTH_HTTPS_ONLY === 'true' ||
       process.env.OAUTH_HTTPS_ONLY === '1'
@@ -32,7 +32,7 @@ export const OAUTH_HTTPS_ONLY: boolean =
  * The directory where data is stored.
  * This value is retrieved from the environment variable `DATA_DIR`, or defaults to './data' if not set.
  */
-export const DATA_DIR: string = process.env.DATA_DIR ?? './data';
+const DATA_DIR: string = process.env.DATA_DIR ?? './data';
 
 /**
  * The timeout duration for inference operations in milliseconds.
@@ -42,7 +42,7 @@ export const DATA_DIR: string = process.env.DATA_DIR ?? './data';
  *
  * Default value: 90000 (90 seconds)
  */
-export const INFERENCE_TIMEOUT = 90000;
+const INFERENCE_TIMEOUT = 90000;
 
 /**
  * The number of parallel requests to the Inference Endpoint to generate cells
@@ -54,30 +54,31 @@ export const INFERENCE_TIMEOUT = 90000;
 const DEFAULT_CONCURRENT_REQUESTS = 5;
 const DEFAULT_MAX_CONCURRENT_REQUESTS = 10;
 
-export const NUM_CONCURRENT_REQUESTS = Math.min(
+const NUM_CONCURRENT_REQUESTS = Math.min(
   Number(process.env.NUM_CONCURRENT_REQUESTS || DEFAULT_CONCURRENT_REQUESTS),
   DEFAULT_MAX_CONCURRENT_REQUESTS,
 );
 
 /**
- * The Serper API key used for web searches.
- * This value is retrieved from the environment variable `SERPER_API_KEY`.
- */
-export const SERPER_API_KEY: string | undefined = process.env.SERPER_API_KEY;
-
-/**
- * The default model provider for inference operations.
- * Default value: 'sambanova'
- */
-export const DEFAULT_MODEL_PROVIDER: string =
-  process.env.DEFAULT_MODEL_PROVIDER ?? 'sambanova';
-
-/**
  * The default model for inference.
  * Default value: 'meta-llama/Llama-3.3-70B-Instruct'
  */
-export const DEFAULT_MODEL: string =
+const DEFAULT_MODEL: string =
   process.env.DEFAULT_MODEL ?? 'meta-llama/Llama-3.3-70B-Instruct';
+
+/**
+ * The default model provider for inference operations.
+ * Default value: 'nebius'
+ */
+const DEFAULT_MODEL_PROVIDER: string =
+  process.env.DEFAULT_MODEL_PROVIDER ?? 'nebius';
+
+/**
+ * If defined, the inference endpoint bill with by applied to the organization billing.
+ *
+ * Users must be part of the organiation in order to run inference calls. Default: undefined
+ */
+const ORG_BILLING = process.env.ORG_BILLING ?? undefined;
 
 /**
  * The URL of the model endpoint for inference operations.
@@ -86,8 +87,7 @@ export const DEFAULT_MODEL: string =
  * Otherwise, the default model and provider will be used.
  * Default value: undefined
  */
-export const MODEL_ENDPOINT_URL: string | undefined =
-  process.env.MODEL_ENDPOINT_URL;
+const MODEL_ENDPOINT_URL: string | undefined = process.env.MODEL_ENDPOINT_URL;
 
 /**
  * The name of the model endpoint for inference operations.
@@ -96,7 +96,7 @@ export const MODEL_ENDPOINT_URL: string | undefined =
  *
  * Default value: 'unknown'
  */
-export const MODEL_ENDPOINT_NAME: string =
+const MODEL_ENDPOINT_NAME: string =
   process.env.MODEL_ENDPOINT_NAME ?? 'unknown';
 
 /**
@@ -104,9 +104,9 @@ export const MODEL_ENDPOINT_NAME: string =
  * This value is retrieved from the environment variable `EXCLUDED_MODELS` as a comma-separated string.
  * If not set, defaults to a predefined list of models.
  */
-export const EXCLUDED_MODELS: string[] = process.env.EXCLUDED_MODELS?.split(
-  ',',
-).map((m) => m.trim()) ?? [
+const EXCLUDED_MODELS: string[] = process.env.EXCLUDED_MODELS?.split(',').map(
+  (m) => m.trim(),
+) ?? [
   'HuggingFaceM4/idefics-9b-instruct',
   'meta-llama/Llama-2-70b-hf',
   'SakanaAI/TinySwallow-1.5B',
@@ -137,7 +137,7 @@ export const EXCLUDED_MODELS: string[] = process.env.EXCLUDED_MODELS?.split(
  *
  * Default value: 'Xenova/all-MiniLM-L6-v2'
  */
-export const EMBEDDING_MODEL_ID: string =
+const EMBEDDING_MODEL_ID: string =
   process.env.EMBEDDING_MODEL || 'Xenova/all-MiniLM-L6-v2';
 
 /**
@@ -150,9 +150,7 @@ export const EMBEDDING_MODEL_ID: string =
  *
  * Default value: 384 (See default model: 'Xenova/all-MiniLM-L6-v2')
  */
-export const EMBEDDING_MODEL_DIM: number = Number(
-  process.env.EMBEDDING_DIM ?? 384,
-);
+const EMBEDDING_MODEL_DIM: number = Number(process.env.EMBEDDING_DIM ?? 384);
 
 /**
  * The provider for the embedding model.
@@ -163,7 +161,7 @@ export const EMBEDDING_MODEL_DIM: number = Number(
  *
  * Default value: undefined
  */
-export const EMBEDDING_MODEL_PROVIDER: string | undefined =
+const EMBEDDING_MODEL_PROVIDER: string | undefined =
   process.env.EMBEDDING_MODEL_PROVIDER;
 
 /**
@@ -176,23 +174,23 @@ export const EMBEDDING_MODEL_PROVIDER: string | undefined =
  *
  * Default value: undefined
  */
-export const EMBEDDING_ENDPOINT_URL: string | undefined =
+const EMBEDDING_ENDPOINT_URL: string | undefined =
   process.env.EMBEDDING_ENDPOINT_URL;
 
 /**
- * Default configuration for embedding operations
+ * The Serper API key used for web searches.
+ * This value is retrieved from the environment variable `SERPER_API_KEY`.
  */
-export const DEFAULT_EMBEDDING_MODEL = {
-  model: EMBEDDING_MODEL_ID,
-  embeddingDim: EMBEDDING_MODEL_DIM,
+const SERPER_API_KEY: string | undefined = process.env.SERPER_API_KEY;
 
-  provider: EMBEDDING_MODEL_PROVIDER,
-  endpointUrl: EMBEDDING_ENDPOINT_URL,
-
-  isInstruct: process.env.EMBEDDING_IS_INSTRUCT
-    ? process.env.EMBEDDING_IS_INSTRUCT === 'true'
-    : true,
-} as const;
+/**
+ * List of blocked domains or URL fragments for web search.
+ * This value is retrieved from the environment variable `BLOCKED_URLS` as a comma-separated string.
+ * If not set, defaults to blocking YouTube and Twitter.
+ */
+const BLOCKED_URLS: string[] = process.env.BLOCKED_URLS?.split(',').map((u) =>
+  u.trim(),
+) ?? ['youtube.com', 'x.com', 'bloomberg.com', 'nytimes.com'];
 
 /**
  *
@@ -203,12 +201,12 @@ export const DEFAULT_EMBEDDING_MODEL = {
  *
  * Default value: 8192
  */
-const DEFAULT_EXAMPLES_PROMPT_CONTEXT_SIZE = 8192;
-export const EXAMPLES_PROMPT_CONTEXT_SIZE: number =
+const DEFAULT_EXAMPLES_PROMPT_MAX_CONTEXT_SIZE = 8192;
+export const EXAMPLES_PROMPT_MAX_CONTEXT_SIZE: number =
   Number(
-    process.env.EXAMPLES_PROMPT_CONTEXT_SIZE ??
-      DEFAULT_EXAMPLES_PROMPT_CONTEXT_SIZE,
-  ) || DEFAULT_EXAMPLES_PROMPT_CONTEXT_SIZE;
+    process.env.EXAMPLES_PROMPT_MAX_CONTEXT_SIZE ??
+      DEFAULT_EXAMPLES_PROMPT_MAX_CONTEXT_SIZE,
+  ) || DEFAULT_EXAMPLES_PROMPT_MAX_CONTEXT_SIZE;
 
 /**
  * This constant defines the maximum number of characters allowed in the context of the sources prompt.
@@ -217,25 +215,12 @@ export const EXAMPLES_PROMPT_CONTEXT_SIZE: number =
  * This is important for performance and to avoid exceeding the token limit of the model.
  * Default value: 61440 (16k tokens)
  */
-const DEFAULT_SOURCES_PROMPT_CONTEXT_SIZE = 61440; // 16k tokens
-export const SOURCES_PROMPT_CONTEXT_SIZE: number =
+const DEFAULT_SOURCES_PROMPT_MAX_CONTEXT_SIZE = 61440; // 16k tokens
+export const SOURCES_PROMPT_MAX_CONTEXT_SIZE: number =
   Number(
-    process.env.SOURCES_PROMPT_CONTEXT_SIZE ??
-      DEFAULT_SOURCES_PROMPT_CONTEXT_SIZE,
-  ) || DEFAULT_SOURCES_PROMPT_CONTEXT_SIZE;
-
-export const GOOGLE_CLIENT_ID: string | undefined =
-  process.env.GOOGLE_CLIENT_ID;
-
-export const GOOGLE_REDIRECT_URI: string | undefined =
-  process.env.GOOGLE_REDIRECT_URI;
-
-/**
- * If defined, the inference endpoint bill with by applied to the organization billing.
- *
- * Users must be part of the organiation in order to run inference calls. Default: undefined
- */
-export const ORG_BILLING = process.env.ORG_BILLING ?? undefined;
+    process.env.SOURCES_PROMPT_MAX_CONTEXT_SIZE ??
+      DEFAULT_SOURCES_PROMPT_MAX_CONTEXT_SIZE,
+  ) || DEFAULT_SOURCES_PROMPT_MAX_CONTEXT_SIZE;
 
 /**
  * This constant defines whether telemetry is enabled.
@@ -245,23 +230,66 @@ export const ORG_BILLING = process.env.ORG_BILLING ?? undefined;
  * Otherwise, it will be disabled.
  * Default value: false in development mode, true otherwise
  */
-export const TELEMETRY_ENABLED: boolean =
+const TELEMETRY_ENABLED: boolean =
   process.env.TELEMETRY_ENABLED !== undefined
     ? process.env.TELEMETRY_ENABLED === 'true' ||
       process.env.TELEMETRY_ENABLED === '1'
     : !isDev;
 
-/**
- * List of blocked domains or URL fragments for web search.
- * This value is retrieved from the environment variable `BLOCKED_URLS` as a comma-separated string.
- * If not set, defaults to blocking YouTube and Twitter.
- */
-export const BLOCKED_URLS: string[] = process.env.BLOCKED_URLS?.split(',').map(
-  (u) => u.trim(),
-) ?? ['youtube.com', 'x.com', 'bloomberg.com', 'nytimes.com'];
+export const GOOGLE_OAUTH_CLIENT_ID: string | undefined =
+  process.env.GOOGLE_OAUTH_CLIENT_ID;
+
+export const GOOGLE_OAUTH_REDIRECT_URI: string | undefined =
+  process.env.GOOGLE_OAUTH_REDIRECT_URI;
 
 const RUNTIME_ENV = join(DATA_DIR, process.env.NODE_ENV ?? 'development');
 
-export const VECTOR_DB_DIR: string = join(RUNTIME_ENV, 'embeddings');
-export const SQLITE_DB: string = join(RUNTIME_ENV, '.sqlite3');
-export const DUCKDB_DB: string = join(RUNTIME_ENV, 'duckdb');
+export const appConfig = {
+  authentication: {
+    clientId: OAUTH_CLIENT_ID,
+    scopes: OAUTH_SCOPES,
+    httpsOnly: OAUTH_HTTPS_ONLY,
+    hfToken: HF_TOKEN,
+  },
+
+  inference: {
+    timeout: INFERENCE_TIMEOUT,
+    numConcurrentRequests: NUM_CONCURRENT_REQUESTS,
+    billTo: ORG_BILLING,
+    excludedHubModels: EXCLUDED_MODELS,
+
+    tasks: {
+      textGeneration: {
+        defaultModel: DEFAULT_MODEL,
+        defaultProvider: DEFAULT_MODEL_PROVIDER,
+
+        endpointUrl: MODEL_ENDPOINT_URL,
+        endpointName: MODEL_ENDPOINT_NAME,
+      },
+
+      featureExtraction: {
+        model: EMBEDDING_MODEL_ID,
+        embeddingDim: EMBEDDING_MODEL_DIM,
+        provider: EMBEDDING_MODEL_PROVIDER,
+        endpointUrl: EMBEDDING_ENDPOINT_URL,
+        isInstruct: process.env.EMBEDDING_IS_INSTRUCT
+          ? process.env.EMBEDDING_IS_INSTRUCT === 'true'
+          : true,
+      },
+    },
+  },
+
+  data: {
+    dataDir: DATA_DIR,
+    vectorDbDir: join(RUNTIME_ENV, 'embeddings'),
+    sqliteDb: join(RUNTIME_ENV, '.sqlite3'),
+    duckDb: join(RUNTIME_ENV, 'duckdb'),
+  },
+
+  webSearch: {
+    serperApiKey: SERPER_API_KEY,
+    blockedUrls: BLOCKED_URLS,
+  },
+
+  enableTelemetry: TELEMETRY_ENABLED,
+};

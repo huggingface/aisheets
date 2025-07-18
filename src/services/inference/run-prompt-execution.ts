@@ -7,7 +7,7 @@ import {
 } from '@huggingface/inference';
 
 import { isDev } from '@builder.io/qwik';
-import { HF_TOKEN, INFERENCE_TIMEOUT, ORG_BILLING } from '~/config';
+import { appConfig } from '~/config';
 import { cacheGet, cacheSet } from '~/services/cache';
 import { type Example, materializePrompt } from './materialize-prompt';
 
@@ -191,9 +191,13 @@ export const normalizeFeatureExtractionArgs = ({
   accessToken?: string;
   endpointUrl?: string;
 }): FeatureExtractionArgs => {
+  const {
+    authentication: { hfToken },
+  } = appConfig;
+
   const args: FeatureExtractionArgs = {
     inputs,
-    accessToken: HF_TOKEN ?? accessToken,
+    accessToken: hfToken ?? accessToken,
     // We must review the chunk strategy to avoid truncating the input
     truncate: true, // Otherwise, it will raise an error (see https://github.com/huggingface/text-embeddings-inference/issues/356)
   };
@@ -221,9 +225,13 @@ export const normalizeChatCompletionArgs = ({
   accessToken?: string;
   endpointUrl?: string;
 }) => {
+  const {
+    authentication: { hfToken },
+  } = appConfig;
+
   const args: any = {
     messages,
-    accessToken: HF_TOKEN ?? accessToken,
+    accessToken: hfToken ?? accessToken,
   };
 
   if (endpointUrl) {
@@ -241,11 +249,14 @@ export const normalizeChatCompletionArgs = ({
 };
 
 export const normalizeOptions = (timeout?: number | undefined): Options => {
+  const {
+    inference: { billTo, timeout: defaultTimeout },
+  } = appConfig;
   const options: Record<string, any> = {
-    signal: AbortSignal.timeout(timeout ?? INFERENCE_TIMEOUT),
+    signal: AbortSignal.timeout(timeout ?? defaultTimeout),
   };
 
-  if (ORG_BILLING) options.billTo = ORG_BILLING;
+  if (billTo) options.billTo = billTo;
 
   return options;
 };

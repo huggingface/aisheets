@@ -1,11 +1,5 @@
 import { chatCompletion } from '@huggingface/inference';
-import {
-  DEFAULT_MODEL,
-  DEFAULT_MODEL_PROVIDER,
-  MODEL_ENDPOINT_NAME,
-  MODEL_ENDPOINT_URL,
-  NUM_CONCURRENT_REQUESTS,
-} from '~/config';
+import { appConfig } from '~/config';
 import { updateProcess } from '~/services';
 import { cacheGet, cacheSet } from '~/services/cache';
 import { MAX_SOURCE_SNIPPET_LENGTH } from '~/services/db/models/cell';
@@ -46,7 +40,7 @@ export interface GenerateCellsParams {
   timeout?: number;
 }
 
-const MAX_CONCURRENCY = NUM_CONCURRENT_REQUESTS;
+const MAX_CONCURRENCY = appConfig.inference.numConcurrentRequests;
 
 /**
  * Generates cells for a given column based on the provided parameters.
@@ -222,8 +216,16 @@ async function* generateCellsFromScratch({
 
   const validatedIdxs = validatedCells?.map((cell) => cell.idx);
 
+  const {
+    inference: {
+      tasks: { textGeneration },
+    },
+  } = appConfig;
+
   const endpointUrl =
-    useEndpointURL && MODEL_ENDPOINT_URL ? MODEL_ENDPOINT_URL : undefined;
+    useEndpointURL && textGeneration.endpointUrl
+      ? textGeneration.endpointUrl
+      : undefined;
 
   for (let i = offset; i < limit + offset; i++) {
     if (validatedIdxs?.includes(i)) continue;
@@ -239,7 +241,7 @@ async function* generateCellsFromScratch({
 
     const args = {
       accessToken: session.token,
-      modelName: endpointUrl ? MODEL_ENDPOINT_NAME : modelName,
+      modelName: endpointUrl ? textGeneration.endpointName : modelName,
       modelProvider,
       endpointUrl,
       examples: existingCellsExamples,
@@ -301,6 +303,12 @@ async function singleCellGeneration({
   cell: Cell;
 }> {
   const {
+    inference: {
+      tasks: { textGeneration },
+    },
+  } = appConfig;
+
+  const {
     columnsReferences,
     modelName,
     modelProvider,
@@ -328,11 +336,13 @@ async function singleCellGeneration({
   );
 
   const endpointUrl =
-    useEndpointURL && MODEL_ENDPOINT_URL ? MODEL_ENDPOINT_URL : undefined;
+    useEndpointURL && textGeneration.endpointUrl
+      ? textGeneration.endpointUrl
+      : undefined;
 
   const args: PromptExecutionParams = {
     accessToken: session.token,
-    modelName: endpointUrl ? MODEL_ENDPOINT_NAME : modelName,
+    modelName: endpointUrl ? textGeneration.endpointName : modelName,
     modelProvider,
     endpointUrl,
     examples,
@@ -531,8 +541,16 @@ async function buildWebSearchQueries({
   options: { accessToken: string };
   maxQueries?: number;
 }): Promise<string[]> {
-  const { modelName = DEFAULT_MODEL, modelProvider = DEFAULT_MODEL_PROVIDER } =
-    column.process || {};
+  const {
+    inference: {
+      tasks: { textGeneration },
+    },
+  } = appConfig;
+
+  const {
+    modelName = textGeneration.defaultModel,
+    modelProvider = textGeneration.defaultProvider,
+  } = column.process || {};
 
   try {
     const promptText = SEARCH_QUERIES_PROMPT_TEMPLATE.replace(

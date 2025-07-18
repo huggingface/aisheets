@@ -1,7 +1,7 @@
 import { SerperSearch } from './search/serper-search';
 import type { HeaderElement } from './types';
 
-import * as config from '~/config';
+import { appConfig } from '~/config';
 import { checkSourceExists, indexDatasetSources } from './embed/engine';
 import { scrapeUrlsBatch } from './scrape';
 import { trackTime } from './utils/track-time';
@@ -45,10 +45,12 @@ function addBlockListToQuery(query: string, blockList: string[]): string {
 }
 
 // Utility function to filter results by blocklist
-function filterByBlockList<T extends { url: string }>(results: T[]): T[] {
+function filterByBlockList<T extends { url: string }>(
+  results: T[],
+  blockedUrls: string[],
+): T[] {
   return results.filter(
-    (result) =>
-      !config.BLOCKED_URLS.some((blocked) => result.url.includes(blocked)),
+    (result) => !blockedUrls.some((blocked) => result.url.includes(blocked)),
   );
 }
 
@@ -165,17 +167,21 @@ export const searchQueriesToSources = async (
   errors?: ErrorSource[];
 }> => {
   // Check if the API key is set
-  if (!config.SERPER_API_KEY) throw new Error('No SERPER API key provided');
+  const {
+    webSearch: { serperApiKey, blockedUrls },
+  } = appConfig;
+
+  if (!serperApiKey) throw new Error('No SERPER API key provided');
 
   const sourcesMap = new Map<string, WebSource>();
-  const serper = new SerperSearch(config.SERPER_API_KEY);
+  const serper = new SerperSearch(serperApiKey);
 
   const errors = [] as ErrorSource[];
 
   for (const query of queries) {
     try {
       // Add blocklist to the query string
-      const queryWithBlock = addBlockListToQuery(query, config.BLOCKED_URLS);
+      const queryWithBlock = addBlockListToQuery(query, blockedUrls);
       const webSearch = await serper.search({
         q: `${queryWithBlock} -filetype:pdf`,
         num: maxSources,
@@ -208,10 +214,12 @@ export const searchQueriesToSources = async (
   }
 
   return {
-    sources: filterByBlockList(Array.from(sourcesMap.values())).slice(
-      0,
-      maxSources,
-    ),
+    // Do we need to filter by blocklist here since we already filtered in the query?
+    // If so, we can remove the filterByBlockList function
+    sources: filterByBlockList(
+      Array.from(sourcesMap.values()),
+      blockedUrls,
+    ).slice(0, maxSources),
     errors,
   };
 };

@@ -1,11 +1,6 @@
 import type { RequestEventBase } from '@builder.io/qwik-city';
 import { chatCompletion } from '@huggingface/inference';
-import {
-  DEFAULT_MODEL,
-  DEFAULT_MODEL_PROVIDER,
-  MODEL_ENDPOINT_NAME,
-  MODEL_ENDPOINT_URL,
-} from '~/config';
+import { appConfig } from '~/config';
 import {
   normalizeChatCompletionArgs,
   normalizeOptions,
@@ -41,6 +36,12 @@ export interface WebSearchQuery {
   column: string;
   query: string;
 }
+
+const {
+  inference: {
+    tasks: { textGeneration },
+  },
+} = appConfig;
 
 /**
  * Template for the search-enabled prompt
@@ -210,10 +211,12 @@ async function extractDatasetConfig({
 
   const args = normalizeChatCompletionArgs({
     messages: [{ role: 'user', content: promptText }],
-    modelName: MODEL_ENDPOINT_URL ? MODEL_ENDPOINT_NAME : modelName,
+    modelName: textGeneration.endpointUrl
+      ? textGeneration.endpointName
+      : modelName,
     modelProvider,
     accessToken: session.token,
-    endpointUrl: MODEL_ENDPOINT_URL,
+    endpointUrl: textGeneration.endpointUrl,
   });
 
   const cacheValue = cacheGet(args);
@@ -337,8 +340,8 @@ const processTextConfigResponse = (
 async function createDatasetWithColumns(
   columns: Array<{ name: string; prompt: string; type: string }>,
   session: Session,
-  modelName: string = DEFAULT_MODEL,
-  modelProvider: string = DEFAULT_MODEL_PROVIDER,
+  modelName: string = textGeneration.defaultModel,
+  modelProvider: string = textGeneration.defaultProvider,
   datasetName = 'New Dataset',
   searchEnabled = false,
 ) {
@@ -450,7 +453,7 @@ async function populateDataset(
           ...column.process,
           // Custom endpoint URL is only available for text columns
           useEndpointURL:
-            MODEL_ENDPOINT_URL !== undefined && column.type !== 'image',
+            textGeneration.endpointUrl !== undefined && column.type !== 'image',
         },
         stream: false,
         session,
@@ -591,8 +594,8 @@ export const runAutoDataset = async function* (
   this: RequestEventBase<QwikCityPlatform>,
   {
     instruction,
-    modelName = DEFAULT_MODEL,
-    modelProvider = DEFAULT_MODEL_PROVIDER,
+    modelName = textGeneration.defaultModel,
+    modelProvider = textGeneration.defaultProvider,
     searchEnabled = false,
     maxSearchQueries = 1,
     maxSources = 5,

@@ -1,11 +1,15 @@
 import consola from 'consola';
 import { Sequelize } from 'sequelize';
-import { SQLITE_DB } from '~/config';
+import { appConfig } from '~/config';
 
 // https://sequelize.org/docs/v6/other-topics/typescript/
 
+const {
+  data: { sqliteDb },
+} = appConfig;
+
 export const db = new Sequelize({
-  storage: SQLITE_DB,
+  storage: sqliteDb,
   dialect: 'sqlite',
   logging: false,
 });

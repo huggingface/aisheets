@@ -7,6 +7,9 @@ export const Sandbox = component$<{ content: string }>(({ content }) => {
       srcdoc={`<html>
           <head>
             <style>
+              html {
+                  font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+              }
               body { margin: 0; padding: 0; maxHeight: 500px; maxWidth: 800px; }
               iframe { width: 100%; height: 100%; border: none; }
               svg { width: 100%; height: 100%; }

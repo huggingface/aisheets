@@ -1,5 +1,4 @@
 import { $, component$, useSignal, useVisibleTask$ } from '@builder.io/qwik';
-import { cn } from '@qwik-ui/utils';
 import { LuPenSquare } from '@qwikest/icons/lucide';
 import { Button, ToggleGroup } from '~/components';
 import type { CellProps } from '~/features/table/components/body/renderer/cell-props';
@@ -10,7 +9,7 @@ import {
   stopScrolling,
   unSelectText,
 } from '~/features/table/components/body/renderer/components/utils';
-import { hasBlobContent } from '~/features/utils/columns';
+import { hasBlobContent, isTextType } from '~/features/utils/columns';
 import { useColumnsStore } from '~/state';
 import { useValidateCellUseCase } from '~/usecases/validate-cell.usecase';
 
@@ -66,6 +65,14 @@ export const CellRenderer = component$<CellProps>((props) => {
     onClose();
   });
 
+  useVisibleTask$(({ track }) => {
+    track(isExpanded);
+
+    if (isExpanded.value && !cell.id) {
+      isEditing.value = true;
+    }
+  });
+
   if (!column) {
     return null;
   }
@@ -74,17 +81,16 @@ export const CellRenderer = component$<CellProps>((props) => {
     <div
       class="w-full h-full"
       onDblClick$={() => {
-        if (!cell.value) return;
+        if (!cell.id) {
+          if (!isTextType(column)) return;
+        }
+
         if (isExpanded.value) return;
 
         isExpanded.value = true;
       }}
     >
-      <div
-        class={cn('h-full flex flex-col justify-between', {
-          'cursor-pointer': !!cell.value,
-        })}
-      >
+      <div class="h-full flex flex-col justify-between cursor-pointer">
         <div class="h-full flex flex-col justify-between select-none">
           <TableRenderer {...props} />
         </div>

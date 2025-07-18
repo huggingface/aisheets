@@ -12,6 +12,7 @@ import {
   hasBlobContent,
   isArrayType,
   isObjectType,
+  isTextType,
 } from '~/features/utils/columns';
 import { type Column, TEMPORAL_ID } from '~/state';
 
@@ -31,10 +32,7 @@ export const TableCellHeader = component$<{ column: Column }>(({ column }) => {
       columnType = 'list';
     } else if (isObjectType(column)) {
       columnType = 'dict';
-    } else if (
-      columnType.startsWith('varchar') ||
-      columnType.startsWith('text')
-    ) {
+    } else if (isTextType(column)) {
       columnType = 'string';
     }
 

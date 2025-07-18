@@ -122,7 +122,9 @@ export const ExecutionForm = component$<SidebarProps>(
 
     const modelProviders = useComputed$(() => {
       const model = models.value.find(
-        (m: Model) => m.id === selectedModelId.value,
+        (m: Model) =>
+          m.id.toLocaleLowerCase() ===
+          selectedModelId.value.toLocaleLowerCase(),
       );
       return model ? model.providers : [];
     });
@@ -184,8 +186,10 @@ export const ExecutionForm = component$<SidebarProps>(
         selectedProvider.value = process.modelProvider!;
       } else {
         const defaultModel =
-          models.value?.find((m: Model) => m.id === DEFAULT_MODEL) ||
-          models.value[0];
+          models.value?.find(
+            (m: Model) =>
+              m.id.toLocaleLowerCase() === DEFAULT_MODEL.toLocaleLowerCase(),
+          ) || models.value[0];
 
         if (!defaultModel) return;
 
@@ -225,22 +229,6 @@ export const ExecutionForm = component$<SidebarProps>(
       ) {
         selectedProvider.value = defaultProvider;
       }
-    });
-
-    useVisibleTask$(({ track }) => {
-      track(selectedModelId);
-      track(selectedProvider);
-      track(prompt);
-      track(columnsReferences);
-      track(endpointURLSelected);
-
-      updateColumn({
-        ...column,
-        process: {
-          ...column.process!,
-          columnsReferences: columnsReferences.value,
-        },
-      });
     });
 
     useVisibleTask$(() => {

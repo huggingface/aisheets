@@ -5,6 +5,7 @@ import {
   useVisibleTask$,
 } from '@builder.io/qwik';
 import { Textarea } from '~/components';
+import { nextTick } from '~/components/hooks/tick';
 import type { CellProps } from '~/features/table/components/body/renderer/cell-props';
 
 interface CellRawEditorProps extends CellProps {
@@ -18,7 +19,9 @@ export const CellRawEditor = component$<CellRawEditorProps>(({ value }) => {
     track(editCellValueInput);
     if (!editCellValueInput.value) return;
 
-    editCellValueInput.value.focus();
+    nextTick(() => {
+      editCellValueInput.value!.focus();
+    }, 100);
     if (editCellValueInput.value instanceof HTMLTextAreaElement) {
       editCellValueInput.value.setSelectionRange(0, 0);
       editCellValueInput.value.scrollTop = 0;

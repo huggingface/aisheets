@@ -1,25 +1,31 @@
 import type { Column } from '~/state/columns';
 
-export const hasBlobContent = (column: Column | undefined): boolean => {
+interface Typeable {
+  type: Column['type'];
+}
+
+export const hasBlobContent = (column?: Typeable): boolean => {
   return column?.type?.toUpperCase().includes('BLOB') || isImage(column);
 };
 
-export const isArrayType = (column: Column): boolean => {
-  return column.type.includes('[]');
+export const isArrayType = (column?: Typeable): boolean => {
+  return column?.type?.includes('[]') ?? false;
 };
 
-export const isObjectType = (column: Column): boolean => {
+export const isObjectType = (column?: Typeable): boolean => {
   return (
-    column.type.toUpperCase().startsWith('STRUCT') ||
-    column.type.toUpperCase().startsWith('MAP')
+    (column?.type?.toUpperCase().startsWith('STRUCT') ||
+      column?.type?.toUpperCase().startsWith('MAP')) ??
+    false
   );
 };
 
-export const isTextType = (column: Column): boolean => {
+export const isTextType = (column?: Typeable): boolean => {
   return (
-    column.type?.toUpperCase().startsWith('TEXT') ||
-    column.type?.toUpperCase().startsWith('STRING') ||
-    column.type?.toUpperCase().startsWith('VARCHAR')
+    (column?.type?.toUpperCase().startsWith('TEXT') ||
+      column?.type?.toUpperCase().startsWith('STRING') ||
+      column?.type?.toUpperCase().startsWith('VARCHAR')) ??
+    false
   );
 };
 
@@ -50,11 +56,11 @@ export const isMarkDown = (value?: string): boolean => {
   );
 };
 
-export const isImage = (column: Column | undefined): boolean => {
+export const isImage = (column?: Typeable): boolean => {
   return column?.type?.toLowerCase().includes('image') ?? false;
 };
 
-export const isEditableValue = (column: Column): boolean => {
+export const isEditableValue = (column: Typeable): boolean => {
   return (
     !hasBlobContent(column) && !isArrayType(column) && !isObjectType(column)
   );

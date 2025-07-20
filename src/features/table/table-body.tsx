@@ -66,6 +66,7 @@ export const TableBody = component$(() => {
           validated: false,
           column: {
             id: column.id,
+            type: column.type,
           },
           updatedAt: new Date(),
           generating: false,

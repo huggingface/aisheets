@@ -1,6 +1,6 @@
 import { Op } from 'sequelize';
 import { ColumnCellModel } from '~/services/db/models/cell';
-import type { Cell } from '~/state';
+import type { Cell, Column } from '~/state';
 
 import {
   type CellSource,
@@ -11,19 +11,23 @@ import { getColumnById, listColumnsByIds } from './columns';
 import { listDatasetTableRows, upsertColumnValues } from './tables';
 import { deleteDatasetTableRows } from './tables/delete-table-rows';
 
-const rowDataToCells = ({
-  rowIdx,
-  rowData,
-}: {
-  rowIdx: number;
-  rowData: Record<string, any>;
-}): Cell[] => {
+const rowDataToCells = (
+  {
+    rowIdx,
+    rowData,
+  }: {
+    rowIdx: number;
+    rowData: Record<string, any>;
+  },
+  column: Column,
+): Cell[] => {
   return Object.entries(rowData).map(([columnId, cellValue]) => {
     return {
       idx: rowIdx,
       value: cellValue,
       column: {
         id: columnId,
+        type: column.type,
       },
       // default values
       id: undefined, // review this and probably let the id be undefined
@@ -237,7 +241,7 @@ export const getColumnCells = async ({
   if (rows.length === 0) return [];
 
   const cells = rows.map((rowData, idx) =>
-    rowDataToCells({ rowIdx: (offset || 0) + idx, rowData }),
+    rowDataToCells({ rowIdx: (offset || 0) + idx, rowData }, dbColumn),
   );
 
   const storedCells = await ColumnCellModel.findAll({

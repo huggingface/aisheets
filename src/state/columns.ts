@@ -127,6 +127,7 @@ export const useColumnsStore = () => {
           value: '',
           column: {
             id: TEMPORAL_ID,
+            type: type ?? 'text',
           },
         },
         {
@@ -138,6 +139,7 @@ export const useColumnsStore = () => {
           value: '',
           column: {
             id: TEMPORAL_ID,
+            type: type ?? 'text',
           },
         },
         {
@@ -149,6 +151,7 @@ export const useColumnsStore = () => {
           value: '',
           column: {
             id: TEMPORAL_ID,
+            type: type ?? 'text',
           },
         },
         {
@@ -160,6 +163,7 @@ export const useColumnsStore = () => {
           value: '',
           column: {
             id: TEMPORAL_ID,
+            type: type ?? 'text',
           },
         },
         {
@@ -171,6 +175,7 @@ export const useColumnsStore = () => {
           value: '',
           column: {
             id: TEMPORAL_ID,
+            type: type ?? 'text',
           },
         },
         {
@@ -182,6 +187,7 @@ export const useColumnsStore = () => {
           value: '',
           column: {
             id: TEMPORAL_ID,
+            type: type ?? 'text',
           },
         },
         {
@@ -193,6 +199,7 @@ export const useColumnsStore = () => {
           value: '',
           column: {
             id: TEMPORAL_ID,
+            type: type ?? 'text',
           },
         },
         {
@@ -204,6 +211,7 @@ export const useColumnsStore = () => {
           value: '',
           column: {
             id: TEMPORAL_ID,
+            type: type ?? 'text',
           },
         },
       ],

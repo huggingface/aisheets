@@ -33,19 +33,13 @@ import {
 } from '~/state';
 
 export const TableBody = component$(() => {
-  const pageSize = 30;
   const rowSize = 108; // px
 
   const { modelEndpointEnabled } = useContext(configContext);
   const { activeDataset } = useDatasetsStore();
 
-  const {
-    columns,
-    firstColumn,
-    replaceColumns,
-    updateColumn,
-    deleteCellByIdx,
-  } = useColumnsStore();
+  const { columns, firstColumn, updateColumn, deleteCellByIdx } =
+    useColumnsStore();
   const { onGenerateColumn } = useGenerateColumn();
   const selectedRows = useSignal<number[]>([]);
 
@@ -275,37 +269,6 @@ export const TableBody = component$(() => {
     },
   );
 
-  const loadPage = $(
-    async ({
-      rangeStart,
-    }: {
-      rangeStart: number;
-    }) => {
-      const cells = await getCells({
-        columnIds: columns.value
-          .filter((column) => column.id !== TEMPORAL_ID)
-          .map((column) => column.id),
-        offset: rangeStart,
-        limit: pageSize,
-      });
-
-      for (const cell of cells.flat()) {
-        const column = columns.value.find((c) => c.id === cell.column?.id);
-        if (!column) return;
-
-        if (column.cells.some((c) => c.idx === cell.idx)) {
-          column.cells = [
-            ...column.cells.map((c) => (c.idx === cell.idx ? cell : c)),
-          ];
-        } else {
-          column.cells.push(cell);
-        }
-      }
-
-      replaceColumns(columns.value);
-    },
-  );
-
   const itemRenderer = $(
     (
       item: VirtualItem,
@@ -492,12 +455,8 @@ export const TableBody = component$(() => {
       <VirtualScrollContainer
         key={datasetSize.value}
         totalCount={datasetSize.value}
-        buffer={pageSize}
         estimateSize={rowSize}
-        overscan={pageSize * 2}
-        pageSize={pageSize}
         data={data}
-        loadNextPage={loadPage}
         itemRenderer={itemRenderer}
         scrollElement={scrollElement}
       />

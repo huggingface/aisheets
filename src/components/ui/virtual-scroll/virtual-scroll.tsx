@@ -29,7 +29,7 @@ const { getSerializable: getVirtual, useSerializable: useVirtualScroll } =
         range?: { startIndex: number; endIndex: number };
         totalCount: number;
         estimateSize: number;
-        overscan: number;
+        overscan?: number;
         debug?: boolean;
       }) => {
         const virtualizer = new Virtualizer({
@@ -80,7 +80,7 @@ export const VirtualScrollContainer = component$(
   }: {
     totalCount: number;
     data: Signal<unknown[]>;
-    loadNextPage: QRL<
+    loadNextPage?: QRL<
       ({
         rangeStart,
       }: {
@@ -95,9 +95,9 @@ export const VirtualScrollContainer = component$(
       ) => any
     >;
     estimateSize: number;
-    overscan: number;
-    pageSize: number;
-    buffer: number;
+    overscan?: number;
+    pageSize?: number;
+    buffer?: number;
     scrollElement: Signal<HTMLElement | undefined>;
     debug?: boolean;
   }) => {
@@ -117,9 +117,11 @@ export const VirtualScrollContainer = component$(
     });
 
     useTask$(({ track }) => {
+      if (!loadNextPage) return;
       track(() => virtualState.state.range);
 
       const indexToFetch = (virtualState.state.range?.endIndex ?? 0) + buffer;
+
       if (
         isBrowser &&
         indexToFetch < totalCount &&
@@ -146,14 +148,10 @@ export const VirtualScrollContainer = component$(
     const visibleRows = useSignal<VirtualItem[]>([]);
     useVisibleTask$(({ track }) => {
       track(() => virtualState.state.range);
+      console.log('RANGE', virtualState.state.range);
       if (!virtualState.value) return;
 
-      const uniqueItems = new Map<number, VirtualItem>();
-      // biome-ignore lint/complexity/noForEach: <explanation>
-      virtualState.value.getVirtualItems().forEach((item) => {
-        uniqueItems.set(item.index, item);
-      });
-      visibleRows.value = Array.from(uniqueItems.values());
+      visibleRows.value = virtualState.value.getVirtualItems();
     });
 
     return (

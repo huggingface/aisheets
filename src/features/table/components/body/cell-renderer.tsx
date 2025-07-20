@@ -61,11 +61,11 @@ export const CellRenderer = component$<CellProps>((props) => {
     <div
       class="w-full h-full"
       onDblClick$={() => {
+        if (isExpanded.value || isEditing.value) return;
+
         if (!cell.id) {
           if (!isTextType(cell.column)) return;
         }
-
-        if (isExpanded.value) return;
 
         isExpanded.value = true;
 

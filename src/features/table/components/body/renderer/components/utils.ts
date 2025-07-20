@@ -12,21 +12,16 @@ export const unSelectText = $(() => {
   }, 100);
 });
 
-export const stopScrolling = $(
-  (
-    shouldCancelScroll: Signal<boolean>,
-    cleanup: (callback: () => void) => void,
-  ) => {
-    const scrollable = document.querySelector('.scrollable');
+export const stopScrolling = $((shouldCancelScroll: Signal<boolean>) => {
+  const scrollable = document.querySelector('.scrollable');
 
-    if (shouldCancelScroll.value) {
-      scrollable?.classList.add('overflow-hidden');
-      scrollable?.classList.add('pr-[15px]');
-    }
+  if (shouldCancelScroll.value) {
+    scrollable?.classList.add('overflow-hidden');
+    scrollable?.classList.add('pr-[15px]');
+  }
 
-    cleanup(() => {
-      scrollable?.classList.remove('overflow-hidden');
-      scrollable?.classList.remove('pr-[15px]');
-    });
-  },
-);
+  return () => {
+    scrollable?.classList.remove('overflow-hidden');
+    scrollable?.classList.remove('pr-[15px]');
+  };
+});

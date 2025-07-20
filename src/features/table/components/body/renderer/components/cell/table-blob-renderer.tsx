@@ -49,7 +49,7 @@ const ErrorContent = component$<{ content: string }>(({ content }) => {
 });
 
 export const TableBlobRenderer = component$<CellProps>((props) => {
-  const { cell, column } = props;
+  const { cell } = props;
   const contentValue = useSignal<string | null>();
 
   useTask$(async ({ track }) => {
@@ -65,7 +65,7 @@ export const TableBlobRenderer = component$<CellProps>((props) => {
         return contentValue.value;
       }
 
-      if (content && !content.bytes && !isObjectType(column)) {
+      if (content && !content.bytes && !isObjectType(cell.column)) {
         content.bytes = content;
       }
 

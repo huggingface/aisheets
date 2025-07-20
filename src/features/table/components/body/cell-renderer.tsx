@@ -1,4 +1,4 @@
-import { $, component$, useSignal, useVisibleTask$ } from '@builder.io/qwik';
+import { $, component$, useSignal, useTask$ } from '@builder.io/qwik';
 import { LuPenSquare } from '@qwikest/icons/lucide';
 import { Button, ToggleGroup } from '~/components';
 import type { CellProps } from '~/features/table/components/body/renderer/cell-props';
@@ -23,25 +23,7 @@ export const CellRenderer = component$<CellProps>((props) => {
   const originalValue = useSignal(cell.value);
   const newValue = useSignal(cell.value);
 
-  useVisibleTask$(({ track }) => {
-    track(() => cell.value);
-
-    originalValue.value = cell.value;
-    newValue.value = cell.value;
-  });
-
-  useVisibleTask$(({ track, cleanup }) => {
-    track(isExpanded);
-
-    stopScrolling(isExpanded, cleanup);
-    unSelectText();
-
-    if (isExpanded.value && !cell.id) {
-      isEditing.value = true;
-    }
-  });
-
-  useVisibleTask$(({ track }) => {
+  useTask$(({ track }) => {
     track(isEditing);
 
     newValue.value = originalValue.value;
@@ -66,6 +48,15 @@ export const CellRenderer = component$<CellProps>((props) => {
     onClose();
   });
 
+  useTask$(async ({ track, cleanup }) => {
+    track(isExpanded);
+    if (!isExpanded.value) return;
+
+    const cancel = await stopScrolling(isExpanded);
+
+    cleanup(() => cancel());
+  });
+
   return (
     <div
       class="w-full h-full"
@@ -77,6 +68,15 @@ export const CellRenderer = component$<CellProps>((props) => {
         if (isExpanded.value) return;
 
         isExpanded.value = true;
+
+        originalValue.value = cell.value;
+        newValue.value = cell.value;
+
+        unSelectText();
+
+        if (!cell.id && !cell.value) {
+          isEditing.value = true;
+        }
       }}
     >
       <div class="h-full flex flex-col justify-between cursor-pointer">

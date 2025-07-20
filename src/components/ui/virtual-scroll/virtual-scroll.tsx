@@ -17,6 +17,7 @@ import {
   observeElementOffset,
   observeElementRect,
 } from '@tanstack/virtual-core';
+import { nextTick } from '~/components/hooks/tick';
 import { makeSerializable } from './make-serializable';
 
 const { getSerializable: getVirtual, useSerializable: useVirtualScroll } =
@@ -104,6 +105,7 @@ export const VirtualScrollContainer = component$(
       throw new Error('scrollElement is required');
     }
 
+    const measuredIndices = useSignal(new Set<number>());
     const loadingData = useSignal(false);
     const virtualState = useVirtualScroll({
       debug,
@@ -146,7 +148,12 @@ export const VirtualScrollContainer = component$(
       track(() => virtualState.state.range);
       if (!virtualState.value) return;
 
-      visibleRows.value = virtualState.value.getVirtualItems();
+      const uniqueItems = new Map<number, VirtualItem>();
+      // biome-ignore lint/complexity/noForEach: <explanation>
+      virtualState.value.getVirtualItems().forEach((item) => {
+        uniqueItems.set(item.index, item);
+      });
+      visibleRows.value = Array.from(uniqueItems.values());
     });
 
     return (
@@ -155,10 +162,13 @@ export const VirtualScrollContainer = component$(
           return itemRenderer(item, data.value[item.index], {
             key: item.key.toString(),
             ref: (node) => {
-              const attr = document.createAttribute('data-index');
-              attr.value = item.index.toString();
-              node.attributes.setNamedItem(attr);
-              virtualState.value?.measureElement(node);
+              if (node?.isConnected && !measuredIndices.value.has(item.index)) {
+                measuredIndices.value.add(item.index);
+                node.setAttribute('data-index', item.index.toString());
+                nextTick(() => {
+                  virtualState.value?.measureElement?.(node);
+                });
+              }
             },
             style: {
               display: 'flex',

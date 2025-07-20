@@ -154,7 +154,12 @@ export const VirtualScrollContainer = component$(
         {visibleRows.value.map((item: VirtualItem) => {
           return itemRenderer(item, data.value[item.index], {
             key: item.key.toString(),
-            ref: (node) => virtualState.value?.measureElement(node),
+            ref: (node) => {
+              const attr = document.createAttribute('data-index');
+              attr.value = item.index.toString();
+              node.attributes.setNamedItem(attr);
+              virtualState.value?.measureElement(node);
+            },
             style: {
               display: 'flex',
               position: 'absolute',

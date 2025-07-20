@@ -204,6 +204,7 @@ export const getValidatedColumnCells = async ({
     validated: model.validated,
     column: {
       id: model.columnId,
+      type: model.column?.type!,
     },
     updatedAt: model.updatedAt,
     generating: model.generating,
@@ -351,6 +352,7 @@ export const createCell = async ({
     validated: model.validated,
     column: {
       id: model.columnId,
+      type: model.column?.type!,
     },
     updatedAt: model.updatedAt,
     generating: model.generating,
@@ -392,6 +394,7 @@ export const updateCell = async (cell: Partial<Cell>): Promise<Cell> => {
     validated: model.validated,
     column: {
       id: model.columnId,
+      type: model.column?.type!,
     },
     updatedAt: model.updatedAt,
     generating: model.generating,

@@ -57,7 +57,8 @@ export type Cell = {
   error?: string;
   sources?: CellSource[];
   column?: {
-    id: string;
+    id: Column['id'];
+    type: Column['type'];
   };
 };
 

@@ -14,22 +14,18 @@ import {
   isObjectType,
 } from '~/features/utils/columns';
 
-export const TableRenderer = component$<CellProps>((props) => {
-  const { cell, column } = props;
+export const TableRenderer = component$<Required<CellProps>>((props) => {
+  const { cell } = props;
 
-  if (!column) {
-    return null;
-  }
-
-  if (hasBlobContent(column)) {
+  if (hasBlobContent(cell.column)) {
     return <TableBlobRenderer {...props} />;
   }
 
-  if (isObjectType(column)) {
+  if (isObjectType(cell.column)) {
     return <TableObjectRenderer {...props} />;
   }
 
-  if (isArrayType(column)) {
+  if (isArrayType(cell.column)) {
     return <TableArrayRenderer {...props} />;
   }
 

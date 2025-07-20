@@ -15,21 +15,17 @@ import {
 } from '~/features/utils/columns';
 
 export const PreviewRenderer = component$<PreviewProps>((props) => {
-  const { column, value } = props;
+  const { cell, value } = props;
 
-  if (!column) {
-    return null;
-  }
-
-  if (hasBlobContent(column)) {
+  if (hasBlobContent(cell.column)) {
     return <PreviewBlobRenderer {...props} />;
   }
 
-  if (isObjectType(column)) {
+  if (isObjectType(cell.column)) {
     return <PreviewObjectRenderer {...props} />;
   }
 
-  if (isArrayType(column)) {
+  if (isArrayType(cell.column)) {
     return <PreviewArrayRenderer {...props} />;
   }
 

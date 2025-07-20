@@ -1,7 +1,6 @@
-import type { Cell, Column } from '~/state';
+import type { Cell } from '~/state';
 
 export interface PreviewProps {
   cell: Cell;
-  column: Column;
   value: string;
 }

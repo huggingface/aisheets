@@ -10,14 +10,12 @@ import {
   unSelectText,
 } from '~/features/table/components/body/renderer/components/utils';
 import { hasBlobContent, isTextType } from '~/features/utils/columns';
-import { useColumnsStore } from '~/state';
 import { useValidateCellUseCase } from '~/usecases/validate-cell.usecase';
 
 export const CellRenderer = component$<CellProps>((props) => {
   const { cell } = props;
-  const { columns } = useColumnsStore();
+  console.log('COLUMN TYPE', cell.column?.type);
   const validateCell = useValidateCellUseCase();
-  const column = columns.value.find((col) => col.id === cell.column?.id);
 
   const isExpanded = useSignal(false);
   const isEditing = useSignal(false);
@@ -38,6 +36,10 @@ export const CellRenderer = component$<CellProps>((props) => {
 
     stopScrolling(isExpanded, cleanup);
     unSelectText();
+
+    if (isExpanded.value && !cell.id) {
+      isEditing.value = true;
+    }
   });
 
   useVisibleTask$(({ track }) => {
@@ -65,24 +67,12 @@ export const CellRenderer = component$<CellProps>((props) => {
     onClose();
   });
 
-  useVisibleTask$(({ track }) => {
-    track(isExpanded);
-
-    if (isExpanded.value && !cell.id) {
-      isEditing.value = true;
-    }
-  });
-
-  if (!column) {
-    return null;
-  }
-
   return (
     <div
       class="w-full h-full"
       onDblClick$={() => {
         if (!cell.id) {
-          if (!isTextType(column)) return;
+          if (!isTextType(cell.column)) return;
         }
 
         if (isExpanded.value) return;
@@ -118,7 +108,7 @@ export const CellRenderer = component$<CellProps>((props) => {
             <div class="flex items-center justify-center w-full h-full p-6 bg-neutral-50">
               {!isEditing.value ? (
                 <div class="w-full h-full flex flex-col gap-3">
-                  {!hasBlobContent(column) ? (
+                  {!hasBlobContent(cell.column) ? (
                     <div class="w-full h-9 flex justify-end">
                       <Button
                         look="ghost"

@@ -14,7 +14,6 @@ import { useValidateCellUseCase } from '~/usecases/validate-cell.usecase';
 
 export const CellRenderer = component$<CellProps>((props) => {
   const { cell } = props;
-  console.log('COLUMN TYPE', cell.column?.type);
   const validateCell = useValidateCellUseCase();
 
   const isExpanded = useSignal(false);

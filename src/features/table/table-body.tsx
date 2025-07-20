@@ -33,7 +33,7 @@ import {
 } from '~/state';
 
 export const TableBody = component$(() => {
-  const pageSize = 25;
+  const pageSize = 30;
   const rowSize = 108; // px
 
   const { modelEndpointEnabled } = useContext(configContext);
@@ -49,9 +49,9 @@ export const TableBody = component$(() => {
   const { onGenerateColumn } = useGenerateColumn();
   const selectedRows = useSignal<number[]>([]);
 
-  const datasetSize = useComputed$(() => {
-    return Math.max(activeDataset.value?.size || 0, 100);
-  });
+  const datasetSize = useComputed$(() =>
+    Math.max(activeDataset.value?.size || 0, 100),
+  );
 
   const data = useComputed$(() => {
     const getCell = (column: Column, rowIndex: number): Cell => {

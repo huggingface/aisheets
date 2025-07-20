@@ -2,7 +2,7 @@ import { $ } from '@builder.io/qwik';
 import { server$ } from '@builder.io/qwik-city';
 
 import { createCell, updateCell } from '~/services';
-import { type Cell, useColumnsStore } from '~/state';
+import { type Cell, type Column, useColumnsStore } from '~/state';
 
 interface EditCell {
   id?: string;
@@ -10,7 +10,8 @@ interface EditCell {
   value: string;
   validated: boolean;
   column: {
-    id: string;
+    id: Column['id'];
+    type: Column['type'];
   };
 }
 

@@ -227,6 +227,16 @@ export const useColumnsStore = () => {
     return activeDataset.value.columns;
   });
 
+  const columnsIndexed = useComputed$(() => {
+    return activeDataset.value.columns.reduce(
+      (acc, column) => {
+        acc[column.id] = column;
+        return acc;
+      },
+      {} as Record<string, Column>,
+    );
+  });
+
   const replaceColumns = $((replaced: Column[]) => {
     activeDataset.value = {
       ...activeDataset.value,
@@ -237,6 +247,7 @@ export const useColumnsStore = () => {
   const firstColumn = useComputed$(() => columns.value[0]);
 
   return {
+    columnsIndexed,
     columns,
     firstColumn,
     replaceColumns,

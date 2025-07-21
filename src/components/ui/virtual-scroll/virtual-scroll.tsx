@@ -148,7 +148,6 @@ export const VirtualScrollContainer = component$(
     const visibleRows = useSignal<VirtualItem[]>([]);
     useVisibleTask$(({ track }) => {
       track(() => virtualState.state.range);
-      console.log('RANGE', virtualState.state.range);
       if (!virtualState.value) return;
 
       visibleRows.value = virtualState.value.getVirtualItems();

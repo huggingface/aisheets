@@ -1,10 +1,4 @@
-import {
-  $,
-  component$,
-  useOnDocument,
-  useSignal,
-  useVisibleTask$,
-} from '@builder.io/qwik';
+import { $, component$, useSignal, useVisibleTask$ } from '@builder.io/qwik';
 import { LuPenSquare } from '@qwikest/icons/lucide';
 import { Button, ToggleGroup } from '~/components';
 import type { CellProps } from '~/features/table/components/body/renderer/cell-props';
@@ -42,16 +36,6 @@ export const CellRenderer = component$<CellProps>((props) => {
     isEditing.value = false;
     isExpanded.value = false;
   });
-
-  useOnDocument(
-    'mousedown',
-    $((e: MouseEvent) => {
-      if (isExpanded.value) {
-        e.stopPropagation();
-        e.preventDefault();
-      }
-    }),
-  );
 
   const onUpdateCell = $(async () => {
     if (!!newValue.value && newValue.value !== originalValue.value) {

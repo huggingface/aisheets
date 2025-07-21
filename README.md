@@ -10,16 +10,20 @@ Hugging Face Sheets lets you effortlessly run prompts and models over your data 
 
 ### Using the Sheets Space
 
-Try it instantly at https://huggingface.co/spaces/aisheets/sheets
+Try it instantly at <https://huggingface.co/spaces/aisheets/sheets>
 
 ### Using Docker
 
-First, get your Hugging Face token from https://huggingface.co/settings/tokens
+First, get your Hugging Face token from <https://huggingface.co/settings/tokens>
 
 ```bash
 export HF_TOKEN=your_token_here
-docker... tdb
+docker run -p 3000:3000 \
+-e HF_TOKEN=HF_TOKEN \
+aisheets/sheets
 ```
+
+Open `http://localhost:3000` in your browser.
 
 ### Using pnpm
 
@@ -33,7 +37,24 @@ pnpm install
 pnpm dev
 ```
 
-Open `http://localhost:3000` in your browser.
+Open `http://localhost:5173` in your browser.
+
+#### Building for production
+
+To build the application for production, run:
+
+```bash
+pnpm build
+```
+
+This will create a production build in the `dist` directory.
+
+Then, you can launch the built-in Express server to serve the production build:
+
+```bash
+export HF_TOKEN=your_token_here
+pnpm serve
+```
 
 ## Developer docs
 

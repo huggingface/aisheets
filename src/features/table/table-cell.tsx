@@ -49,7 +49,7 @@ export const TableCell = component$<{
   });
 
   return (
-    <div class="min-h-[100px] h-[100px] max-h-[100px] relative flex flex-col overflow-hidden group">
+    <div class="min-h-[100px] h-[102px] max-h-[102px] relative flex flex-col overflow-hidden group">
       <CellSkeleton cell={cell} />
       <CellError cell={cell} />
 

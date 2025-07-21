@@ -66,7 +66,7 @@ export const TableMarkDownRenderer = component$<CellProps>((props) => {
   return (
     <div class="h-full flex flex-col justify-between">
       <CellActions cell={cell} />
-      <div class="w-full h-[90px] flex flex-col items-center">
+      <div class="w-full h-full flex flex-col items-center">
         <div class="flex items-center justify-center overflow-hidden">
           <TableSandbox content={htmlContent.value || ''} />
         </div>

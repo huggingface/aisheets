@@ -80,7 +80,7 @@ export const CellActions = component$<{ cell: Cell }>(({ cell }) => {
               class={cn(
                 'opacity-0 group-hover:opacity-100 transition-opacity visible rounded-full w-4 h-4 text-white bg-neutral-600 p-4 hover:shadow-md shadow-neutral-700 hover:bg-neutral-700',
                 {
-                  'bg-secondary-400 shadow-secondary-400 opacity-100':
+                  'bg-secondary-400 shadow-secondary-400 hover:bg-secondary-400 hover:text-secondary-200 opacity-100':
                     cell.validated,
                   hidden: !cell.value,
                 },

@@ -21,6 +21,7 @@ import { Tooltip } from '~/components/ui/tooltip/tooltip';
 import { VirtualScrollContainer } from '~/components/ui/virtual-scroll/virtual-scroll';
 import { useExecution } from '~/features/add-column';
 import { useGenerateColumn } from '~/features/execution';
+import { isOverlayOpen } from '~/features/table/components/body/renderer/components/utils';
 import { TableCell } from '~/features/table/table-cell';
 import { configContext } from '~/routes/home/layout';
 import { deleteRowsCells, getColumnCells } from '~/services';
@@ -127,7 +128,9 @@ export const TableBody = component$(() => {
     }
   });
 
-  const handleMouseDown$ = $((cell: Cell, e: MouseEvent) => {
+  const handleMouseDown$ = $(async (cell: Cell, e: MouseEvent) => {
+    if (await isOverlayOpen()) return;
+
     dragStartCell.value = cell;
     selectedCellToDrag.value = [cell];
 
@@ -223,6 +226,7 @@ export const TableBody = component$(() => {
 
   const handleMouseMove$ = $(async (e: MouseEvent) => {
     if (e.buttons !== 1 /* Primary button not pressed */) return;
+    if (await isOverlayOpen()) return;
 
     if (!dragStartCell.value) return;
 

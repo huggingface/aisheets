@@ -1,14 +1,17 @@
-import { $, component$, useSignal, useTask$ } from '@builder.io/qwik';
+import {
+  $,
+  component$,
+  useOnDocument,
+  useSignal,
+  useVisibleTask$,
+} from '@builder.io/qwik';
 import { LuPenSquare } from '@qwikest/icons/lucide';
 import { Button, ToggleGroup } from '~/components';
 import type { CellProps } from '~/features/table/components/body/renderer/cell-props';
 import { CellRawEditor } from '~/features/table/components/body/renderer/cell-raw-editor';
 import { TableRenderer } from '~/features/table/components/body/renderer/components/cell/table-renderer';
 import { PreviewRenderer } from '~/features/table/components/body/renderer/components/preview/preview-renderer';
-import {
-  stopScrolling,
-  unSelectText,
-} from '~/features/table/components/body/renderer/components/utils';
+import { unSelectText } from '~/features/table/components/body/renderer/components/utils';
 import { hasBlobContent, isTextType } from '~/features/utils/columns';
 import { useValidateCellUseCase } from '~/usecases/validate-cell.usecase';
 
@@ -23,10 +26,11 @@ export const CellRenderer = component$<CellProps>((props) => {
   const originalValue = useSignal(cell.value);
   const newValue = useSignal(cell.value);
 
-  useTask$(({ track }) => {
-    track(isEditing);
+  useVisibleTask$(({ track }) => {
+    track(() => cell.value);
 
-    newValue.value = originalValue.value;
+    originalValue.value = cell.value;
+    newValue.value = cell.value;
   });
 
   const onEdit = $(() => {
@@ -39,6 +43,16 @@ export const CellRenderer = component$<CellProps>((props) => {
     isExpanded.value = false;
   });
 
+  useOnDocument(
+    'mousedown',
+    $((e: MouseEvent) => {
+      if (isExpanded.value) {
+        e.stopPropagation();
+        e.preventDefault();
+      }
+    }),
+  );
+
   const onUpdateCell = $(async () => {
     if (!!newValue.value && newValue.value !== originalValue.value) {
       await validateCell(cell, newValue.value);
@@ -48,31 +62,16 @@ export const CellRenderer = component$<CellProps>((props) => {
     onClose();
   });
 
-  useTask$(async ({ track, cleanup }) => {
-    track(isExpanded);
-    if (!isExpanded.value) return;
-
-    const cancel = await stopScrolling(isExpanded);
-
-    cleanup(() => cancel());
-  });
-
   return (
     <div
       class="w-full h-full"
       onDblClick$={() => {
         if (isExpanded.value || isEditing.value) return;
-
-        if (!cell.id) {
-          if (!isTextType(cell.column)) return;
-        }
-
-        isExpanded.value = true;
-
-        originalValue.value = cell.value;
-        newValue.value = cell.value;
+        if (!cell.id && !isTextType(cell.column)) return;
 
         unSelectText();
+
+        isExpanded.value = true;
 
         if (!cell.id && !cell.value) {
           isEditing.value = true;
@@ -88,7 +87,7 @@ export const CellRenderer = component$<CellProps>((props) => {
       {isExpanded.value && (
         <>
           <div
-            class="fixed inset-0 bg-neutral-700/40 z-50"
+            class="fixed inset-0 bg-neutral-700/40 z-[100] overlay"
             onClick$={() => {
               if (isEditing.value) return;
 

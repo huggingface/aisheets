@@ -49,14 +49,14 @@ export const CellActions = component$<{ cell: Cell }>(({ cell }) => {
 
   return (
     <>
-      <div class="absolute h-[101px] w-full z-40 top-0 right-0">
-        <div class="flex flex-col items-end justify-center gap-1 w-full h-full pr-2">
-          <div class="flex flex-col justify-end items-center gap-3 h-full py-2">
+      <div class="absolute h-full w-full z-40 bottom-0 right-0">
+        <div class="flex flex-col items-end justify-center w-full h-full">
+          <div class="flex flex-col justify-end items-center gap-1 h-full p-2">
             <Button
               look="ghost"
               size="sm"
               class={cn(
-                'opacity-0 group-hover:opacity-100 transition-opacity visible rounded-full text-white w-4 h-4 bg-neutral-600 p-4 hover:shadow-lg shadow-neutral-600',
+                'opacity-0 group-hover:opacity-100 transition-opacity visible rounded-full w-[30px] h-fit text-white bg-neutral-600 p-2 hover:shadow-md shadow-neutral-700 hover:bg-neutral-700',
                 {
                   hidden: !cell.value || !cell.sources?.length,
                 },
@@ -70,17 +70,17 @@ export const CellActions = component$<{ cell: Cell }>(({ cell }) => {
                 }
               }}
             >
-              <Tooltip text="View sources">
-                <LuGlobe class="text-lg" />
+              <Tooltip text="View sources" floating="right" gutter={12}>
+                <LuGlobe class="text-sm" />
               </Tooltip>
             </Button>
             <Button
               look="ghost"
               size="sm"
               class={cn(
-                'opacity-0 group-hover:opacity-100 transition-opacity visible rounded-full w-4 h-4 text-white bg-neutral-600 p-4 hover:shadow-lg shadow-neutral-600',
+                'opacity-0 group-hover:opacity-100 transition-opacity visible rounded-full w-[30px] h-fit text-white bg-neutral-600 p-2 hover:shadow-md shadow-neutral-700 hover:bg-neutral-700',
                 {
-                  'bg-secondary-400 shadow-secondary-400 opacity-100':
+                  'bg-secondary-400 shadow-secondary-400 hover:bg-secondary-400 hover:text-secondary-200 opacity-100':
                     cell.validated,
                   hidden: !cell.value,
                 },
@@ -94,7 +94,7 @@ export const CellActions = component$<{ cell: Cell }>(({ cell }) => {
                 floating="right"
                 gutter={12}
               >
-                <LuThumbsUp class="text-lg" />
+                <LuThumbsUp class="text-sm" />
               </Tooltip>
             </Button>
           </div>

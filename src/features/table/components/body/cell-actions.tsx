@@ -70,7 +70,7 @@ export const CellActions = component$<{ cell: Cell }>(({ cell }) => {
                 }
               }}
             >
-              <Tooltip text="View sources">
+              <Tooltip text="View sources" floating="right" gutter={12}>
                 <LuGlobe class="text-lg" />
               </Tooltip>
             </Button>

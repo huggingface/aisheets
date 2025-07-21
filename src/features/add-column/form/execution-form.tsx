@@ -390,15 +390,14 @@ export const ExecutionForm = component$<SidebarProps>(
                     <p class="text-neutral-500 underline">
                       {selectedModelId.value}
                     </p>
-                    {enableCustomEndpoint.value &&
-                      !endpointURLSelected.value && (
-                        <Tooltip text="Reset default model">
-                          <LuUndo2
-                            class="w-4 h-4 rounded-full gap-2 text-neutral-500 cursor-pointer hover:bg-neutral-200"
-                            onClick$={() => (endpointURLSelected.value = true)}
-                          />
-                        </Tooltip>
-                      )}
+                    {!endpointURLSelected.value && (
+                      <Tooltip text="Reset default model">
+                        <LuUndo2
+                          class="w-4 h-4 rounded-full gap-2 text-neutral-500 cursor-pointer hover:bg-neutral-200"
+                          onClick$={() => (endpointURLSelected.value = true)}
+                        />
+                      </Tooltip>
+                    )}
                     with provider
                     <p class="italic">{selectedProvider.value}</p>
                   </div>

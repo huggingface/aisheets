@@ -1,8 +1,7 @@
-import { component$, useContext } from '@builder.io/qwik';
+import { component$ } from '@builder.io/qwik';
 import { LuEgg } from '@qwikest/icons/lucide';
 import { Tooltip } from '~/components/ui/tooltip/tooltip';
 import { useGenerateColumn } from '~/features/execution';
-import { configContext } from '~/routes/home/layout';
 import { type Column, TEMPORAL_ID } from '~/state';
 
 export const CellGeneration = component$<{ column: Column }>(({ column }) => {
@@ -10,10 +9,6 @@ export const CellGeneration = component$<{ column: Column }>(({ column }) => {
 
   if (column.id === TEMPORAL_ID || column.kind !== 'dynamic') return null;
   if (!column.process) return null;
-
-  const { modelEndpointEnabled } = useContext(configContext);
-
-  column.process.useEndpointURL = modelEndpointEnabled;
 
   return (
     <Tooltip text="Regenerate">

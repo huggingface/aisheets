@@ -24,7 +24,7 @@ import { useGenerateColumn } from '~/features/execution';
 import { isOverlayOpen } from '~/features/table/components/body/renderer/components/utils';
 import { TableCell } from '~/features/table/table-cell';
 import { configContext } from '~/routes/home/layout';
-import { deleteRowsCells, getColumnCells } from '~/services';
+import { deleteRowsCells } from '~/services';
 import {
   type Cell,
   type Column,
@@ -246,32 +246,6 @@ export const TableBody = component$(() => {
 
     lastMove.value = currentY;
   });
-
-  const getCells = server$(
-    async ({
-      columnIds,
-      offset,
-      limit,
-    }: {
-      columnIds: string[];
-      offset: number;
-      limit: number;
-    }) => {
-      const allCells = await Promise.all(
-        columnIds.map((columnId) =>
-          getColumnCells({
-            column: {
-              id: columnId,
-            },
-            offset,
-            limit,
-          }),
-        ),
-      );
-
-      return allCells;
-    },
-  );
 
   const itemRenderer = $(
     (

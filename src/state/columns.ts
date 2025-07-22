@@ -78,21 +78,6 @@ export interface Column {
   numberOfCells?: number;
 }
 
-export const isDirty = (column: Column): boolean => {
-  if (!column.process) return false;
-
-  const { activeDataset } = useDatasetsStore();
-  const columnsReferences = column.process!.columnsReferences.map((id) =>
-    activeDataset.value.columns.find((c: Column) => c.id === id),
-  );
-
-  if (!columnsReferences.length && column.cells.every((c) => !c.validated)) {
-    return true;
-  }
-
-  return columnsReferences.every((c) => c && !isDirty(c));
-};
-
 export const TEMPORAL_ID = '-1';
 export const useColumnsStore = () => {
   const { activeDataset } = useDatasetsStore();
@@ -249,7 +234,6 @@ export const useColumnsStore = () => {
     columns,
     firstColumn,
     replaceColumns,
-    isDirty: $((column: Column) => isDirty(column)),
     addTemporalColumn: $(async (type?: string) => {
       if (activeDataset.value.columns.some((c) => c.id === TEMPORAL_ID)) return;
 

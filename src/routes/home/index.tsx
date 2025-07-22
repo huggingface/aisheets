@@ -339,7 +339,18 @@ export default component$(() => {
               <h1 class="text-neutral-600 text-2xl font-semibold">
                 AI-powered spreadsheets
               </h1>
-              <h2 class="text-neutral-500 font-medium">From a simple idea</h2>
+
+              <DragAndDrop />
+
+              <div class="w-full md:w-[697px] flex justify-center items-center">
+                <hr class="w-full border-t" />
+                <span class="mx-10 text-neutral-500">OR</span>
+                <hr class="w-full border-t" />
+              </div>
+
+              <h2 class="text-neutral-500 font-medium">
+                Build a synthetic dataset from a simple idea
+              </h2>
             </div>
           )}
 
@@ -438,16 +449,6 @@ export default component$(() => {
                       <LuArrowUp class="text-neutral" />
                     </Button>
                   ))}
-                </div>
-
-                <div class="w-full md:w-[697px] flex justify-center items-center">
-                  <hr class="w-full border-t" />
-                  <span class="mx-10 text-neutral-500">OR</span>
-                  <hr class="w-full border-t" />
-                </div>
-
-                <div class="w-full md:w-[530px] h-[150px] lg:h-[230px]">
-                  <DragAndDrop />
                 </div>
               </div>
             )}

@@ -131,7 +131,9 @@ export const DragAndDrop = component$(() => {
           'opacity-30': isDragging.value,
         })}
       >
-        <span class="text-neutral-500 font-medium">From real-world data</span>
+        <span class="text-neutral-500 font-medium">
+          Expand, analyze, enrich your data
+        </span>
 
         <Popover.Root
           id={popoverId}

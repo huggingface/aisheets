@@ -361,7 +361,7 @@ export default component$(() => {
                     look="ghost"
                     value={prompt.value}
                     disabled={isLoading.value}
-                    placeholder="Describe the dataset you want or try one of the examples below"
+                    placeholder="Description and representation of polite gesture by culture"
                     class={cn(
                       'p-4 max-h-40 resize-none overflow-auto text-base placeholder:text-neutral-500',
                       {

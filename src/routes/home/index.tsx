@@ -348,7 +348,7 @@ export default component$(() => {
                 <hr class="w-full border-t" />
               </div>
 
-              <h2 class="text-neutral-500 font-medium">
+              <h2 class="text-primary-600 font-semibold text-xl">
                 Build a synthetic dataset from a simple idea
               </h2>
             </div>

@@ -133,9 +133,9 @@ export const DragAndDrop = component$(() => {
           }
         })}
       >
-        <span class="text-neutral-500 font-medium">
+        <h2 class="text-primary-600 font-semibold text-xl">
           Expand, analyze, enrich your data
-        </span>
+        </h2>
 
         <input
           type="file"

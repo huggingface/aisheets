@@ -321,10 +321,12 @@ export default component$(() => {
         <div class="flex flex-col w-full max-w-6xl gap-5">
           {!isLoading.value && (
             <div class="flex flex-col items-center justify-center space-y-4">
-              <MainLogo class="mt-6 md:mt-0 w-[70px] h-[70px]" />
-              <h1 class="text-neutral-600 text-2xl font-semibold">
-                AI-powered spreadsheets
-              </h1>
+              <div class="flex flex-col items-center justify-center mb-4">
+                <MainLogo class="mt-6 md:mt-0 w-[70px] h-[70px]" />
+                <h1 class="text-neutral-600 text-2xl font-semibold">
+                  AI-powered spreadsheets
+                </h1>
+              </div>
 
               <DragAndDrop />
 
@@ -419,7 +421,7 @@ export default component$(() => {
             </form>
 
             {!isLoading.value && (
-              <div class="flex flex-col items-center justify-center space-y-8 mt-8">
+              <div class="flex flex-col items-center justify-center mt-4">
                 <div class="w-full md:w-[700px] flex flex-col md:flex-row flex-wrap justify-start items-center gap-2">
                   {examples.map((example) => (
                     <Button

@@ -108,131 +108,140 @@ export const DragAndDrop = component$(() => {
 `);
 
   return (
-    <div class="relative w-full h-full min-h-[250px] text-center transition z-10 p-[2px] rounded-lg animated-border">
-      <div
-        ref={container}
-        preventdefault:dragover
-        preventdefault:drop
-        class={cn(
-          'h-full flex justify-center items-center bg-white p-8 rounded-md min-h-[250px] w-full',
-          {
-            "relative bg-[url('/dnd-background.svg')] bg-no-repeat bg-cover":
-              isDragging.value || isPopOverOpen.value,
-          },
-        )}
-        onDragOver$={() => {
-          isDragging.value = true;
-        }}
-        onDragLeave$={(e, el) => {
-          isDragging.value = el.contains(e.relatedTarget as Node);
-        }}
-        onDrop$={sync$((e: DragEvent) => {
-          isDragging.value = false;
+    <div class="relative w-full h-full text-center transition z-10 p-[2px] rounded-lg animated-border">
+      <div class="relative h-full w-full bg-white p-8 rounded-md">
+        <div
+          class={cn(
+            'absolute inset-0  transition-opacity duration-300 opacity-0',
+            {
+              "bg-[url('/dnd-background.svg')] bg-no-repeat bg-cover opacity-100":
+                isDragging.value || isPopOverOpen.value,
+            },
+          )}
+        />
+        <div
+          ref={container}
+          preventdefault:dragover
+          preventdefault:drop
+          class={cn(
+            'relative h-full min-h-[180px] w-full flex justify-center items-center',
+          )}
+          onDragOver$={() => {
+            isDragging.value = true;
+          }}
+          onDragLeave$={(e, el) => {
+            isDragging.value = el.contains(e.relatedTarget as Node);
+          }}
+          onDrop$={sync$((e: DragEvent) => {
+            isDragging.value = false;
 
-          if (e.dataTransfer?.files?.length) {
-            file.value = noSerialize(e.dataTransfer.files[0]);
-
-            handleUploadFile$();
-          }
-        })}
-      >
-        <input
-          type="file"
-          id="file-select"
-          accept={allowedExtensions.map((ext) => `.${ext}`).join(',')}
-          class="hidden"
-          onChange$={(e: Event) => {
-            const input = e.target as HTMLInputElement;
-
-            if (input.files?.length) {
-              file.value = noSerialize(input.files[0]);
+            if (e.dataTransfer?.files?.length) {
+              file.value = noSerialize(e.dataTransfer.files[0]);
 
               handleUploadFile$();
             }
-          }}
-        />
+          })}
+        >
+          <input
+            type="file"
+            id="file-select"
+            accept={allowedExtensions.map((ext) => `.${ext}`).join(',')}
+            class="hidden"
+            onChange$={(e: Event) => {
+              const input = e.target as HTMLInputElement;
 
-        <div class="flex flex-col items-center justify-center gap-6 h-full">
-          <h2 class="text-primary-600 font-semibold text-xl">
-            Expand, analyze, enrich your data
-          </h2>
+              if (input.files?.length) {
+                file.value = noSerialize(input.files[0]);
 
-          <Popover.Root
-            id={popoverId}
-            bind:anchor={anchorRef}
-            manual
-            floating="right"
-            gutter={14}
-          >
-            <Popover.Trigger
-              disabled={!!file.value}
-              class={cn(
-                buttonVariants({ look: 'outline', size: 'sm' }),
-                'flex gap-1 justify-between items-center px-3 py-5 bg-neutral-700 text-white disabled:text-neutral-300 disabled:cursor-not-allowed hover:bg-neutral-600',
-                {
-                  'bg-neutral-600': isDragging.value || isPopOverOpen.value,
-                },
-              )}
+                handleUploadFile$();
+              }
+            }}
+          />
+
+          <div class="flex flex-col items-center justify-center gap-6 h-full">
+            <h2 class="text-primary-600 font-semibold text-xl">
+              Expand, analyze, enrich your data
+            </h2>
+
+            <Popover.Root
+              id={popoverId}
+              bind:anchor={anchorRef}
+              manual
+              floating="right"
+              gutter={14}
             >
-              <LuFilePlus2 class="text-md" />
-              Drop or click to import a file
-            </Popover.Trigger>
-            <Popover.Panel
-              class="w-86 text-sm shadow-lg p-2"
-              onToggle$={(e) => {
-                isPopOverOpen.value = e.newState == 'open';
-              }}
-            >
-              <Link
-                href="/home/dataset/create/from-hub"
+              <Popover.Trigger
+                disabled={!!file.value}
                 class={cn(
-                  'w-full flex items-center justify-start hover:bg-neutral-100 gap-2.5 p-2 rounded-none rounded-tl-md rounded-tr-md',
+                  buttonVariants({ look: 'outline', size: 'sm' }),
+                  'flex gap-1 justify-between items-center px-3 py-5 bg-neutral-700 text-white disabled:text-neutral-300 disabled:cursor-not-allowed hover:bg-neutral-600',
+                  {
+                    'bg-neutral-600': isDragging.value || isPopOverOpen.value,
+                  },
                 )}
               >
-                <HFLogo class="items-left w-4 h-4 flex-shrink-0" />
-                Add from Hugging Face Hub
-              </Link>
-
-              {isGoogleAuthEnabled && (
-                <>
-                  <hr class="border-t border-slate-200 dark:border-slate-700" />
-                  <Button
-                    look="ghost"
-                    class="w-full flex items-center justify-start hover:bg-neutral-100 gap-2.5 p-2 rounded-none"
-                    onClick$={() => {
-                      navigate('/home/dataset/create/from-google-drive');
-                    }}
-                  >
-                    <GoogleDrive class="w-4 h-4 flex-shrink-0" />
-                    Add from Google Drive
-                  </Button>
-                </>
-              )}
-
-              <hr class="border-t border-slate-200 dark:border-slate-700" />
-
-              <Button
-                look="ghost"
-                class="w-full flex items-center justify-start hover:bg-neutral-100 gap-2.5 p-2 rounded-none rounded-bl-md rounded-br-md"
-                onClick$={() => document.getElementById('file-select')?.click()}
+                <LuFilePlus2 class="text-md" />
+                Drop or click to import a file
+              </Popover.Trigger>
+              <Popover.Panel
+                class="w-86 text-sm shadow-lg p-2"
+                onToggle$={(e) => {
+                  isPopOverOpen.value = e.newState == 'open';
+                }}
               >
-                <LuUpload class="w-4 h-4 flex-shrink-0" />
-                Upload from computer
-              </Button>
-            </Popover.Panel>
-          </Popover.Root>
+                <Link
+                  href="/home/dataset/create/from-hub"
+                  class={cn(
+                    'w-full flex items-center justify-start hover:bg-neutral-100 gap-2.5 p-2 rounded-none rounded-tl-md rounded-tr-md',
+                  )}
+                >
+                  <HFLogo class="items-left w-4 h-4 flex-shrink-0" />
+                  Add from Hugging Face Hub
+                </Link>
 
-          {file.value && !uploadErrorMessage.value && (
-            <div class="w-fit text-sm text-neutral-50 bg-black opacity-30 rounded-sm p-2 flex items-center justify-between gap-3">
-              {file.value.name}
-              <div class="w-5 h-5 border-2 border-gray-300 border-t-transparent rounded-full animate-spin" />
-            </div>
-          )}
-          {uploadErrorMessage.value && (
-            <div class="text-red-500 text-sm mt-2">
-              {uploadErrorMessage.value}
-            </div>
-          )}
+                {isGoogleAuthEnabled && (
+                  <>
+                    <hr class="border-t border-slate-200 dark:border-slate-700" />
+                    <Button
+                      look="ghost"
+                      class="w-full flex items-center justify-start hover:bg-neutral-100 gap-2.5 p-2 rounded-none"
+                      onClick$={() => {
+                        navigate('/home/dataset/create/from-google-drive');
+                      }}
+                    >
+                      <GoogleDrive class="w-4 h-4 flex-shrink-0" />
+                      Add from Google Drive
+                    </Button>
+                  </>
+                )}
+
+                <hr class="border-t border-slate-200 dark:border-slate-700" />
+
+                <Button
+                  look="ghost"
+                  class="w-full flex items-center justify-start hover:bg-neutral-100 gap-2.5 p-2 rounded-none rounded-bl-md rounded-br-md"
+                  onClick$={() =>
+                    document.getElementById('file-select')?.click()
+                  }
+                >
+                  <LuUpload class="w-4 h-4 flex-shrink-0" />
+                  Upload from computer
+                </Button>
+              </Popover.Panel>
+            </Popover.Root>
+
+            {file.value && !uploadErrorMessage.value && (
+              <div class="w-fit text-sm text-neutral-50 bg-black opacity-30 rounded-sm p-2 flex items-center justify-between gap-3">
+                {file.value.name}
+                <div class="w-5 h-5 border-2 border-gray-300 border-t-transparent rounded-full animate-spin" />
+              </div>
+            )}
+            {uploadErrorMessage.value && (
+              <div class="text-red-500 text-sm mt-2">
+                {uploadErrorMessage.value}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

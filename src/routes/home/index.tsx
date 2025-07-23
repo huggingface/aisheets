@@ -332,7 +332,7 @@ export default component$(() => {
         </div>
       </div>
       <div class="w-full flex flex-col items-center justify-center">
-        <div class="flex flex-col w-full items-center gap-5">
+        <div class="flex flex-col w-full max-w-6xl gap-5">
           {!isLoading.value && (
             <div class="flex flex-col items-center justify-center space-y-4">
               <MainLogo class="mt-6 md:mt-0 w-[70px] h-[70px]" />

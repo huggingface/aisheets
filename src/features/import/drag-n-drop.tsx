@@ -113,10 +113,13 @@ export const DragAndDrop = component$(() => {
         ref={container}
         preventdefault:dragover
         preventdefault:drop
-        class={cn('bg-white p-8 rounded-md min-h-[250px] w-full', {
-          "relative bg-[url('/dnd-background.svg')] bg-no-repeat bg-cover":
-            isDragging.value || isPopOverOpen.value,
-        })}
+        class={cn(
+          'h-full flex justify-center items-center bg-white p-8 rounded-md min-h-[250px] w-full',
+          {
+            "relative bg-[url('/dnd-background.svg')] bg-no-repeat bg-cover":
+              isDragging.value || isPopOverOpen.value,
+          },
+        )}
         onDragOver$={() => {
           isDragging.value = true;
         }}
@@ -133,10 +136,6 @@ export const DragAndDrop = component$(() => {
           }
         })}
       >
-        <h2 class="text-primary-600 font-semibold text-xl">
-          Expand, analyze, enrich your data
-        </h2>
-
         <input
           type="file"
           id="file-select"
@@ -153,14 +152,11 @@ export const DragAndDrop = component$(() => {
           }}
         />
 
-        <div
-          class={cn(
-            'absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 w-[230px] md:w-fit',
-            {
-              'opacity-100': isDragging.value,
-            },
-          )}
-        >
+        <div class="flex flex-col items-center justify-center gap-6 h-full">
+          <h2 class="text-primary-600 font-semibold text-xl">
+            Expand, analyze, enrich your data
+          </h2>
+
           <Popover.Root
             id={popoverId}
             bind:anchor={anchorRef}
@@ -172,7 +168,10 @@ export const DragAndDrop = component$(() => {
               disabled={!!file.value}
               class={cn(
                 buttonVariants({ look: 'outline', size: 'sm' }),
-                'flex gap-1 justify-between items-center px-3 bg-neutral-700 text-white disabled:text-neutral-300 disabled:cursor-not-allowed',
+                'flex gap-1 justify-between items-center px-3 py-5 bg-neutral-700 text-white disabled:text-neutral-300 disabled:cursor-not-allowed hover:bg-neutral-600',
+                {
+                  'bg-neutral-600': isDragging.value || isPopOverOpen.value,
+                },
               )}
             >
               <LuFilePlus2 class="text-md" />

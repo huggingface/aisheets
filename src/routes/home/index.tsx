@@ -71,28 +71,14 @@ export default component$(() => {
 
   const examples = [
     {
-      title: 'Challenging medicine multi-choice questions',
+      title: 'Html code for web portfolio examples',
       prompt:
-        'Extremely challenging multiple-choice questions for the domain of medicine',
+        'Generate a list of 5 HTML code examples for personal web portfolios, including the main sections and features',
     },
     {
-      title: 'Spanish-Speaking Countries & Regional Idioms',
+      title: 'Realistic images for memes',
       prompt:
-        'List of idioms in Spanish speaking countries, with the country where they are used',
-    },
-    {
-      title: 'Climate-related disasters',
-      prompt:
-        'Recent climate related disasters including the name/type of disaster, location and year',
-    },
-    {
-      title: 'Endangered Plants',
-      prompt: 'Endangered plant species. Include scientific name and habitat',
-    },
-    {
-      title: 'Customer sentiment climbing shoes',
-      prompt:
-        'Sentiment dataset about real climbing shoe models, including a summary of positive and negative aspects',
+        'Generate a list of 5 realistic images that can be used for memes, including the image description and context',
     },
   ];
 

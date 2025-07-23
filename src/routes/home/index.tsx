@@ -445,17 +445,17 @@ export default component$(() => {
       </div>
       <Tips id="home-tips">
         <p>
+          <b>Start with existing data:</b> Generating new content from
+          structured data helps improve accuracy. Import a file, then transform,
+          augment, or enrich its content to suit your use case.
+        </p>
+        <p>
           <b>Write a good prompt:</b> Be detailed about the topic and content
           you want.
         </p>
         <p>
           <b>Activate "Search the web":</b> For deep research, fact-checking and
           up-to-date info.
-        </p>
-        <p>
-          <b>Start with existing data:</b> Generating new content from
-          structured data helps improve accuracy. Import a file, then transform,
-          augment, or enrich its content to suit your use case.
         </p>
       </Tips>
     </ActiveDatasetProvider>

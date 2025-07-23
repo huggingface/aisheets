@@ -6,6 +6,7 @@ import {
   sync$,
   useContext,
   useSignal,
+  useStylesScoped$,
 } from '@builder.io/qwik';
 import { Link, useNavigate } from '@builder.io/qwik-city';
 import { usePopover } from '@qwik-ui/headless';
@@ -20,6 +21,7 @@ export const DragAndDrop = component$(() => {
   const popoverId = 'uploadFilePopover';
   const anchorRef = useSignal<HTMLElement | undefined>();
   const { hidePopover } = usePopover(popoverId);
+  const isPopOverOpen = useSignal(false);
 
   const { isGoogleAuthEnabled } = useContext(configContext);
 
@@ -86,15 +88,34 @@ export const DragAndDrop = component$(() => {
     }),
   );
 
+  useStylesScoped$(`
+@keyframes border-animation {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+.animated-border {
+  background-image: linear-gradient(270deg, #ffd21e, #6b86ff, #ffd21e);
+  background-size: 400% 400%;
+  animation: border-animation 4s linear infinite;
+}
+`);
+
   return (
-    <div class="relative w-full h-full min-h-[250px] text-center transition z-10 p-[1px] rounded-lg bg-gradient-to-b from-[#FFD21E] to-[#6B86FF]">
+    <div class="relative w-full h-full min-h-[250px] text-center transition z-10 p-[2px] rounded-lg animated-border">
       <div
         ref={container}
         preventdefault:dragover
         preventdefault:drop
         class={cn('bg-white p-8 rounded-md min-h-[250px] w-full', {
           "relative bg-[url('/dnd-background.svg')] bg-no-repeat bg-cover":
-            isDragging.value,
+            isDragging.value || isPopOverOpen.value,
         })}
         onDragOver$={() => {
           isDragging.value = true;
@@ -157,7 +178,12 @@ export const DragAndDrop = component$(() => {
               <LuFilePlus2 class="text-md" />
               Drop or click to import a file
             </Popover.Trigger>
-            <Popover.Panel class="w-86 text-sm shadow-lg p-2">
+            <Popover.Panel
+              class="w-86 text-sm shadow-lg p-2"
+              onToggle$={(e) => {
+                isPopOverOpen.value = e.newState == 'open';
+              }}
+            >
               <Link
                 href="/home/dataset/create/from-hub"
                 class={cn(

@@ -5,6 +5,7 @@ import {
   noSerialize,
   sync$,
   useContext,
+  useOnWindow,
   useSignal,
   useStylesScoped$,
 } from '@builder.io/qwik';
@@ -88,6 +89,16 @@ export const DragAndDrop = component$(() => {
     }),
   );
 
+  const isMobile = useSignal(false);
+
+  useOnWindow(
+    'resize',
+    $(() => {
+      isMobile.value = window.innerWidth <= 768;
+      console.log('isMobile', isMobile.value);
+    }),
+  );
+
   useStylesScoped$(`
 @keyframes border-animation {
   0% {
@@ -164,10 +175,11 @@ export const DragAndDrop = component$(() => {
             </h2>
 
             <Popover.Root
+              key={isMobile.value ? 'mobile' : 'desktop'}
               id={popoverId}
               bind:anchor={anchorRef}
               manual
-              floating="right"
+              floating={isMobile.value ? 'bottom' : 'right'}
               gutter={14}
             >
               <Popover.Trigger

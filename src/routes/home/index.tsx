@@ -71,14 +71,13 @@ export default component$(() => {
 
   const examples = [
     {
-      title: 'Html code for web portfolio examples',
+      title: 'Portfolio web pages',
       prompt:
-        'Generate a list of 5 HTML code examples for personal web portfolios, including the main sections and features',
+        'Dataset with personal portfolios. Include the html/css/js single page, working implementation. Be creative but avoid writing long code.',
     },
     {
-      title: 'Realistic images for memes',
-      prompt:
-        'Generate a list of 5 realistic images that can be used for memes, including the image description and context',
+      title: 'Isometric images',
+      prompt: 'Isometric images of european capitals',
     },
   ];
 

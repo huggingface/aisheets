@@ -163,7 +163,7 @@ export const ExecutionForm = component$<SidebarProps>(
     });
 
     useTask$(({ track }) => {
-      track(column);
+      track(columns);
 
       variables.value = columns.value
         .filter((c) => c.id !== column.id && !hasBlobContent(c))
@@ -171,6 +171,10 @@ export const ExecutionForm = component$<SidebarProps>(
           id: c.id,
           name: c.name,
         }));
+    });
+
+    useTask$(({ track }) => {
+      track(column);
 
       if (isImageColumn.value) {
         // Currently, we custom endpoint only for text models

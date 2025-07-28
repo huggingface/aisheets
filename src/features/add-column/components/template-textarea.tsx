@@ -38,6 +38,8 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
     variables: [],
   });
 
+  const previousVariables = useSignal<Variable[]>([]);
+
   const getCursorPosition = $((textarea: HTMLTextAreaElement) => {
     const cursorPosition = textarea.selectionStart || 0;
     const textBeforeCursor = props['bind:value'].value.slice(0, cursorPosition);
@@ -140,12 +142,33 @@ export const TemplateTextArea = component$<TemplateTextAreaProps>((props) => {
     props['bind:value'].value = updatedValue;
   });
 
+  const changePreviousVariables = $(() => {
+    let currentValue = props['bind:value'].value;
+    for (const variable of previousVariables.value) {
+      const newVariable = props.variables.value.find(
+        (v) => v.id === variable.id,
+      );
+
+      if (!newVariable) continue;
+
+      currentValue = currentValue.replace(
+        `{{${variable.name}}}`,
+        `{{${newVariable.name}}}`,
+      );
+    }
+
+    props['bind:value'].value = currentValue;
+    previousVariables.value = [...props.variables.value];
+  });
+
   useVisibleTask$(({ track }) => {
     track(props.variables);
 
     referenceVariables.variables = props.variables.value.map(
       (variable) => variable.name,
     );
+
+    changePreviousVariables();
   });
 
   useVisibleTask$(({ track }) => {

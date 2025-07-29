@@ -1,6 +1,6 @@
 import { $, component$, useSignal, useVisibleTask$ } from '@builder.io/qwik';
-import { LuPenSquare } from '@qwikest/icons/lucide';
-import { Button, ToggleGroup } from '~/components';
+import { LuBrain, LuPenSquare } from '@qwikest/icons/lucide';
+import { Accordion, Button, ToggleGroup } from '~/components';
 import type { CellProps } from '~/features/table/components/body/renderer/cell-props';
 import { CellRawEditor } from '~/features/table/components/body/renderer/cell-raw-editor';
 import { TableRenderer } from '~/features/table/components/body/renderer/components/cell/table-renderer';
@@ -19,12 +19,28 @@ export const CellRenderer = component$<CellProps>((props) => {
 
   const originalValue = useSignal(cell.value);
   const newValue = useSignal(cell.value);
+  const thinking = useSignal<string[]>([]);
 
-  useVisibleTask$(({ track }) => {
+  const getThinking = $((value: string) => {
+    const match = value?.match(/<think>([\s\S]*?)<\/think>/);
+    if (!match) return [];
+
+    const thinkText = match[1].trim();
+    return thinkText
+      .split('\n')
+      .map((l) => l.trim())
+      .filter((l) => l);
+  });
+
+  const remoteThinking = $((value: string) => {
+    return value?.replace(/<think>[\s\S]*?<\/think>/, '').trim();
+  });
+
+  useVisibleTask$(async ({ track }) => {
     track(() => cell.value);
 
-    originalValue.value = cell.value;
-    newValue.value = cell.value;
+    newValue.value = originalValue.value = await remoteThinking(cell.value);
+    thinking.value = await getThinking(cell.value);
   });
 
   const onEdit = $(() => {
@@ -89,7 +105,7 @@ export const CellRenderer = component$<CellProps>((props) => {
           >
             <div class="flex items-center justify-center w-full h-full p-6 bg-neutral-50">
               {!isEditing.value ? (
-                <div class="w-full h-full flex flex-col gap-3">
+                <div class="w-full h-full flex flex-col">
                   {!hasBlobContent(cell.column) ? (
                     <div class="w-full h-9 flex justify-end">
                       <Button
@@ -103,10 +119,34 @@ export const CellRenderer = component$<CellProps>((props) => {
                     </div>
                   ) : null}
 
-                  <PreviewRenderer {...props} value={cell.value} />
+                  <div class="max-h-[40vh] md:max-h-[440px] h-full">
+                    <Accordion.Root class="w-full">
+                      <Accordion.Item>
+                        <Accordion.Trigger
+                          header="h1"
+                          class="text-lg font-bold hover:no-underline h-10"
+                        >
+                          <div class="flex items-center gap-2 h-10">
+                            <LuBrain class="p-2 rounded-lg bg-neutral-300 h-9 w-9" />
+                            Reasoning
+                          </div>
+                        </Accordion.Trigger>
+                        <Accordion.Content>
+                          {thinking.value.map((t) => {
+                            return (
+                              <ul key={t} class="list-disc pl-6">
+                                <li>{t}</li>
+                              </ul>
+                            );
+                          })}
+                        </Accordion.Content>
+                      </Accordion.Item>
+                    </Accordion.Root>
+                    <PreviewRenderer {...props} value={newValue.value} />
+                  </div>
                 </div>
               ) : (
-                <div class="w-full h-full flex flex-col gap-3">
+                <div class="w-full h-full flex flex-col justify-between gap-3">
                   <div class="w-full h-9 flex">
                     <ToggleGroup.Root
                       bind:value={mode}
@@ -128,11 +168,13 @@ export const CellRenderer = component$<CellProps>((props) => {
                       </ToggleGroup.Item>
                     </ToggleGroup.Root>
                   </div>
-                  {mode.value === 'write' ? (
-                    <CellRawEditor {...props} value={newValue} />
-                  ) : (
-                    <PreviewRenderer {...props} value={newValue.value} />
-                  )}
+                  <div class="max-h-[40vh] md:max-h-[440px] h-full">
+                    {mode.value === 'write' ? (
+                      <CellRawEditor {...props} value={newValue} />
+                    ) : (
+                      <PreviewRenderer {...props} value={newValue.value} />
+                    )}
+                  </div>
                   <div class="flex items-center justify-end gap-2">
                     <Button
                       look="secondary"

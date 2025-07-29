@@ -19,7 +19,7 @@ const rowDataToCells = (
     rowIdx: number;
     rowData: Record<string, any>;
   },
-  column: Column,
+  column?: Column | ColumnModel,
 ): Cell[] => {
   return Object.entries(rowData).map(([columnId, cellValue]) => {
     return {
@@ -27,7 +27,7 @@ const rowDataToCells = (
       value: cellValue,
       column: {
         id: columnId,
-        type: column.type,
+        type: column?.type ?? '',
       },
       // default values
       id: undefined, // review this and probably let the id be undefined
@@ -80,7 +80,10 @@ export const getColumnCellById = async (id: string): Promise<Cell | null> => {
     offset: model.idx,
   });
 
-  const cell = rowDataToCells({ rowIdx: model.idx, rowData: rows[0] })[0];
+  const cell = rowDataToCells(
+    { rowIdx: model.idx, rowData: rows[0] },
+    column,
+  )[0];
 
   return mergeCellWithModel({ cell, model });
 };
@@ -154,7 +157,7 @@ export const getColumnCellByIdx = async ({
 
   if (rows.length === 0) return null;
 
-  const cell = rowDataToCells({ rowIdx: idx, rowData: rows[0] })[0];
+  const cell = rowDataToCells({ rowIdx: idx, rowData: rows[0] }, column)[0];
 
   const model = await ColumnCellModel.findOne({
     where: {

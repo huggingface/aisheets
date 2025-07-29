@@ -217,7 +217,6 @@ export const TableBody = component$(() => {
       ...column,
       process: {
         ...column.process!,
-        useEndpointURL: modelEndpointEnabled,
         offset,
         limit,
       },

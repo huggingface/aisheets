@@ -2,9 +2,10 @@ import { ProcessColumnModel, ProcessModel } from '~/services/db/models';
 import type { Process } from '~/state';
 
 export interface CreateProcess {
+  prompt: string;
   modelName: string;
   modelProvider: string;
-  prompt: string;
+  useEndpointURL?: boolean;
   searchEnabled: boolean;
   columnsReferences?: string[];
 }
@@ -19,9 +20,10 @@ export const createProcess = async ({
   };
 }): Promise<Process> => {
   const model = await ProcessModel.create({
+    prompt: process.prompt,
     modelName: process.modelName,
     modelProvider: process.modelProvider,
-    prompt: process.prompt,
+    useCustomEndpoint: process.useEndpointURL ?? false,
     searchEnabled: process.searchEnabled,
     columnId: column.id,
   });
@@ -37,9 +39,10 @@ export const createProcess = async ({
 
   return {
     id: model.id,
+    prompt: model.prompt,
     modelName: model.modelName,
     modelProvider: model.modelProvider,
-    prompt: model.prompt,
+    useEndpointURL: model.useCustomEndpoint,
     searchEnabled: model.searchEnabled,
     columnsReferences: process?.columnsReferences || [],
     updatedAt: model.updatedAt,
@@ -55,9 +58,10 @@ export const updateProcess = async (process: Process): Promise<Process> => {
 
   model.changed('updatedAt', true);
   model.set({
+    prompt: process.prompt,
     modelName: process.modelName,
     modelProvider: process.modelProvider,
-    prompt: process.prompt,
+    useCustomEndpoint: process.useEndpointURL ?? false,
     searchEnabled: process.searchEnabled,
   });
 
@@ -74,9 +78,10 @@ export const updateProcess = async (process: Process): Promise<Process> => {
 
   return {
     id: model.id,
+    prompt: model.prompt,
     modelName: model.modelName,
     modelProvider: model.modelProvider,
-    prompt: model.prompt,
+    useEndpointURL: model.useCustomEndpoint,
     searchEnabled: model.searchEnabled,
     columnsReferences: process.columnsReferences,
     updatedAt: model.updatedAt,

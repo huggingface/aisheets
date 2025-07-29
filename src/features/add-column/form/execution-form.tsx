@@ -78,7 +78,7 @@ export const ExecutionForm = component$<SidebarProps>(
 
     const allModels = useContext<Model[]>(modelsContext);
 
-    let {
+    const {
       DEFAULT_MODEL,
       DEFAULT_MODEL_PROVIDER,
       modelEndpointEnabled,
@@ -103,7 +103,8 @@ export const ExecutionForm = component$<SidebarProps>(
     const selectedModelId = useSignal<string>('');
     const selectedProvider = useSignal<string>('');
 
-    const endpointURLSelected = useSignal(modelEndpointEnabled);
+    const enableCustomEndpoint = useSignal(modelEndpointEnabled);
+    const endpointURLSelected = useSignal(false);
 
     const onSelectedVariables = $((variables: { id: string }[]) => {
       columnsReferences.value = variables.map((v) => v.id);
@@ -114,11 +115,6 @@ export const ExecutionForm = component$<SidebarProps>(
     const isImageColumn = useComputed$(() => {
       return column.type === 'image';
     });
-
-    if (isImageColumn.value) {
-      // Currently, we custom endpoint only for text models
-      modelEndpointEnabled = false;
-    }
 
     const modelProviders = useComputed$(() => {
       const model = models.value.find(
@@ -166,7 +162,9 @@ export const ExecutionForm = component$<SidebarProps>(
       }
     });
 
-    useTask$(() => {
+    useTask$(({ track }) => {
+      track(column);
+
       variables.value = columns.value
         .filter((c) => c.id !== column.id && !hasBlobContent(c))
         .map((c) => ({
@@ -174,11 +172,18 @@ export const ExecutionForm = component$<SidebarProps>(
           name: c.name,
         }));
 
+      if (isImageColumn.value) {
+        // Currently, we custom endpoint only for text models
+        enableCustomEndpoint.value = false;
+      }
+
       const { process } = column;
       if (!process) return;
 
       prompt.value = process.prompt;
       searchOnWeb.value = process.searchEnabled || false;
+      endpointURLSelected.value =
+        (enableCustomEndpoint.value && process.useEndpointURL) || false;
 
       if (process.modelName) {
         // If there's a previously selected model, use that
@@ -385,14 +390,15 @@ export const ExecutionForm = component$<SidebarProps>(
                     <p class="text-neutral-500 underline">
                       {selectedModelId.value}
                     </p>
-                    {modelEndpointEnabled && !endpointURLSelected.value && (
-                      <Tooltip text="Reset default model">
-                        <LuUndo2
-                          class="w-4 h-4 rounded-full gap-2 text-neutral-500 cursor-pointer hover:bg-neutral-200"
-                          onClick$={() => (endpointURLSelected.value = true)}
-                        />
-                      </Tooltip>
-                    )}
+                    {enableCustomEndpoint.value &&
+                      !endpointURLSelected.value && (
+                        <Tooltip text="Reset default model">
+                          <LuUndo2
+                            class="w-4 h-4 rounded-full gap-2 text-neutral-500 cursor-pointer hover:bg-neutral-200"
+                            onClick$={() => (endpointURLSelected.value = true)}
+                          />
+                        </Tooltip>
+                      )}
                     with provider
                     <p class="italic">{selectedProvider.value}</p>
                   </div>

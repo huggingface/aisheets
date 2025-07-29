@@ -51,7 +51,7 @@ export const CellRenderer = component$<CellProps>((props) => {
       class="w-full h-full"
       onDblClick$={() => {
         if (isExpanded.value || isEditing.value) return;
-        if (!cell.id && !isTextType(cell.column)) return;
+        if (!(cell.id || cell.value) && !isTextType(cell.column)) return;
 
         unSelectText();
 

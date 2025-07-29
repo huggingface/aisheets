@@ -20,21 +20,27 @@ Since Ollama starts a local server on port `11434` by default, this URL will poi
 export MODEL_ENDPOINT_NAME=llama3
 ```
 
-This is an important step to conform the OpenAI API specification. The model name is a required paramter in the [OpenAI API](https://platform.openai.com/docs/api-reference/responses/create#responses-create-model), and it is used to identify which model to use for inference.
+This is an important step to conform the OpenAI API specification. The model name is a required parameter in the [OpenAI API](https://platform.openai.com/docs/api-reference/responses/create#responses-create-model), and it is used to identify which model to use for inference.
 
 3. **Run the Sheets app**: After setting the environment variables, you can run the Sheets app as usual. The app will now use your custom LLM for inference instead of the default Huggingface Inference Providers API as the default behavior. Anyway, all the models provided by the Huggingface Inference Providers API will still be available when selecting a model in the column settings.
 
-* Note: The text to image generation feature cannot be customized yet. It will always use the Huggingface Inference Providers API to generate images. Take this into account when running Sheets with custom LLMs.
+* Note: The text-to-image generation feature cannot be customized yet. It will always utilize the Hugging Face Inference Providers API to generate images. Take this into account when running Sheets with custom LLMs.
 
 ## Example of running Sheets with Ollama
 
 To run Sheets with Ollama, you can follow these steps:
 
-1. Start the Ollama server:
+1. Start the Ollama server, and run the model of your choice
+```sh
+export OLLAMA_NOHISTORY=1
+ollama serve
+```
 
 ```sh
 ollama run llama3
 ```
+
+(Visit the Ollama [FAQ](https://github.com/ollama/ollama/blob/main/docs/faq.md#how-can-i-specify-the-context-window-size) page to know more about Ollama server configuration)
 
 2. Set the environment variables:
 

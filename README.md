@@ -1,16 +1,60 @@
-# Sheets
+# 🤗 Hugging Face Sheets
 
-`Sheets` is a tool for building datasets using AI models. It offers:
+AI-powered spreadsheets that bring open-source models directly to your data workflows.
 
-- **Real-time iteration**: Building high-quality and diverse datasets involves carefully designing and combining prompts, trying out different models, a lot of trial and error, and spending time looking at your data. `Sheets` accelerates dataset iteration with an interactive and progressive workflow, enabling you to test many things and see the results instantly.
-- **In-context learning using human demonstrations**: One of the biggest frustrations when building datasets with AI is prompts' brittleness. You often need to spend hours tuning the language of your prompt to avoid specific failures, ensure correct formatting, etc. Adding few-shot examples to your prompt is one of the most effective solutions to these issues. However, writing these examples by hand is time-consuming and challenging. In `Sheets`, you just need to edit/select good examples, which are automatically included in the data generation process.
-- **The latest open-source models**: `Sheets` enables you to use the latest and most powerful models, thanks to [Hugging Face Inference Providers](https://huggingface.co/blog/inference-providers).
-- **Cost-efficiency**: Instead of launching 100s of inference calls to experiment with prompts and pipelines, `Sheets` enables you to test and build in smol steps (a few rows at a time!). This saves money and energy and leads to higher-quality datasets; you get to look at your data and tune the generation process as you go.
-- **Go from smol to great**:  Many big things, like the universe, start from something very smol. To build great datasets, it's better to build the perfect small dataset for your use case and then scale it up. `Sheets` enables you to build datasets and pipelines progressively. Once you're satisfied with your dataset, you can use the generated configuration to scale up the size of your dataset (if needed).
+## What is it?
 
-## Quick demo (TBD)
+Hugging Face Sheets lets you effortlessly run prompts and models over your data with agentic search for accuracy and real-time information. Think of it as a familiar spreadsheet interface powered by hundreds of AI models from the Hugging Face ecosystem.
 
-<https://github.com/user-attachments/assets/29e790d4-df29-4452-96f1-0069d45a1da9>
+## Quick Start
+
+### Using the Sheets Space
+
+Try it instantly at <https://huggingface.co/spaces/aisheets/sheets>
+
+### Using Docker
+
+First, get your Hugging Face token from <https://huggingface.co/settings/tokens>
+
+```bash
+export HF_TOKEN=your_token_here
+docker run -p 3000:3000 \
+-e HF_TOKEN=HF_TOKEN \
+aisheets/sheets
+```
+
+Open `http://localhost:3000` in your browser.
+
+### Using pnpm
+
+First, [install pnpm](https://pnpm.io/installation) if you haven't already.
+
+```bash
+git clone https://github.com/huggingface/sheets.git
+cd sheets
+export HF_TOKEN=your_token_here
+pnpm install
+pnpm dev
+```
+
+Open `http://localhost:5173` in your browser.
+
+#### Building for production
+
+To build the application for production, run:
+
+```bash
+pnpm build
+```
+
+This will create a production build in the `dist` directory.
+
+Then, you can launch the built-in Express server to serve the production build:
+
+```bash
+export HF_TOKEN=your_token_here
+pnpm serve
+```
 
 ## Developer docs
 
@@ -53,17 +97,14 @@ Inside your project, you'll see the following directory structure:
 Run this on your root folder
 
 ```sh
-touch .env.local
+touch .env
 ```
 
-Add in your `.env.local` file the following variables:
+Add in your `.env` file the following variable:
 
 ```
-OAUTH_CLIENT_ID
-HF_TOKEN=X
+HF_TOKEN=your_hugging_face_token
 ```
-
-Please note that if you define the `HF_TOKEN`, this variable will take priority over `OAUTH_CLIENT_ID`.
 
 Development mode uses [Vite's development server](https://vitejs.dev/). The `dev` command will server-side render (SSR) the output during development.
 

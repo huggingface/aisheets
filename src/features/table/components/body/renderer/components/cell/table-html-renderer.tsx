@@ -9,11 +9,7 @@ export const TableHTMLRenderer = component$<TableProps>(({ cell }) => {
   return (
     <div class="h-full flex flex-col justify-between">
       <CellActions cell={cell} />
-      <div class="w-full h-[90px] flex flex-col items-center">
-        <div class="flex items-center justify-center overflow-hidden">
-          <TableSandbox content={content} />
-        </div>
-      </div>
+      <TableSandbox content={content} />
     </div>
   );
 });

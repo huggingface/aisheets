@@ -26,9 +26,10 @@ export const modelToColumn = (model: ColumnModel): Column => {
       columnsReferences: (model.process?.referredColumns ?? []).map(
         (columnRef) => columnRef.id,
       ),
+      prompt: model.process?.prompt ?? '',
       modelName: model.process?.modelName ?? '',
       modelProvider: model.process?.modelProvider ?? '',
-      prompt: model.process?.prompt ?? '',
+      useEndpointURL: model.process?.useCustomEndpoint ?? false,
       searchEnabled: model.process?.searchEnabled,
       updatedAt: model.process?.updatedAt,
     },

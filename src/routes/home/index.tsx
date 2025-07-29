@@ -71,28 +71,13 @@ export default component$(() => {
 
   const examples = [
     {
-      title: 'Challenging medicine multi-choice questions',
+      title: 'Portfolio web pages',
       prompt:
-        'Extremely challenging multiple-choice questions for the domain of medicine',
+        'Dataset with personal portfolios. Include the html/css/js single page, working implementation. Be creative but avoid writing long code.',
     },
     {
-      title: 'Spanish-Speaking Countries & Regional Idioms',
-      prompt:
-        'List of idioms in Spanish speaking countries, with the country where they are used',
-    },
-    {
-      title: 'Climate-related disasters',
-      prompt:
-        'Recent climate related disasters including the name/type of disaster, location and year',
-    },
-    {
-      title: 'Endangered Plants',
-      prompt: 'Endangered plant species. Include scientific name and habitat',
-    },
-    {
-      title: 'Customer sentiment climbing shoes',
-      prompt:
-        'Sentiment dataset about real climbing shoe models, including a summary of positive and negative aspects',
+      title: 'Isometric images',
+      prompt: 'Isometric images of european capitals',
     },
   ];
 
@@ -332,14 +317,27 @@ export default component$(() => {
         </div>
       </div>
       <div class="w-full flex flex-col items-center justify-center">
-        <div class="flex flex-col w-full items-center gap-5">
+        <div class="flex flex-col w-full max-w-6xl gap-5">
           {!isLoading.value && (
             <div class="flex flex-col items-center justify-center space-y-4">
-              <MainLogo class="mt-6 md:mt-0 w-[70px] h-[70px]" />
-              <h1 class="text-neutral-600 text-2xl font-semibold">
-                AI-powered spreadsheets
-              </h1>
-              <h2 class="text-neutral-500 font-medium">From a simple idea</h2>
+              <div class="flex flex-col items-center justify-center mb-4">
+                <MainLogo class="mt-6 md:mt-0 w-[70px] h-[70px]" />
+                <h1 class="text-neutral-600 text-2xl font-semibold">
+                  AI-powered spreadsheets
+                </h1>
+              </div>
+
+              <DragAndDrop />
+
+              <div class="w-full md:w-[697px] flex justify-center items-center">
+                <hr class="w-full border-t" />
+                <span class="mx-10 text-neutral-500">OR</span>
+                <hr class="w-full border-t" />
+              </div>
+
+              <h2 class="text-primary-600 font-semibold text-xl text-center">
+                Build a synthetic dataset from a simple idea
+              </h2>
             </div>
           )}
 
@@ -362,7 +360,7 @@ export default component$(() => {
                     look="ghost"
                     value={prompt.value}
                     disabled={isLoading.value}
-                    placeholder="Describe the dataset you want or try one of the examples below"
+                    placeholder="Description and representation of polite gesture by culture"
                     class={cn(
                       'p-4 max-h-40 resize-none overflow-auto text-base placeholder:text-neutral-500',
                       {
@@ -422,7 +420,7 @@ export default component$(() => {
             </form>
 
             {!isLoading.value && (
-              <div class="flex flex-col items-center justify-center space-y-8 mt-8">
+              <div class="flex flex-col items-center justify-center mt-4">
                 <div class="w-full md:w-[700px] flex flex-col md:flex-row flex-wrap justify-start items-center gap-2">
                   {examples.map((example) => (
                     <Button
@@ -439,16 +437,6 @@ export default component$(() => {
                     </Button>
                   ))}
                 </div>
-
-                <div class="w-full md:w-[697px] flex justify-center items-center">
-                  <hr class="w-full border-t" />
-                  <span class="mx-10 text-neutral-500">OR</span>
-                  <hr class="w-full border-t" />
-                </div>
-
-                <div class="w-full md:w-[530px] h-[150px] lg:h-[230px]">
-                  <DragAndDrop />
-                </div>
               </div>
             )}
           </div>
@@ -456,17 +444,17 @@ export default component$(() => {
       </div>
       <Tips id="home-tips">
         <p>
+          <b>Start with existing data:</b> Generating new content from
+          structured data helps improve accuracy. Import a file, then transform,
+          augment, or enrich its content to suit your use case.
+        </p>
+        <p>
           <b>Write a good prompt:</b> Be detailed about the topic and content
           you want.
         </p>
         <p>
           <b>Activate "Search the web":</b> For deep research, fact-checking and
           up-to-date info.
-        </p>
-        <p>
-          <b>Start with existing data:</b> Generating new content from
-          structured data helps improve accuracy. Import a file, then transform,
-          augment, or enrich its content to suit your use case.
         </p>
       </Tips>
     </ActiveDatasetProvider>

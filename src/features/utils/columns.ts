@@ -65,3 +65,18 @@ export const isEditableValue = (column: Typeable): boolean => {
     !hasBlobContent(column) && !isArrayType(column) && !isObjectType(column)
   );
 };
+
+export const getThinking = (value: string) => {
+  const match = value?.match(/<think>([\s\S]*?)<\/think>/);
+  if (!match) return [];
+
+  const thinkText = match[1].trim();
+  return thinkText
+    .split('\n')
+    .map((l) => l.trim())
+    .filter((l) => l);
+};
+
+export const removeThinking = (value: string) => {
+  return value?.replace(/<think>[\s\S]*?<\/think>/, '').trim();
+};

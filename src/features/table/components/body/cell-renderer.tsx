@@ -6,7 +6,12 @@ import { CellRawEditor } from '~/features/table/components/body/renderer/cell-ra
 import { TableRenderer } from '~/features/table/components/body/renderer/components/cell/table-renderer';
 import { PreviewRenderer } from '~/features/table/components/body/renderer/components/preview/preview-renderer';
 import { unSelectText } from '~/features/table/components/body/renderer/components/utils';
-import { hasBlobContent, isTextType } from '~/features/utils/columns';
+import {
+  getThinking,
+  hasBlobContent,
+  isTextType,
+  removeThinking,
+} from '~/features/utils/columns';
 import { useValidateCellUseCase } from '~/usecases/validate-cell.usecase';
 
 export const CellRenderer = component$<CellProps>((props) => {
@@ -21,26 +26,11 @@ export const CellRenderer = component$<CellProps>((props) => {
   const newValue = useSignal(cell.value);
   const thinking = useSignal<string[]>([]);
 
-  const getThinking = $((value: string) => {
-    const match = value?.match(/<think>([\s\S]*?)<\/think>/);
-    if (!match) return [];
-
-    const thinkText = match[1].trim();
-    return thinkText
-      .split('\n')
-      .map((l) => l.trim())
-      .filter((l) => l);
-  });
-
-  const remoteThinking = $((value: string) => {
-    return value?.replace(/<think>[\s\S]*?<\/think>/, '').trim();
-  });
-
-  useVisibleTask$(async ({ track }) => {
+  useVisibleTask$(({ track }) => {
     track(() => cell.value);
 
-    newValue.value = originalValue.value = await remoteThinking(cell.value);
-    thinking.value = await getThinking(cell.value);
+    newValue.value = originalValue.value = removeThinking(cell.value);
+    thinking.value = getThinking(cell.value);
   });
 
   const onEdit = $(() => {

@@ -13,7 +13,7 @@ export const TableSandbox = component$<{ content: string }>(({ content }) => {
             html {
                 font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
             }
-            body { margin-top: -20px; margin-right: 0; margin-bottom: 0; margin-left: 0; padding: 0; padding: 0; overflow: hidden; }
+            body { margin:0; padding: 0; padding: 0; overflow: hidden; }
           </style>
         </head>
         <body>

@@ -8,6 +8,7 @@ import { markedHighlight } from 'marked-highlight';
 import markedKatex from 'marked-katex-extension';
 import { CellActions } from '~/features/table/components/body/cell-actions';
 import { TableSandbox } from '~/features/table/components/body/renderer/components/table-sandbox';
+import { removeThinking } from '~/features/utils/columns';
 
 const preprocess = (html: string) => {
   return html.replace(/[^\S\r\n]+$/gm, '');
@@ -58,7 +59,7 @@ export const TableMarkDownRenderer = component$<CellProps>((props) => {
       }
     });
 
-    const html = await marked.parse(cell.value);
+    const html = await marked.parse(removeThinking(cell.value));
 
     htmlContent.value = html;
   });

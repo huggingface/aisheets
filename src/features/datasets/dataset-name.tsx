@@ -6,6 +6,7 @@ import {
   useVisibleTask$,
 } from '@builder.io/qwik';
 import { server$ } from '@builder.io/qwik-city';
+import { LuExternalLink } from '@qwikest/icons/lucide';
 import { Input } from '~/components';
 import { useClickOutside } from '~/components/hooks/click/outside';
 import { Tooltip } from '~/components/ui/tooltip/tooltip';
@@ -98,37 +99,47 @@ export const DatasetName = component$(() => {
   });
 
   return (
-    <div class="w-fit max-w-1/2">
-      {state.isEditing ? (
-        <Input
-          ref={inputRef}
-          type="text"
-          value={state.name}
-          onInput$={handleChange}
-          onKeyDown$={handleKeyDown}
-          class="text-md h-6 font-bold p-0 border-none outline-none leading-none max-w-96"
-          style={{
-            width: `${state.name.length}ch`,
-          }}
-        />
-      ) : isNameTruncated.value ? (
-        <Tooltip text={state.name} floating="bottom-end">
+    <>
+      <div class="w-fit max-w-1/2">
+        {state.isEditing ? (
+          <Input
+            ref={inputRef}
+            type="text"
+            value={state.name}
+            onInput$={handleChange}
+            onKeyDown$={handleKeyDown}
+            class="text-md h-6 font-bold p-0 border-none outline-none leading-none max-w-96"
+            style={{
+              width: `${state.name.length}ch`,
+            }}
+          />
+        ) : isNameTruncated.value ? (
+          <Tooltip text={state.name} floating="bottom-end">
+            <h1
+              class="text-md font-bold h-6 mt-2 leading-none w-96 truncate text-ellipsis whitespace-nowrap"
+              onClick$={handleEditClick}
+            >
+              {state.displayName}
+            </h1>
+          </Tooltip>
+        ) : (
           <h1
-            class="text-md font-bold h-6 mt-2 leading-none w-96 truncate text-ellipsis whitespace-nowrap"
+            class="text-md font-bold h-6 mt-2 leading-none w-fit truncate text-ellipsis whitespace-nowrap"
             onClick$={handleEditClick}
           >
             {state.displayName}
           </h1>
-        </Tooltip>
-      ) : (
-        <h1
-          class="text-md font-bold h-6 mt-2 leading-none w-fit truncate text-ellipsis whitespace-nowrap"
-          onClick$={handleEditClick}
-        >
-          {state.displayName}
-        </h1>
-      )}
-      <p class="text-red-300 absolute">{state.error}</p>
-    </div>
+        )}
+        <p class="text-red-300 absolute">{state.error}</p>
+      </div>
+      <Tooltip text="Open in new tab" floating="bottom-end">
+        <LuExternalLink
+          class="text-secundary hover:text-primary"
+          onClick$={() => {
+            window.open(location.href, '_blank');
+          }}
+        />
+      </Tooltip>
+    </>
   );
 });

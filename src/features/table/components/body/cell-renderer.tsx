@@ -110,28 +110,28 @@ export const CellRenderer = component$<CellProps>((props) => {
                   ) : null}
 
                   <div class="max-h-[40vh] md:max-h-[440px] h-full">
-                    <Accordion.Root class="w-full">
-                      <Accordion.Item>
-                        <Accordion.Trigger
-                          header="h1"
-                          class="text-lg font-bold hover:no-underline h-10"
-                        >
-                          <div class="flex items-center gap-2 h-10">
-                            <LuBrain class="p-2 rounded-lg bg-neutral-300 h-9 w-9" />
-                            Reasoning
-                          </div>
-                        </Accordion.Trigger>
-                        <Accordion.Content>
-                          {thinking.value.map((t) => {
-                            return (
-                              <ul key={t} class="list-disc pl-6">
-                                <li>{t}</li>
-                              </ul>
-                            );
-                          })}
-                        </Accordion.Content>
-                      </Accordion.Item>
-                    </Accordion.Root>
+                    {thinking.value.length >= 1 ? (
+                      <Accordion.Root class="w-full">
+                        <Accordion.Item class="p-1">
+                          <Accordion.Trigger
+                            header="h1"
+                            class="text-lg font-bold hover:no-underline h-10"
+                          >
+                            <div class="flex items-center gap-2 h-10">
+                              <LuBrain class="p-2 rounded-lg bg-neutral-300 h-9 w-9" />
+                              Reasoning
+                            </div>
+                          </Accordion.Trigger>
+                          <Accordion.Content>
+                            <ul class="list-disc pl-6 space-y-2">
+                              {thinking.value.map((t) => {
+                                return <li key={t}>{t}</li>;
+                              })}
+                            </ul>
+                          </Accordion.Content>
+                        </Accordion.Item>
+                      </Accordion.Root>
+                    ) : null}
                     <PreviewRenderer {...props} value={newValue.value} />
                   </div>
                 </div>

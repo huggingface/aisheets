@@ -1,17 +1,12 @@
 import { $, component$, useSignal, useVisibleTask$ } from '@builder.io/qwik';
-import { LuBrain, LuPenSquare } from '@qwikest/icons/lucide';
-import { Accordion, Button, ToggleGroup } from '~/components';
+import { LuPenSquare } from '@qwikest/icons/lucide';
+import { Button, ToggleGroup } from '~/components';
 import type { CellProps } from '~/features/table/components/body/renderer/cell-props';
 import { CellRawEditor } from '~/features/table/components/body/renderer/cell-raw-editor';
 import { TableRenderer } from '~/features/table/components/body/renderer/components/cell/table-renderer';
 import { PreviewRenderer } from '~/features/table/components/body/renderer/components/preview/preview-renderer';
 import { unSelectText } from '~/features/table/components/body/renderer/components/utils';
-import {
-  getThinking,
-  hasBlobContent,
-  isTextType,
-  removeThinking,
-} from '~/features/utils/columns';
+import { hasBlobContent, isTextType } from '~/features/utils/columns';
 import { useValidateCellUseCase } from '~/usecases/validate-cell.usecase';
 
 export const CellRenderer = component$<CellProps>((props) => {
@@ -24,13 +19,11 @@ export const CellRenderer = component$<CellProps>((props) => {
 
   const originalValue = useSignal(cell.value);
   const newValue = useSignal(cell.value);
-  const thinking = useSignal<string[]>([]);
 
   useVisibleTask$(({ track }) => {
     track(() => cell.value);
 
-    newValue.value = originalValue.value = removeThinking(cell.value);
-    thinking.value = getThinking(cell.value);
+    newValue.value = originalValue.value = cell.value;
   });
 
   const onEdit = $(() => {
@@ -109,32 +102,7 @@ export const CellRenderer = component$<CellProps>((props) => {
                     </div>
                   ) : null}
 
-                  <div class="max-h-[40vh] md:max-h-[440px] h-full flex flex-col gap-5">
-                    {thinking.value.length >= 1 ? (
-                      <Accordion.Root class="w-3/4">
-                        <Accordion.Item class="border border-neutral-300 rounded-md">
-                          <Accordion.Trigger
-                            header="h1"
-                            class="text-lg hover:no-underline h-12 hover:bg-neutral-200 p-2 rounded-t-md"
-                          >
-                            <div class="flex items-center gap-2">
-                              <LuBrain class="p-2 rounded-sm bg-neutral-300 w-fit h-fit" />
-                              Reasoning
-                            </div>
-                          </Accordion.Trigger>
-                          <Accordion.Content>
-                            <ul class="pt-4 pl-6 space-y-2">
-                              {thinking.value.map((t) => {
-                                return <li key={t}>{t}</li>;
-                              })}
-                            </ul>
-                          </Accordion.Content>
-                        </Accordion.Item>
-                      </Accordion.Root>
-                    ) : null}
-
-                    <PreviewRenderer {...props} value={newValue.value} />
-                  </div>
+                  <PreviewRenderer {...props} value={newValue.value} />
                 </div>
               ) : (
                 <div class="w-full h-full flex flex-col justify-between gap-3">

@@ -6,7 +6,7 @@ import {
   useVisibleTask$,
 } from '@builder.io/qwik';
 import { server$ } from '@builder.io/qwik-city';
-import { LuExternalLink } from '@qwikest/icons/lucide';
+import { LuLink } from '@qwikest/icons/lucide';
 import { Input } from '~/components';
 import { useClickOutside } from '~/components/hooks/click/outside';
 import { Tooltip } from '~/components/ui/tooltip/tooltip';
@@ -21,6 +21,7 @@ export const DatasetName = component$(() => {
     error: '',
     name: '',
     displayName: activeDataset.value.name,
+    copied: false,
   });
 
   const { updateOnActiveDataset } = useDatasetsStore();
@@ -132,14 +133,24 @@ export const DatasetName = component$(() => {
         )}
         <p class="text-red-300 absolute">{state.error}</p>
       </div>
-      <Tooltip text="Open in new tab" floating="bottom-end">
-        <LuExternalLink
-          class="text-secundary hover:text-primary"
-          onClick$={() => {
-            window.open(location.href, '_blank');
-          }}
-        />
-      </Tooltip>
+
+      <div class="flex items-center gap-2">
+        <Tooltip
+          text={state.copied ? 'URL Copied' : 'Copy URL'}
+          floating="bottom-end"
+        >
+          <LuLink
+            class={['text-secundary hover:text-primary'].join(' ')}
+            onClick$={$(() => {
+              navigator.clipboard.writeText(location.href);
+              state.copied = true;
+              setTimeout(() => {
+                state.copied = false;
+              }, 1200);
+            })}
+          />
+        </Tooltip>
+      </div>
     </>
   );
 });

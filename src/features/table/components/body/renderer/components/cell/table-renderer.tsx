@@ -1,4 +1,4 @@
-import { component$ } from '@builder.io/qwik';
+import { component$, useSignal, useTask$ } from '@builder.io/qwik';
 import type { CellProps } from '~/features/table/components/body/renderer/cell-props';
 import { TableArrayRenderer } from '~/features/table/components/body/renderer/components/cell/table-array-renderer';
 import { TableBlobRenderer } from '~/features/table/components/body/renderer/components/cell/table-blob-renderer';
@@ -12,10 +12,18 @@ import {
   isHTMLContent,
   isMarkDown,
   isObjectType,
+  removeThinking,
 } from '~/features/utils/columns';
 
 export const TableRenderer = component$<Required<CellProps>>((props) => {
   const { cell } = props;
+  const newValue = useSignal('');
+
+  useTask$(({ track }) => {
+    track(() => cell.value);
+
+    newValue.value = removeThinking(cell.value);
+  });
 
   if (hasBlobContent(cell.column)) {
     return <TableBlobRenderer {...props} />;
@@ -29,11 +37,11 @@ export const TableRenderer = component$<Required<CellProps>>((props) => {
     return <TableArrayRenderer {...props} />;
   }
 
-  if (isMarkDown(cell.value)) {
+  if (isMarkDown(newValue.value)) {
     return <TableMarkDownRenderer {...props} />;
   }
 
-  if (isHTMLContent(cell.value)) {
+  if (isHTMLContent(newValue.value)) {
     return <TableHTMLRenderer {...props} />;
   }
 

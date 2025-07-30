@@ -1,4 +1,4 @@
-import { component$, useSignal, useVisibleTask$ } from '@builder.io/qwik';
+import { component$, useSignal, useTask$ } from '@builder.io/qwik';
 import { LuBrain } from '@qwikest/icons/lucide';
 import { Accordion } from '~/components';
 import { PreviewArrayRenderer } from '~/features/table/components/body/renderer/components/preview/preview-array-renderer';
@@ -21,11 +21,13 @@ import {
 export const PreviewRenderer = component$<PreviewProps>((props) => {
   const { cell, value } = props;
   const thinking = useSignal<string[]>([]);
+  const newValue = useSignal(value);
 
-  useVisibleTask$(({ track }) => {
-    track(() => cell.value);
+  useTask$(({ track }) => {
+    track(() => value);
 
-    thinking.value = getThinking(cell.value);
+    newValue.value = removeThinking(value);
+    thinking.value = getThinking(value);
   });
 
   let Component = PreviewRawRenderer;
@@ -36,9 +38,9 @@ export const PreviewRenderer = component$<PreviewProps>((props) => {
     Component = PreviewObjectRenderer;
   } else if (isArrayType(cell.column)) {
     Component = PreviewArrayRenderer;
-  } else if (isMarkDown(value)) {
+  } else if (isMarkDown(newValue.value)) {
     Component = PreviewMarkDownRenderer;
-  } else if (isHTMLContent(value)) {
+  } else if (isHTMLContent(newValue.value)) {
     Component = PreviewHtmlRenderer;
   }
 
@@ -66,7 +68,8 @@ export const PreviewRenderer = component$<PreviewProps>((props) => {
           </Accordion.Item>
         </Accordion.Root>
       ) : null}
-      <Component cell={cell} value={removeThinking(value)} />
+
+      <Component cell={cell} value={newValue.value} />
     </div>
   );
 });

@@ -101,6 +101,23 @@ export const DatasetName = component$(() => {
 
   return (
     <>
+      <div class="flex items-center gap-2">
+        <Tooltip
+          text={state.copied ? 'URL Copied' : 'Copy URL'}
+          floating="bottom-end"
+        >
+          <LuLink
+            class={['text-secundary hover:text-primary'].join(' ')}
+            onClick$={$(() => {
+              navigator.clipboard.writeText(location.href);
+              state.copied = true;
+              setTimeout(() => {
+                state.copied = false;
+              }, 1200);
+            })}
+          />
+        </Tooltip>
+      </div>
       <div class="w-fit max-w-1/2">
         {state.isEditing ? (
           <Input
@@ -132,24 +149,6 @@ export const DatasetName = component$(() => {
           </h1>
         )}
         <p class="text-red-300 absolute">{state.error}</p>
-      </div>
-
-      <div class="flex items-center gap-2">
-        <Tooltip
-          text={state.copied ? 'URL Copied' : 'Copy URL'}
-          floating="bottom-end"
-        >
-          <LuLink
-            class={['text-secundary hover:text-primary'].join(' ')}
-            onClick$={$(() => {
-              navigator.clipboard.writeText(location.href);
-              state.copied = true;
-              setTimeout(() => {
-                state.copied = false;
-              }, 1200);
-            })}
-          />
-        </Tooltip>
       </div>
     </>
   );

@@ -109,21 +109,21 @@ export const CellRenderer = component$<CellProps>((props) => {
                     </div>
                   ) : null}
 
-                  <div class="max-h-[40vh] md:max-h-[440px] h-full">
+                  <div class="max-h-[40vh] md:max-h-[440px] h-full flex flex-col gap-5">
                     {thinking.value.length >= 1 ? (
-                      <Accordion.Root class="w-full">
-                        <Accordion.Item class="p-1">
+                      <Accordion.Root class="w-3/4">
+                        <Accordion.Item class="border border-neutral-300 rounded-md">
                           <Accordion.Trigger
                             header="h1"
-                            class="text-lg font-bold hover:no-underline h-10"
+                            class="text-lg hover:no-underline h-12 hover:bg-neutral-200 p-2 rounded-t-md"
                           >
-                            <div class="flex items-center gap-2 h-10">
-                              <LuBrain class="p-2 rounded-lg bg-neutral-300 h-9 w-9" />
+                            <div class="flex items-center gap-2">
+                              <LuBrain class="p-2 rounded-sm bg-neutral-300 w-fit h-fit" />
                               Reasoning
                             </div>
                           </Accordion.Trigger>
                           <Accordion.Content>
-                            <ul class="list-disc pl-6 space-y-2">
+                            <ul class="pt-4 pl-6 space-y-2">
                               {thinking.value.map((t) => {
                                 return <li key={t}>{t}</li>;
                               })}
@@ -132,6 +132,7 @@ export const CellRenderer = component$<CellProps>((props) => {
                         </Accordion.Item>
                       </Accordion.Root>
                     ) : null}
+
                     <PreviewRenderer {...props} value={newValue.value} />
                   </div>
                 </div>

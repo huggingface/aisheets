@@ -15,7 +15,7 @@ import { Table } from '~/features/table';
 import { Username } from '~/features/user/username';
 import { useSession } from '~/loaders';
 import { ActiveDatasetProvider } from '~/state';
-import { datasetAsJson } from './json';
+import { datasetAsJson } from './json/utils';
 
 export const onGet: RequestHandler = async (event: RequestEvent) => {
   const { headers } = event.request;

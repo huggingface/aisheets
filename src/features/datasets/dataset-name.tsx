@@ -107,7 +107,7 @@ export const DatasetName = component$(() => {
           floating="bottom-end"
         >
           <LuLink
-            class={['text-secundary hover:text-primary'].join(' ')}
+            class={['text-neutral-500 hover:text-neutral-600'].join(' ')}
             onClick$={$(() => {
               navigator.clipboard.writeText(location.href);
               state.copied = true;

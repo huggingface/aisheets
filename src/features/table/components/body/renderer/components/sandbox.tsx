@@ -4,27 +4,41 @@ export const Sandbox = component$<{ content: string }>(({ content }) => {
   return (
     <iframe
       title="HTML"
+      class="w-full h-full border-none"
       srcdoc={`<html>
-          <head>
-            <style>
-              html {
-                  font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-              }
-              body { margin: 0; padding: 0; maxHeight: 500px; maxWidth: 800px; }
-              iframe { width: 100%; height: 100%; border: none; }
-              svg { width: 100%; height: 100%; }
-              img { max-width: 100%; height: auto; }
-              pre { margin: 0; padding: 0; }
-              code { font-family: monospace; }
-            </style>
-          </head>
-          <body>${content}</body>
-        </html>`}
-      style={{
-        width: '100%',
-        height: '100%',
-        border: 'none',
-      }}
+<head>
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        width: 100%;
+        overflow: hidden;
+        font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+      }
+
+      * {
+        max-width: 100%;
+        max-height: 100%;
+        box-sizing: border-box;
+      }
+
+      svg, img {
+        max-width: 100%;
+        max-height: 100%;
+        display: block;
+      }
+
+      pre, code {
+        margin: 0;
+        padding: 0;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+    </style>
+  </head>
+  <body>${content}</body>
+</html>`}
     />
   );
 });

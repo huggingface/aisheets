@@ -45,6 +45,16 @@ export const CellRenderer = component$<CellProps>((props) => {
     onClose();
   });
 
+  useVisibleTask$(({ track }) => {
+    track(isExpanded);
+
+    if (isExpanded.value) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+  });
+
   return (
     <div
       class="w-full h-full"

@@ -3,7 +3,7 @@ import type { PreviewProps } from '~/features/table/components/body/renderer/com
 
 export const PreviewRawRenderer = component$<PreviewProps>(({ value }) => {
   return (
-    <div class="w-full h-full text-base resize-none whitespace-pre-wrap break-words overflow-auto p-1 py-2">
+    <div class="w-full h-full text-base resize-none whitespace-pre-wrap break-words p-1 py-2">
       <p>{value?.toString()}</p>
     </div>
   );

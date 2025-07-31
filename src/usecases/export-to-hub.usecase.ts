@@ -9,7 +9,7 @@ import { type RequestEventBase, server$ } from '@builder.io/qwik-city';
 import { getDatasetById } from '~/services/repository/datasets';
 import { exportDatasetTableRows } from '~/services/repository/tables';
 import { type Dataset, useServerSession } from '~/state';
-import { generateDatasetConfig } from '~/usecases/create-dataset-config';
+import { generateDatasetConfig } from './create-dataset-config';
 
 export interface ExportDatasetParams {
   dataset: Dataset;

@@ -6,6 +6,7 @@ import {
   useVisibleTask$,
 } from '@builder.io/qwik';
 import { server$ } from '@builder.io/qwik-city';
+import { LuLink } from '@qwikest/icons/lucide';
 import { Input } from '~/components';
 import { useClickOutside } from '~/components/hooks/click/outside';
 import { Tooltip } from '~/components/ui/tooltip/tooltip';
@@ -20,6 +21,7 @@ export const DatasetName = component$(() => {
     error: '',
     name: '',
     displayName: activeDataset.value.name,
+    copied: false,
   });
 
   const { updateOnActiveDataset } = useDatasetsStore();
@@ -99,35 +101,51 @@ export const DatasetName = component$(() => {
 
   return (
     <div class="w-fit max-w-1/2">
-      {state.isEditing ? (
-        <Input
-          ref={inputRef}
-          type="text"
-          value={state.name}
-          onInput$={handleChange}
-          onKeyDown$={handleKeyDown}
-          class="text-md h-6 font-bold p-0 border-none outline-none leading-none max-w-96"
-          style={{
-            width: `${state.name.length}ch`,
-          }}
-        />
-      ) : isNameTruncated.value ? (
-        <Tooltip text={state.name} floating="bottom-end">
+      <div class="flex w-fit items-center gap-2">
+        <Tooltip text={state.copied ? 'Copied' : 'Copy link'} floating="bottom">
+          <LuLink
+            class={[
+              'text-neutral-500 hover:text-neutral-600 cursor-pointer',
+            ].join(' ')}
+            onClick$={$(() => {
+              navigator.clipboard.writeText(location.href);
+              state.copied = true;
+              setTimeout(() => {
+                state.copied = false;
+              }, 1200);
+            })}
+          />
+        </Tooltip>
+        {state.isEditing ? (
+          <Input
+            ref={inputRef}
+            type="text"
+            value={state.name}
+            onInput$={handleChange}
+            onKeyDown$={handleKeyDown}
+            class="text-md h-6 font-bold leading-none p-0 border-none outline-none max-w-96"
+            style={{
+              width: `${state.name.length}ch`,
+            }}
+          />
+        ) : isNameTruncated.value ? (
+          <Tooltip text={state.name}>
+            <h1
+              class="text-md h-6 font-bold leading-none mt-2 w-96 truncate text-ellipsis whitespace-nowrap"
+              onClick$={handleEditClick}
+            >
+              {state.displayName}
+            </h1>
+          </Tooltip>
+        ) : (
           <h1
-            class="text-md font-bold h-6 mt-2 leading-none w-96 truncate text-ellipsis whitespace-nowrap"
+            class="flex h-12 w-full text-md h-6 font-bold leading-none mt-2 text-ellipsis whitespace-nowrap"
             onClick$={handleEditClick}
           >
             {state.displayName}
           </h1>
-        </Tooltip>
-      ) : (
-        <h1
-          class="text-md font-bold h-6 mt-2 leading-none w-fit truncate text-ellipsis whitespace-nowrap"
-          onClick$={handleEditClick}
-        >
-          {state.displayName}
-        </h1>
-      )}
+        )}
+      </div>
       <p class="text-red-300 absolute">{state.error}</p>
     </div>
   );

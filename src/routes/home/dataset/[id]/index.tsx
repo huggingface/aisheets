@@ -1,5 +1,9 @@
 import { component$ } from '@builder.io/qwik';
-import type { DocumentHead } from '@builder.io/qwik-city';
+import type {
+  DocumentHead,
+  RequestEvent,
+  RequestHandler,
+} from '@builder.io/qwik-city';
 import { Login } from '~/components/ui/login/Login';
 import { MobileBanner } from '~/components/ui/mobile/banner';
 import { Tips } from '~/components/ui/tips/tips';
@@ -11,6 +15,16 @@ import { Table } from '~/features/table';
 import { Username } from '~/features/user/username';
 import { useSession } from '~/loaders';
 import { ActiveDatasetProvider } from '~/state';
+import { datasetAsJson } from './json/utils';
+
+export const onGet: RequestHandler = async (event: RequestEvent) => {
+  const { headers } = event.request;
+  const acceptHeader = headers.get('Accept') || headers.get('accept');
+
+  if (acceptHeader?.includes('application/json')) {
+    return datasetAsJson(event);
+  }
+};
 
 export default component$(() => {
   const session = useSession();

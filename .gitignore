@@ -6,7 +6,7 @@
 
 # Development
 node_modules
-.env
+*.env
 *.local
 
 # Cache
@@ -50,3 +50,5 @@ lerna-debug.log*
 .data
 data
 
+# Extra repositories
+repos

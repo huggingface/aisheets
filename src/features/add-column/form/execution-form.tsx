@@ -392,7 +392,14 @@ export const ExecutionForm = component$<SidebarProps>(
                   <div class="flex items-center justify-start gap-1">
                     Model
                     <p class="text-neutral-500 underline">
-                      {selectedModelId.value}
+                      <a
+                        href={`https://huggingface.co/${selectedModelId.value}`}
+                        class="text-neutral-500 hover:text-neutral-600"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {selectedModelId.value}
+                      </a>
                     </p>
                     {enableCustomEndpoint.value &&
                       !endpointURLSelected.value && (
@@ -414,7 +421,7 @@ export const ExecutionForm = component$<SidebarProps>(
                   class="hover:bg-neutral-200"
                 >
                   <Tooltip text="Change model">
-                    <LuSettings class="text-neutral-500" />
+                    <LuSettings class="text-neutral-500 hover:text-neutral-600" />
                   </Tooltip>
                 </Button>
               </div>

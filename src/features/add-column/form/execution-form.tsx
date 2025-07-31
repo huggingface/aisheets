@@ -394,7 +394,7 @@ export const ExecutionForm = component$<SidebarProps>(
                     <p class="text-neutral-500 underline">
                       <a
                         href={`https://huggingface.co/${selectedModelId.value}`}
-                        class="text-neutral-500 hover:text-blue-700"
+                        class="text-neutral-500 hover:text-neutral-600"
                         target="_blank"
                         rel="noopener noreferrer"
                       >
@@ -421,7 +421,7 @@ export const ExecutionForm = component$<SidebarProps>(
                   class="hover:bg-neutral-200"
                 >
                   <Tooltip text="Change model">
-                    <LuSettings class="text-neutral-500" />
+                    <LuSettings class="text-neutral-500 hover:text-neutral-600" />
                   </Tooltip>
                 </Button>
               </div>

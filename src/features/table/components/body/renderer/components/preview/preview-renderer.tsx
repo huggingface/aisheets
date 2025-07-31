@@ -45,7 +45,7 @@ export const PreviewRenderer = component$<PreviewProps>((props) => {
   }
 
   return (
-    <div class="max-h-[40vh] md:max-h-[440px] h-full flex flex-col overflow-y-auto gap-2">
+    <div class="h-full flex flex-col overflow-y-auto gap-2">
       {thinking.value.length >= 1 ? (
         <Accordion.Root class="w-3/4 shrink-0">
           <Accordion.Item class="border border-neutral-300 rounded-md">

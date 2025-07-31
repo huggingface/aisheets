@@ -23,4 +23,6 @@ export const datasetAsJson = async (event: RequestEvent) => {
   });
 };
 
-export const onGet: RequestHandler = datasetAsJson;
+export const onGet: RequestHandler = async (event: RequestEvent) => {
+  await datasetAsJson(event);
+};

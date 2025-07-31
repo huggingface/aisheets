@@ -142,7 +142,7 @@ export const DatasetName = component$(() => {
           </Tooltip>
         ) : (
           <h1
-            class="text-md font-bold h-6 mt-2 leading-none w-fit truncate text-ellipsis whitespace-nowrap"
+            class="text-md font-bold h-6 mt-2 leading-none w-96 truncate text-ellipsis whitespace-nowrap"
             onClick$={handleEditClick}
           >
             {state.displayName}

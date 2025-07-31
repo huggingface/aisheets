@@ -45,7 +45,7 @@ export const PreviewRenderer = component$<PreviewProps>((props) => {
   }
 
   return (
-    <div class="max-h-[40vh] md:max-h-[440px] h-full flex flex-col gap-5">
+    <div class="max-h-[40vh] md:max-h-[440px] h-full flex flex-col gap-5 overflow-y-auto">
       {thinking.value.length >= 1 ? (
         <Accordion.Root class="w-3/4">
           <Accordion.Item class="border border-neutral-300 rounded-md">
@@ -59,7 +59,7 @@ export const PreviewRenderer = component$<PreviewProps>((props) => {
               </div>
             </Accordion.Trigger>
             <Accordion.Content>
-              <ul class="pt-4 pl-6 space-y-2 overflow-y-auto max-h-[200px]">
+              <ul class="pt-4 pl-6 space-y-2">
                 {thinking.value.map((t) => {
                   return <li key={t}>{t}</li>;
                 })}

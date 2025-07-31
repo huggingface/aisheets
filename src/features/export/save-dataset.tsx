@@ -18,14 +18,14 @@ export const SaveDataset = component$(() => {
       <Popover.Trigger
         class={cn(
           buttonVariants({ look: 'secondary', size: 'sm' }),
-          'disabled:cursor-not-allowed bg-neutral-100',
+          'disabled:cursor-not-allowed bg-white text-neutral-500 hover:text-neutral-600 dark:bg-slate-800 dark:text-slate-400 dark:hover:text-slate-300',
         )}
         disabled={
           activeDataset.value.columns.filter((c) => c.id !== TEMPORAL_ID)
             .length === 0
         }
       >
-        <Label class="flex items-center">
+        <Label class="flex items-center cursor-pointer">
           <Tooltip text="Download">
             <LuDownload class="w-4 h-4" />
           </Tooltip>

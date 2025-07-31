@@ -59,7 +59,7 @@ export const PreviewRenderer = component$<PreviewProps>((props) => {
               </div>
             </Accordion.Trigger>
             <Accordion.Content>
-              <ul class="pt-4 pl-6 space-y-2">
+              <ul class="pt-4 pl-6 space-y-2 overflow-y-auto max-h-[200px]">
                 {thinking.value.map((t) => {
                   return <li key={t}>{t}</li>;
                 })}

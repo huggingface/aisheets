@@ -66,8 +66,8 @@ export const isEditableValue = (column: Typeable): boolean => {
   );
 };
 
-export const getThinking = (value: string) => {
-  if (typeof value !== 'string') return value;
+export const getThinking = (value: string): string[] => {
+  if (typeof value !== 'string') return [];
 
   const match = value?.match(/<think>([\s\S]*?)<\/think>/);
   if (!match) return [];

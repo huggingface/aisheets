@@ -237,7 +237,7 @@ export const DragAndDrop = component$(() => {
                   }
                 >
                   <LuUpload class="w-4 h-4 flex-shrink-0" />
-                  Upload from computer
+                  Upload from computer ({allowedExtensions.join(', ')})
                 </Button>
               </Popover.Panel>
             </Popover.Root>

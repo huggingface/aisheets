@@ -51,7 +51,7 @@ export const PreviewRenderer = component$<PreviewProps>((props) => {
           <Accordion.Item class="border border-neutral-300 rounded-md">
             <Accordion.Trigger
               header="h1"
-              class="text-lg hover:no-underline h-12 hover:bg-neutral-200 p-2 rounded-t-md"
+              class="text-lg hover:no-underline h-12 hover:bg-neutral-200 p-2 rounded-md data-[open]:rounded-b-none duration-200"
             >
               <div class="flex items-center gap-2">
                 <LuBrain class="p-2 rounded-sm bg-neutral-300 w-fit h-fit" />
@@ -59,7 +59,7 @@ export const PreviewRenderer = component$<PreviewProps>((props) => {
               </div>
             </Accordion.Trigger>
             <Accordion.Content>
-              <ul class="pt-4 pl-6 space-y-2">
+              <ul class="pt-4 p-6 space-y-2">
                 {thinking.value.map((t) => {
                   return <li key={t}>{t}</li>;
                 })}

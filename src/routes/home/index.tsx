@@ -11,7 +11,7 @@ import { StepsStatus } from '~/features/autodataset/steps-status';
 import { DragAndDrop } from '~/features/import/drag-n-drop';
 import { MainSidebarButton } from '~/features/main-sidebar';
 import { Username } from '~/features/user/username';
-import { useSession } from '~/loaders';
+import { useSession, useTrendingHubModels } from '~/loaders';
 import { ActiveDatasetProvider } from '~/state';
 import { runAutoDataset } from '~/usecases/run-autodataset';
 
@@ -37,6 +37,7 @@ export default component$(() => {
   const searchOnWeb = useSignal(false);
   const prompt = useSignal('');
   const currentStep = useSignal('');
+  const trendingModels = useTrendingHubModels();
 
   const creationFlow = useStore({
     datasetName: {
@@ -319,12 +320,24 @@ export default component$(() => {
       <div class="w-full flex flex-col items-center justify-center">
         <div class="flex flex-col w-full max-w-6xl gap-5">
           {!isLoading.value && (
-            <div class="flex flex-col items-center justify-center space-y-4">
+            <div class="flex flex-col items-center justify-center space-y-3">
               <div class="flex flex-col items-center justify-center mb-4">
                 <MainLogo class="mt-6 md:mt-0 w-[70px] h-[70px]" />
                 <h1 class="text-neutral-600 text-2xl font-semibold">
                   AI Sheets
                 </h1>
+              </div>
+              <div class="bg-neutral-100 rounded-md flex justify-center items-center p-2 gap-3">
+                <p>Available for vibe testing:</p>
+                {trendingModels.value.map((model) => (
+                  <div
+                    key={model.id}
+                    class="flex items-center bg-white p-1 gap-1"
+                  >
+                    <img src={model.picture} alt={model.id} class="w-4 h-4" />
+                    <span class="text-sm text-neutral-700">{model.id}</span>
+                  </div>
+                ))}
               </div>
 
               <DragAndDrop />

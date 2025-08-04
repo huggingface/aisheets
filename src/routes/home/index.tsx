@@ -1,7 +1,7 @@
 import { $, component$, useSignal, useStore } from '@builder.io/qwik';
 import { server$, useNavigate } from '@builder.io/qwik-city';
 import { cn } from '@qwik-ui/utils';
-import { LuArrowUp, LuEgg, LuGlobe } from '@qwikest/icons/lucide';
+import { LuEgg, LuGlobe } from '@qwikest/icons/lucide';
 import { Button, Textarea } from '~/components';
 import { Login } from '~/components/ui/login/Login';
 import { MainLogo } from '~/components/ui/logo/logo';
@@ -77,8 +77,9 @@ export default component$(() => {
         'Dataset with personal portfolios. Include the html/css/js single page, working implementation. Be creative but avoid writing long code.',
     },
     {
-      title: 'Isometric images',
-      prompt: 'Isometric images of european capitals',
+      title: 'Multi-task questions',
+      prompt: 'TODO',
+      banner: 'Ideal for vibe testing',
     },
   ];
 
@@ -327,13 +328,10 @@ export default component$(() => {
                   AI Sheets
                 </h1>
               </div>
-              <div class="bg-neutral-100 rounded-md flex justify-center items-center p-2 gap-3">
+              <div class="bg-neutral-100 rounded-md flex justify-center items-center p-2 gap-2">
                 <p>Available for vibe testing:</p>
                 {trendingModels.value.map((model) => (
-                  <div
-                    key={model.id}
-                    class="flex items-center bg-white p-1 gap-1"
-                  >
+                  <div key={model.id} class="flex items-center p-1 gap-1">
                     <img src={model.picture} alt={model.id} class="w-4 h-4" />
                     <span class="text-sm text-neutral-700">{model.id}</span>
                   </div>
@@ -432,18 +430,23 @@ export default component$(() => {
               <div class="flex flex-col items-center justify-center mt-4">
                 <div class="w-full md:w-[700px] flex flex-col md:flex-row flex-wrap justify-start items-center gap-2">
                   {examples.map((example) => (
-                    <Button
-                      key={example.title}
-                      look="secondary"
-                      class="flex items-center gap-2 text-xs px-2 text-primary-600 rounded-xl bg-transparent hover:bg-neutral-100 whitespace-nowrap"
-                      onClick$={() => {
-                        prompt.value = example.prompt;
-                        document.getElementById('prompt')?.focus();
-                      }}
-                    >
-                      {example.title}
-                      <LuArrowUp class="text-neutral" />
-                    </Button>
+                    <div class="relative inline-block" key={example.title}>
+                      {example.banner && (
+                        <div class="absolute -top-2 right-0 translate-x-[30%] bg-[#F8C200] text-white text-[10px] px-2 py-[2px] rounded-md shadow-sm z-10">
+                          {example.banner}
+                        </div>
+                      )}
+                      <Button
+                        look="secondary"
+                        class="flex items-center gap-2 text-xs px-2 text-primary-600 rounded-xl bg-transparent hover:bg-neutral-100 whitespace-nowrap"
+                        onClick$={() => {
+                          prompt.value = example.prompt;
+                          document.getElementById('prompt')?.focus();
+                        }}
+                      >
+                        {example.title}
+                      </Button>
+                    </div>
                   ))}
                 </div>
               </div>

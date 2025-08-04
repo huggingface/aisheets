@@ -322,11 +322,14 @@ export default component$(() => {
             <div class="flex flex-col items-center justify-center space-y-4">
               <div class="flex flex-col items-center justify-center mb-4">
                 <MainLogo class="mt-6 md:mt-0 w-[70px] h-[70px]" />
+                <h1 class="text-neutral-600 text-2xl font-semibold">
+                  AI Sheets
+                </h1>
               </div>
 
               <DragAndDrop />
 
-              <div class="w-full md:w-[697px] flex justify-center items-center">
+              <div class="w-full md:w-[697px] flex justify-center items-center py-6">
                 <hr class="w-full border-t" />
                 <span class="mx-10 text-neutral-500">OR</span>
                 <hr class="w-full border-t" />
@@ -403,7 +406,7 @@ export default component$(() => {
                       look="primary"
                       type="submit"
                       class="w-[30px] h-[30px] rounded-full flex items-center justify-center p-0"
-                      disabled={isLoading.value || !prompt.value.trim()}
+                      disabled={isLoading.value}
                     >
                       <LuEgg class="text-lg" />
                     </Button>

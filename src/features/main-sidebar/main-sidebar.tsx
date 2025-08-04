@@ -96,7 +96,7 @@ export const MainSidebar = component$(() => {
         <div
           class={cn('flex items-center justify-between px-2 mt-5 w-[274px]')}
         >
-          <span class="text-base font-semibold px-4 font-inter">Sheets</span>
+          <span class="text-base font-semibold px-4 font-inter">AI Sheets</span>
           <div class="md:hidden">
             <MainSidebarButton />
           </div>

@@ -72,8 +72,9 @@ export default component$(() => {
 
   const examples = [
     {
-      title: 'Multi-task questions',
-      prompt: 'TODO',
+      title: 'Webapp development',
+      prompt:
+        'dataset with two columns:\n # description\nIdentify one useful but implementable single-file web app, visualization, or UI feature\n #implementation\nCreate a complete, runnable HTML+JS file implementing {{description}}',
       banner: 'Ideal for vibe testing',
     },
     {

@@ -329,7 +329,7 @@ export default component$(() => {
                 </h1>
               </div>
               <div class="bg-neutral-100 rounded-md flex justify-center items-center p-2 gap-2">
-                <p>Available for vibe testing:</p>
+                <p>Trending for vibe testing:</p>
                 {trendingModels.value.map((model) => (
                   <div key={model.id} class="flex items-center p-1 gap-1">
                     <img src={model.picture} alt={model.id} class="w-4 h-4" />

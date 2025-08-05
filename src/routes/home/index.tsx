@@ -431,7 +431,7 @@ export default component$(() => {
             </form>
 
             {!isLoading.value && (
-              <div class="flex flex-col items-center justify-center mt-4">
+              <div class="flex flex-col items-center justify-center mt-7">
                 <div class="w-full md:w-[700px] flex flex-col md:flex-row flex-wrap justify-start items-center gap-4">
                   {examples.map((example) => (
                     <div class="relative inline-block" key={example.title}>

@@ -7,6 +7,7 @@ import { CellGeneration } from '~/features/table/components/header/cell-generati
 import { CellSettings } from '~/features/table/components/header/cell-settings';
 import { ColumnNameEdition } from '~/features/table/components/header/column-name-edition';
 import { DeleteColumn } from '~/features/table/components/header/delete-column';
+import { DuplicateColumn } from '~/features/table/components/header/duplicate-column';
 import { HideColumn } from '~/features/table/components/header/hide-column';
 import {
   hasBlobContent,
@@ -75,6 +76,9 @@ export const TableCellHeader = component$<{ column: Column }>(({ column }) => {
             </div>
             <div class="rounded-sm hover:bg-neutral-100 transition-colors">
               <HideColumn column={column} />
+            </div>
+            <div class="rounded-sm hover:bg-neutral-100 transition-colors">
+              <DuplicateColumn column={column} />
             </div>
             <div class="rounded-sm hover:bg-neutral-100 transition-colors">
               <DeleteColumn column={column} />

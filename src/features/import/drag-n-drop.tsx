@@ -135,7 +135,7 @@ export const DragAndDrop = component$(() => {
           preventdefault:dragover
           preventdefault:drop
           class={cn(
-            'relative h-full min-h-[180px] w-full flex justify-center items-center',
+            'relative h-full min-h-44 w-full flex justify-center items-center',
           )}
           onDragOver$={() => {
             isDragging.value = true;

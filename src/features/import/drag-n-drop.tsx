@@ -95,7 +95,6 @@ export const DragAndDrop = component$(() => {
     'resize',
     $(() => {
       isMobile.value = window.innerWidth <= 768;
-      console.log('isMobile', isMobile.value);
     }),
   );
 

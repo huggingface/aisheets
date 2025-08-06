@@ -22,7 +22,11 @@ export const DuplicateColumn = component$<{
     );
   });
 
-  if (column.id === TEMPORAL_ID || columns.value.length <= 1) {
+  if (
+    column.id === TEMPORAL_ID ||
+    columns.value.length <= 1 ||
+    column.kind === 'static'
+  ) {
     return null;
   }
 

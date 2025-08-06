@@ -345,7 +345,7 @@ export default component$(() => {
 
               <DragAndDrop />
 
-              <div class="w-full md:w-[697px] flex justify-center items-center py-6">
+              <div class="w-full md:w-[697px] flex justify-center items-center py-3">
                 <hr class="w-full border-t" />
                 <span class="mx-10 text-neutral-500">OR</span>
                 <hr class="w-full border-t" />

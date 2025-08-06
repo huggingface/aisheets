@@ -88,7 +88,13 @@ export const useGenerateColumn = () => {
         updateColumn(column);
       }
       if (cell) {
-        replaceCell(cell);
+        replaceCell({
+          ...cell,
+          column: {
+            id: persistedColumn.id,
+            type: persistedColumn.type,
+          },
+        });
       }
     }
 

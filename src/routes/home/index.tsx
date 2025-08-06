@@ -1,4 +1,10 @@
-import { $, component$, useSignal, useStore } from '@builder.io/qwik';
+import {
+  $,
+  component$,
+  useSignal,
+  useStore,
+  useVisibleTask$,
+} from '@builder.io/qwik';
 import { server$, useNavigate } from '@builder.io/qwik-city';
 import { cn } from '@qwik-ui/utils';
 import { LuArrowUp, LuEgg, LuGlobe } from '@qwikest/icons/lucide';
@@ -38,6 +44,7 @@ export default component$(() => {
   const prompt = useSignal('');
   const currentStep = useSignal('');
   const trendingModels = useTrendingHubModels();
+  const textAreaElement = useSignal<HTMLTextAreaElement>();
 
   const creationFlow = useStore({
     datasetName: {
@@ -190,6 +197,15 @@ export default component$(() => {
   const onSubmitHandler = $(async (e: Event) => {
     e.preventDefault();
     await handleAssistant();
+  });
+
+  useVisibleTask$(({ track }) => {
+    track(prompt);
+
+    if (!textAreaElement.value) return;
+
+    textAreaElement.value.style.height = '0px';
+    textAreaElement.value.style.height = `${textAreaElement.value.scrollHeight}px`;
   });
 
   return (
@@ -368,26 +384,23 @@ export default component$(() => {
               <div>
                 <div class="w-full bg-white border border-secondary-foreground rounded-xl pb-14 shadow-[0px_4px_6px_rgba(0,0,0,0.1)]">
                   <Textarea
+                    ref={textAreaElement}
                     id="prompt"
                     look="ghost"
-                    value={prompt.value}
+                    bind:value={prompt}
                     disabled={isLoading.value}
                     placeholder="Write your dataset description here"
                     class={cn(
-                      'p-4 max-h-40 resize-none overflow-auto text-base placeholder:text-neutral-500',
+                      'p-4 max-h-44 resize-none overflow-auto text-base placeholder:text-neutral-500 h-auto',
                       {
                         'opacity-50 pointer-events-none': isLoading.value,
                       },
                     )}
-                    onInput$={(e, el) => {
-                      prompt.value = el.value;
-                      const target = e.target as HTMLTextAreaElement;
-                      target.style.height = 'auto';
-                      target.style.height = `${target.scrollHeight}px`;
-                    }}
-                    onKeyDown$={async (e) => {
+                    onKeyPress$={async (e) => {
                       if (e.key === 'Enter' && !e.shiftKey) {
                         e.preventDefault();
+                        e.stopPropagation();
+
                         await handleAssistant();
                       }
                       // Shift+Enter will insert a newline by default

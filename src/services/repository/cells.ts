@@ -358,8 +358,8 @@ export const createCell = async ({
     error: model.error,
     validated: model.validated,
     column: {
-      id: model.columnId,
-      type: model.column?.type!,
+      id: column.id,
+      type: column.type!,
     },
     updatedAt: model.updatedAt,
     generating: model.generating,

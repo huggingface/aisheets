@@ -13,6 +13,8 @@ import {
 export type Execution = {
   columnId?: string;
   prompt?: string;
+  modelName?: string;
+  modelProvider?: string;
   mode?: 'add' | 'edit';
 };
 
@@ -31,19 +33,27 @@ export const useExecution = () => {
 
   const columnId = useComputed$(() => context.value.columnId);
   const mode = useComputed$(() => context.value.mode);
-  const initialPrompt = useComputed$(() => context.value.prompt);
+  const initialProcess = useComputed$(() => {
+    return {
+      prompt: context.value.prompt,
+      modelName: context.value.modelName,
+      modelProvider: context.value.modelProvider,
+    };
+  });
 
   return {
     columnId,
     mode,
-    initialPrompt,
+    initialProcess,
     open: $(
       (
         columnId: Execution['columnId'],
         mode: Execution['mode'],
         prompt?: string,
+        modelName?: string,
+        modelProvider?: string,
       ) => {
-        context.value = { columnId, mode, prompt };
+        context.value = { columnId, mode, prompt, modelName, modelProvider };
       },
     ),
     close: $(() => {

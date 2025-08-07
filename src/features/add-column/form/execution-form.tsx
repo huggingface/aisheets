@@ -72,7 +72,7 @@ class Models {
 export const ExecutionForm = component$<SidebarProps>(
   ({ column, onGenerateColumn }) => {
     const executionFormRef = useSignal<HTMLElement>();
-    const { initialPrompt, mode, close } = useExecution();
+    const { initialProcess, mode, close } = useExecution();
     const { firstColumn, columns, removeTemporalColumn, updateColumn } =
       useColumnsStore();
 
@@ -157,8 +157,14 @@ export const ExecutionForm = component$<SidebarProps>(
     });
 
     useVisibleTask$(() => {
-      if (initialPrompt.value) {
-        prompt.value = initialPrompt.value;
+      if (initialProcess.value.prompt) {
+        prompt.value = initialProcess.value.prompt;
+      }
+      if (initialProcess.value.modelName) {
+        selectedModelId.value = initialProcess.value.modelName;
+      }
+      if (initialProcess.value.modelProvider) {
+        selectedProvider.value = initialProcess.value.modelProvider;
       }
     });
 

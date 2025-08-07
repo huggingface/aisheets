@@ -11,7 +11,7 @@ import { StepsStatus } from '~/features/autodataset/steps-status';
 import { DragAndDrop } from '~/features/import/drag-n-drop';
 import { MainSidebarButton } from '~/features/main-sidebar';
 import { Username } from '~/features/user/username';
-import { useSession } from '~/loaders';
+import { useSession, useTrendingHubModels } from '~/loaders';
 import { ActiveDatasetProvider } from '~/state';
 import { runAutoDataset } from '~/usecases/run-autodataset';
 
@@ -37,6 +37,7 @@ export default component$(() => {
   const searchOnWeb = useSignal(false);
   const prompt = useSignal('');
   const currentStep = useSignal('');
+  const trendingModels = useTrendingHubModels();
 
   const creationFlow = useStore({
     datasetName: {
@@ -71,12 +72,13 @@ export default component$(() => {
 
   const examples = [
     {
-      title: 'Portfolio web pages',
+      title: 'Webapp development',
       prompt:
-        'Dataset with personal portfolios. Include the html/css/js single page, working implementation. Be creative but avoid writing long code.',
+        'dataset with two columns:\n # description\nIdentify one useful but implementable single-file web app, visualization, or UI feature\n #implementation\nCreate a complete, runnable HTML+JS file implementing {{description}}',
+      banner: 'Ideal for vibe testing',
     },
     {
-      title: 'Isometric images',
+      title: 'Isometric images of cities',
       prompt: 'Isometric images of european capitals',
     },
   ];
@@ -319,25 +321,35 @@ export default component$(() => {
       <div class="w-full flex flex-col items-center justify-center">
         <div class="flex flex-col w-full max-w-6xl gap-5">
           {!isLoading.value && (
-            <div class="flex flex-col items-center justify-center space-y-4">
+            <div class="flex flex-col items-center justify-center space-y-3">
               <div class="flex flex-col items-center justify-center mb-4">
                 <MainLogo class="mt-6 md:mt-0 w-[70px] h-[70px]" />
                 <h1 class="text-neutral-600 text-2xl font-semibold">
-                  AI-powered spreadsheets
+                  AI Sheets
                 </h1>
+              </div>
+              <div class="bg-neutral-100 rounded-md flex justify-center items-center flex-wrap p-2 gap-2">
+                <p class="text-sm text-center w-full lg:text-left lg:w-fit">
+                  Trending for vibe testing:
+                </p>
+                {trendingModels.value.map((model) => (
+                  <div
+                    key={model.id}
+                    class="flex items-center p-1 gap-1 font-mono"
+                  >
+                    <img src={model.picture} alt={model.id} class="w-4 h-4" />
+                    <span class="text-sm text-neutral-700">{model.id}</span>
+                  </div>
+                ))}
               </div>
 
               <DragAndDrop />
 
-              <div class="w-full md:w-[697px] flex justify-center items-center">
+              <div class="w-full md:w-[697px] flex justify-center items-center py-3">
                 <hr class="w-full border-t" />
                 <span class="mx-10 text-neutral-500">OR</span>
                 <hr class="w-full border-t" />
               </div>
-
-              <h2 class="text-primary-600 font-semibold text-xl text-center">
-                Build a synthetic dataset from a simple idea
-              </h2>
             </div>
           )}
 
@@ -360,7 +372,7 @@ export default component$(() => {
                     look="ghost"
                     value={prompt.value}
                     disabled={isLoading.value}
-                    placeholder="Description and representation of polite gesture by culture"
+                    placeholder="Write your dataset description here"
                     class={cn(
                       'p-4 max-h-40 resize-none overflow-auto text-base placeholder:text-neutral-500',
                       {
@@ -410,7 +422,7 @@ export default component$(() => {
                       look="primary"
                       type="submit"
                       class="w-[30px] h-[30px] rounded-full flex items-center justify-center p-0"
-                      disabled={isLoading.value || !prompt.value.trim()}
+                      disabled={isLoading.value}
                     >
                       <LuEgg class="text-lg" />
                     </Button>
@@ -420,21 +432,27 @@ export default component$(() => {
             </form>
 
             {!isLoading.value && (
-              <div class="flex flex-col items-center justify-center mt-4">
-                <div class="w-full md:w-[700px] flex flex-col md:flex-row flex-wrap justify-start items-center gap-2">
+              <div class="flex flex-col items-center justify-center my-7">
+                <div class="w-full md:w-[700px] flex flex-col md:flex-row flex-wrap justify-start items-center gap-4">
                   {examples.map((example) => (
-                    <Button
-                      key={example.title}
-                      look="secondary"
-                      class="flex items-center gap-2 text-xs px-2 text-primary-600 rounded-xl bg-transparent hover:bg-neutral-100 whitespace-nowrap"
-                      onClick$={() => {
-                        prompt.value = example.prompt;
-                        document.getElementById('prompt')?.focus();
-                      }}
-                    >
-                      {example.title}
-                      <LuArrowUp class="text-neutral" />
-                    </Button>
+                    <div class="relative inline-block" key={example.title}>
+                      {example.banner && (
+                        <div class="absolute -top-2 right-0 translate-x-[10%] bg-[#F8C200] text-white text-[10px] px-2 py-[2px] rounded-sm shadow-sm z-10">
+                          {example.banner}
+                        </div>
+                      )}
+                      <Button
+                        look="secondary"
+                        class="flex items-center gap-2 text-xs px-2 text-primary-600 rounded-xl bg-transparent hover:bg-neutral-100 whitespace-nowrap"
+                        onClick$={() => {
+                          prompt.value = example.prompt;
+                          document.getElementById('prompt')?.focus();
+                        }}
+                      >
+                        {example.title}
+                        <LuArrowUp class="text-neutral" />
+                      </Button>
+                    </div>
                   ))}
                 </div>
               </div>

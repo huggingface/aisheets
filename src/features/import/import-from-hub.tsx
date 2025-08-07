@@ -59,75 +59,77 @@ export const ImportFromHub = component$(() => {
   });
 
   return (
-    <div class="flex flex-col w-full max-w-2xl mt-8 gap-4">
-      <div class="flex flex-col justify-between gap-4">
-        <h1 class="text-3xl font-bold w-full">
-          Import your dataset from the hub
-        </h1>
+    <div class="w-full flex items-center justify-evenly">
+      <div class="flex flex-col w-full max-w-2xl mt-8 gap-4">
+        <div class="flex flex-col justify-between gap-4">
+          <h1 class="text-3xl font-bold w-full">
+            Import your dataset from the hub
+          </h1>
 
-        <div class="flex flex-col gap-2 w-full">
-          <DatasetSearch
-            onSelectedDataset$={(dataset) => {
-              repoId.value = dataset;
-            }}
-          />
+          <div class="flex flex-col gap-2 w-full">
+            <DatasetSearch
+              onSelectedDataset$={(dataset) => {
+                repoId.value = dataset;
+              }}
+            />
 
-          {repoId.value && (
-            <div class="w-full">
-              <FileSelection
-                repoId={repoId.value}
-                accessToken={session.value.token}
-                onSelectedFile$={(file) => {
-                  filePath.value = file;
-                }}
-              />
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div class="flex flex-col w-full gap-4 mt-4">
-        {repoId.value && filePath.value && (
-          <div class="text-foreground text-sm">
-            <span>Only the first 1000 rows will be imported.</span>
-          </div>
-        )}
-        <Button
-          look="primary"
-          isGenerating={isImportingData.value}
-          disabled={!enableImportButton.value || isImportingData.value}
-          onClick$={handleOnClickImportFromHub}
-          class="min-w-[180px]"
-        >
-          {isImportingData.value ? (
-            <div class="flex items-center justify-between w-full px-2">
-              <span>Importing</span>
-              <div class="animate-spin">
-                <svg
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  aria-labelledby="loadingSpinnerTitle"
-                >
-                  <title id="loadingSpinnerTitle">Loading spinner</title>
-                  <path
-                    d="M12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22C17.5228 22 22 17.5228 22 12"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                  />
-                </svg>
+            {repoId.value && (
+              <div class="w-full">
+                <FileSelection
+                  repoId={repoId.value}
+                  accessToken={session.value.token}
+                  onSelectedFile$={(file) => {
+                    filePath.value = file;
+                  }}
+                />
               </div>
-            </div>
-          ) : (
-            <div class="flex items-center gap-4">
-              <LuChevronRightSquare class="text-xl" />
-              <span>Import dataset</span>
+            )}
+          </div>
+        </div>
+
+        <div class="flex flex-col w-full gap-4 mt-4">
+          {repoId.value && filePath.value && (
+            <div class="text-foreground text-sm">
+              <span>Only the first 1000 rows will be imported.</span>
             </div>
           )}
-        </Button>
+          <Button
+            look="primary"
+            isGenerating={isImportingData.value}
+            disabled={!enableImportButton.value || isImportingData.value}
+            onClick$={handleOnClickImportFromHub}
+            class="min-w-[180px]"
+          >
+            {isImportingData.value ? (
+              <div class="flex items-center justify-between w-full px-2">
+                <span>Importing</span>
+                <div class="animate-spin">
+                  <svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    aria-labelledby="loadingSpinnerTitle"
+                  >
+                    <title id="loadingSpinnerTitle">Loading spinner</title>
+                    <path
+                      d="M12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22C17.5228 22 22 17.5228 22 12"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                    />
+                  </svg>
+                </div>
+              </div>
+            ) : (
+              <div class="flex items-center gap-4">
+                <LuChevronRightSquare class="text-xl" />
+                <span>Import dataset</span>
+              </div>
+            )}
+          </Button>
+        </div>
       </div>
     </div>
   );

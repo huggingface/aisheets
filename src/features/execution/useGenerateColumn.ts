@@ -88,6 +88,7 @@ export const useGenerateColumn = () => {
         updateColumn(column);
       }
       if (cell) {
+        console.log('Replacing cell:', cell);
         replaceCell(cell);
       }
     }

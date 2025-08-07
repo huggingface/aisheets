@@ -82,137 +82,139 @@ export const TEMPORAL_ID = '-1';
 export const useColumnsStore = () => {
   const { activeDataset } = useDatasetsStore();
 
-  const createPlaceholderColumn = $(({ type }: { type?: string }): Column => {
-    const getNextColumnName = (counter = 1): string => {
-      const manyColumnsWithName = activeDataset.value.columns.filter(
-        (c) => c.id !== TEMPORAL_ID,
-      );
-      const newPosibleColumnName = `Column ${manyColumnsWithName.length + 1}`;
+  const createPlaceholderColumn = $(
+    ({ type, name }: { type?: string; name?: string }): Column => {
+      const getNextColumnName = (counter = 1): string => {
+        const manyColumnsWithName = activeDataset.value.columns.filter(
+          (c) => c.id !== TEMPORAL_ID,
+        );
+        const newPosibleColumnName = `Column ${manyColumnsWithName.length + 1}`;
 
-      if (!manyColumnsWithName.find((c) => c.name === newPosibleColumnName)) {
-        return newPosibleColumnName;
-      }
+        if (!manyColumnsWithName.find((c) => c.name === newPosibleColumnName)) {
+          return newPosibleColumnName;
+        }
 
-      return getNextColumnName(counter + 1);
-    };
+        return getNextColumnName(counter + 1);
+      };
 
-    return {
-      id: TEMPORAL_ID,
-      name: getNextColumnName(),
-      kind: 'dynamic',
-      type: type ?? 'text',
-      visible: true,
-      cells: [
-        {
-          id: TEMPORAL_ID,
-          idx: 0,
-          validated: false,
-          updatedAt: new Date(),
-          generating: false,
-          value: '',
-          column: {
+      return {
+        id: TEMPORAL_ID,
+        name: name ?? getNextColumnName(),
+        kind: 'dynamic',
+        type: type ?? 'text',
+        visible: true,
+        cells: [
+          {
             id: TEMPORAL_ID,
-            type: type ?? 'text',
+            idx: 0,
+            validated: false,
+            updatedAt: new Date(),
+            generating: false,
+            value: '',
+            column: {
+              id: TEMPORAL_ID,
+              type: type ?? 'text',
+            },
           },
-        },
-        {
-          id: TEMPORAL_ID,
-          idx: 1,
-          validated: false,
-          updatedAt: new Date(),
-          generating: false,
-          value: '',
-          column: {
+          {
             id: TEMPORAL_ID,
-            type: type ?? 'text',
+            idx: 1,
+            validated: false,
+            updatedAt: new Date(),
+            generating: false,
+            value: '',
+            column: {
+              id: TEMPORAL_ID,
+              type: type ?? 'text',
+            },
           },
-        },
-        {
-          id: TEMPORAL_ID,
-          idx: 2,
-          validated: false,
-          updatedAt: new Date(),
-          generating: false,
-          value: '',
-          column: {
+          {
             id: TEMPORAL_ID,
-            type: type ?? 'text',
+            idx: 2,
+            validated: false,
+            updatedAt: new Date(),
+            generating: false,
+            value: '',
+            column: {
+              id: TEMPORAL_ID,
+              type: type ?? 'text',
+            },
           },
-        },
-        {
-          id: TEMPORAL_ID,
-          idx: 3,
-          validated: false,
-          updatedAt: new Date(),
-          generating: false,
-          value: '',
-          column: {
+          {
             id: TEMPORAL_ID,
-            type: type ?? 'text',
+            idx: 3,
+            validated: false,
+            updatedAt: new Date(),
+            generating: false,
+            value: '',
+            column: {
+              id: TEMPORAL_ID,
+              type: type ?? 'text',
+            },
           },
-        },
-        {
-          id: TEMPORAL_ID,
-          idx: 4,
-          validated: false,
-          updatedAt: new Date(),
-          generating: false,
-          value: '',
-          column: {
+          {
             id: TEMPORAL_ID,
-            type: type ?? 'text',
+            idx: 4,
+            validated: false,
+            updatedAt: new Date(),
+            generating: false,
+            value: '',
+            column: {
+              id: TEMPORAL_ID,
+              type: type ?? 'text',
+            },
           },
-        },
-        {
-          id: TEMPORAL_ID,
-          idx: 5,
-          validated: false,
-          updatedAt: new Date(),
-          generating: false,
-          value: '',
-          column: {
+          {
             id: TEMPORAL_ID,
-            type: type ?? 'text',
+            idx: 5,
+            validated: false,
+            updatedAt: new Date(),
+            generating: false,
+            value: '',
+            column: {
+              id: TEMPORAL_ID,
+              type: type ?? 'text',
+            },
           },
-        },
-        {
-          id: TEMPORAL_ID,
-          idx: 6,
-          validated: false,
-          updatedAt: new Date(),
-          generating: false,
-          value: '',
-          column: {
+          {
             id: TEMPORAL_ID,
-            type: type ?? 'text',
+            idx: 6,
+            validated: false,
+            updatedAt: new Date(),
+            generating: false,
+            value: '',
+            column: {
+              id: TEMPORAL_ID,
+              type: type ?? 'text',
+            },
           },
-        },
-        {
-          id: TEMPORAL_ID,
-          idx: 7,
-          validated: false,
-          updatedAt: new Date(),
-          generating: false,
-          value: '',
-          column: {
+          {
             id: TEMPORAL_ID,
-            type: type ?? 'text',
+            idx: 7,
+            validated: false,
+            updatedAt: new Date(),
+            generating: false,
+            value: '',
+            column: {
+              id: TEMPORAL_ID,
+              type: type ?? 'text',
+            },
           },
+        ],
+        process: {
+          modelName: '',
+          modelProvider: '',
+          prompt: '',
+          searchEnabled: false,
+          columnsReferences: [],
+          updatedAt: new Date(),
         },
-      ],
-      process: {
-        modelName: '',
-        modelProvider: '',
-        prompt: '',
-        searchEnabled: false,
-        columnsReferences: [],
-        updatedAt: new Date(),
-      },
-      dataset: {
-        ...activeDataset.value,
-      },
-    };
-  });
+        dataset: {
+          ...activeDataset.value,
+        },
+      };
+    },
+  );
 
   const columns = useComputed$(async () => {
     if (activeDataset.value.columns.length === 0) {
@@ -234,10 +236,10 @@ export const useColumnsStore = () => {
     columns,
     firstColumn,
     replaceColumns,
-    addTemporalColumn: $(async (type?: string) => {
+    addTemporalColumn: $(async (type?: string, name?: string) => {
       if (activeDataset.value.columns.some((c) => c.id === TEMPORAL_ID)) return;
 
-      const newTemporalColumn = await createPlaceholderColumn({ type });
+      const newTemporalColumn = await createPlaceholderColumn({ type, name });
 
       replaceColumns([...columns.value, newTemporalColumn]);
     }),

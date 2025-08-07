@@ -11,7 +11,7 @@ export const DuplicateColumn = component$<{
   const { columns, addTemporalColumn } = useColumnsStore();
 
   const onDuplicateColumn = $(async () => {
-    await addTemporalColumn(column.type);
+    await addTemporalColumn(column.type, `${column.name} copy`);
 
     open(
       TEMPORAL_ID,

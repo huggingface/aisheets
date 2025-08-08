@@ -1,6 +1,19 @@
+<div align="center">
+
 # 🤗 Hugging Face AI Sheets
 
-Hugging Face AI Sheets is an open-source tool for building, enriching, and transforming datasets using AI models with no code. The tool can be deployed locally or on the Hub. It lets you use thousands of open models from the Hugging Face Hub via Inference Providers or local models, including `gpt-oss` from OpenAI! 
+*Build, enrich, and transform datasets using AI models with no code. Deploy locally or on the Hub with access to thousands of open models.*
+
+[Introduction](https://huggingface.co/blog/aisheets) • [Try it out](https://huggingface.co/spaces/aisheets/sheets)
+
+<video width="400" src="https://github.com/user-attachments/assets/a284e4d4-3c11-4885-96cc-2f6f0314f2a1"></video>
+
+</div>
+
+## What's AI Sheets?
+
+Hugging Face AI Sheets is an open-source tool for building, enriching, and transforming datasets using AI models with no code. The tool can be deployed locally or on the Hub. It lets you use thousands of open models from the Hugging Face Hub via Inference Providers or local models, including `gpt-oss` from OpenAI!
+
 
 ## Quick Start
 

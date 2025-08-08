@@ -83,7 +83,8 @@ export const textToImageGeneration = async ({
       normalizeOptions(timeout),
     );
 
-    const bytes = await response.bytes();
+    const buffer = await response.arrayBuffer();
+    const bytes = new Uint8Array(buffer);
     cacheSet(cacheKey, bytes);
 
     return {

@@ -547,6 +547,12 @@ export const ExecutionForm = component$<SidebarProps>(
                                           src={model.picture}
                                           alt={model.id}
                                           class="w-4 h-4"
+                                          onError$={(ev) => {
+                                            (
+                                              ev.target as HTMLImageElement
+                                            ).src =
+                                              'https://huggingface.co/front/assets/huggingface_logo-noborder.svg';
+                                          }}
                                         />
                                         <Select.ItemLabel>
                                           {model.id}
@@ -557,9 +563,7 @@ export const ExecutionForm = component$<SidebarProps>(
                                               key={e.label}
                                               class={cn('rounded-sm', e.class)}
                                             >
-                                              <span
-                                                class={cn('capitalize p-2')}
-                                              >
+                                              <span class="capitalize p-2">
                                                 {e.label}
                                               </span>
                                             </div>

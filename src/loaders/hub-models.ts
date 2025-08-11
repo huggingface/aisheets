@@ -52,6 +52,7 @@ export interface Model {
   size?: string;
   pipeline_tag?: string;
   trendingScore?: number;
+  picture?: string;
 }
 
 const listAllModels = server$(async function (
@@ -88,7 +89,11 @@ const listAllModels = server$(async function (
 
   return models
     .flat()
-    .sort((a, b) => (b.trendingScore || 0) - (a.trendingScore || 0));
+    .sort((a, b) => (b.trendingScore || 0) - (a.trendingScore || 0))
+    .map((m) => ({
+      ...m,
+      picture: `https://huggingface.co/api/organizations/${m.id.split('/')[0]}/avatar`,
+    }));
 });
 
 // Function to fetch models for a specific pipeline tag

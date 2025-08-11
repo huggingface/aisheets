@@ -67,35 +67,67 @@ class Models {
   }
 }
 
+type ModelWithExtraTags = Model & {
+  extraTags?: { label: string; class: string }[];
+};
 class GroupedModels {
   private models: Model[];
+  private tags = {
+    HEAVY: {
+      label: 'heavy',
+      class: 'bg-[#FBDAD7]',
+    },
+    LIGHT: {
+      label: 'light',
+      class: 'bg-[#F0FFD4]',
+    },
+  };
 
   constructor(models: Model[]) {
     this.models = models;
   }
 
-  private get recommendedModelIds(): Model['id'][] {
-    return ['Qwen/Qwen-Image', 'black-forest-labs/FLUX.1-schnell'];
+  private get recommendedModelIds(): {
+    id: Model['id'];
+    tags: {
+      label: string;
+      class: string;
+    }[];
+  }[] {
+    return [
+      {
+        id: 'Qwen/Qwen-Image',
+        tags: [this.tags.HEAVY, this.tags.LIGHT],
+      },
+    ];
   }
 
   groupsByCategory(): {
     label: string;
     class: string;
-    models: Model[];
+    models: ModelWithExtraTags[];
   }[] {
+    const recommended: ModelWithExtraTags[] = this.models
+      .filter((model) =>
+        this.recommendedModelIds.map((r) => r.id).includes(model.id),
+      )
+      .map((m) => ({
+        ...m,
+        extraTags: this.recommendedModelIds.find((r) => r.id === m.id)?.tags,
+      }));
+
     return [
       {
         label: 'Recommended Models',
         class: 'h-10 p-2 bg-primary-50 text-primary-400',
-        models: this.models.filter((model) =>
-          this.recommendedModelIds.includes(model.id),
-        ),
+        models: recommended,
       },
       {
         label: 'All models available on Hugging Face',
         class: 'h-10 p-2 bg-secondary-50 text-secondary-400',
         models: this.models.filter(
-          (model) => !this.recommendedModelIds.includes(model.id),
+          (model) =>
+            !this.recommendedModelIds.map((r) => r.id).includes(model.id),
         ),
       },
     ];
@@ -478,13 +510,13 @@ export const ExecutionForm = component$<SidebarProps>(
                             'border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto p-0',
                           )}
                         >
-                          <div class="flex flex-col gap-2">
+                          <div class="flex flex-col">
                             {Object.entries(groupedModels.value).map(
                               ([category, models]) => (
-                                <div key={category} class="mb-2 last:mb-0">
+                                <div key={category}>
                                   <div
                                     class={cn(
-                                      'text-[13px] font-normal rounded-sm rounded-b-none',
+                                      'text-[13px] font-semibold rounded-sm rounded-b-none',
                                       models.class,
                                     )}
                                   >
@@ -510,9 +542,30 @@ export const ExecutionForm = component$<SidebarProps>(
                                             : model.providers[0];
                                       }}
                                     >
-                                      <Select.ItemLabel>
-                                        {model.id}
-                                      </Select.ItemLabel>
+                                      <div class="flex items-center p-1 gap-2 font-mono">
+                                        <img
+                                          src={model.picture}
+                                          alt={model.id}
+                                          class="w-4 h-4"
+                                        />
+                                        <Select.ItemLabel>
+                                          {model.id}
+                                        </Select.ItemLabel>
+                                        <div class="flex items-center gap-2">
+                                          {model.extraTags?.map((e) => (
+                                            <div
+                                              key={e.label}
+                                              class={cn('rounded-sm', e.class)}
+                                            >
+                                              <span
+                                                class={cn('capitalize p-2')}
+                                              >
+                                                {e.label}
+                                              </span>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      </div>
                                       {model.size && (
                                         <span class="ml-2 bg-gray-100 text-gray-700 px-2 py-0.5 rounded text-sm">
                                           {model.size}

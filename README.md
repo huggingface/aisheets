@@ -72,16 +72,27 @@ If you want to generate a larger dataset, you can use the above-mentioned config
 hf jobs uv run \
 -s HF_TOKEN=$HF_TOKEN \
 https://raw.githubusercontent.com/huggingface/aisheets/refs/heads/main/scripts/extend_dataset/with_inference_client.py \ # script for running the pipeline
+nvidia/Nemotron-Personas dvilasuero/nemotron-kimi-qa-distilled \
+--config https://huggingface.co/datasets/dvilasuero/nemotron-personas-kimi-questions/raw/main/config.yml \ # config with prompts
+--num-rows 100 # limit to 100 rows, leave empty for the full dataset
+```
+
+Or you can use an alternative script that uses vllm inference instead of the inference client. This script helps you to save on inference costs, but it requires you to setup a vllm-compatiable flavor when running the job:
+
+```bash
+hf jobs uv run --flavor l4x1 \
+https://raw.githubusercontent.com/huggingface/aisheets/refs/heads/main/scripts/extend_dataset/with_vllm.py \ # script for running the pipeline
+nvidia/Nemotron-Personas dvilasuero/nemotron-kimi-qa-distilled \
 --config https://huggingface.co/datasets/dvilasuero/nemotron-personas-kimi-questions/raw/main/config.yml \ # config with prompts
 --num-rows 100 \ # limit to 100 rows, leave empty for the full dataset
-nvidia/Nemotron-Personas dvilasuero/nemotron-kimi-qa-distilled 
+--vllm-model deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B
 ```
 
 ## Running AI Sheets with custom (and local) LLMs
 
 By default, AI Sheets is configured to use the Huggingface Inference Providers API to run inference on the latest open-source models. However, you can also run Sheets with own custom LLMs, such as those hosted on your own infrastructure or other cloud providers. The only requirement is that your LLMs must support the [OpenAI API specification](https://platform.openai.com/docs/api-reference/introduction).
 
-## Steps
+### Steps
 
 When running AI Sheets with custom LLMs, you need to set some environment variables to point the inference calls to your custom LLMs. Here are the steps:
 
@@ -105,7 +116,7 @@ This is a crucial step to conform to the OpenAI API specification. The model nam
 
 * Note: The text-to-image generation feature cannot be customized yet. It will always utilize the Hugging Face Inference Providers API to generate images. Take this into account when running AI Sheets with custom LLMs.
 
-## Example of running AI Sheets with Ollama
+### Example of running AI Sheets with Ollama
 
 To run AI Sheets with Ollama, you can follow these steps:
 

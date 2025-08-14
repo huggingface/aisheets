@@ -71,7 +71,7 @@ If you want to generate a larger dataset, you can use the above-mentioned config
 ```bash
 hf jobs uv run \
 -s HF_TOKEN=$HF_TOKEN \
-https://raw.githubusercontent.com/huggingface/aisheets/f2dc328bb50bfb1d37cf9ce581b6b4dfb0616c46/scripts/extend_dataset/script.py \ # script for running the pipeline
+https://raw.githubusercontent.com/huggingface/aisheets/refs/heads/main/scripts/extend_dataset/with_inference_client.py \ # script for running the pipeline
 --config https://huggingface.co/datasets/dvilasuero/nemotron-personas-kimi-questions/raw/main/config.yml \ # config with prompts
 --num-rows 100 \ # limit to 100 rows, leave empty for the full dataset
 nvidia/Nemotron-Personas dvilasuero/nemotron-kimi-qa-distilled 

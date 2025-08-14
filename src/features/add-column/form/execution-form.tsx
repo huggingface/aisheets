@@ -22,6 +22,7 @@ import {
 
 import { Button, Select, triggerLooks } from '~/components';
 import { useClickOutside } from '~/components/hooks/click/outside';
+import { nextTick } from '~/components/hooks/tick';
 import { Tooltip } from '~/components/ui/tooltip/tooltip';
 
 import {
@@ -81,6 +82,14 @@ class GroupedModels {
       label: 'light',
       class: 'bg-[#F0FFD4]',
     },
+    FAST: {
+      label: 'fast',
+      class: 'bg-[#D7FBE0]',
+    },
+    SLOW: {
+      label: 'slow',
+      class: 'bg-[#FBDAD7]',
+    },
   };
 
   constructor(models: Model[]) {
@@ -96,8 +105,8 @@ class GroupedModels {
   }[] {
     return [
       {
-        id: 'Qwen/Qwen-Image',
-        tags: [this.tags.HEAVY, this.tags.LIGHT],
+        id: 'black-forest-labs/FLUX.1-dev',
+        tags: [this.tags.FAST],
       },
     ];
   }
@@ -155,8 +164,7 @@ export const ExecutionForm = component$<SidebarProps>(
         column.type as SupportedType,
       );
     });
-
-    const isOpenModel = useSignal(false);
+    const filteredModels = useSignal<Model[]>(models.value);
 
     const prompt = useSignal<string>('');
     const columnsReferences = useSignal<string[]>([]);
@@ -176,7 +184,7 @@ export const ExecutionForm = component$<SidebarProps>(
     });
 
     const groupedModels = useComputed$(() => {
-      return new GroupedModels(models.value).groupsByCategory();
+      return new GroupedModels(filteredModels.value).groupsByCategory();
     });
 
     const isImageColumn = useComputed$(() => {
@@ -189,6 +197,7 @@ export const ExecutionForm = component$<SidebarProps>(
           m.id.toLocaleLowerCase() ===
           selectedModelId.value.toLocaleLowerCase(),
       );
+
       return model ? model.providers : [];
     });
 
@@ -225,8 +234,8 @@ export const ExecutionForm = component$<SidebarProps>(
         }));
     });
 
-    useTask$(({ track }) => {
-      track(column);
+    useVisibleTask$(({ track }) => {
+      track(() => column);
 
       if (isImageColumn.value) {
         // Currently, we custom endpoint only for text models
@@ -258,13 +267,27 @@ export const ExecutionForm = component$<SidebarProps>(
       }
     });
 
-    useVisibleTask$(({ track }) => {
-      track(isOpenModel);
+    useTask$(({ track }) => {
+      track(modelSearchQuery);
 
-      isModelDropdownOpen.value = !isOpenModel.value;
-      if (!isOpenModel.value) {
-        modelSearchQuery.value = selectedModelId.value || '';
+      if (modelSearchQuery.value.length <= 1) return;
+
+      if (modelSearchQuery.value === selectedModelId.value) {
+        filteredModels.value = models.value;
+        return;
       }
+
+      filteredModels.value = models.value.filter((model: Model) =>
+        model.id.toLowerCase().includes(modelSearchQuery.value.toLowerCase()),
+      );
+
+      isModelDropdownOpen.value = false;
+
+      nextTick(() => {
+        isModelDropdownOpen.value =
+          filteredModels.value.length > 0 &&
+          filteredModels.value.length !== models.value.length;
+      }, 300);
     });
 
     useVisibleTask$(({ track }) => {
@@ -430,10 +453,7 @@ export const ExecutionForm = component$<SidebarProps>(
 
               <div class="flex items-center justify-start gap-1">
                 {endpointURLSelected.value ? (
-                  <div
-                    onClick$={() => (isOpenModel.value = !isOpenModel.value)}
-                    class="flex items-center justify-start gap-1 cursor-pointer"
-                  >
+                  <div class="flex items-center justify-start gap-1 cursor-pointer">
                     Model
                     <p class="text-neutral-500 underline">
                       {MODEL_ENDPOINT_NAME}
@@ -494,9 +514,6 @@ export const ExecutionForm = component$<SidebarProps>(
                                 modelSearchQuery.value = '';
                               }
                             }}
-                            onClick$={() => {
-                              isModelDropdownOpen.value = false;
-                            }}
                             placeholder="Search models..."
                             bind:value={modelSearchQuery}
                           />
@@ -506,85 +523,89 @@ export const ExecutionForm = component$<SidebarProps>(
                           key={modelSearchQuery.value}
                           floating="bottom-end"
                           gutter={8}
-                          class={cn(
-                            'border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto p-0',
-                          )}
+                          class="border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto p-0 ml-3 mt-2"
                         >
                           <div class="flex flex-col">
                             {Object.entries(groupedModels.value).map(
-                              ([category, models]) => (
-                                <div key={category}>
-                                  <div
-                                    class={cn(
-                                      'text-[13px] font-semibold rounded-sm rounded-b-none',
-                                      models.class,
-                                    )}
-                                  >
-                                    {models.label}
-                                  </div>
-                                  {models.models.map((model) => (
-                                    <Select.Item
-                                      key={model.id}
-                                      value={model.id}
-                                      class="text-foreground hover:bg-accent"
-                                      onClick$={() => {
-                                        isModelDropdownOpen.value = false;
-                                        endpointURLSelected.value = false;
-
-                                        selectedModelId.value = model.id;
-                                        modelSearchQuery.value = model.id;
-
-                                        selectedProvider.value =
-                                          model.providers.includes(
-                                            DEFAULT_MODEL_PROVIDER,
-                                          )
-                                            ? DEFAULT_MODEL_PROVIDER
-                                            : model.providers[0];
-                                      }}
+                              ([category, models]) => {
+                                if (models.models.length === 0) return null;
+                                return (
+                                  <div key={category}>
+                                    <div
+                                      class={cn(
+                                        'text-[13px] font-semibold rounded-sm rounded-b-none',
+                                        models.class,
+                                      )}
                                     >
-                                      <div class="flex items-center p-1 gap-2 font-mono">
-                                        <img
-                                          src={model.picture}
-                                          alt={model.id}
-                                          class="w-4 h-4"
-                                          onError$={(ev) => {
-                                            (
-                                              ev.target as HTMLImageElement
-                                            ).src =
-                                              'https://huggingface.co/front/assets/huggingface_logo-noborder.svg';
-                                          }}
-                                        />
-                                        <Select.ItemLabel>
-                                          {model.id}
-                                        </Select.ItemLabel>
-                                        <div class="flex items-center gap-2">
-                                          {model.extraTags?.map((e) => (
-                                            <div
-                                              key={e.label}
-                                              class={cn('rounded-sm', e.class)}
-                                            >
-                                              <span class="capitalize p-2">
-                                                {e.label}
-                                              </span>
-                                            </div>
-                                          ))}
-                                        </div>
-                                      </div>
-                                      {model.size && (
-                                        <span class="ml-2 bg-gray-100 text-gray-700 px-2 py-0.5 rounded text-sm">
-                                          {model.size}
-                                        </span>
-                                      )}
+                                      {models.label}
+                                    </div>
+                                    {models.models.map((model) => (
+                                      <Select.Item
+                                        key={model.id}
+                                        value={model.id}
+                                        class="text-foreground hover:bg-accent"
+                                        onClick$={() => {
+                                          isModelDropdownOpen.value = false;
+                                          endpointURLSelected.value = false;
 
-                                      {model.id === selectedModelId.value && (
-                                        // We cannot use the Select.ItemIndicator here
-                                        // because it doesn't work when the model list changes
-                                        <LuCheck class="h-4 w4 text-primary-500 absolute right-2 top-1/2 -translate-y-1/2" />
-                                      )}
-                                    </Select.Item>
-                                  ))}
-                                </div>
-                              ),
+                                          selectedModelId.value = model.id;
+                                          modelSearchQuery.value = model.id;
+
+                                          selectedProvider.value =
+                                            model.providers.includes(
+                                              DEFAULT_MODEL_PROVIDER,
+                                            )
+                                              ? DEFAULT_MODEL_PROVIDER
+                                              : model.providers[0];
+                                        }}
+                                      >
+                                        <div class="flex text-xs items-center p-1 gap-2 font-mono">
+                                          <img
+                                            src={model.picture}
+                                            alt={model.id}
+                                            class="w-4 h-4"
+                                            onError$={(ev) => {
+                                              (
+                                                ev.target as HTMLImageElement
+                                              ).src =
+                                                'https://huggingface.co/front/assets/huggingface_logo-noborder.svg';
+                                            }}
+                                          />
+                                          <Select.ItemLabel>
+                                            {model.id}
+                                          </Select.ItemLabel>
+                                          <div class="flex items-center gap-2">
+                                            {model.extraTags?.map((e) => (
+                                              <div
+                                                key={e.label}
+                                                class={cn(
+                                                  'rounded-sm',
+                                                  e.class,
+                                                )}
+                                              >
+                                                <span class="capitalize p-2">
+                                                  {e.label}
+                                                </span>
+                                              </div>
+                                            ))}
+                                          </div>
+                                        </div>
+                                        {model.size && (
+                                          <span class="ml-2 bg-gray-100 text-gray-700 px-2 py-0.5 rounded text-sm">
+                                            {model.size}
+                                          </span>
+                                        )}
+
+                                        {model.id === selectedModelId.value && (
+                                          // We cannot use the Select.ItemIndicator here
+                                          // because it doesn't work when the model list changes
+                                          <LuCheck class="h-4 w4 text-primary-500 absolute right-2 top-1/2 -translate-y-1/2" />
+                                        )}
+                                      </Select.Item>
+                                    ))}
+                                  </div>
+                                );
+                              },
                             )}
                           </div>
                         </Select.Popover>
@@ -596,10 +617,10 @@ export const ExecutionForm = component$<SidebarProps>(
                         <Select.Trigger class="px-4 bg-white rounded-base border-neutral-300-foreground">
                           <Select.DisplayValue />
                         </Select.Trigger>
-                        <Select.Popover class="border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto">
-                          {modelProviders.value.map((provider, idx) => (
+                        <Select.Popover class="border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto mt-1">
+                          {modelProviders.value.map((provider) => (
                             <Select.Item
-                              key={idx}
+                              key={provider}
                               value={provider}
                               class="text-foreground hover:bg-accent"
                               onClick$={() => {

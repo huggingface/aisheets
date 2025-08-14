@@ -115,7 +115,7 @@ def _display_configuration_summary(
         f"• Generated columns: [cyan]{len(config.columns)}[/]",
         f"• Worker threads: [cyan]{config.max_workers}[/]",
         f"• Rows to generate: [cyan]{config.num_rows}[/]",
-        f"• VLLM model: [cyan]{config.vll_model}[/]",
+        f"• VLLM model: [cyan]{config.vllm_model}[/]",
         f"• Batch size: [cyan]{config.batch_size}[/]",
     ]
 

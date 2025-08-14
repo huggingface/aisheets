@@ -81,6 +81,7 @@ Or you can use an alternative script that uses vllm inference instead of the inf
 
 ```bash
 hf jobs uv run --flavor l4x1 \
+-s HF_TOKEN=$HF_TOKEN \
 https://raw.githubusercontent.com/huggingface/aisheets/refs/heads/main/scripts/extend_dataset/with_vllm.py \ # script for running the pipeline
 nvidia/Nemotron-Personas dvilasuero/nemotron-kimi-qa-distilled \
 --config https://huggingface.co/datasets/dvilasuero/nemotron-personas-kimi-questions/raw/main/config.yml \ # config with prompts

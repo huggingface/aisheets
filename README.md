@@ -71,18 +71,18 @@ If you want to generate a larger dataset, you can use the above-mentioned config
 ```bash
 hf jobs uv run \
 -s HF_TOKEN=$HF_TOKEN \
-https://raw.githubusercontent.com/huggingface/aisheets/refs/heads/main/scripts/extend_dataset/with_inference_client.py \ # script for running the pipeline
+https://github.com/huggingface/aisheets/raw/refs/heads/main/scripts/extend_dataset/with_inference_client.py \ # script for running the pipeline
 nvidia/Nemotron-Personas dvilasuero/nemotron-kimi-qa-distilled \
 --config https://huggingface.co/datasets/dvilasuero/nemotron-personas-kimi-questions/raw/main/config.yml \ # config with prompts
 --num-rows 100 # limit to 100 rows, leave empty for the full dataset
 ```
 
-Or you can use an alternative script that uses vllm inference instead of the inference client. This script helps you to save on inference costs, but it requires you to setup a vllm-compatible flavor when running the job:
+Alternatively, you can use a script that utilizes vllm inference instead of the inference client. This script helps you to save on inference costs, but it requires you to set up a vllm-compatible flavor when running the job:
 
 ```bash
 hf jobs uv run --flavor l4x1 \
 -s HF_TOKEN=$HF_TOKEN \
-https://raw.githubusercontent.com/huggingface/aisheets/refs/heads/main/scripts/extend_dataset/with_vllm.py \ # script for running the pipeline
+https://github.com/huggingface/aisheets/raw/refs/heads/main/scripts/extend_dataset/with_vllm.py \ # script for running the pipeline
 nvidia/Nemotron-Personas dvilasuero/nemotron-kimi-qa-distilled \
 --config https://huggingface.co/datasets/dvilasuero/nemotron-personas-kimi-questions/raw/main/config.yml \ # config with prompts
 --num-rows 100 \ # limit to 100 rows, leave empty for the full dataset

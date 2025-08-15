@@ -292,26 +292,18 @@ def main(
         max_model_len=29456,  # Adjust based on model/hardware capabilities
     )
 
-    streaming = num_rows and num_rows > 0
-
     max_workers = max_workers or max(1, multiprocessing.cpu_count() - 1)
-    if streaming:
-        max_workers = None
 
     dataset: Dataset = load_dataset(
         repo_id,
         split=split,
         num_proc=max_workers,
-        streaming=streaming,
     )
 
-    if streaming:
+    if num_rows is None:
+        num_rows = dataset.num_rows
+    if num_rows < dataset.num_rows:
         dataset = dataset.take(num_rows)
-    else:
-        if num_rows is None:
-            num_rows = dataset.num_rows
-        if num_rows < dataset.num_rows:
-            dataset = dataset.take(num_rows)
 
     processor_config = load_processor_config(
         dataset=dataset,

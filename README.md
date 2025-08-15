@@ -77,7 +77,7 @@ nvidia/Nemotron-Personas dvilasuero/nemotron-kimi-qa-distilled \
 --num-rows 100 # limit to 100 rows, leave empty for the full dataset
 ```
 
-Or you can use an alternative script that uses vllm inference instead of the inference client. This script helps you to save on inference costs, but it requires you to setup a vllm-compatiable flavor when running the job:
+Or you can use an alternative script that uses vllm inference instead of the inference client. This script helps you to save on inference costs, but it requires you to setup a vllm-compatible flavor when running the job:
 
 ```bash
 hf jobs uv run --flavor l4x1 \

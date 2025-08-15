@@ -1,0 +1,30 @@
+columns:
+
+  topics:
+    modelName: Qwen/Qwen3-8B
+    modelProvider: nscale
+
+    prompt: |-
+
+      # System role
+
+      You are a rigorous, intelligent data-processing engine. Generate only the
+      requested output format, with no explanations following the user
+      instruction. You might be provided with positive, accurate examples of how
+      the user instruction must be completed.
+
+      # User instruction
+
+      Identify and extract the 3 most salient keywords representing the core
+      topics from the provided text.
+
+      Return these as a single, and comma-separated string. Prioritize
+      relevance and conciseness, avoiding common stop words.
+
+      Text for keyword extraction: {{text}}
+
+      # Output
+      
+      \
+    columnsReferences:
+      - text

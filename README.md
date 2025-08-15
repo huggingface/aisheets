@@ -14,7 +14,6 @@
 
 Hugging Face AI Sheets is an open-source tool for building, enriching, and transforming datasets using AI models with no code. The tool can be deployed locally or on the Hub. It lets you use thousands of open models from the Hugging Face Hub via Inference Providers or local models, including `gpt-oss` from OpenAI!
 
-
 ## Quick Start
 
 ### Using the AI Sheets Space
@@ -65,11 +64,36 @@ export HF_TOKEN=your_token_here
 pnpm serve
 ```
 
+## Running data generation scripts using HF Jobs
+
+If you want to generate a larger dataset, you can use the above-mentioned config and script, like this:
+
+```bash
+hf jobs uv run \
+-s HF_TOKEN=$HF_TOKEN \
+https://github.com/huggingface/aisheets/raw/refs/heads/main/scripts/extend_dataset/with_inference_client.py \ # script for running the pipeline
+nvidia/Nemotron-Personas dvilasuero/nemotron-kimi-qa-distilled \
+--config https://huggingface.co/datasets/dvilasuero/nemotron-personas-kimi-questions/raw/main/config.yml \ # config with prompts
+--num-rows 100 # limit to 100 rows, leave empty for the full dataset
+```
+
+Alternatively, you can use a script that utilizes vllm inference instead of the inference client. This script helps you to save on inference costs, but it requires you to set up a vllm-compatible flavor when running the job:
+
+```bash
+hf jobs uv run --flavor l4x1 \
+-s HF_TOKEN=$HF_TOKEN \
+https://github.com/huggingface/aisheets/raw/refs/heads/main/scripts/extend_dataset/with_vllm.py \ # script for running the pipeline
+nvidia/Nemotron-Personas dvilasuero/nemotron-kimi-qa-distilled \
+--config https://huggingface.co/datasets/dvilasuero/nemotron-personas-kimi-questions/raw/main/config.yml \ # config with prompts
+--num-rows 100 \ # limit to 100 rows, leave empty for the full dataset
+--vllm-model deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B
+```
+
 ## Running AI Sheets with custom (and local) LLMs
 
 By default, AI Sheets is configured to use the Huggingface Inference Providers API to run inference on the latest open-source models. However, you can also run Sheets with own custom LLMs, such as those hosted on your own infrastructure or other cloud providers. The only requirement is that your LLMs must support the [OpenAI API specification](https://platform.openai.com/docs/api-reference/introduction).
 
-## Steps
+### Steps
 
 When running AI Sheets with custom LLMs, you need to set some environment variables to point the inference calls to your custom LLMs. Here are the steps:
 
@@ -93,11 +117,12 @@ This is a crucial step to conform to the OpenAI API specification. The model nam
 
 * Note: The text-to-image generation feature cannot be customized yet. It will always utilize the Hugging Face Inference Providers API to generate images. Take this into account when running AI Sheets with custom LLMs.
 
-## Example of running AI Sheets with Ollama
+### Example of running AI Sheets with Ollama
 
 To run AI Sheets with Ollama, you can follow these steps:
 
 1. Start the Ollama server, and run the model of your choice
+
 ```sh
 export OLLAMA_NOHISTORY=1
 ollama serve
@@ -130,38 +155,37 @@ AI Sheets defines some environment variables that can be used to customize the b
 
 ###  Authentication
 
-- `OAUTH_CLIENT_ID`: The Hugging Face OAuth client ID for the application. This is used to authenticate users via the Hugging Face OAuth. If this variable is defined, it will be used to authenticate users. (See how to setup the Hugging Face OAuth [here](https://huggingface.co/blog/frascuchon/running-sheets-locally#oauth-authentication)).
+* `OAUTH_CLIENT_ID`: The Hugging Face OAuth client ID for the application. This is used to authenticate users via the Hugging Face OAuth. If this variable is defined, it will be used to authenticate users. (See how to setup the Hugging Face OAuth [here](https://huggingface.co/blog/frascuchon/running-sheets-locally#oauth-authentication)).
 
-- `HF_TOKEN`: A Hugging Face token to use for authentication. If this variable is defined, it will be used for authenticated inference calls, instead of the OAuth token.
+* `HF_TOKEN`: A Hugging Face token to use for authentication. If this variable is defined, it will be used for authenticated inference calls, instead of the OAuth token.
 
-- `OAUTH_SCOPES`: The scopes to request during the OAuth authentication. The default value is `openid profile inference-api manage-repos`. This variable is used to request the necessary permissions for the application to function correctly, and normally does not need to be changed.
+* `OAUTH_SCOPES`: The scopes to request during the OAuth authentication. The default value is `openid profile inference-api manage-repos`. This variable is used to request the necessary permissions for the application to function correctly, and normally does not need to be changed.
 
 ###  Inference
 
-- `DEFAULT_MODEL`: The default model id to use when calling the inference API for text generation. The default value is `meta-llama/Llama-3.3-70B-Instruct`. This variable can be used to change the default model used for text generation and must be a valid model id from the [Hugging Face Hub](https://huggingface.co/models?pipeline_tag=text-generation&inference_provider=all&sort=trending),
+* `DEFAULT_MODEL`: The default model id to use when calling the inference API for text generation. The default value is `meta-llama/Llama-3.3-70B-Instruct`. This variable can be used to change the default model used for text generation and must be a valid model id from the [Hugging Face Hub](https://huggingface.co/models?pipeline_tag=text-generation&inference_provider=all&sort=trending),
 
-- `DEFAULT_MODEL_PROVIDER`: The default model provider to use when calling the inference API for text generation. The default value is `nebius`. This variable can be used to change the default model provider used for text generation and must be a valid provider from the [Hugging Face Inference Providers](https://huggingface.co/docs/inference-providers/en/index).
+* `DEFAULT_MODEL_PROVIDER`: The default model provider to use when calling the inference API for text generation. The default value is `nebius`. This variable can be used to change the default model provider used for text generation and must be a valid provider from the [Hugging Face Inference Providers](https://huggingface.co/docs/inference-providers/en/index).
 
-- `ORG_BILLING`: The organization billing to use for inference calls. If this variable is defined, the inference calls will be billed to the specified organization. This is useful for organizations that want to manage their inference costs and usage. Remember that users must be part of the organization to use this feature, or an `HF_TOKEN` of a user that is part of the organization must be defined.
+* `ORG_BILLING`: The organization billing to use for inference calls. If this variable is defined, the inference calls will be billed to the specified organization. This is useful for organizations that want to manage their inference costs and usage. Remember that users must be part of the organization to use this feature, or an `HF_TOKEN` of a user that is part of the organization must be defined.
 
-- `MODEL_ENDPOINT_URL`:  The URL of a custom inference endpoint to use for text generation. If this variable is defined, it will be used instead of the default Hugging Face Inference API. This is useful for using custom inference endpoints that are not hosted on the Hugging Face Hub, such as Ollama or LLM Studio. The URL must be a valid endpoint that supports the [OpenAI API format](https://platform.openai.com/docs/api-reference/chat/create).
+* `MODEL_ENDPOINT_URL`:  The URL of a custom inference endpoint to use for text generation. If this variable is defined, it will be used instead of the default Hugging Face Inference API. This is useful for using custom inference endpoints that are not hosted on the Hugging Face Hub, such as Ollama or LLM Studio. The URL must be a valid endpoint that supports the [OpenAI API format](https://platform.openai.com/docs/api-reference/chat/create).
 
-- `MODEL_ENDPOINT_NAME`: The model id to use when calling the custom inference endpoint defined by `MODEL_ENDPOINT_URL`. This variable is required if `MODEL_ENDPOINT_URL` is defined for custom inference endpoints that require a model id, such as Ollama or LLM Studio. The model id must correspond to the model deployed on the custom inference endpoint.
+* `MODEL_ENDPOINT_NAME`: The model id to use when calling the custom inference endpoint defined by `MODEL_ENDPOINT_URL`. This variable is required if `MODEL_ENDPOINT_URL` is defined for custom inference endpoints that require a model id, such as Ollama or LLM Studio. The model id must correspond to the model deployed on the custom inference endpoint.
 
-- `NUM_CONCURRENT_REQUESTS`: The number of concurrent requests to allow when calling the inference API in the column cells generation process. The default value is `5`, and the maximum value is `10`. This is useful to control the number of concurrent requests made to the inference API and avoid hitting rate limits defined by the provider.
+* `NUM_CONCURRENT_REQUESTS`: The number of concurrent requests to allow when calling the inference API in the column cells generation process. The default value is `5`, and the maximum value is `10`. This is useful to control the number of concurrent requests made to the inference API and avoid hitting rate limits defined by the provider.
 
 ### Miscellaneous
 
-- `DATA_DIR`: The directory where the application will store all its data. The default value is `./data`. This variable can be used to change the data directory used by the application. The directory must be writable by the application.
+* `DATA_DIR`: The directory where the application will store all its data. The default value is `./data`. This variable can be used to change the data directory used by the application. The directory must be writable by the application.
 
-- `SERPER_API_KEY`: The API key to use for the Serper web search API. If this variable is defined, it will be used to authenticate web search requests. If this variable is not defined, web search will be disabled. The Serper API key can be obtained from the [Serper website](https://serper.dev/).
+* `SERPER_API_KEY`: The API key to use for the Serper web search API. If this variable is defined, it will be used to authenticate web search requests. If this variable is not defined, web search will be disabled. The Serper API key can be obtained from the [Serper website](https://serper.dev/).
 
-- `TELEMETRY_ENABLED`: A boolean value that indicates whether telemetry is enabled or not. The default value is `1`. This variable can be used to disable telemetry if desired. Telemetry is used to collect anonymous usage data to help improve the application.
+* `TELEMETRY_ENABLED`: A boolean value that indicates whether telemetry is enabled or not. The default value is `1`. This variable can be used to disable telemetry if desired. Telemetry is used to collect anonymous usage data to help improve the application.
 
-- `EXAMPLES_PROMPT_MAX_CONTEXT_SIZE`: The maximum context size (in characters) for the examples section in the prompt for text generation. The default value is `8192`. If the examples section exceeds this size, it will be truncated. This variable can be used when the examples section is too large and needs to be reduced to fit within the context size limits of the model.
+* `EXAMPLES_PROMPT_MAX_CONTEXT_SIZE`: The maximum context size (in characters) for the examples section in the prompt for text generation. The default value is `8192`. If the examples section exceeds this size, it will be truncated. This variable can be used when the examples section is too large and needs to be reduced to fit within the context size limits of the model.
 
-- `SOURCES_PROMPT_MAX_CONTEXT_SIZE`: The maximum context size (in characters) for the sources section in the prompt for text generation. The default value is `61440`. If the sources section exceeds this size, it will be truncated. This variable can be used when the sources section is too large and needs to be reduced to fit within the context size limits of the model.
-
+* `SOURCES_PROMPT_MAX_CONTEXT_SIZE`: The maximum context size (in characters) for the sources section in the prompt for text generation. The default value is `61440`. If the sources section exceeds this size, it will be truncated. This variable can be used when the sources section is too large and needs to be reduced to fit within the context size limits of the model.
 
 ## Developer docs
 
@@ -193,11 +217,11 @@ Inside your project, you'll see the following directory structure:
         └── ...
 ```
 
-- `src/routes`: Provides the directory-based routing, which can include a hierarchy of `layout.tsx` layout files, and an `index.tsx` file as the page. Additionally, `index.ts` files are endpoints. Please see the [routing docs](https://qwik.dev/qwikcity/routing/overview/) for more info.
+* `src/routes`: Provides the directory-based routing, which can include a hierarchy of `layout.tsx` layout files, and an `index.tsx` file as the page. Additionally, `index.ts` files are endpoints. Please see the [routing docs](https://qwik.dev/qwikcity/routing/overview/) for more info.
 
-- `src/components`: Recommended directory for components.
+* `src/components`: Recommended directory for components.
 
-- `public`: Any static assets, like images, can be placed in the public directory. Please see the [Vite public directory](https://vitejs.dev/guide/assets.html#the-public-directory) for more info.
+* `public`: Any static assets, like images, can be placed in the public directory. Please see the [Vite public directory](https://vitejs.dev/guide/assets.html#the-public-directory) for more info.
 
 ### Development
 

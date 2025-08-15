@@ -1,5 +1,5 @@
 columns:
-  smolLm3-3B-classification:
+  jailbreak_classification:
 
       modelName: HuggingFaceTB/SmolLM3-3B
       modelProvider: hf-inference

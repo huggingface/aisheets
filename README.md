@@ -28,7 +28,7 @@ First, get your Hugging Face token from <https://huggingface.co/settings/tokens>
 export HF_TOKEN=your_token_here
 docker run -p 3000:3000 \
 -e HF_TOKEN=HF_TOKEN \
-AI Sheets/sheets
+aisheets/sheets
 ```
 
 Open `http://localhost:3000` in your browser.

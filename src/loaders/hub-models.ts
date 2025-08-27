@@ -212,23 +212,35 @@ interface TrendingModel {
 export const useTrendingHubModels = routeLoader$(async function (
   this: RequestEventLoader,
 ): Promise<TrendingModel[]> {
-  const url = 'https://huggingface.co/api/models';
-  const params = new URLSearchParams();
-  params.append('sort', 'trendingScore');
-  params.append('direction', '-1');
-  params.append('limit', '3');
+  const getModels = async (
+    kind: 'text-generation' | 'image-text-to-text',
+    limit: number,
+  ) => {
+    const url = 'https://huggingface.co/api/models';
+    const params = new URLSearchParams();
+    params.append('pipeline_tag', kind);
+    params.append('limit', `${limit}`);
 
-  const response = await fetch(`${url}?${params}`, {
-    method: 'GET',
-  });
+    params.append('sort', 'trendingScore');
+    params.append('direction', '-1');
 
-  if (!response.ok) {
-    return [];
-  }
+    const response = await fetch(`${url}?${params}`, {
+      method: 'GET',
+    });
 
-  const model = await response.json();
+    if (!response.ok) {
+      return [];
+    }
 
-  return model.map((m: any) => ({
+    return await response.json();
+  };
+
+  const [textModels, imageTextModels] = await Promise.all([
+    getModels('text-generation', 2),
+    getModels('image-text-to-text', 1),
+  ]);
+
+  return [...textModels, ...imageTextModels].map((m: any) => ({
     id: m.modelId,
     picture: `https://huggingface.co/api/organizations/${m.modelId.split('/')[0]}/avatar`,
   }));

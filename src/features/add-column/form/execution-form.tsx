@@ -16,14 +16,12 @@ import {
   LuEgg,
   LuGlobe,
   LuStopCircle,
-  LuUndo2,
   LuX,
 } from '@qwikest/icons/lucide';
 
 import { Button, Select, triggerLooks } from '~/components';
 import { useClickOutside } from '~/components/hooks/click/outside';
 import { nextTick } from '~/components/hooks/tick';
-import { Tooltip } from '~/components/ui/tooltip/tooltip';
 
 import {
   TemplateTextArea,
@@ -90,6 +88,10 @@ class GroupedModels {
       label: 'slow',
       class: 'bg-[#FBDAD7]',
     },
+    REASONING: {
+      label: 'reasoning',
+      class: 'bg-[#D0E8FF]',
+    },
   };
 
   constructor(models: Model[]) {
@@ -105,7 +107,11 @@ class GroupedModels {
   }[] {
     return [
       {
-        id: 'black-forest-labs/FLUX.1-dev',
+        id: 'deepseek-ai/DeepSeek-V3.1',
+        tags: [this.tags.REASONING],
+      },
+      {
+        id: 'openai/gpt-oss-20b',
         tags: [this.tags.FAST],
       },
     ];
@@ -133,7 +139,7 @@ class GroupedModels {
       },
       {
         label: 'All models available on Hugging Face',
-        class: 'h-10 p-2 bg-secondary-50 text-secondary-400',
+        class: 'h-10 p-2 bg-[#FFF0D9] text-[#FF9D00]',
         models: this.models.filter(
           (model) =>
             !this.recommendedModelIds.map((r) => r.id).includes(model.id),
@@ -152,12 +158,8 @@ export const ExecutionForm = component$<SidebarProps>(
 
     const allModels = useContext<Model[]>(modelsContext);
 
-    const {
-      DEFAULT_MODEL,
-      DEFAULT_MODEL_PROVIDER,
-      modelEndpointEnabled,
-      MODEL_ENDPOINT_NAME,
-    } = useContext(configContext);
+    const { DEFAULT_MODEL, DEFAULT_MODEL_PROVIDER, modelEndpointEnabled } =
+      useContext(configContext);
 
     const models = useComputed$(() => {
       return new Models(allModels).getModelsByType(
@@ -295,15 +297,18 @@ export const ExecutionForm = component$<SidebarProps>(
 
       modelProviders.value = model.providers ?? [];
 
-      if (
-        !selectedProvider.value ||
-        !model.providers.includes(selectedProvider.value)
-      ) {
-        selectedProvider.value =
-          model.providers.find(
+      nextTick(() => {
+        if (
+          !selectedProvider.value ||
+          !modelProviders.value.includes(selectedProvider.value)
+        ) {
+          const defaultModel = modelProviders.value.find(
             (provider) => provider === DEFAULT_MODEL_PROVIDER,
-          ) || model.providers[0];
-      }
+          );
+
+          selectedProvider.value = defaultModel || modelProviders.value[0];
+        }
+      });
     });
 
     useVisibleTask$(() => {
@@ -366,7 +371,11 @@ export const ExecutionForm = component$<SidebarProps>(
           <span class="px-8">Instructions to generate cells</span>
           <Button
             look="ghost"
-            class={`${columns.value.filter((c) => c.id !== TEMPORAL_ID).length >= 1 ? 'visible' : 'invisible'} rounded-full hover:bg-neutral-200 cursor-pointer transition-colors w-[30px] h-[30px]`}
+            class={`${
+              columns.value.filter((c) => c.id !== TEMPORAL_ID).length >= 1
+                ? 'visible'
+                : 'invisible'
+            } rounded-full hover:bg-neutral-200 cursor-pointer transition-colors w-[30px] h-[30px]`}
             onClick$={handleCloseForm}
             tabIndex={0}
             aria-label="Close"
@@ -442,43 +451,6 @@ export const ExecutionForm = component$<SidebarProps>(
                 </div>
               </div>
 
-              <div class="flex items-center justify-start gap-1">
-                {endpointURLSelected.value ? (
-                  <div class="flex items-center justify-start gap-1 cursor-pointer">
-                    Model
-                    <p class="text-neutral-500 underline">
-                      {MODEL_ENDPOINT_NAME}
-                    </p>
-                    with custom endpoint
-                  </div>
-                ) : (
-                  <div class="flex items-center justify-start gap-1">
-                    Model
-                    <p class="text-neutral-500 underline">
-                      <a
-                        href={`https://huggingface.co/${selectedModelId.value}`}
-                        class="text-neutral-500 hover:text-neutral-600"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        {selectedModelId.value}
-                      </a>
-                    </p>
-                    {enableCustomEndpoint.value &&
-                      !endpointURLSelected.value && (
-                        <Tooltip text="Reset default model">
-                          <LuUndo2
-                            class="w-4 h-4 rounded-full gap-2 text-neutral-500 cursor-pointer hover:bg-neutral-200"
-                            onClick$={() => (endpointURLSelected.value = true)}
-                          />
-                        </Tooltip>
-                      )}
-                    with provider
-                    <p class="italic">{selectedProvider.value}</p>
-                  </div>
-                )}
-              </div>
-
               <div class="px-3 pb-12 pt-2 bg-white border border-secondary-foreground rounded-sm">
                 <div class="flex flex-col gap-4">
                   <div class="flex gap-4">
@@ -492,12 +464,28 @@ export const ExecutionForm = component$<SidebarProps>(
                         <Select.Label>Model</Select.Label>
                         <div
                           class={cn(
-                            'w-full flex flex-row justify-between items-center',
                             triggerLooks('default'),
+                            'flex text-xs items-center p-1 gap-2 font-mono',
                           )}
                         >
+                          {modelSearchQuery.value != '' && (
+                            <img
+                              alt={selectedModelId.value}
+                              src={
+                                models.value.find(
+                                  (m) => m.id === selectedModelId.value,
+                                )?.picture
+                              }
+                              class="w-4 h-4"
+                              onError$={(ev) => {
+                                (ev.target as HTMLImageElement).src =
+                                  'https://huggingface.co/front/assets/huggingface_logo-noborder.svg';
+                              }}
+                            />
+                          )}
+
                           <input
-                            class="h-8 w-full outline-none"
+                            class="h-8 w-full outline-none font-mono text-xs"
                             onFocusIn$={() => {
                               if (
                                 selectedModelId.value === modelSearchQuery.value
@@ -508,13 +496,20 @@ export const ExecutionForm = component$<SidebarProps>(
                             placeholder="Search models..."
                             bind:value={modelSearchQuery}
                           />
+
+                          <ModelFlag
+                            model={groupedModels.value
+                              .flatMap((m) => m.models)
+                              .find((m) => m.id === selectedModelId.value)}
+                          />
+
                           <Select.Trigger look="headless" />
                         </div>
                         <Select.Popover
                           key={modelSearchQuery.value}
                           floating="bottom-end"
                           gutter={8}
-                          class="border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto p-0 ml-3 mt-2"
+                          class="border border-border max-h-[300px] overflow-y-auto overflow-x-hidden top-[100%] bottom-auto p-0 mt-2 ml-24 min-w-[450px]"
                         >
                           <div class="flex flex-col">
                             {Object.entries(groupedModels.value).map(
@@ -541,13 +536,6 @@ export const ExecutionForm = component$<SidebarProps>(
 
                                           selectedModelId.value = model.id;
                                           modelSearchQuery.value = model.id;
-
-                                          selectedProvider.value =
-                                            model.providers.includes(
-                                              DEFAULT_MODEL_PROVIDER,
-                                            )
-                                              ? DEFAULT_MODEL_PROVIDER
-                                              : model.providers[0];
                                         }}
                                       >
                                         <div class="flex text-xs items-center p-1 gap-2 font-mono">
@@ -565,27 +553,9 @@ export const ExecutionForm = component$<SidebarProps>(
                                           <Select.ItemLabel>
                                             {model.id}
                                           </Select.ItemLabel>
-                                          <div class="flex items-center gap-2">
-                                            {model.extraTags?.map((e) => (
-                                              <div
-                                                key={e.label}
-                                                class={cn(
-                                                  'rounded-sm',
-                                                  e.class,
-                                                )}
-                                              >
-                                                <span class="capitalize p-2">
-                                                  {e.label}
-                                                </span>
-                                              </div>
-                                            ))}
-                                          </div>
+
+                                          <ModelFlag model={model} />
                                         </div>
-                                        {model.size && (
-                                          <span class="ml-2 bg-gray-100 text-gray-700 px-2 py-0.5 rounded text-sm">
-                                            {model.size}
-                                          </span>
-                                        )}
 
                                         {model.id === selectedModelId.value && (
                                           // We cannot use the Select.ItemIndicator here
@@ -636,6 +606,27 @@ export const ExecutionForm = component$<SidebarProps>(
           </div>
         </div>
       </th>
+    );
+  },
+);
+
+export const ModelFlag = component$(
+  ({ model }: { model?: ModelWithExtraTags }) => {
+    if (!model) return null;
+
+    return (
+      <div class="flex items-center gap-2">
+        {model.extraTags?.map((e) => (
+          <span key={e.label} class={cn('rounded-sm p-1 capitalize', e.class)}>
+            {e.label}
+          </span>
+        ))}
+        {!model.extraTags && model.size && (
+          <span class="rounded-sm bg-gray-100 text-gray-700 p-1">
+            {model.size}
+          </span>
+        )}
+      </div>
     );
   },
 );

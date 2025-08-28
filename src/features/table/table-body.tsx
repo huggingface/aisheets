@@ -5,7 +5,6 @@ import {
   component$,
   noSerialize,
   useComputed$,
-  useContext,
   useSignal,
   useStore,
   useTask$,
@@ -23,7 +22,6 @@ import { useExecution } from '~/features/add-column';
 import { useGenerateColumn } from '~/features/execution';
 import { isOverlayOpen } from '~/features/table/components/body/renderer/components/utils';
 import { TableCell } from '~/features/table/table-cell';
-import { configContext } from '~/routes/home/layout';
 import { deleteRowsCells } from '~/services';
 import {
   type Cell,
@@ -36,7 +34,6 @@ import {
 export const TableBody = component$(() => {
   const rowSize = 108; // px
 
-  const { modelEndpointEnabled } = useContext(configContext);
   const { activeDataset } = useDatasetsStore();
 
   const { columns, firstColumn, updateColumn, deleteCellByIdx } =

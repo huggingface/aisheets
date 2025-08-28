@@ -59,9 +59,10 @@ export const SecondLogo = component$<LogoProps>(
 
 export const HFLogo = component$<LogoProps>(({ ...props }) => {
   return (
-    // biome-ignore lint/a11y/noSvgWithoutTitle: <explanation>
     <svg
       {...props}
+      role="img"
+      aria-hidden="true"
       class={cn('w-10 h-10', props.class)}
       style={{
         transform: 'scale(1.4)',
@@ -112,9 +113,10 @@ export const HFLogo = component$<LogoProps>(({ ...props }) => {
 
 export const GoogleDrive = component$<LogoProps>(({ ...props }) => {
   return (
-    // biome-ignore lint/a11y/noSvgWithoutTitle: <explanation>
     <svg
       {...props}
+      role="img"
+      aria-hidden="true"
       class={cn('w-10 h-10', props.class)}
       style={{
         transform: 'scale(1.4)',

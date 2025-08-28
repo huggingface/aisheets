@@ -22,7 +22,7 @@ export const useValidateCellUseCase = () => {
     async (editCell: EditCell): Promise<Cell> => {
       try {
         return await updateCell(editCell);
-      } catch (error) {
+      } catch {
         return await createCell({
           cell: editCell,
           columnId: editCell.column.id,

@@ -1,4 +1,4 @@
-// @ts-ignore Missing type definitions for sbd
+// @ts-expect-error Missing type definitions for sbd
 import { sentences as splitBySentences } from 'sbd';
 import type { MarkdownElement } from '../types';
 import { MarkdownElementType } from '../types';

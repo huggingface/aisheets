@@ -226,18 +226,13 @@ async function extractDatasetConfig({
 
   const result = processTextConfigResponse(
     response.choices[0].message.content || '',
-    maxSearchQueries,
     searchEnabled,
   );
 
   return cacheSet(args, result);
 }
 
-const processTextConfigResponse = (
-  text: string,
-  maxSearchQueries: number,
-  searchEnabled = false,
-) => {
+const processTextConfigResponse = (text: string, searchEnabled = false) => {
   // Define regex patterns for better maintainability
   const sectionPatterns = {
     name: /^DATASET NAME:$/i,

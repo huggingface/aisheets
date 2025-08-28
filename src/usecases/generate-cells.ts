@@ -169,7 +169,13 @@ async function* generateCellsFromScratch({
       inputs: {},
     }));
 
-  let sourcesContext = undefined;
+  let sourcesContext:
+    | {
+        text: string;
+        source_uri: string;
+        score?: number;
+      }[]
+    | undefined;
   const sourcesLimit = Math.max(30, (limit + existingCellsExamples.length) * 2);
 
   if (searchEnabled) {
@@ -355,7 +361,6 @@ async function singleCellGeneration({
   switch (column.type.toLowerCase().trim()) {
     case 'image': {
       const response = await _generateImage({
-        column,
         prompt,
         args,
         session,
@@ -682,12 +687,10 @@ const _generateText = async ({
 };
 
 const _generateImage = async ({
-  column,
   prompt,
   args,
   session,
 }: {
-  column: Column;
   prompt: string;
   args: PromptExecutionParams;
   session: Session;

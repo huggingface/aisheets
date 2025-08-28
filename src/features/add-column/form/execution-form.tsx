@@ -22,6 +22,7 @@ import {
 import { Button, Select, triggerLooks } from '~/components';
 import { useClickOutside } from '~/components/hooks/click/outside';
 import { nextTick } from '~/components/hooks/tick';
+import { ExtraProviders, Provider } from '~/components/ui/logo/logo';
 
 import {
   TemplateTextArea,
@@ -538,21 +539,23 @@ export const ExecutionForm = component$<SidebarProps>(
                                           modelSearchQuery.value = model.id;
                                         }}
                                       >
-                                        <div class="flex text-xs items-center p-1 gap-2 font-mono">
-                                          <img
-                                            src={model.picture}
-                                            alt={model.id}
-                                            class="w-4 h-4"
-                                            onError$={(ev) => {
-                                              (
-                                                ev.target as HTMLImageElement
-                                              ).src =
-                                                'https://huggingface.co/front/assets/huggingface_logo-noborder.svg';
-                                            }}
-                                          />
-                                          <Select.ItemLabel>
-                                            {model.id}
-                                          </Select.ItemLabel>
+                                        <div class="flex text-xs items-center justify-between p-1 gap-2 font-mono w-full">
+                                          <div class="flex items-center gap-2">
+                                            <img
+                                              src={model.picture}
+                                              alt={model.id}
+                                              class="w-4 h-4"
+                                              onError$={(ev) => {
+                                                (
+                                                  ev.target as HTMLImageElement
+                                                ).src =
+                                                  'https://huggingface.co/front/assets/huggingface_logo-noborder.svg';
+                                              }}
+                                            />
+                                            <Select.ItemLabel>
+                                              {model.id}
+                                            </Select.ItemLabel>
+                                          </div>
 
                                           <ModelFlag model={model} />
                                         </div>
@@ -575,25 +578,40 @@ export const ExecutionForm = component$<SidebarProps>(
                     <div class="flex-1">
                       <Select.Root bind:value={selectedProvider}>
                         <Select.Label>Inference Providers</Select.Label>
-                        <Select.Trigger class="px-4 bg-white rounded-base border-neutral-300-foreground">
-                          <Select.DisplayValue />
+                        <Select.Trigger class="bg-white rounded-base border-neutral-300-foreground">
+                          <div class="flex text-xs items-center justify-between gap-2 font-mono w-full">
+                            <div class="flex items-center gap-2">
+                              <Provider name={selectedProvider.value} />
+                              <Select.DisplayValue />
+                            </div>
+
+                            <ExtraProviders
+                              selected={selectedProvider.value}
+                              providers={modelProviders.value}
+                            />
+                          </div>
                         </Select.Trigger>
-                        <Select.Popover class="border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto mt-1">
+                        <Select.Popover class="border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto mt-1 min-w-[200px]">
                           {modelProviders.value.map((provider) => (
                             <Select.Item
                               key={provider}
                               value={provider}
                               class="text-foreground hover:bg-accent"
                               onClick$={() => {
+                                selectedProvider.value = provider; // Redundant but ensures the value is set sometimes does not work...
                                 endpointURLSelected.value = false;
                               }}
                             >
-                              <Select.ItemLabel>{provider}</Select.ItemLabel>
-                              {provider === selectedProvider.value && (
-                                // We cannot use the Select.ItemIndicator here
-                                // because it doesn't work when the model list changes
-                                <LuCheck class="h-4 w4 text-primary-500 absolute right-2 top-1/2 -translate-y-1/2" />
-                              )}
+                              <div class="flex text-xs items-center p-1 gap-2 font-mono">
+                                <Provider name={provider} />
+
+                                <Select.ItemLabel>{provider}</Select.ItemLabel>
+                                {provider === selectedProvider.value && (
+                                  // We cannot use the Select.ItemIndicator here
+                                  // because it doesn't work when the model list changes
+                                  <LuCheck class="h-4 w4 text-primary-500 absolute right-2 top-1/2 -translate-y-1/2" />
+                                )}
+                              </div>
                             </Select.Item>
                           ))}
                         </Select.Popover>

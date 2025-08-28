@@ -465,10 +465,10 @@ export const ExecutionForm = component$<SidebarProps>(
                         <div
                           class={cn(
                             triggerLooks('default'),
-                            'flex text-xs items-center p-1 gap-2 font-mono',
+                            'flex text-xs items-center px-2 gap-2 font-mono',
                           )}
                         >
-                          {modelSearchQuery.value != '' && (
+                          {modelSearchQuery.value == selectedModelId.value && (
                             <img
                               alt={selectedModelId.value}
                               src={

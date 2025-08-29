@@ -34,7 +34,10 @@ export interface DatasetInfo {
 export const getDatasetInfo = async ({
   repoId,
   accessToken,
-}: { repoId: string; accessToken: string }): Promise<DatasetInfo> => {
+}: {
+  repoId: string;
+  accessToken: string;
+}): Promise<DatasetInfo> => {
   const repo = {
     name: repoId,
     type: 'dataset' as RepoType,

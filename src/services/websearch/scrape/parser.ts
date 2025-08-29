@@ -214,7 +214,7 @@ export function spatialParser(): {
       }
     };
 
-    const expandCluster = (c: number, neighbors: number[]) => {
+    const expandCluster = (_: number, neighbors: number[]) => {
       for (let i = 0; i < neighbors.length; i += 1) {
         const neighborIndex = neighbors[i];
         if (!visitedIndices.has(neighborIndex)) {
@@ -230,7 +230,7 @@ export function spatialParser(): {
       }
     };
 
-    dataset.forEach((element: T, index: number) => {
+    dataset.forEach((_: T, index: number) => {
       if (!visitedIndices.has(index)) {
         visitedIndices.add(index);
         const neighbors = findNeighbors(index);

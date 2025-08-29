@@ -235,7 +235,7 @@ async function extractDatasetConfig({
 
 const processTextConfigResponse = (
   text: string,
-  maxSearchQueries: number,
+  _maxSearchQueries: number,
   searchEnabled = false,
 ) => {
   // Define regex patterns for better maintainability

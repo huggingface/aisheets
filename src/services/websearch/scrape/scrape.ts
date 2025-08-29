@@ -86,7 +86,7 @@ export async function scrapeUrl(
         // For HTML content
         try {
           await page.waitForLoadState('networkidle', { timeout: 500 });
-        } catch (e) {
+        } catch {
           // Continue with what we have
         }
 

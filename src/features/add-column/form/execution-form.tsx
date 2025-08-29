@@ -494,7 +494,7 @@ export const ExecutionForm = component$<SidebarProps>(
                                 modelSearchQuery.value = '';
                               }
                             }}
-                            onKeyDown$={(e) => {
+                            onKeyDown$={() => {
                               nextTick(() => {
                                 isModelDropdownOpen.value = false;
                               });

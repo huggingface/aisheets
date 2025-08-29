@@ -39,7 +39,7 @@ if (provider === undefined && endpointUrl === undefined) {
 
   processEmbeddings = async (
     texts: string[],
-    options: {
+    _options: {
       accessToken: string;
     },
   ): Promise<number[][]> => {

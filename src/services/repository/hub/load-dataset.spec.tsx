@@ -12,7 +12,7 @@ describe.runIf(accessToken)(
   'loadDataset',
   () => {
     it('should load a dataset for a public dataset', async () => {
-      const model = await DatasetModel.create({
+      await DatasetModel.create({
         name: 'Test Dataset',
         createdBy: 'test',
       });
@@ -32,7 +32,7 @@ describe.runIf(accessToken)(
     it('should read a dataset for a private dataset', async (t) => {
       t.skip(); // The dataset is is private and we still need to resolve errors running in the HF spaces
 
-      const model = await DatasetModel.create({
+      await DatasetModel.create({
         name: 'Test Dataset',
         createdBy: 'test',
       });
@@ -48,8 +48,8 @@ describe.runIf(accessToken)(
       expect(result.rows).toHaveLength(50);
     });
 
-    it('should load rows with rowIdx attribute', async (t) => {
-      const model = await DatasetModel.create({
+    it('should load rows with rowIdx attribute', async () => {
+      await DatasetModel.create({
         name: 'Test Dataset',
         createdBy: 'test',
       });
@@ -68,7 +68,7 @@ describe.runIf(accessToken)(
     });
 
     it('should load rows with provided columns', async () => {
-      const model = await DatasetModel.create({
+      await DatasetModel.create({
         name: 'Test Dataset',
         createdBy: 'test',
       });

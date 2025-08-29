@@ -59,7 +59,6 @@ export const SecondLogo = component$<LogoProps>(
 
 export const HFLogo = component$<LogoProps>(({ ...props }) => {
   return (
-    // biome-ignore lint/a11y/noSvgWithoutTitle: <explanation>
     <svg
       {...props}
       class={cn('w-10 h-10', props.class)}
@@ -71,6 +70,7 @@ export const HFLogo = component$<LogoProps>(({ ...props }) => {
       viewBox="0 0 16 16"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
     >
       <g id="huggingface-color 1">
         <g id="Group">
@@ -112,7 +112,6 @@ export const HFLogo = component$<LogoProps>(({ ...props }) => {
 
 export const GoogleDrive = component$<LogoProps>(({ ...props }) => {
   return (
-    // biome-ignore lint/a11y/noSvgWithoutTitle: <explanation>
     <svg
       {...props}
       class={cn('w-10 h-10', props.class)}
@@ -124,6 +123,7 @@ export const GoogleDrive = component$<LogoProps>(({ ...props }) => {
       viewBox="0 0 18 18"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
     >
       <path d="M1.125 6.72502C1.125 4.76481 1.125 3.78472 1.50648 3.03603C1.84204 2.37747 2.37747 1.84204 3.03603 1.50648C3.78472 1.125 4.76481 1.125 6.72502 1.125H11.275C13.2352 1.125 14.2153 1.125 14.964 1.50648C15.6225 1.84204 16.158 2.37747 16.4935 3.03603C16.875 3.78472 16.875 4.76481 16.875 6.72502V11.275C16.875 13.2352 16.875 14.2153 16.4935 14.964C16.158 15.6225 15.6225 16.158 14.964 16.4935C14.2153 16.875 13.2352 16.875 11.275 16.875H6.72502C4.76481 16.875 3.78472 16.875 3.03603 16.4935C2.37747 16.158 1.84204 15.6225 1.50648 14.964C1.125 14.2153 1.125 13.2352 1.125 11.275V6.72502Z" />
       <path

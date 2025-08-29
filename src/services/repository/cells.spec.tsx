@@ -24,7 +24,7 @@ describe('getRowCells', () => {
       datasetId: dataset.id,
     });
 
-    const cell = await ColumnCellModel.create({
+    await ColumnCellModel.create({
       idx: 1,
       columnId: column.id,
     });
@@ -62,7 +62,7 @@ describe('getRowCells', () => {
 
     const idx = 1;
 
-    const cells = await ColumnCellModel.bulkCreate([
+    await ColumnCellModel.bulkCreate([
       {
         idx,
         columnId: columns[0].id,

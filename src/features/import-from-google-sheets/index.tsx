@@ -34,7 +34,7 @@ export const ImportFromGoogleSheets = component$(() => {
     try {
       new URL(url.value);
       return true;
-    } catch (e) {
+    } catch {
       return false;
     }
   });

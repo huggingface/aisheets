@@ -139,27 +139,6 @@ export const exportDatasetTableRows = async ({
   });
 };
 
-const featuresInfoList = (
-  columns: { id: string; name: string; type: string }[],
-) => {
-  return columns.map((column) => {
-    switch (column.type.toLowerCase()) {
-      case 'image': {
-        return {
-          name: column.name,
-          dtype: 'image',
-        };
-      }
-      default: {
-        return {
-          name: column.name,
-          dtype: 'string',
-        };
-      }
-    }
-  });
-};
-
 const featuresInfoDict = (
   columns: { id: string; name: string; type: string }[],
 ) => {

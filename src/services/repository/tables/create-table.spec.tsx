@@ -26,7 +26,7 @@ describe('createDatasetTable', () => {
         {
           column_name: 'rowIdx',
           column_type: 'BIGINT',
-          default: `nextval('\"${dataset.id}_rowIdx_seq\"')`,
+          default: `nextval('"${dataset.id}_rowIdx_seq"')`,
           extra: null,
           key: 'PRI',
           null: 'NO',
@@ -50,7 +50,7 @@ describe('createDatasetTable', () => {
         {
           column_name: 'rowIdx',
           column_type: 'BIGINT',
-          default: `nextval('\"${dataset.id}_rowIdx_seq\"')`,
+          default: `nextval('"${dataset.id}_rowIdx_seq"')`,
           extra: null,
           key: 'PRI',
           null: 'NO',

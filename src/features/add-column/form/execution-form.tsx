@@ -453,7 +453,7 @@ export const ExecutionForm = component$<SidebarProps>(
               <div class="px-3 pb-12 pt-2 bg-white border border-secondary-foreground rounded-sm">
                 <div class="flex flex-col gap-4">
                   <div class="flex gap-4">
-                    <div class="flex-[2]">
+                    <div class="flex-[2] w-3/4">
                       <Select.Root
                         ref={modelSearchContainerRef}
                         key={modelSearchQuery.value}
@@ -584,7 +584,8 @@ export const ExecutionForm = component$<SidebarProps>(
                         </Select.Popover>
                       </Select.Root>
                     </div>
-                    <div class="flex-1">
+
+                    <div class="flex-1 w-1/4">
                       <Select.Root bind:value={selectedProvider}>
                         <Select.Label>Inference Providers</Select.Label>
                         <Select.Trigger class="bg-white rounded-base border-neutral-300-foreground">

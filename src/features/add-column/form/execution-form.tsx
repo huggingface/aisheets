@@ -275,8 +275,6 @@ export const ExecutionForm = component$<SidebarProps>(
         model.id.toLowerCase().includes(modelSearchQuery.value.toLowerCase()),
       );
 
-      isModelDropdownOpen.value = false;
-
       nextTick(() => {
         isModelDropdownOpen.value =
           filteredModels.value.length > 0 &&
@@ -486,6 +484,8 @@ export const ExecutionForm = component$<SidebarProps>(
                           )}
 
                           <input
+                            placeholder="Search models..."
+                            bind:value={modelSearchQuery}
                             class="h-8 w-full outline-none font-mono text-xs"
                             onFocusIn$={() => {
                               if (
@@ -494,8 +494,17 @@ export const ExecutionForm = component$<SidebarProps>(
                                 modelSearchQuery.value = '';
                               }
                             }}
-                            placeholder="Search models..."
-                            bind:value={modelSearchQuery}
+                            onKeyDown$={(e) => {
+                              nextTick(() => {
+                                isModelDropdownOpen.value = false;
+                              });
+                            }}
+                            onClick$={() => {
+                              isModelDropdownOpen.value = false;
+                              nextTick(() => {
+                                isModelDropdownOpen.value = true;
+                              }, 100);
+                            }}
                           />
 
                           <ModelFlag

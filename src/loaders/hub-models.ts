@@ -64,8 +64,8 @@ const listAllModels = server$(async function (
   const models = await Promise.all([
     // All text generation models that support conversational
     Promise.all([
-      fetchModelsForPipeline('text-generation', session),
-      fetchModelsForPipeline('image-text-to-text', session),
+      fetchModelsForPipeline(session, 'text-generation'),
+      fetchModelsForPipeline(session, 'image-text-to-text'),
     ]).then((models) =>
       models
         .flat()
@@ -78,7 +78,7 @@ const listAllModels = server$(async function (
     // All image generation models
     // TODO: Add pagination support since image generation models can be large
     // and we might want to fetch more than just the first 1000 models.
-    fetchModelsForPipeline('text-to-image', session).then((models) =>
+    fetchModelsForPipeline(session, 'text-to-image').then((models) =>
       models.map((model) => ({
         ...model,
         supportedType: 'image',
@@ -91,16 +91,16 @@ const listAllModels = server$(async function (
     .sort((a, b) => (b.trendingScore || 0) - (a.trendingScore || 0));
 });
 
-// Function to fetch models for a specific pipeline tag
 const fetchModelsForPipeline = async (
-  pipelineTag: string,
   session: Session,
+  kind: 'text-generation' | 'image-text-to-text' | 'text-to-image',
+  limit?: number,
 ): Promise<Model[]> => {
   const url = 'https://huggingface.co/api/models';
 
   const params = new URLSearchParams([
     ...Object.entries({
-      pipeline_tag: pipelineTag,
+      pipeline_tag: kind,
       sort: 'trendingScore',
       direction: '-1',
     }),
@@ -108,7 +108,11 @@ const fetchModelsForPipeline = async (
       (m) => !UNSUPPORTED_PROVIDERS.includes(m),
     ).map((provider) => ['inference_provider', provider]),
     ...MODEL_EXPANDABLE_KEYS.map((key) => ['expand', key]),
-  ]).toString();
+  ]);
+
+  if (limit) {
+    params.append('limit', `${limit}`);
+  }
 
   const {
     authentication: { hfToken },
@@ -116,7 +120,7 @@ const fetchModelsForPipeline = async (
   } = appConfig;
 
   const token = session.anonymous ? hfToken : session.token;
-  const response = await fetch(`${url}?${params}`, {
+  const response = await fetch(`${url}?${params.toString()}`, {
     method: 'GET',
     headers: {
       Authorization: `Bearer ${token}`,
@@ -125,11 +129,7 @@ const fetchModelsForPipeline = async (
 
   if (!response.ok) {
     const message = await response.text();
-    console.warn(
-      `Failed to fetch ${pipelineTag} models`,
-      response.status,
-      message,
-    );
+    console.warn(`Failed to fetch ${kind} models`, response.status, message);
     return [];
   }
 
@@ -166,7 +166,7 @@ const fetchModelsForPipeline = async (
         ...model,
         providers: availableProviders,
         size,
-        pipeline_tag: pipelineTag,
+        pipeline_tag: kind,
       });
     }
 
@@ -212,36 +212,37 @@ interface TrendingModel {
 export const useTrendingHubModels = routeLoader$(async function (
   this: RequestEventLoader,
 ): Promise<TrendingModel[]> {
-  const getModels = async (
-    kind: 'text-generation' | 'image-text-to-text',
-    limit: number,
+  const session = useServerSession(this);
+  if (!session) return [];
+
+  const fetchTrending = async (
+    kind: 'text-generation' | 'image-text-to-text' | 'text-to-image',
   ) => {
-    const url = 'https://huggingface.co/api/models';
-    const params = new URLSearchParams();
-    params.append('pipeline_tag', kind);
-    params.append('limit', `${limit}`);
+    let limit = 1;
 
-    params.append('sort', 'trendingScore');
-    params.append('direction', '-1');
+    let trendingModel = null;
 
-    const response = await fetch(`${url}?${params}`, {
-      method: 'GET',
-    });
+    while (!trendingModel) {
+      const models = await fetchModelsForPipeline(session, kind, limit);
 
-    if (!response.ok) {
-      return [];
+      if (models.length > 0) {
+        trendingModel = models[0];
+      } else {
+        limit++;
+      }
     }
 
-    return await response.json();
+    return trendingModel;
   };
 
-  const [textModels, imageTextModels] = await Promise.all([
-    getModels('text-generation', 2),
-    getModels('image-text-to-text', 1),
+  const models = await Promise.all([
+    fetchTrending('text-generation'),
+    fetchTrending('image-text-to-text'),
+    fetchTrending('text-to-image'),
   ]);
 
-  return [...textModels, ...imageTextModels].map((m: any) => ({
-    id: m.modelId,
-    picture: `https://huggingface.co/api/organizations/${m.modelId.split('/')[0]}/avatar`,
+  return models.map((m: any) => ({
+    id: m.id,
+    picture: `https://huggingface.co/api/organizations/${m.id.split('/')[0]}/avatar`,
   }));
 });

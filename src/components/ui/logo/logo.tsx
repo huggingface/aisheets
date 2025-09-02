@@ -180,6 +180,14 @@ export const Provider = component$<{
       return <Featherless />;
     case 'cohere':
       return <Cohere />;
+    case 'fal-ai':
+      return <Fal />;
+    case 'replicate':
+      return <Replicate />;
+    case 'hf-inference':
+      return <HuggingFace />;
+    case 'black-forest':
+      return <BlackForest />;
     default:
       return null;
   }
@@ -525,6 +533,7 @@ const Featherless = component$(() => {
 const Cohere = component$(() => {
   return (
     <svg
+      class="w-4 h-4"
       xmlns="http://www.w3.org/2000/svg"
       xmlns:xlink="http://www.w3.org/1999/xlink"
       aria-hidden="true"
@@ -550,6 +559,142 @@ const Cohere = component$(() => {
       <path
         d="M6.44 15.6934C4.54667 15.6934 3 17.24 3 19.1334V19.5867C3 21.4534 4.54667 23 6.44 23C8.33333 23 9.88 21.4534 9.88 19.56V19.1067C9.85333 17.24 8.33333 15.6934 6.44 15.6934Z"
         fill="#FF7759"
+      />
+    </svg>
+  );
+});
+
+const Fal = component$(() => {
+  return (
+    <svg
+      class="w-4 h-4"
+      xmlns="http://www.w3.org/2000/svg"
+      xmlns:xlink="http://www.w3.org/1999/xlink"
+      aria-hidden="true"
+      focusable="false"
+      role="img"
+      width="1em"
+      height="1em"
+      preserveAspectRatio="xMidYMid meet"
+      viewBox="0 0 26 26"
+    >
+      <path
+        fill-rule="evenodd"
+        clip-rule="evenodd"
+        d="M16.5899 2.37891C16.9579 2.37891 17.2529 2.67812 17.2881 3.04443C17.6019 6.31174 20.2023 8.91191 23.4698 9.22569C23.8361 9.26089 24.1353 9.55582 24.1353 9.92378V16.0761C24.1353 16.4441 23.8361 16.739 23.4698 16.7742C20.2023 17.088 17.6019 19.6881 17.2881 22.9555C17.2529 23.3218 16.9579 23.621 16.5899 23.621H10.4373C10.0692 23.621 9.77432 23.3218 9.73912 22.9555C9.42534 19.6881 6.82494 17.088 3.5574 16.7742C3.19109 16.739 2.89185 16.4441 2.89185 16.0761V9.92378C2.89185 9.55582 3.19109 9.26089 3.55741 9.22569C6.82494 8.91191 9.42534 6.31174 9.73912 3.04443C9.77432 2.67812 10.0692 2.37891 10.4373 2.37891H16.5899ZM7.15714 12.982C7.15714 16.5163 10.0192 19.3814 13.5498 19.3814C17.0804 19.3814 19.9426 16.5163 19.9426 12.982C19.9426 9.44762 17.0804 6.58248 13.5498 6.58248C10.0192 6.58248 7.15714 9.44762 7.15714 12.982Z"
+        fill="currentColor"
+      />
+    </svg>
+  );
+});
+
+const Replicate = component$(() => {
+  return (
+    <svg
+      class="w-4 h-4"
+      xmlns="http://www.w3.org/2000/svg"
+      xmlns:xlink="http://www.w3.org/1999/xlink"
+      aria-hidden="true"
+      focusable="false"
+      role="img"
+      width="1em"
+      height="1em"
+      preserveAspectRatio="xMidYMid meet"
+      viewBox="0 0 26 26"
+    >
+      <rect
+        x="3.14136"
+        y="2.43652"
+        width="21.1274"
+        height="21.1274"
+        rx="3.54011"
+        fill="url(#paint0_linear_171_78)"
+      />
+      <path
+        fill-rule="evenodd"
+        clip-rule="evenodd"
+        d="M19.9161 7.72173V6.18848H7.49072V19.8116H9.21034V7.72173H19.9161ZM19.919 9.09575V10.629H12.4584V19.8109H10.7388V9.09575H19.919ZM19.9161 11.9922V13.5342H15.7008V19.8082H13.9811V11.9922H19.9161Z"
+        fill="white"
+      />
+      <defs>
+        <linearGradient
+          id="paint0_linear_171_78"
+          x1="22.9091"
+          y1="3.17345"
+          x2="4.19652"
+          y2="22.4427"
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop stop-color="#EBFF18" />
+          <stop offset="0.5" stop-color="#EB40F0" />
+          <stop offset="1" stop-color="#BE0000" />
+        </linearGradient>
+      </defs>
+    </svg>
+  );
+});
+
+const HuggingFace = component$(() => {
+  return (
+    <svg
+      class="w-4 h-4"
+      xmlns="http://www.w3.org/2000/svg"
+      xmlns:xlink="http://www.w3.org/1999/xlink"
+      aria-hidden="true"
+      focusable="false"
+      role="img"
+      width="1em"
+      height="1em"
+      preserveAspectRatio="xMidYMid meet"
+      viewBox="0 0 26 26"
+    >
+      <rect
+        x="3.34856"
+        y="3.02654"
+        width="19.9474"
+        height="19.9474"
+        rx="2.95009"
+        fill="#FFD21E"
+        stroke="#FFB41E"
+        stroke-width="1.18004"
+      />
+      <path
+        fill-rule="evenodd"
+        clip-rule="evenodd"
+        d="M7.69336 9.74609V16.9754H9.32329V13.9595H11.8181V16.9754H13.4591V9.74609H11.8181V12.5292H9.32329V9.74609H7.69336ZM15.1646 9.74609V16.9754H16.7945V14.1702H19.3004V12.7953H16.7945V11.121H19.7217V9.74609H15.1646Z"
+        fill="#814D00"
+      />
+    </svg>
+  );
+});
+
+const BlackForest = component$(() => {
+  return (
+    <svg
+      class="w-4 h-4"
+      xmlns="http://www.w3.org/2000/svg"
+      xmlns:xlink="http://www.w3.org/1999/xlink"
+      aria-hidden="true"
+      focusable="false"
+      role="img"
+      width="1em"
+      height="1em"
+      preserveAspectRatio="xMidYMid meet"
+      viewBox="0 0 26 26"
+    >
+      <path
+        fill-rule="evenodd"
+        clip-rule="evenodd"
+        d="M13.1146 5L22.5938 18.9541L20.7344 18.9687L13.1146 7.54511L6.55208 17.528H14.6458L16.1042 18.9687C16.1042 19.0468 4 18.9541 4 18.9541L13.1146 5ZM21.3906 9.46122C21.3979 9.47585 21.6969 9.95853 22.0615 10.5436C22.4188 11.1287 22.7615 11.6918 22.9583 12.0063H19.8229L20.2458 11.3262C20.2458 11.3262 20.8365 10.3827 21.026 10.0463C21.2229 9.70988 21.3833 9.44659 21.3906 9.46122Z"
+        fill="currentColor"
+      />
+      <path
+        d="M19.6305 18.9541H17.917L13.4326 12.0794H15.2555L19.6305 18.9541Z"
+        fill="currentColor"
+      />
+      <path
+        d="M13.224 15.9556H10.1979L11.6563 13.5787L13.224 15.9556Z"
+        fill="currentColor"
       />
     </svg>
   );

@@ -115,6 +115,10 @@ class GroupedModels {
         id: 'openai/gpt-oss-20b',
         tags: [this.tags.FAST],
       },
+      {
+        id: 'black-forest-labs/FLUX.1-dev',
+        tags: [this.tags.LIGHT, this.tags.FAST],
+      },
     ];
   }
 

@@ -73,25 +73,33 @@ type ModelWithExtraTags = Model & {
 class GroupedModels {
   private models: Model[];
   private tags = {
-    HEAVY: {
-      label: 'heavy',
-      class: 'bg-[#FBDAD7]',
-    },
     LIGHT: {
       label: 'light',
-      class: 'bg-[#F0FFD4]',
-    },
-    FAST: {
-      label: 'fast',
-      class: 'bg-[#D7FBE0]',
-    },
-    SLOW: {
-      label: 'slow',
-      class: 'bg-[#FBDAD7]',
+      class: 'bg-[#FFF9C4]',
     },
     REASONING: {
       label: 'reasoning',
       class: 'bg-[#D0E8FF]',
+    },
+    CODING: {
+      label: 'coding',
+      class: 'bg-[#FFE4E1]',
+    },
+    NLP: {
+      label: 'NLP',
+      class: 'bg-[#E6F3FF]',
+    },
+    TEXT_RENDERING: {
+      label: 'text-rendering',
+      class: 'bg-[#F0F8FF]',
+    },
+    AESTHETICS: {
+      label: 'aesthetics',
+      class: 'bg-[#FFF0F5]',
+    },
+    EXPERIMENTATION: {
+      label: 'experimentation',
+      class: 'bg-[#F5F5DC]',
     },
   };
 
@@ -108,16 +116,32 @@ class GroupedModels {
   }[] {
     return [
       {
-        id: 'deepseek-ai/DeepSeek-V3.1',
-        tags: [this.tags.REASONING],
+        id: 'openai/gpt-oss-120b',
+        tags: [this.tags.CODING, this.tags.REASONING],
       },
       {
         id: 'openai/gpt-oss-20b',
-        tags: [this.tags.FAST],
+        tags: [this.tags.NLP, this.tags.LIGHT],
       },
       {
-        id: 'black-forest-labs/FLUX.1-dev',
-        tags: [this.tags.LIGHT, this.tags.FAST],
+        id: 'meta-llama/Llama-3.1-70B-Instruct',
+        tags: [this.tags.NLP, this.tags.LIGHT],
+      },
+      {
+        id: 'Qwen/Qwen3-Coder-480B-A35B-Instruct',
+        tags: [this.tags.CODING],
+      },
+      {
+        id: 'Qwen/Qwen-Image',
+        tags: [this.tags.TEXT_RENDERING],
+      },
+      {
+        id: 'black-forest-labs/FLUX.1-Krea-dev',
+        tags: [this.tags.AESTHETICS],
+      },
+      {
+        id: 'black-forest-labs/FLUX.1-schnell',
+        tags: [this.tags.LIGHT, this.tags.EXPERIMENTATION],
       },
     ];
   }

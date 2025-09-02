@@ -207,6 +207,27 @@ export const TableHeader = component$(() => {
     });
   });
 
+  useVisibleTask$(({ track }) => {
+    track(draggedColId);
+
+    if (draggedColId.value) {
+      document
+        .getElementById(draggedColId.value)
+        ?.classList.add('opacity-50', 'bg-primary-50', 'dragging');
+      for (const cell of document.querySelectorAll(
+        `td[data-column-id="${draggedColId.value}"]`,
+      )) {
+        const cellElement = cell as HTMLElement;
+        cellElement.classList.add('opacity-50', 'bg-primary-50', 'dragging');
+      }
+    } else {
+      for (const cell of document.getElementsByClassName('dragging')) {
+        const cellElement = cell as HTMLElement;
+        cellElement.classList.remove('opacity-50', 'bg-primary-50');
+      }
+    }
+  });
+
   const indexToAlphanumeric = $((index: number): string => {
     let result = '';
     while (index > 0) {
@@ -239,7 +260,7 @@ export const TableHeader = component$(() => {
                       'border-2 border-blue-400':
                         targetColId.value === column.id &&
                         draggedColId.value !== targetColId.value,
-                      'opacity-50 shadow-lg bg-primary-200':
+                      'opacity-50 shadow-lg bg-primary-50':
                         draggedColId.value === column.id,
                     },
                   )}

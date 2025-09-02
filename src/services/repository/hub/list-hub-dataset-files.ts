@@ -1,6 +1,6 @@
 import { type RepoType, listFiles } from '@huggingface/hub';
 
-const SUPPORTED_EXTENSIONS = ['.parquet', '.jsonl', '.csv'];
+const SUPPORTED_EXTENSIONS = ['.parquet', '.jsonl', '.csv', '.arrow', '.tsv'];
 
 export const listHubDatasetDataFiles = async ({
   repoId,

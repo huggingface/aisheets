@@ -507,12 +507,6 @@ export const ExecutionForm = component$<SidebarProps>(
                             }}
                           />
 
-                          <ModelFlag
-                            model={groupedModels.value
-                              .flatMap((m) => m.models)
-                              .find((m) => m.id === selectedModelId.value)}
-                          />
-
                           <Select.Trigger look="headless" />
                         </div>
                         <Select.Popover

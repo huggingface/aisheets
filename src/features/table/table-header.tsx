@@ -19,7 +19,7 @@ import { type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
 
 export const TableHeader = component$(() => {
   const MAX_WIDTH = 1000;
-  const { columns } = useColumnsStore();
+  const { columns, replaceColumns } = useColumnsStore();
 
   const resizingColumn = useSignal<{
     columnId: string;
@@ -30,6 +30,32 @@ export const TableHeader = component$(() => {
     [key: string]: number;
   }>({});
   const observers = useSignal(new Map());
+  const draggedColId = useSignal<string | null>(null);
+
+  const handleDragStart = $((e: DragEvent, id: string) => {
+    draggedColId.value = id;
+  });
+
+  const handleDrop = $((e: DragEvent, targetId: string) => {
+    e.preventDefault();
+
+    const draggedId = draggedColId.value;
+    if (!draggedId || draggedId === targetId) return;
+
+    const newOrder = columns.value.map((col) => col.id);
+
+    const fromIndex = newOrder.indexOf(draggedId);
+    const toIndex = newOrder.indexOf(targetId);
+
+    newOrder.splice(fromIndex, 1);
+    newOrder.splice(toIndex, 0, draggedId);
+
+    replaceColumns(
+      columns.value.sort(
+        (a, b) => newOrder.indexOf(a.id) - newOrder.indexOf(b.id),
+      ),
+    );
+  });
 
   const handleResizeStart = $((event: MouseEvent, columnId: string) => {
     const handleResize = (event: MouseEvent) => {
@@ -190,7 +216,7 @@ export const TableHeader = component$(() => {
                   id={`index-${column.id}`}
                   key={column.id}
                   class={cn(
-                    'min-w-[142px] w-[326px] h-[38px] border bg-neutral-100 text-primary-600 font-normal relative select-none',
+                    'min-w-[142px] w-[326px] h-[38px] border bg-neutral-100 text-primary-600 font-normal relative select-none cursor-pointer',
                     {
                       'border-r-0': column.id === TEMPORAL_ID,
                     },
@@ -198,6 +224,10 @@ export const TableHeader = component$(() => {
                   style={{
                     width: `${columnsWidths[column.id] || 326}px`,
                   }}
+                  draggable={true}
+                  onDragStart$={(e) => handleDragStart(e, column.id)}
+                  onDrop$={(e) => handleDrop(e, column.id)}
+                  onDragOver$={(e) => e.preventDefault()}
                 >
                   {indexToAlphanumeric(i + 1)}
                   <span

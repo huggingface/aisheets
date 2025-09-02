@@ -31,16 +31,31 @@ export const TableHeader = component$(() => {
   }>({});
   const observers = useSignal(new Map());
   const draggedColId = useSignal<string | null>(null);
+  const targetColId = useSignal<string | null>(null);
 
   const handleDragStart = $((e: DragEvent, id: string) => {
     draggedColId.value = id;
+  });
+
+  const handleDragOver = $((e: DragEvent, id: string) => {
+    e.preventDefault();
+    targetColId.value = id;
+  });
+
+  const handleDragLeave = $(() => {
+    targetColId.value = null;
   });
 
   const handleDrop = $((e: DragEvent, targetId: string) => {
     e.preventDefault();
 
     const draggedId = draggedColId.value;
-    if (!draggedId || draggedId === targetId) return;
+    if (!draggedId || draggedId === targetId) {
+      draggedColId.value = null;
+      targetColId.value = null;
+
+      return;
+    }
 
     const newOrder = columns.value.map((col) => col.id);
 
@@ -50,11 +65,13 @@ export const TableHeader = component$(() => {
     newOrder.splice(fromIndex, 1);
     newOrder.splice(toIndex, 0, draggedId);
 
+    draggedColId.value = null;
     replaceColumns(
       columns.value.sort(
         (a, b) => newOrder.indexOf(a.id) - newOrder.indexOf(b.id),
       ),
     );
+    targetColId.value = null;
   });
 
   const handleResizeStart = $((event: MouseEvent, columnId: string) => {
@@ -219,6 +236,11 @@ export const TableHeader = component$(() => {
                     'min-w-[142px] w-[326px] h-[38px] border bg-neutral-100 text-primary-600 font-normal relative select-none cursor-pointer',
                     {
                       'border-r-0': column.id === TEMPORAL_ID,
+                      'border-2 border-blue-400':
+                        targetColId.value === column.id &&
+                        draggedColId.value !== targetColId.value,
+                      'opacity-50 shadow-lg bg-primary-200':
+                        draggedColId.value === column.id,
                     },
                   )}
                   style={{
@@ -227,7 +249,8 @@ export const TableHeader = component$(() => {
                   draggable={true}
                   onDragStart$={(e) => handleDragStart(e, column.id)}
                   onDrop$={(e) => handleDrop(e, column.id)}
-                  onDragOver$={(e) => e.preventDefault()}
+                  onDragOver$={(e) => handleDragOver(e, column.id)}
+                  onDragLeave$={handleDragLeave}
                 >
                   {indexToAlphanumeric(i + 1)}
                   <span

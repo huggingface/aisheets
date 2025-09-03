@@ -30,7 +30,7 @@ export const DragAndDrop = component$(() => {
   const isDragging = useSignal(false);
   const navigate = useNavigate();
 
-  const allowedExtensions = ['csv', 'tsv', 'xlsx', 'xls', 'parquet'];
+  const allowedExtensions = ['csv', 'tsv', 'xlsx', 'xls', 'parquet', 'arrow'];
 
   const uploadErrorMessage = useSignal<string | null>(null);
 

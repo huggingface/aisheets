@@ -35,6 +35,9 @@ await connectAndClose(async (db) => {
 
   await db.run(`
     INSTALL gsheets FROM community;
+    INSTALL nanoarrow FROM community;
+
     LOAD gsheets;
+    LOAD nanoarrow;
   `);
 });

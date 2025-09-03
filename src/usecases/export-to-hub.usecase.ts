@@ -8,6 +8,7 @@ import { type HubApiError, createRepo, uploadFiles } from '@huggingface/hub';
 import { type RequestEventBase, server$ } from '@builder.io/qwik-city';
 import { getDatasetById } from '~/services/repository/datasets';
 import { exportDatasetTableRows } from '~/services/repository/tables';
+import { describeTableColumns } from '~/services/repository/tables/describe-table-columns';
 import { type Dataset, useServerSession } from '~/state';
 import { generateDatasetConfig } from './create-dataset-config';
 
@@ -40,7 +41,7 @@ export const useExportDataset = () =>
     const owner = requestedOwner || session.user.username;
     const repoId = `${owner}/${name}`;
 
-    const readme = readmeContent(foundDataset);
+    const readme = await readmeContent(foundDataset);
 
     try {
       await createRepo({
@@ -91,17 +92,18 @@ async function createDatasetConfig(dataset: Dataset): Promise<string> {
 
   return configPath;
 }
-function readmeContent(dataset: Dataset): string {
+async function readmeContent(dataset: Dataset): Promise<string> {
   return `
 ---
 pretty_name: ${dataset.name}
+
 tags:
 - aisheets
 - synthetic data
 
 ${yaml.stringify({
   dataset_info: {
-    features: generateFeaturesInfo(dataset.columns),
+    features: await generateFeaturesInfo(dataset),
   },
 })}
   
@@ -114,23 +116,56 @@ configs:
 `;
 }
 
-const generateFeaturesInfo = (
-  columns: { id: string; name: string; type: string }[],
-) => {
-  return columns.map((column) => {
-    switch (column.type.toLowerCase()) {
-      case 'image': {
-        return {
-          name: column.name,
-          dtype: 'image',
-        };
-      }
-      default: {
-        return {
-          name: column.name,
-          dtype: 'string',
-        };
-      }
+const mapDBTypeToFeatureType = (dbType: string) => {
+  const type = dbType.toLowerCase();
+
+  switch (type) {
+    case 'varchar':
+    case 'string':
+    case 'text':
+      return 'string';
+
+    case 'blob':
+      return 'binary';
+
+    default:
+      return type;
+  }
+};
+
+const generateFeaturesInfo = async (dataset: Dataset) => {
+  const dbColumns = await describeTableColumns(dataset);
+
+  return dataset.columns.map((column) => {
+    const type = column.type.trim().toLowerCase();
+    if (type === 'image') {
+      return {
+        name: column.name,
+        dtype: type,
+      };
     }
+
+    const dbCol = dbColumns.find((col) => col.name === column.id);
+    if (!dbCol) {
+      return {
+        name: column.name,
+        dtype: 'string',
+      };
+    }
+
+    if (dbCol.properties && dbCol.properties.length > 0) {
+      return {
+        name: column.name,
+        [mapDBTypeToFeatureType(dbCol.type)]: dbCol.properties.map((prop) => ({
+          name: prop.name,
+          dtype: mapDBTypeToFeatureType(prop.type),
+        })),
+      };
+    }
+
+    return {
+      name: column.name,
+      dtype: mapDBTypeToFeatureType(dbCol.type),
+    };
   });
 };

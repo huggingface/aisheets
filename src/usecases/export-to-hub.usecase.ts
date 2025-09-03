@@ -7,10 +7,14 @@ import { type HubApiError, createRepo, uploadFiles } from '@huggingface/hub';
 
 import { type RequestEventBase, server$ } from '@builder.io/qwik-city';
 import { getDatasetById } from '~/services/repository/datasets';
-import { exportDatasetTableRows } from '~/services/repository/tables';
+import {
+  exportDatasetTableRows,
+  listDatasetTableRows,
+} from '~/services/repository/tables';
 import { describeTableColumns } from '~/services/repository/tables/describe-table-columns';
 import { type Dataset, useServerSession } from '~/state';
 import { generateDatasetConfig } from './create-dataset-config';
+import { detectMimeTypeFromBytes } from './utils/mime-types';
 
 export interface ExportDatasetParams {
   dataset: Dataset;
@@ -128,6 +132,20 @@ const mapDBTypeToFeatureType = (dbType: string) => {
     case 'blob':
       return 'binary';
 
+    case 'bigint':
+    case 'int':
+    case 'integer':
+    case 'smallint':
+    case 'tinyint':
+    case 'mediumint':
+      return 'int32';
+
+    case 'float':
+    case 'double':
+    case 'real':
+    case 'decimal':
+      return 'float32';
+
     default:
       return type;
   }
@@ -136,20 +154,21 @@ const mapDBTypeToFeatureType = (dbType: string) => {
 const generateFeaturesInfo = async (dataset: Dataset) => {
   const dbColumns = await describeTableColumns(dataset);
 
-  return dataset.columns.map((column) => {
+  const features = dataset.columns.map(async (column) => {
     const type = column.type.trim().toLowerCase();
-    if (type === 'image') {
-      return {
-        name: column.name,
-        dtype: type,
-      };
-    }
 
     const dbCol = dbColumns.find((col) => col.name === column.id);
     if (!dbCol) {
       return {
         name: column.name,
         dtype: 'string',
+      };
+    }
+
+    if (type === 'image' || (await isImageFeature(dataset, dbCol))) {
+      return {
+        name: column.name,
+        dtype: 'image',
       };
     }
 
@@ -168,4 +187,77 @@ const generateFeaturesInfo = async (dataset: Dataset) => {
       dtype: mapDBTypeToFeatureType(dbCol.type),
     };
   });
+
+  return Promise.all(features);
+};
+
+const isImageFeature = async (
+  dataset: Dataset,
+  dbCol: {
+    name: string;
+    type: string;
+    properties?: Array<{ name: string; type: string }>;
+  },
+) => {
+  let blobProp = undefined;
+  if (dbCol.type.toLowerCase() === 'blob') {
+    blobProp = dbCol;
+  } else if (dbCol.properties) {
+    blobProp = dbCol.properties.find(
+      (prop) => prop.type.toLowerCase() === 'blob',
+    );
+  }
+
+  if (blobProp) {
+    const columnMimeType = await extractDatasetColumnMimeType({
+      dataset,
+      columnId: dbCol.name,
+    });
+
+    return columnMimeType?.startsWith('image/');
+  }
+
+  return false;
+};
+
+const extractDatasetColumnMimeType = async ({
+  dataset,
+  columnId,
+}: {
+  dataset: Dataset;
+  columnId: string;
+}): Promise<string | null> => {
+  try {
+    const row = await listDatasetTableRows({
+      dataset,
+      columns: [{ id: columnId }],
+      offset: 0,
+      limit: 1,
+    });
+
+    if (row.length === 0) return null;
+
+    const value = row[0][columnId];
+
+    if (value instanceof Uint8Array) {
+      return detectMimeTypeFromBytes(value);
+    }
+    if ('bytes' in value && value.bytes instanceof Uint8Array) {
+      return detectMimeTypeFromBytes(value.bytes);
+    }
+    if (Array.isArray(value) && value.length > 0) {
+      const first = value[0];
+      if (first instanceof Uint8Array) {
+        return detectMimeTypeFromBytes(first);
+      }
+      if (first && 'bytes' in first && first.bytes instanceof Uint8Array) {
+        return detectMimeTypeFromBytes(first.bytes);
+      }
+    }
+
+    return null;
+  } catch (error) {
+    console.error('Error extracting mime type:', error);
+    return null;
+  }
 };

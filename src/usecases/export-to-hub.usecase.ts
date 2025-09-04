@@ -156,22 +156,22 @@ const generateFeaturesInfo = async (dataset: Dataset) => {
 
   const features = dataset.columns.map(async (column) => {
     const type = column.type.trim().toLowerCase();
-
     const dbCol = dbColumns.find((col) => col.name === column.id);
+    // Fallback to string if column not found in the database
     if (!dbCol) {
       return {
         name: column.name,
         dtype: 'string',
       };
     }
-
+    // Image column
     if (type === 'image' || (await isImageFeature(dataset, dbCol))) {
       return {
         name: column.name,
         dtype: 'image',
       };
     }
-
+    // Nested column (struct, map or list of struct)
     if (dbCol.properties && dbCol.properties.length > 0) {
       return {
         name: column.name,
@@ -181,7 +181,16 @@ const generateFeaturesInfo = async (dataset: Dataset) => {
         })),
       };
     }
-
+    // List column (list of int, list of string, list of float, etc)
+    if (dbCol.itemsType) {
+      return {
+        name: column.name,
+        [mapDBTypeToFeatureType(dbCol.type)]: mapDBTypeToFeatureType(
+          dbCol.itemsType,
+        ),
+      };
+    }
+    // Primitive column (int, string, float, etc)
     return {
       name: column.name,
       dtype: mapDBTypeToFeatureType(dbCol.type),

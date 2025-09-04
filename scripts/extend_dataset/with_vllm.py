@@ -1,14 +1,13 @@
 # /// script
 # requires-python = ">=3.12"
 # dependencies = [
-#     "datasets~=4.0.0",
+#     "datasets",
+#     "vllm",
+#     "transformers",
 #     "huggingface-hub[hf_transfer]",
+#     "torch",
 #     "rich",
 #     "typer",
-#     "vllm~=0.10.0",
-#     "transformers==4.53.2",
-#     "flashinfer-python",
-#     "torch",
 # ]
 # ///
 import dataclasses
@@ -77,7 +76,6 @@ def load_processor_config(
     batch_size: int | None = 1000,
     vllm_model: str | None = None,
 ) -> ProcessorConfig:
-
     with Console().status("[bold green]Loading configuration..."):
         config = _load_config(config_path)
         source_columns = set(dataset.features.keys())
@@ -263,7 +261,7 @@ def check_cuda_availability():
         rprint(f"[bold red]CUDA is not available![/]")
         raise RuntimeError("CUDA is not available")
     else:
-        rprint("[bold green]CUDA is available![/]")
+        rprint(f"[bold green]CUDA is available. GPU: {torch.cuda.get_device_name(0)}[/]")
 
 
 def main(

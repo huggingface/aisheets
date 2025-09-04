@@ -13,7 +13,6 @@ export const Sandbox = component$<{ content: string }>(({ content }) => {
         padding: 0;
         height: 100%;
         width: 100%;
-        overflow: hidden;
         font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
       }
 

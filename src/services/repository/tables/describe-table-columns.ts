@@ -26,6 +26,7 @@ const duckDB2DBColumn = (col: {
   let entryTypes: InnerDuckDBType[] = col.columnType.entryTypes || [];
 
   if (col.columnType.valueType) {
+    // TODO: Value type can be only a typeId (list of integers).
     entryNames = col.columnType.valueType.entryNames || [];
     entryTypes = col.columnType.valueType.entryTypes || [];
   }

@@ -138,13 +138,13 @@ const mapDBTypeToFeatureType = (dbType: string) => {
     case 'smallint':
     case 'tinyint':
     case 'mediumint':
-      return 'int32';
+      return 'int64';
 
     case 'float':
     case 'double':
     case 'real':
     case 'decimal':
-      return 'float32';
+      return 'float64';
 
     default:
       return type;

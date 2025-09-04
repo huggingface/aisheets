@@ -216,30 +216,59 @@ export const TableHeader = component$(() => {
   useVisibleTask$(({ track }) => {
     track(targetColId);
 
+    const addBorder = (el: Element | null, isDraggingRight: boolean) => {
+      if (isDraggingRight) {
+        el?.classList.add('border-r-2', 'border-r-blue-500');
+      } else {
+        el?.classList.add('border-l-2', 'border-l-blue-500');
+      }
+    };
+
+    const removeBorder = (el: Element | null) => {
+      el?.classList.remove(
+        'border-l-2',
+        'border-l-blue-500',
+        'border-r-2',
+        'border-r-blue-500',
+      );
+    };
+
     if (prevTargetColId.value && prevTargetColId.value !== targetColId.value) {
+      const prevTh = document.getElementById(`index-${prevTargetColId.value}`);
+      removeBorder(prevTh);
+
       const prevHeader = document.getElementById(prevTargetColId.value);
-      prevHeader?.classList.remove('border-l-2', 'border-l-blue-500');
+      removeBorder(prevHeader);
 
       for (const cell of document.querySelectorAll(
         `td[data-column-id="${prevTargetColId.value}"]`,
       )) {
-        (cell as HTMLElement).classList.remove(
-          'border-l-2',
-          'border-l-blue-500',
-        );
+        removeBorder(cell);
       }
     }
 
     prevTargetColId.value = targetColId.value;
 
-    if (targetColId.value) {
+    if (targetColId.value && draggedColId.value) {
+      const draggedIndex = columns.value.findIndex(
+        (c) => c.id === draggedColId.value,
+      );
+      const targetIndex = columns.value.findIndex(
+        (c) => c.id === targetColId.value,
+      );
+
+      const isDraggingRight = draggedIndex < targetIndex;
+
+      const th = document.getElementById(`index-${targetColId.value}`);
+      addBorder(th, isDraggingRight);
+
       const header = document.getElementById(targetColId.value);
-      header?.classList.add('border-l-2', 'border-l-blue-500');
+      addBorder(header, isDraggingRight);
 
       for (const cell of document.querySelectorAll(
         `td[data-column-id="${targetColId.value}"]`,
       )) {
-        (cell as HTMLElement).classList.add('border-l-2', 'border-l-blue-500');
+        addBorder(cell, isDraggingRight);
       }
     }
   });
@@ -272,9 +301,6 @@ export const TableHeader = component$(() => {
                     'min-w-[142px] w-[326px] h-[38px] border bg-neutral-100 text-primary-600 font-normal relative select-none cursor-grab',
                     {
                       'border-r-0': column.id === TEMPORAL_ID,
-                      'border-l-2 border-l-blue-500':
-                        targetColId.value === column.id &&
-                        draggedColId.value !== targetColId.value,
                       'opacity-50 shadow-lg bg-primary-50':
                         draggedColId.value === column.id,
                       'cursor-grabbing':

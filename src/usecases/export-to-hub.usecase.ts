@@ -123,6 +123,11 @@ configs:
 const mapDBTypeToFeatureType = (dbType: string) => {
   const type = dbType.toLowerCase();
 
+  if (type.startsWith('timestamp')) {
+    const precision = type.split('_')[1];
+    return `timestamp[${precision || 's'}]`;
+  }
+
   switch (type) {
     case 'varchar':
     case 'string':

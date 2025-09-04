@@ -26,27 +26,27 @@ export const upsertColumnValuesFromGenerator = async ({
     for await (const [idx, value] of generator) {
       const result = await db.run(
         `
-        SELECT * FROM ${tableName} WHERE rowIdx = ? LIMIT 1;
+        SELECT * FROM ${tableName} WHERE rowIdx = $1 LIMIT 1;
       `,
-        [idx],
+        { 1: idx },
       );
 
       if (result.rowCount > 0) {
         // Update existing row
         await db.run(
           `
-          UPDATE ${tableName} SET ${columnName} = ? WHERE rowIdx = ?;
+          UPDATE ${tableName} SET ${columnName} = $1 WHERE rowIdx = $2;
         `,
-          [sanitizeValue(value), idx],
+          { 1: sanitizeValue(value), 2: idx },
         );
       } else {
         // Insert new row
         await db.run(
           `
         INSERT INTO ${tableName} (rowIdx, ${columnName})
-        VALUES (?, ?);
+        VALUES ($1, $2);
       `,
-          [idx, sanitizeValue(value)],
+          { 1: idx, 2: sanitizeValue(value) },
         );
       }
     }

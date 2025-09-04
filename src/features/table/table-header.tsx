@@ -35,18 +35,7 @@ export const TableHeader = component$(() => {
     e.preventDefault();
     draggedColId.value = columnId;
 
-    const ghost = document
-      .getElementById(columnId)!
-      .cloneNode(true) as HTMLElement;
-    ghost.style.position = 'absolute';
-    ghost.style.pointerEvents = 'none';
-    ghost.style.opacity = '0.7';
-    ghost.classList.add('grabbing');
-    document.body.appendChild(ghost);
-
     const move = (ev: MouseEvent) => {
-      ghost.style.left = `${ev.pageX}px`;
-      ghost.style.top = `${ev.pageY}px`;
       const el = document.elementFromPoint(
         ev.clientX,
         ev.clientY,
@@ -59,8 +48,6 @@ export const TableHeader = component$(() => {
     };
 
     const up = () => {
-      document.body.removeChild(ghost);
-
       if (
         draggedColId.value &&
         targetColId.value &&
@@ -225,6 +212,38 @@ export const TableHeader = component$(() => {
     }
   });
 
+  const prevTargetColId = useSignal<string | null>(null);
+  useVisibleTask$(({ track }) => {
+    track(targetColId);
+
+    if (prevTargetColId.value && prevTargetColId.value !== targetColId.value) {
+      const prevHeader = document.getElementById(prevTargetColId.value);
+      prevHeader?.classList.remove('border-l-2', 'border-l-blue-500');
+
+      for (const cell of document.querySelectorAll(
+        `td[data-column-id="${prevTargetColId.value}"]`,
+      )) {
+        (cell as HTMLElement).classList.remove(
+          'border-l-2',
+          'border-l-blue-500',
+        );
+      }
+    }
+
+    prevTargetColId.value = targetColId.value;
+
+    if (targetColId.value) {
+      const header = document.getElementById(targetColId.value);
+      header?.classList.add('border-l-2', 'border-l-blue-500');
+
+      for (const cell of document.querySelectorAll(
+        `td[data-column-id="${targetColId.value}"]`,
+      )) {
+        (cell as HTMLElement).classList.add('border-l-2', 'border-l-blue-500');
+      }
+    }
+  });
+
   const indexToAlphanumeric = $((index: number): string => {
     let result = '';
     while (index > 0) {
@@ -253,7 +272,7 @@ export const TableHeader = component$(() => {
                     'min-w-[142px] w-[326px] h-[38px] border bg-neutral-100 text-primary-600 font-normal relative select-none cursor-grab',
                     {
                       'border-r-0': column.id === TEMPORAL_ID,
-                      'border-2 border-blue-400':
+                      'border-l-2 border-l-blue-500':
                         targetColId.value === column.id &&
                         draggedColId.value !== targetColId.value,
                       'opacity-50 shadow-lg bg-primary-50':

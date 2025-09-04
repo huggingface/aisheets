@@ -74,7 +74,7 @@ class GroupedModels {
   private models: Model[];
   private tags = {
     LIGHT: {
-      label: 'light',
+      label: 'lightweight',
       class: 'bg-[#FFF9C4]',
     },
     REASONING: {
@@ -116,16 +116,16 @@ class GroupedModels {
   }[] {
     return [
       {
-        id: 'openai/gpt-oss-120b',
-        tags: [this.tags.CODING, this.tags.REASONING],
-      },
-      {
         id: 'openai/gpt-oss-20b',
         tags: [this.tags.NLP, this.tags.LIGHT],
       },
       {
         id: 'meta-llama/Llama-3.1-70B-Instruct',
         tags: [this.tags.NLP, this.tags.LIGHT],
+      },
+      {
+        id: 'openai/gpt-oss-120b',
+        tags: [this.tags.CODING, this.tags.REASONING],
       },
       {
         id: 'Qwen/Qwen3-Coder-480B-A35B-Instruct',

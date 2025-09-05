@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/1.6.1/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.2.2/schema.json",
   "linter": {
     "enabled": true,
     "rules": {
@@ -13,7 +13,8 @@
         "noAssignInExpressions": "off",
         "noExplicitAny": "off",
         "noDoubleEquals": "off",
-        "noArrayIndexKey": "off"
+        "noArrayIndexKey": "off",
+        "noUnknownAtRules": "off"
       },
       "security": {
         "noDangerouslySetInnerHtml": "off"
@@ -31,7 +32,7 @@
     }
   },
   "files": {
-    "include": ["./src/**/*"]
+    "includes": ["src/**/*"]
   },
   "formatter": {
     "enabled": true,
@@ -44,7 +45,8 @@
   "javascript": {
     "formatter": {
       "quoteStyle": "single",
-      "semicolons": "always"
+      "semicolons": "always",
+      "jsxQuoteStyle": "double"
     }
   }
 }

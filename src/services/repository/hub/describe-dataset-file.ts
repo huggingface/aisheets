@@ -49,11 +49,9 @@ export const describeFromURI = async ({
 export const describeDatasetFile = async ({
   repoId,
   file,
-  accessToken,
 }: {
   repoId: string;
   file: string;
-  accessToken: string;
 }): Promise<ColumnInfo[]> => {
   const result = await describeFromURI({
     uri: `hf://datasets/${repoId}/${file}`,

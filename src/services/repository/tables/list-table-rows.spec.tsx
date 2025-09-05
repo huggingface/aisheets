@@ -5,7 +5,7 @@ import { createDatasetTableFromFile } from './create-table-from-file';
 import { deleteDatasetTable } from './delete-table';
 import { listDatasetTableRows } from './list-table-rows';
 
-let dataset: DatasetModel | undefined = undefined;
+let dataset: DatasetModel | undefined;
 
 beforeEach(async () => {
   dataset = await DatasetModel.create({

@@ -49,7 +49,7 @@ export const triggerLooks = (look: TriggerProps['look'] = 'default') => {
   const ghostClass =
     'flex h-10 w-full justify-between items-center whitespace-nowrap rounded-sm bg-transparent px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50';
 
-  const looks = {
+  const looks: any = {
     default: defaultClass,
     ghost: ghostClass,
     headless: '',

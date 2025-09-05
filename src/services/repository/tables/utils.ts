@@ -1,18 +1,12 @@
-export const getDatasetTableName = (dataset: {
-  id: string;
-}) => {
+export const getDatasetTableName = (dataset: { id: string }) => {
   return `"${dataset.id}"`;
 };
 
-export const getDatasetRowSequenceName = (dataset: {
-  id: string;
-}) => {
+export const getDatasetRowSequenceName = (dataset: { id: string }) => {
   return `"${dataset.id}_rowIdx_seq"`;
 };
 
-export const getColumnName = (column: {
-  id: string;
-}) => {
+export const getColumnName = (column: { id: string }) => {
   return `"${column.id}"`;
 };
 

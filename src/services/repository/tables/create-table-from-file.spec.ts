@@ -5,7 +5,7 @@ import { createDatasetTableFromFile } from './create-table-from-file';
 import { deleteDatasetTable } from './delete-table';
 import { getDatasetTableName } from './utils';
 
-let dataset: DatasetModel | undefined = undefined;
+let dataset: DatasetModel | undefined;
 
 beforeEach(async () => {
   dataset = await DatasetModel.create({
@@ -27,7 +27,7 @@ describe('create-table-from-file', () => {
       file: 'tests/test.jsonl',
     });
 
-    const storedColumns = await ColumnModel.findAll({
+    await ColumnModel.findAll({
       where: {
         datasetId: dataset!.id,
       },

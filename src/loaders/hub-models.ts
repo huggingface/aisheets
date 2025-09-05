@@ -120,11 +120,14 @@ const fetchModelsForPipeline = async (
   } = appConfig;
 
   const token = session.anonymous ? hfToken : session.token;
+  const headers: HeadersInit = {};
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
   const response = await fetch(`${url}?${params.toString()}`, {
     method: 'GET',
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
+    headers,
   });
 
   if (!response.ok) {
@@ -218,18 +221,27 @@ export const useTrendingHubModels = routeLoader$(async function (
   const fetchTrending = async (
     kind: 'text-generation' | 'image-text-to-text' | 'text-to-image',
   ) => {
+    let retries = 3;
     let limit = 1;
-
     let trendingModel = null;
 
-    while (!trendingModel) {
-      const models = await fetchModelsForPipeline(session, kind, limit);
+    for (; retries > 0; retries--) {
+      try {
+        const models = await fetchModelsForPipeline(session, kind, limit);
 
-      if (models.length > 0) {
-        trendingModel = models[0];
-      } else {
+        if (models?.length > 0 && models[0]) {
+          trendingModel = models[0];
+          break;
+        }
+
         limit++;
+      } catch (error) {
+        console.warn(`Error fetching trending model for ${kind}`, error);
       }
+    }
+
+    if (!trendingModel) {
+      console.warn(`Failed to fetch trending model for ${kind}`);
     }
 
     return trendingModel;

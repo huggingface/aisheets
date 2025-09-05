@@ -1,10 +1,9 @@
+import type { RequestEventBase } from '@builder.io/qwik-city';
 import {
   type RequestEventLoader,
   routeLoader$,
   server$,
 } from '@builder.io/qwik-city';
-
-import type { RequestEventBase } from '@builder.io/qwik-city';
 
 import { INFERENCE_PROVIDERS } from '@huggingface/inference';
 import { appConfig } from '~/config';
@@ -287,9 +286,11 @@ export const useTrendingHubModels = routeLoader$(async function (
   ]);
 
   return await Promise.all(
-    models.map(async (m) => ({
-      id: m.id,
-      picture: await fetchAvatar(m.id),
-    })),
+    models
+      .filter((m) => !!m)
+      .map(async (m) => ({
+        id: m.id,
+        picture: await fetchAvatar(m.id),
+      })),
   );
 });

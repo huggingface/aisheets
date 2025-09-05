@@ -8,7 +8,8 @@ import {
 import { server$ } from '@builder.io/qwik-city';
 import { LuLink } from '@qwikest/icons/lucide';
 import { Input } from '~/components';
-import { useClickOutside } from '~/components/hooks/click/outside';
+import { useClickOutsideConditionally } from '~/components/hooks/click/outside';
+import { nextTick } from '~/components/hooks/tick';
 import { Tooltip } from '~/components/ui/tooltip/tooltip';
 import { updateDataset } from '~/services/repository/datasets';
 import { useDatasetsStore } from '~/state';
@@ -58,7 +59,8 @@ export const DatasetName = component$(() => {
     }
   });
 
-  const inputRef = useClickOutside<HTMLInputElement>(handleSave);
+  const { ref: inputRef, startListening } =
+    useClickOutsideConditionally<HTMLInputElement>(handleSave);
 
   useVisibleTask$(({ track }) => {
     track(activeDataset);
@@ -69,9 +71,14 @@ export const DatasetName = component$(() => {
 
   useVisibleTask$(({ track }) => {
     track(() => state.isEditing);
+
     if (state.isEditing && inputRef.value) {
       inputRef.value.focus();
       inputRef.value.select();
+
+      nextTick(() => {
+        startListening();
+      });
     }
   });
 
@@ -123,7 +130,7 @@ export const DatasetName = component$(() => {
             value={state.name}
             onInput$={handleChange}
             onKeyDown$={handleKeyDown}
-            class="text-md h-6 font-bold leading-none p-0 border-none outline-none max-w-96"
+            class="text-md h-6 font-bold leading-none p-0 border-none outline-none max-w-96 min-w-48"
             style={{
               width: `${state.name.length}ch`,
             }}
@@ -139,7 +146,7 @@ export const DatasetName = component$(() => {
           </Tooltip>
         ) : (
           <h1
-            class="flex h-12 w-full text-md h-6 font-bold leading-none mt-2 text-ellipsis whitespace-nowrap"
+            class="flex w-full text-md h-6 font-bold leading-none mt-2 text-ellipsis whitespace-nowrap"
             onClick$={handleEditClick}
           >
             {state.displayName}

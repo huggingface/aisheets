@@ -8,11 +8,6 @@ interface InnerDuckDBType {
   entryTypes: InnerDuckDBType[];
 }
 
-interface ListDuckDBType {
-  typeId: number;
-  valueType: InnerDuckDBType;
-}
-
 const duckDB2DBColumn = (col: { columnName: string; columnType: any }) => {
   const dbCol: DBColumn = {
     name: col.columnName,

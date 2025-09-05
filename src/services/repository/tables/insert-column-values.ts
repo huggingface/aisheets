@@ -1,5 +1,5 @@
 import { connectAndClose } from '~/services/db/duckdb';
-import { escapeValue, getColumnName, getDatasetTableName } from './utils';
+import { getColumnName, getDatasetTableName, sanitizeValue } from './utils';
 
 export const upsertColumnValuesFromGenerator = async ({
   dataset,
@@ -24,21 +24,30 @@ export const upsertColumnValuesFromGenerator = async ({
     const generator = valuesGenerator();
 
     for await (const [idx, value] of generator) {
-      const result = await db.run(`
-        SELECT * FROM ${tableName} WHERE rowIdx = ${idx} LIMIT 1;
-      `);
+      const result = await db.run(
+        `
+        SELECT * FROM ${tableName} WHERE rowIdx = $1 LIMIT 1;
+      `,
+        { 1: idx },
+      );
 
       if (result.rowCount > 0) {
         // Update existing row
-        await db.run(`
-          UPDATE ${tableName} SET ${columnName} = ${escapeValue(value)} WHERE rowIdx = ${idx};
-        `);
+        await db.run(
+          `
+          UPDATE ${tableName} SET ${columnName} = $1 WHERE rowIdx = $2;
+        `,
+          { 1: sanitizeValue(value), 2: idx },
+        );
       } else {
         // Insert new row
-        await db.run(`
+        await db.run(
+          `
         INSERT INTO ${tableName} (rowIdx, ${columnName})
-        VALUES (${idx}, ${escapeValue(value)});
-      `);
+        VALUES ($1, $2);
+      `,
+          { 1: idx, 2: sanitizeValue(value) },
+        );
       }
     }
   });

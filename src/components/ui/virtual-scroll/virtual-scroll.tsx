@@ -81,11 +81,7 @@ export const VirtualScrollContainer = component$(
     totalCount: number;
     data: Signal<unknown[]>;
     loadNextPage?: QRL<
-      ({
-        rangeStart,
-      }: {
-        rangeStart: number;
-      }) => Promise<void>
+      ({ rangeStart }: { rangeStart: number }) => Promise<void>
     >;
     itemRenderer: QRL<
       (

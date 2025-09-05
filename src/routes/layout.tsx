@@ -22,7 +22,7 @@ export const checkSession = (request: RequestEventBase) => {
   try {
     useServerSession(request);
   } catch (error) {
-    console.error('Session not found, redirecting to login');
+    console.error('Session not found, redirecting to login', error);
     throw (request as RequestEvent).redirect(302, '/');
   }
 };

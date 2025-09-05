@@ -18,7 +18,7 @@ describe('addColumn', () => {
       createdBy: 'test',
     });
 
-    const newColumn = await createColumn({
+    await createColumn({
       name: 'Column 1',
       type: 'text',
       kind: 'static',

@@ -1,8 +1,8 @@
 import {
   $,
-  type QRL,
   component$,
   noSerialize,
+  type QRL,
   useComputed$,
   useContext,
   useSignal,
@@ -15,16 +15,18 @@ import {
   LuCheck,
   LuEgg,
   LuGlobe,
-  LuSettings,
   LuStopCircle,
-  LuUndo2,
   LuX,
 } from '@qwikest/icons/lucide';
 
 import { Button, Select, triggerLooks } from '~/components';
 import { useClickOutside } from '~/components/hooks/click/outside';
 import { nextTick } from '~/components/hooks/tick';
-import { Tooltip } from '~/components/ui/tooltip/tooltip';
+import {
+  ExtraProviders,
+  HuggingFace,
+  Provider,
+} from '~/components/ui/logo/logo';
 
 import {
   TemplateTextArea,
@@ -69,6 +71,128 @@ class Models {
   }
 }
 
+type ModelWithExtraTags = Model & {
+  extraTags?: { label: string; class: string }[];
+};
+class GroupedModels {
+  private models: Model[];
+  private tags = {
+    LIGHT: {
+      label: 'lightweight',
+      class: 'bg-[#FFF9C4]',
+    },
+    REASONING: {
+      label: 'reasoning',
+      class: 'bg-[#D0E8FF]',
+    },
+    CODING: {
+      label: 'coding',
+      class: 'bg-[#FFE4E1]',
+    },
+    NLP: {
+      label: 'NLP',
+      class: 'bg-[#E6F3FF]',
+    },
+    TEXT_RENDERING: {
+      label: 'text-rendering',
+      class: 'bg-[#F0F8FF]',
+    },
+    AESTHETICS: {
+      label: 'aesthetics',
+      class: 'bg-[#FFF0F5]',
+    },
+    EXPERIMENTATION: {
+      label: 'experimentation',
+      class: 'bg-[#F5F5DC]',
+    },
+    TRANSLATION: {
+      label: 'translation',
+      class: 'bg-[#E8F5E8]',
+    },
+  };
+
+  constructor(models: Model[]) {
+    this.models = models;
+  }
+
+  private get recommendedModelIds(): {
+    id: Model['id'];
+    tags: {
+      label: string;
+      class: string;
+    }[];
+  }[] {
+    return [
+      {
+        id: 'openai/gpt-oss-20b',
+        tags: [this.tags.NLP, this.tags.LIGHT],
+      },
+      {
+        id: 'meta-llama/Llama-3.1-70B-Instruct',
+        tags: [this.tags.NLP, this.tags.LIGHT],
+      },
+      {
+        id: 'CohereLabs/command-a-translate-08-2025',
+        tags: [this.tags.TRANSLATION],
+      },
+      {
+        id: 'openai/gpt-oss-120b',
+        tags: [this.tags.CODING, this.tags.REASONING],
+      },
+      {
+        id: 'Qwen/Qwen3-Coder-480B-A35B-Instruct',
+        tags: [this.tags.CODING],
+      },
+      {
+        id: 'Qwen/Qwen-Image',
+        tags: [this.tags.TEXT_RENDERING],
+      },
+      {
+        id: 'black-forest-labs/FLUX.1-Krea-dev',
+        tags: [this.tags.AESTHETICS],
+      },
+      {
+        id: 'black-forest-labs/FLUX.1-schnell',
+        tags: [this.tags.LIGHT, this.tags.EXPERIMENTATION],
+      },
+    ];
+  }
+
+  groupsByCategory(): {
+    label: string;
+    class: string;
+    models: ModelWithExtraTags[];
+  }[] {
+    const recommended: ModelWithExtraTags[] = this.recommendedModelIds
+      .map((recommendedModel) => {
+        const model = this.models.find((m) => m.id === recommendedModel.id);
+        return model
+          ? {
+              ...model,
+              extraTags: recommendedModel.tags,
+            }
+          : null;
+      })
+      .filter((model): model is NonNullable<typeof model> => model !== null);
+
+    return [
+      {
+        label: 'Recommended Models',
+        class: 'h-10 p-2 bg-primary-50 text-primary-400',
+        models: recommended,
+      },
+      {
+        label: 'All models available on Hugging Face',
+        class: 'h-10 p-2 bg-[#FFF0D9] text-[#FF9D00]',
+        models: this.models.filter(
+          (model) =>
+            !this.recommendedModelIds.map((r) => r.id).includes(model.id),
+        ),
+      },
+    ];
+  }
+}
+
 export const ExecutionForm = component$<SidebarProps>(
   ({ column, onGenerateColumn }) => {
     const executionFormRef = useSignal<HTMLElement>();
@@ -78,20 +202,16 @@ export const ExecutionForm = component$<SidebarProps>(
 
     const allModels = useContext<Model[]>(modelsContext);
 
-    const {
-      DEFAULT_MODEL,
-      DEFAULT_MODEL_PROVIDER,
-      modelEndpointEnabled,
-      MODEL_ENDPOINT_NAME,
-    } = useContext(configContext);
+    const { DEFAULT_MODEL, DEFAULT_MODEL_PROVIDER, modelEndpointEnabled } =
+      useContext(configContext);
 
     const models = useComputed$(() => {
+      console.log(allModels.filter((p) => !!p.picture));
       return new Models(allModels).getModelsByType(
         column.type as SupportedType,
       );
     });
-
-    const isOpenModel = useSignal(false);
+    const filteredModels = useSignal<Model[]>(models.value);
 
     const prompt = useSignal<string>('');
     const columnsReferences = useSignal<string[]>([]);
@@ -102,6 +222,7 @@ export const ExecutionForm = component$<SidebarProps>(
     const modelSearchQuery = useSignal<string>('');
     const selectedModelId = useSignal<string>('');
     const selectedProvider = useSignal<string>('');
+    const modelProviders = useSignal<string[]>([]);
 
     const enableCustomEndpoint = useSignal(modelEndpointEnabled);
     const endpointURLSelected = useSignal(false);
@@ -110,19 +231,12 @@ export const ExecutionForm = component$<SidebarProps>(
       columnsReferences.value = variables.map((v) => v.id);
     });
 
-    const filteredModels = useSignal<Model[]>(models.value);
+    const groupedModels = useComputed$(() => {
+      return new GroupedModels(filteredModels.value).groupsByCategory();
+    });
 
     const isImageColumn = useComputed$(() => {
       return column.type === 'image';
-    });
-
-    const modelProviders = useComputed$(() => {
-      const model = models.value.find(
-        (m: Model) =>
-          m.id.toLocaleLowerCase() ===
-          selectedModelId.value.toLocaleLowerCase(),
-      );
-      return model ? model.providers : [];
     });
 
     const isSearchOnWebAvailable = useComputed$(() => {
@@ -134,27 +248,6 @@ export const ExecutionForm = component$<SidebarProps>(
         modelSearchQuery.value = selectedModelId.value || '';
       }),
     );
-
-    useTask$(({ track }) => {
-      track(modelSearchQuery);
-
-      if (modelSearchQuery.value.length <= 1) return;
-
-      if (modelSearchQuery.value === selectedModelId.value) {
-        filteredModels.value = models.value;
-        return;
-      }
-
-      filteredModels.value = models.value.filter((model: Model) =>
-        model.id.toLowerCase().includes(modelSearchQuery.value.toLowerCase()),
-      );
-
-      nextTick(() => {
-        isModelDropdownOpen.value =
-          filteredModels.value.length > 0 &&
-          filteredModels.value.length !== models.value.length;
-      }, 300);
-    });
 
     useVisibleTask$(() => {
       if (initialProcess.value.prompt) {
@@ -180,7 +273,7 @@ export const ExecutionForm = component$<SidebarProps>(
     });
 
     useTask$(({ track }) => {
-      track(column);
+      track(() => column);
 
       if (isImageColumn.value) {
         // Currently, we custom endpoint only for text models
@@ -212,38 +305,53 @@ export const ExecutionForm = component$<SidebarProps>(
       }
     });
 
-    useVisibleTask$(({ track }) => {
-      track(isOpenModel);
+    useTask$(({ track }) => {
+      track(modelSearchQuery);
 
-      isModelDropdownOpen.value = !isOpenModel.value;
-      if (!isOpenModel.value) {
-        modelSearchQuery.value = selectedModelId.value || '';
+      if (modelSearchQuery.value.length <= 1) return;
+
+      if (modelSearchQuery.value === selectedModelId.value) {
+        filteredModels.value = models.value;
+        return;
       }
+
+      filteredModels.value = models.value.filter((model: Model) =>
+        model.id.toLowerCase().includes(modelSearchQuery.value.toLowerCase()),
+      );
+
+      nextTick(() => {
+        isModelDropdownOpen.value =
+          filteredModels.value.length > 0 &&
+          filteredModels.value.length !== models.value.length;
+      }, 300);
     });
 
-    useVisibleTask$(({ track }) => {
+    useTask$(({ track }) => {
       track(selectedModelId);
-
       modelSearchQuery.value = selectedModelId.value || modelSearchQuery.value;
 
       const model = models.value.find(
-        (m: Model) => m.id === selectedModelId.value,
+        (m: Model) =>
+          m.id.toLocaleLowerCase() ===
+          selectedModelId.value.toLocaleLowerCase(),
       );
 
       if (!model) return;
 
-      const defaultProvider =
-        model.providers.find(
-          (provider) => provider === DEFAULT_MODEL_PROVIDER,
-        ) || model.providers[0];
+      modelProviders.value = model.providers ?? [];
 
-      if (
-        !selectedProvider.value ||
-        (selectedProvider.value &&
-          !model.providers.includes(selectedProvider.value))
-      ) {
-        selectedProvider.value = defaultProvider;
-      }
+      nextTick(() => {
+        if (
+          !selectedProvider.value ||
+          !modelProviders.value.includes(selectedProvider.value)
+        ) {
+          const defaultModel = modelProviders.value.find(
+            (provider) => provider === DEFAULT_MODEL_PROVIDER,
+          );
+
+          selectedProvider.value = defaultModel || modelProviders.value[0];
+        }
+      });
     });
 
     useVisibleTask$(() => {
@@ -306,7 +414,11 @@ export const ExecutionForm = component$<SidebarProps>(
           <span class="px-8">Instructions to generate cells</span>
           <Button
             look="ghost"
-            class={`${columns.value.filter((c) => c.id !== TEMPORAL_ID).length >= 1 ? 'visible' : 'invisible'} rounded-full hover:bg-neutral-200 cursor-pointer transition-colors w-[30px] h-[30px]`}
+            class={`${
+              columns.value.filter((c) => c.id !== TEMPORAL_ID).length >= 1
+                ? 'visible'
+                : 'invisible'
+            } rounded-full hover:bg-neutral-200 cursor-pointer transition-colors w-[30px] h-[30px]`}
             onClick$={handleCloseForm}
             tabIndex={0}
             aria-label="Close"
@@ -382,179 +494,164 @@ export const ExecutionForm = component$<SidebarProps>(
                 </div>
               </div>
 
-              <div class="flex items-center justify-start gap-1">
-                {endpointURLSelected.value ? (
-                  <div
-                    onClick$={() => (isOpenModel.value = !isOpenModel.value)}
-                    class="flex items-center justify-start gap-1 cursor-pointer"
-                  >
-                    Model
-                    <p class="text-neutral-500 underline">
-                      {MODEL_ENDPOINT_NAME}
-                    </p>
-                    with custom endpoint
-                  </div>
-                ) : (
-                  <div class="flex items-center justify-start gap-1">
-                    Model
-                    <p class="text-neutral-500 underline">
-                      <a
-                        href={`https://huggingface.co/${selectedModelId.value}`}
-                        class="text-neutral-500 hover:text-neutral-600"
-                        target="_blank"
-                        rel="noopener noreferrer"
+              <div class="px-3 pb-12 pt-2 bg-white border border-secondary-foreground rounded-sm">
+                <div class="flex flex-col gap-4">
+                  <div class="flex gap-4">
+                    <div class="flex-[2] w-3/4">
+                      <Select.Root
+                        ref={modelSearchContainerRef}
+                        key={modelSearchQuery.value}
+                        bind:open={isModelDropdownOpen}
+                        value={selectedModelId.value}
                       >
-                        {selectedModelId.value}
-                      </a>
-                    </p>
-                    {enableCustomEndpoint.value &&
-                      !endpointURLSelected.value && (
-                        <Tooltip text="Reset default model">
-                          <LuUndo2
-                            class="w-4 h-4 rounded-full gap-2 text-neutral-500 cursor-pointer hover:bg-neutral-200"
-                            onClick$={() => (endpointURLSelected.value = true)}
-                          />
-                        </Tooltip>
-                      )}
-                    with provider
-                    <p class="italic">{selectedProvider.value}</p>
-                  </div>
-                )}
-
-                <Button
-                  onClick$={() => (isOpenModel.value = !isOpenModel.value)}
-                  look="ghost"
-                  class="hover:bg-neutral-200"
-                >
-                  <Tooltip text="Change model">
-                    <LuSettings class="text-neutral-500 hover:text-neutral-600" />
-                  </Tooltip>
-                </Button>
-              </div>
-
-              {isOpenModel.value && (
-                <div class="px-3 pb-12 pt-2 bg-white border border-secondary-foreground rounded-sm">
-                  <div class="flex justify-end items-center">
-                    <Button
-                      look="ghost"
-                      class="p-1.5 rounded-full hover:bg-neutral-200 cursor-pointer"
-                      onClick$={() => (isOpenModel.value = false)}
-                      aria-label="Close"
-                    >
-                      <LuX class="text-lg text-neutral" />
-                    </Button>
-                  </div>
-
-                  <div class="flex flex-col gap-4">
-                    <div class="flex gap-4">
-                      <div class="flex-[2]">
-                        <Select.Root
-                          ref={modelSearchContainerRef}
-                          key={modelSearchQuery.value}
-                          bind:open={isModelDropdownOpen}
-                          value={selectedModelId.value}
+                        <Select.Label>Model</Select.Label>
+                        <div
+                          class={cn(
+                            triggerLooks('default'),
+                            'flex text-xs items-center px-2 gap-2 font-mono',
+                          )}
                         >
-                          <Select.Label>Model</Select.Label>
-                          <div
-                            class={cn(
-                              'w-full flex flex-row justify-between items-center',
-                              triggerLooks('default'),
-                            )}
-                          >
-                            <input
-                              class="h-8 w-full outline-none"
-                              onFocusIn$={() => {
-                                if (
-                                  selectedModelId.value ===
-                                  modelSearchQuery.value
-                                ) {
-                                  modelSearchQuery.value = '';
-                                }
-                              }}
-                              onClick$={() => {
-                                isModelDropdownOpen.value = false;
-                              }}
-                              placeholder="Search models..."
-                              bind:value={modelSearchQuery}
+                          {modelSearchQuery.value == selectedModelId.value && (
+                            <ModelImage
+                              model={
+                                models.value.find(
+                                  (m) => m.id === selectedModelId.value,
+                                )!
+                              }
                             />
-                            <Select.Trigger look="headless" />
-                          </div>
-                          <Select.Popover
-                            key={modelSearchQuery.value}
-                            floating="bottom-end"
-                            gutter={8}
-                            class={cn(
-                              'border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto',
+                          )}
+
+                          <input
+                            placeholder="Search models..."
+                            bind:value={modelSearchQuery}
+                            class="h-8 w-full outline-none font-mono text-xs"
+                            onFocusIn$={() => {
+                              if (
+                                selectedModelId.value === modelSearchQuery.value
+                              ) {
+                                modelSearchQuery.value = '';
+                              }
+                            }}
+                            onKeyDown$={() => {
+                              nextTick(() => {
+                                isModelDropdownOpen.value = false;
+                              });
+                            }}
+                            onClick$={() => {
+                              isModelDropdownOpen.value = false;
+                              nextTick(() => {
+                                isModelDropdownOpen.value = true;
+                              }, 100);
+                            }}
+                          />
+
+                          <Select.Trigger look="headless" />
+                        </div>
+                        <Select.Popover
+                          key={modelSearchQuery.value}
+                          floating="bottom-end"
+                          gutter={8}
+                          class="border border-border max-h-[300px] overflow-y-auto overflow-x-hidden top-[100%] bottom-auto p-0 mt-2 ml-24 min-w-[450px]"
+                        >
+                          <div class="flex flex-col">
+                            {Object.entries(groupedModels.value).map(
+                              ([category, models]) => {
+                                if (models.models.length === 0) return null;
+                                return (
+                                  <div key={category}>
+                                    <div
+                                      class={cn(
+                                        'text-[13px] font-semibold rounded-sm rounded-b-none',
+                                        models.class,
+                                      )}
+                                    >
+                                      {models.label}
+                                    </div>
+                                    {models.models.map((model) => (
+                                      <Select.Item
+                                        key={model.id}
+                                        value={model.id}
+                                        class="text-foreground hover:bg-accent"
+                                        onClick$={() => {
+                                          isModelDropdownOpen.value = false;
+                                          endpointURLSelected.value = false;
+
+                                          selectedModelId.value = model.id;
+                                          modelSearchQuery.value = model.id;
+                                        }}
+                                      >
+                                        <div class="flex text-xs items-center justify-between p-1 gap-2 font-mono w-full">
+                                          <div class="flex items-center gap-2">
+                                            <ModelImage model={model} />
+                                            <Select.ItemLabel>
+                                              {model.id}
+                                            </Select.ItemLabel>
+                                          </div>
+
+                                          <ModelFlag model={model} />
+                                        </div>
+
+                                        {model.id === selectedModelId.value && (
+                                          // We cannot use the Select.ItemIndicator here
+                                          // because it doesn't work when the model list changes
+                                          <LuCheck class="h-4 w4 text-primary-500 absolute right-2 top-1/2 -translate-y-1/2" />
+                                        )}
+                                      </Select.Item>
+                                    ))}
+                                  </div>
+                                );
+                              },
                             )}
-                          >
-                            {filteredModels.value.map((model) => (
-                              <Select.Item
-                                key={model.id}
-                                value={model.id}
-                                class="text-foreground hover:bg-accent"
-                                onClick$={() => {
-                                  isModelDropdownOpen.value = false;
-                                  endpointURLSelected.value = false;
+                          </div>
+                        </Select.Popover>
+                      </Select.Root>
+                    </div>
 
-                                  selectedModelId.value = model.id;
-                                  modelSearchQuery.value = model.id;
+                    <div class="flex-1 w-1/4">
+                      <Select.Root bind:value={selectedProvider}>
+                        <Select.Label>Inference Providers</Select.Label>
+                        <Select.Trigger class="bg-white rounded-base border-neutral-300-foreground">
+                          <div class="flex text-xs items-center justify-between gap-2 font-mono w-full">
+                            <div class="flex items-center gap-2">
+                              <Provider name={selectedProvider.value} />
+                              <Select.DisplayValue />
+                            </div>
 
-                                  selectedProvider.value =
-                                    model.providers.includes(
-                                      DEFAULT_MODEL_PROVIDER,
-                                    )
-                                      ? DEFAULT_MODEL_PROVIDER
-                                      : model.providers[0];
-                                }}
-                              >
-                                <Select.ItemLabel>{model.id}</Select.ItemLabel>
-                                {model.size && (
-                                  <span class="ml-2 bg-gray-100 text-gray-700 px-2 py-0.5 rounded text-sm">
-                                    {model.size}
-                                  </span>
-                                )}
+                            <ExtraProviders
+                              selected={selectedProvider.value}
+                              providers={modelProviders.value}
+                            />
+                          </div>
+                        </Select.Trigger>
+                        <Select.Popover class="border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto mt-1 min-w-[200px]">
+                          {modelProviders.value.map((provider) => (
+                            <Select.Item
+                              key={provider}
+                              value={provider}
+                              class="text-foreground hover:bg-accent"
+                              onClick$={() => {
+                                selectedProvider.value = provider; // Redundant but ensures the value is set sometimes does not work...
+                                endpointURLSelected.value = false;
+                              }}
+                            >
+                              <div class="flex text-xs items-center p-1 gap-2 font-mono">
+                                <Provider name={provider} />
 
-                                {model.id === selectedModelId.value && (
-                                  // We cannot use the Select.ItemIndicator here
-                                  // because it doesn't work when the model list changes
-                                  <LuCheck class="h-4 w4 text-primary-500 absolute right-2 top-1/2 -translate-y-1/2" />
-                                )}
-                              </Select.Item>
-                            ))}
-                          </Select.Popover>
-                        </Select.Root>
-                      </div>
-                      <div class="flex-1">
-                        <Select.Root bind:value={selectedProvider}>
-                          <Select.Label>Inference Providers</Select.Label>
-                          <Select.Trigger class="px-4 bg-white rounded-base border-neutral-300-foreground">
-                            <Select.DisplayValue />
-                          </Select.Trigger>
-                          <Select.Popover class="border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto">
-                            {modelProviders.value.map((provider, idx) => (
-                              <Select.Item
-                                key={idx}
-                                value={provider}
-                                class="text-foreground hover:bg-accent"
-                                onClick$={() => {
-                                  endpointURLSelected.value = false;
-                                }}
-                              >
                                 <Select.ItemLabel>{provider}</Select.ItemLabel>
                                 {provider === selectedProvider.value && (
                                   // We cannot use the Select.ItemIndicator here
                                   // because it doesn't work when the model list changes
                                   <LuCheck class="h-4 w4 text-primary-500 absolute right-2 top-1/2 -translate-y-1/2" />
                                 )}
-                              </Select.Item>
-                            ))}
-                          </Select.Popover>
-                        </Select.Root>
-                      </div>
+                              </div>
+                            </Select.Item>
+                          ))}
+                        </Select.Popover>
+                      </Select.Root>
                     </div>
                   </div>
                 </div>
-              )}
+              </div>
             </div>
           </div>
         </div>
@@ -562,3 +659,32 @@ export const ExecutionForm = component$<SidebarProps>(
     );
   },
 );
+
+export const ModelFlag = component$(
+  ({ model }: { model?: ModelWithExtraTags }) => {
+    if (!model) return null;
+
+    return (
+      <div class="flex items-center gap-2">
+        {model.extraTags?.map((e) => (
+          <span key={e.label} class={cn('rounded-sm p-1 capitalize', e.class)}>
+            {e.label}
+          </span>
+        ))}
+        {!model.extraTags && model.size && (
+          <span class="rounded-sm bg-gray-100 text-gray-700 p-1">
+            {model.size}
+          </span>
+        )}
+      </div>
+    );
+  },
+);
+
+const ModelImage = component$(({ model }: { model: Model }) => {
+  if (!model?.picture) {
+    return <HuggingFace />;
+  }
+
+  return <img src={model.picture} alt={model.id} class="w-4 h-4" />;
+});

@@ -38,10 +38,10 @@ Open `http://localhost:3000` in your browser.
 First, [install pnpm](https://pnpm.io/installation) if you haven't already.
 
 ```bash
-git clone https://github.com/huggingface/sheets.git
+git clone https://github.com/huggingface/aisheets.git
 cd sheets
 export HF_TOKEN=your_token_here
-pnpm install
+pnpm install --frozen-lockfile
 pnpm dev
 ```
 

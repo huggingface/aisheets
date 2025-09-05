@@ -28,7 +28,6 @@ export const TableHeader = component$(() => {
     startWidth: number;
   } | null>(null);
   const { columnSize, update } = useColumnsSizeContext();
-  const columnsWidths = useStore<{ [key: string]: number }>({});
   const draggedColId = useSignal<string | null>(null);
   const targetColId = useSignal<string | null>(null);
 
@@ -78,6 +77,9 @@ export const TableHeader = component$(() => {
   });
 
   const handleResizeStart = $((event: MouseEvent, columnId: string) => {
+    event.preventDefault();
+    event.stopPropagation();
+
     const handleResize = (event: MouseEvent) => {
       if (resizingColumn.value) {
         const deltaX = event.clientX - resizingColumn.value.startX;
@@ -85,6 +87,7 @@ export const TableHeader = component$(() => {
           MAX_WIDTH,
           resizingColumn.value.startWidth + deltaX,
         );
+
         update(resizingColumn.value.columnId, newWidth);
       }
     };
@@ -105,7 +108,10 @@ export const TableHeader = component$(() => {
     document.addEventListener('mouseup', handleResizeEnd);
   });
 
-  const autoResize = $((column: Column) => {
+  const autoResize = $((event: MouseEvent, column: Column) => {
+    event.preventDefault();
+    event.stopPropagation();
+
     const headerElement = document.getElementById(`index-${column.id}`)!;
     const bodyCells = document.querySelectorAll(
       `td[data-column-id="${column.id}"]`,
@@ -255,14 +261,14 @@ export const TableHeader = component$(() => {
                         targetColId.value === column.id,
                     },
                   )}
-                  style={{ width: `${columnsWidths[column.id] || 326}px` }}
+                  style={{ width: `${columnSize.value[column.id] || 326}px` }}
                   onMouseDown$={(e) => handleManualDragStart(e, column.id)}
                 >
                   {indexToAlphanumeric(i + 1)}
                   <span
                     class="absolute top-0 -right-[3px] w-[4px] h-full cursor-col-resize bg-transparent hover:bg-primary-100 z-10"
                     onMouseDown$={(e) => handleResizeStart(e, column.id)}
-                    onDblClick$={() => autoResize(column)}
+                    onDblClick$={(e) => autoResize(e, column)}
                   />
                 </th>
 

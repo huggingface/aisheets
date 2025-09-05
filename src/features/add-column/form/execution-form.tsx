@@ -22,7 +22,11 @@ import {
 import { Button, Select, triggerLooks } from '~/components';
 import { useClickOutside } from '~/components/hooks/click/outside';
 import { nextTick } from '~/components/hooks/tick';
-import { ExtraProviders, Provider } from '~/components/ui/logo/logo';
+import {
+  ExtraProviders,
+  HuggingFace,
+  Provider,
+} from '~/components/ui/logo/logo';
 
 import {
   TemplateTextArea,
@@ -202,6 +206,7 @@ export const ExecutionForm = component$<SidebarProps>(
       useContext(configContext);
 
     const models = useComputed$(() => {
+      console.log(allModels.filter((p) => !!p.picture));
       return new Models(allModels).getModelsByType(
         column.type as SupportedType,
       );
@@ -507,18 +512,12 @@ export const ExecutionForm = component$<SidebarProps>(
                           )}
                         >
                           {modelSearchQuery.value == selectedModelId.value && (
-                            <img
-                              alt={selectedModelId.value}
-                              src={
+                            <ModelImage
+                              model={
                                 models.value.find(
                                   (m) => m.id === selectedModelId.value,
-                                )?.picture
+                                )!
                               }
-                              class="w-4 h-4"
-                              onError$={(ev) => {
-                                (ev.target as HTMLImageElement).src =
-                                  'https://huggingface.co/front/assets/huggingface_logo-noborder.svg';
-                              }}
                             />
                           )}
 
@@ -583,17 +582,7 @@ export const ExecutionForm = component$<SidebarProps>(
                                       >
                                         <div class="flex text-xs items-center justify-between p-1 gap-2 font-mono w-full">
                                           <div class="flex items-center gap-2">
-                                            <img
-                                              src={model.picture}
-                                              alt={model.id}
-                                              class="w-4 h-4"
-                                              onError$={(ev) => {
-                                                (
-                                                  ev.target as HTMLImageElement
-                                                ).src =
-                                                  'https://huggingface.co/front/assets/huggingface_logo-noborder.svg';
-                                              }}
-                                            />
+                                            <ModelImage model={model} />
                                             <Select.ItemLabel>
                                               {model.id}
                                             </Select.ItemLabel>
@@ -691,3 +680,11 @@ export const ModelFlag = component$(
     );
   },
 );
+
+const ModelImage = component$(({ model }: { model: Model }) => {
+  if (!model?.picture) {
+    return <HuggingFace />;
+  }
+
+  return <img src={model.picture} alt={model.id} class="w-4 h-4" />;
+});

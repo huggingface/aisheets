@@ -13,10 +13,7 @@ interface ListDuckDBType {
   valueType: InnerDuckDBType;
 }
 
-const duckDB2DBColumn = (col: {
-  columnName: string;
-  columnType: any;
-}) => {
+const duckDB2DBColumn = (col: { columnName: string; columnType: any }) => {
   const dbCol: DBColumn = {
     name: col.columnName,
     type: DuckDBTypeId[col.columnType.typeId],

@@ -213,7 +213,16 @@ const isImageFeature = async (
     properties?: Array<{ name: string; type: string }>;
   },
 ) => {
-  let blobProp = undefined;
+  let blobProp:
+    | {
+        name: string;
+        type: string;
+        properties?: Array<{
+          name: string;
+          type: string;
+        }>;
+      }
+    | undefined;
   if (dbCol.type.toLowerCase() === 'blob') {
     blobProp = dbCol;
   } else if (dbCol.properties) {

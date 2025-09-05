@@ -55,6 +55,8 @@ export interface Model {
   picture?: string;
 }
 
+const cachedOrgAvatars: Record<string, string> = {};
+
 const listAllModels = server$(async function (
   this: RequestEventBase<QwikCityPlatform>,
 ): Promise<Model[]> {
@@ -87,13 +89,38 @@ const listAllModels = server$(async function (
     ),
   ]);
 
-  return models
+  const fetchAvatar = async (modelId: string): Promise<string | undefined> => {
+    const org = modelId.split('/')[0];
+    if (cachedOrgAvatars[org]) {
+      console.log('Using cached avatar for org:', org);
+      return cachedOrgAvatars[org];
+    }
+
+    try {
+      const response = await fetch(
+        `https://huggingface.co/api/organizations/${org}/avatar`,
+      );
+      const data = await response.json();
+
+      if (response.ok && data?.avatarUrl) {
+        cachedOrgAvatars[org] = data.avatarUrl;
+        return data.avatarUrl;
+      }
+    } catch {}
+
+    return undefined;
+  };
+
+  const allModels = models
     .flat()
-    .sort((a, b) => (b.trendingScore || 0) - (a.trendingScore || 0))
-    .map((m) => ({
+    .sort((a, b) => (b.trendingScore || 0) - (a.trendingScore || 0));
+
+  return await Promise.all(
+    allModels.map(async (m) => ({
       ...m,
-      picture: `https://huggingface.co/api/organizations/${m.id.split('/')[0]}/avatar`,
-    }));
+      picture: await fetchAvatar(m.id),
+    })),
+  );
 });
 
 const fetchModelsForPipeline = async (

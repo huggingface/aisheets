@@ -634,7 +634,7 @@ const Replicate = component$(() => {
   );
 });
 
-const HuggingFace = component$(() => {
+export const HuggingFace = component$(() => {
   return (
     <svg
       class="w-4 h-4"

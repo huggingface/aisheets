@@ -1,8 +1,8 @@
 import {
   $,
-  type QRL,
   component$,
   noSerialize,
+  type QRL,
   useComputed$,
   useContext,
   useSignal,
@@ -101,6 +101,10 @@ class GroupedModels {
       label: 'experimentation',
       class: 'bg-[#F5F5DC]',
     },
+    TRANSLATION: {
+      label: 'translation',
+      class: 'bg-[#E8F5E8]',
+    },
   };
 
   constructor(models: Model[]) {
@@ -122,6 +126,10 @@ class GroupedModels {
       {
         id: 'meta-llama/Llama-3.1-70B-Instruct',
         tags: [this.tags.NLP, this.tags.LIGHT],
+      },
+      {
+        id: 'CohereLabs/command-a-translate-08-2025',
+        tags: [this.tags.TRANSLATION],
       },
       {
         id: 'openai/gpt-oss-120b',
@@ -151,14 +159,17 @@ class GroupedModels {
     class: string;
     models: ModelWithExtraTags[];
   }[] {
-    const recommended: ModelWithExtraTags[] = this.models
-      .filter((model) =>
-        this.recommendedModelIds.map((r) => r.id).includes(model.id),
-      )
-      .map((m) => ({
-        ...m,
-        extraTags: this.recommendedModelIds.find((r) => r.id === m.id)?.tags,
-      }));
+    const recommended: ModelWithExtraTags[] = this.recommendedModelIds
+      .map((recommendedModel) => {
+        const model = this.models.find((m) => m.id === recommendedModel.id);
+        return model
+          ? {
+              ...model,
+              extraTags: recommendedModel.tags,
+            }
+          : null;
+      })
+      .filter((model): model is NonNullable<typeof model> => model !== null);
 
     return [
       {

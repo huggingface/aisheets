@@ -5,7 +5,6 @@ import {
   component$,
   noSerialize,
   useComputed$,
-  useContext,
   useSignal,
   useStore,
   useTask$,
@@ -22,8 +21,8 @@ import { VirtualScrollContainer } from '~/components/ui/virtual-scroll/virtual-s
 import { useExecution } from '~/features/add-column';
 import { useGenerateColumn } from '~/features/execution';
 import { isOverlayOpen } from '~/features/table/components/body/renderer/components/utils';
+import { useColumnsSizeContext } from '~/features/table/components/context/colunm-preferences.context';
 import { TableCell } from '~/features/table/table-cell';
-import { configContext } from '~/routes/home/layout';
 import { deleteRowsCells } from '~/services';
 import {
   type Cell,
@@ -36,7 +35,7 @@ import {
 export const TableBody = component$(() => {
   const rowSize = 108; // px
 
-  const { modelEndpointEnabled } = useContext(configContext);
+  const { columnSize } = useColumnsSizeContext();
   const { activeDataset } = useDatasetsStore();
 
   const { columns, firstColumn, updateColumn, deleteCellByIdx } =
@@ -361,9 +360,12 @@ export const TableBody = component$(() => {
                   <td
                     data-column-id={cell.column?.id}
                     class={cn(
-                      'relative transition-colors box-border w-[326px] h-[108px] break-words align-top border border-neutral-300 hover:bg-gray-50/50',
+                      'relative transition-colors box-border min-w-[142px] w-[326px] h-[108px] break-words align-top border border-neutral-300 hover:bg-gray-50/50',
                       getBoundary(cell),
                     )}
+                    style={{
+                      width: `${columnSize.value[cell.column!.id] || 326}px`,
+                    }}
                   >
                     <div
                       onMouseUp$={handleMouseUp$}

@@ -5,12 +5,12 @@ import {
   useSignal,
   useStore,
   useTask$,
-  useVisibleTask$,
 } from '@builder.io/qwik';
 import { cn } from '@qwik-ui/utils';
 import { nextTick } from '~/components/hooks/tick';
 import { ExecutionForm, useExecution } from '~/features/add-column';
 import { useGenerateColumn } from '~/features/execution';
+import { useColumnsSizeContext } from '~/features/table/components/context/colunm-preferences.context';
 import {
   TableAddCellHeaderPlaceHolder,
   TableCellHeader,
@@ -26,12 +26,9 @@ export const TableHeader = component$(() => {
     startX: number;
     startWidth: number;
   } | null>(null);
-  const columnsWidths = useStore<{
-    [key: string]: number;
-  }>({});
-  const observers = useSignal(new Map());
+  const { columnSize, update } = useColumnsSizeContext();
 
-  const handleResizeStart = $((event: MouseEvent, columnId: string) => {
+  const handleResizeStart = $(async (event: MouseEvent, columnId: string) => {
     const handleResize = (event: MouseEvent) => {
       if (resizingColumn.value) {
         const deltaX = event.clientX - resizingColumn.value.startX;
@@ -39,7 +36,7 @@ export const TableHeader = component$(() => {
           MAX_WIDTH,
           resizingColumn.value.startWidth + deltaX,
         );
-        columnsWidths[resizingColumn.value.columnId] = newWidth;
+        update(resizingColumn.value.columnId, newWidth);
       }
     };
 
@@ -52,7 +49,7 @@ export const TableHeader = component$(() => {
     resizingColumn.value = {
       columnId,
       startX: event.clientX,
-      startWidth: columnsWidths[columnId] || 326,
+      startWidth: columnSize.value[columnId] || 326,
     };
 
     document.addEventListener('mousemove', handleResize);
@@ -92,76 +89,7 @@ export const TableHeader = component$(() => {
     maxContentWidth = Math.max(maxContentWidth, headerContentWidth);
 
     const finalWidth = Math.min(maxContentWidth, MAX_WIDTH);
-    headerElement.style.width = `${finalWidth}px`;
-
-    for (const cell of bodyCells) {
-      const cellElement = cell as HTMLElement;
-      cellElement.style.width = `${finalWidth}px`;
-    }
-  });
-
-  const setupMutationObserver = $(() => {
-    for (const column of columns.value.filter((c) => c.visible)) {
-      const headerElement = document.getElementById(`index-${column.id}`);
-      if (headerElement && !observers.value.has(column.id)) {
-        const observer = new MutationObserver(() => {
-          const bodyCells = document.querySelectorAll(
-            `td[data-column-id="${column.id}"]`,
-          );
-
-          const newWidth = headerElement.getBoundingClientRect().width;
-
-          for (const cell of bodyCells) {
-            const cellElement = cell as HTMLElement;
-
-            cellElement.style.width = `${newWidth}px`;
-            cellElement.style.minWidth = headerElement.style.minWidth;
-          }
-        });
-
-        observer.observe(headerElement, {
-          attributes: true,
-          attributeFilter: ['style'],
-        });
-
-        observers.value.set(column.id, observer);
-      }
-    }
-  });
-
-  useVisibleTask$(({ track }) => {
-    track(() => columns.value);
-    setupMutationObserver();
-  });
-
-  useVisibleTask$(({ cleanup }) => {
-    const handleResize = () => {
-      for (const column of columns.value.filter((c) => c.visible)) {
-        const headerElement = document.getElementById(`index-${column.id}`);
-        if (!headerElement) continue;
-
-        const bodyCells = document.querySelectorAll(
-          `td[data-column-id="${column.id}"]`,
-        );
-
-        const newWidth = headerElement.getBoundingClientRect().width;
-        columnsWidths[column.id] = newWidth;
-
-        for (const cell of bodyCells) {
-          const cellElement = cell as HTMLElement;
-
-          cellElement.style.width = `${newWidth}px`;
-          cellElement.style.minWidth = headerElement.style.minWidth;
-        }
-      }
-    };
-
-    handleResize();
-    window.addEventListener('resize', handleResize);
-
-    cleanup(() => {
-      window.removeEventListener('resize', handleResize);
-    });
+    update(column.id, finalWidth);
   });
 
   const indexToAlphanumeric = $((index: number): string => {
@@ -196,7 +124,7 @@ export const TableHeader = component$(() => {
                     },
                   )}
                   style={{
-                    width: `${columnsWidths[column.id] || 326}px`,
+                    width: `${columnSize.value[column.id] || 326}px`,
                   }}
                 >
                   {indexToAlphanumeric(i + 1)}

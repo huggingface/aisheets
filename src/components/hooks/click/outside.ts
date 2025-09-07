@@ -1,26 +1,60 @@
-import { type QRL, useSignal, useVisibleTask$ } from '@builder.io/qwik';
+import { $, type QRL, useOnDocument, useSignal } from '@builder.io/qwik';
 
 export function useClickOutside<T extends HTMLElement>(
-  callback: QRL<() => void>,
+  onClickOut: QRL<() => void>,
 ) {
   const ref = useSignal<T>();
 
-  useVisibleTask$(({ track }) => {
-    track(() => ref.value);
-
-    const handleClickOutside = (event: MouseEvent) => {
-      if (document.getSelection()?.toString()) return;
-      if (ref.value && !ref.value.contains(event.target as Node)) {
-        callback();
+  useOnDocument(
+    'click',
+    $((event) => {
+      if (!ref.value) {
+        return;
       }
-    };
-
-    document.addEventListener('click', handleClickOutside);
-
-    return () => {
-      document.removeEventListener('click', handleClickOutside);
-    };
-  });
+      if (document.getSelection()?.toString()) return;
+      const target = event.target as HTMLElement;
+      if (!ref.value.contains(target)) {
+        onClickOut();
+      }
+    }),
+  );
 
   return ref;
+}
+
+export function useClickOutsideConditionally<T extends HTMLElement>(
+  onClickOut: QRL<() => void>,
+) {
+  const ref = useSignal<T>();
+
+  const listen = useSignal(false);
+
+  const startListening = $(() => {
+    listen.value = true;
+  });
+
+  const stopListening = $(() => {
+    listen.value = false;
+  });
+
+  useOnDocument(
+    'click',
+    $((event) => {
+      if (document.getSelection()?.toString()) return;
+      if (!ref.value || !listen.value) {
+        return;
+      }
+      const target = event.target as HTMLElement;
+      if (!ref.value.contains(target)) {
+        onClickOut();
+        stopListening();
+      }
+    }),
+  );
+
+  return {
+    ref,
+    startListening,
+    stopListening,
+  };
 }

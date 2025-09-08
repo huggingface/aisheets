@@ -35,9 +35,10 @@ export const useImportFromHub = () =>
 
     return await importDatasetFromFile(
       {
-        name: `${repoId} [${filePath}]`,
+        name: `${repoId} - ${filePath}`,
         createdBy: session.user.username,
         file: downloadedFilePath,
+        fromRepoId: repoId,
       },
       {
         limit: 1000,

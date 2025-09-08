@@ -19,6 +19,7 @@ export class DatasetModel extends Model<
   declare id: CreationOptional<string>;
   declare name: string;
   declare createdBy: string;
+  declare fromRepoId: string | null;
 
   declare columns: NonAttribute<ColumnModel[]>;
 
@@ -44,6 +45,10 @@ DatasetModel.init(
     createdBy: {
       type: DataTypes.STRING,
       allowNull: false,
+    },
+    fromRepoId: {
+      type: DataTypes.STRING,
+      allowNull: true,
     },
   },
   {

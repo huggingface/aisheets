@@ -15,21 +15,6 @@ interface CreateDatasetParams {
   createdBy: string;
 }
 
-export const createDatasetIdByUser = async ({
-  createdBy,
-}: {
-  createdBy: string;
-}): Promise<string> => {
-  const model = await DatasetModel.create({
-    name: 'New dataset',
-    createdBy,
-  });
-
-  await createDatasetTable({ dataset: model });
-
-  return model.id;
-};
-
 export const getUserDatasets = async (user: {
   username: string;
 }): Promise<Dataset[]> => {
@@ -49,6 +34,7 @@ export const getUserDatasets = async (user: {
         columns: [],
         createdAt: dataset.createdAt,
         updatedAt: dataset.updatedAt,
+        fromRepoId: dataset.fromRepoId || undefined,
         size: datasetSize,
       };
     }),
@@ -62,10 +48,12 @@ export const importDatasetFromFile = async (
     name,
     createdBy,
     file,
+    fromRepoId,
   }: {
     name: string;
     createdBy: string;
     file: string;
+    fromRepoId?: string;
   },
   options?: {
     limit?: number;
@@ -77,6 +65,7 @@ export const importDatasetFromFile = async (
   const model = await DatasetModel.create({
     name,
     createdBy,
+    fromRepoId: fromRepoId || null,
   });
 
   try {
@@ -105,6 +94,7 @@ export const importDatasetFromFile = async (
       columns,
       createdAt: model.createdAt,
       updatedAt: model.updatedAt,
+      fromRepoId: model.fromRepoId || undefined,
       size: datasetSize,
     };
   } catch (error) {
@@ -161,6 +151,7 @@ export const getDatasetById = async (id: string): Promise<Dataset | null> => {
     columns,
     createdAt: model.createdAt,
     updatedAt: model.updatedAt,
+    fromRepoId: model.fromRepoId || undefined,
     size: datasetSize,
   };
 
@@ -196,8 +187,11 @@ export const updateDataset = async ({
   return {
     id: model.id,
     name: model.name,
-    createdBy: model.createdBy,
     columns: [],
+    createdBy: model.createdBy,
+    createdAt: model.createdAt,
+    updatedAt: model.updatedAt,
+    fromRepoId: model.fromRepoId || undefined,
     size: datasetSize,
   };
 };

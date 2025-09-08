@@ -72,6 +72,11 @@ class Pipeline:
             if config_json:
                 self.config = json.loads(config_json)
             else:
+
+                if not config:
+                    self.console.print("[bold red]Warning: No config file provided. Using config default './config.yml'.")
+                    config = './config.yml'
+
                 self.config = self._load_config(config)
 
             # Handle source dataset if specified
@@ -454,7 +459,7 @@ def main(
     *,
     repo_id: str,
     split: str = "train",
-    config: str = './config.yml',
+    config: str = None,
     config_json: str | None = None,
     destination: str,
     destination_split: str = "train",

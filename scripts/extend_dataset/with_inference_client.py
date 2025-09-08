@@ -7,8 +7,8 @@
 #     "typer",
 # ]
 # ///
-
 import multiprocessing
+import os
 import random
 import time
 import traceback
@@ -18,6 +18,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import requests
 import typer
 import yaml
+import json
 from datasets import Dataset, load_dataset
 from huggingface_hub import InferenceClient
 from rich import print as rprint
@@ -36,6 +37,7 @@ class Pipeline:
         subset: str | None = None,
         split: str = "train",
         config: str | None = None,
+        config_json: str | None = None,
         num_rows: int | None = None,
         bill_to: str | None = None,
         max_workers: int | None = None,
@@ -61,7 +63,16 @@ class Pipeline:
         self.bill_to = bill_to
 
         with self.console.status("[bold green]Loading configuration..."):
-            self.config = self._load_config(config)
+            if config is None and config_json is None:
+                raise ValueError("Either config file path or config JSON string must be provided.")
+
+            if config and config_json:
+                self.console.print("[yellow]Warning: Both config file and config JSON provided. Using config JSON.")
+
+            if config_json:
+                self.config = json.loads(config_json)
+            else:
+                self.config = self._load_config(config)
 
             # Handle source dataset if specified
             self.source_dataset = self._load_source_dataset(repo_id=repo_id, subset=subset, split=split)
@@ -444,6 +455,7 @@ def main(
     repo_id: str,
     split: str = "train",
     config: str = './config.yml',
+    config_json: str | None = None,
     destination: str,
     destination_split: str = "train",
     create_pr: bool = False,
@@ -459,6 +471,7 @@ def main(
         repo_id: The dataset repository ID to augment (e.g., "fka/awesome-chatgpt-prompts").
         split: Dataset split to use (default: "train").
         config: Path to the YAML configuration file for the pipeline.
+        config_json: JSON string of the configuration (alternative to config file).
         destination: Destination repository ID for the augmented dataset.
         destination_split: Split name for the destination dataset (default: "train").
         create_pr: Whether to create a pull request for the destination dataset (default: False).
@@ -473,8 +486,9 @@ def main(
         subset=None,
         split=split,
         config=config,
+        config_json=config_json,
         num_rows=num_rows,
-        bill_to=bill_to,
+        bill_to=bill_to or os.environ.get("ORG_BILLING"),
         request_delay=0.5,
         max_workers=max_workers,
         debug=debug,

@@ -1,4 +1,4 @@
-import { type PropsOf, component$ } from '@builder.io/qwik';
+import { component$, type PropsOf } from '@builder.io/qwik';
 import { cn } from '@qwik-ui/utils';
 
 interface LogoProps extends PropsOf<'svg'> {
@@ -634,7 +634,7 @@ const Replicate = component$(() => {
   );
 });
 
-export const HuggingFace = component$(() => {
+const HuggingFace = component$(() => {
   return (
     <svg
       class="w-4 h-4"
@@ -733,5 +733,15 @@ export const ExtraProviders = component$(
         </div>
       </div>
     );
+  },
+);
+
+export const ModelImage = component$(
+  ({ model }: { model: { picture?: string; id: string } }) => {
+    if (!model?.picture) {
+      return <HuggingFace />;
+    }
+
+    return <img src={model.picture} alt={model.id} class="w-4 h-4" />;
   },
 );

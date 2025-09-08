@@ -320,17 +320,24 @@ class Pipeline:
 
     def run(self):
         start_time = time.time()
+        progress_columns = [
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            BarColumn(complete_style="green", finished_style="green"),
+            TaskProgressColumn(),
+        ]
+
+        rprint(Panel("[bold green]🚀 Starting dataset augmentation pipeline..."))
+
         with Progress(
-                SpinnerColumn(),
-                TextColumn("[progress.description]{task.description}"),
-                BarColumn(complete_style="green", finished_style="green"),
-                TaskProgressColumn(),
-                console=self.console,
-                expand=True
+                *progress_columns,
+                expand=True,
+                # console=self.console,
         ) as progress:
             task_rows = progress.add_task("[bold cyan]Generating dataset rows", total=self.num_rows)
             task_nodes = progress.add_task("[cyan]Processing nodes (per row)", total=len(self.config['columns']))
 
+            rprint(Panel("[bold cyan]Generating dataset rows..."))
             with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
 
                 # If num_rows is None, use the entire dataset
@@ -352,6 +359,7 @@ class Pipeline:
                     for i, source_row in dataset_iter
                 }
 
+                processed_rows = 0
                 for future in as_completed(futures):
                     i = futures[future]
                     row_num = i + 1
@@ -366,6 +374,11 @@ class Pipeline:
                         progress.update(task_rows, description=f"[bold red]✗ Row {row_num} failed")
                         rprint(f"\n[red]Error in row {row_num}: {str(e)}")
                         continue
+                    finally:
+                        processed_rows += 1
+                        rprint(f"[green]Processed {processed_rows} of {self.num_rows} rows.")
+
+
 
         total_time = time.time() - start_time
         minutes = int(total_time // 60)

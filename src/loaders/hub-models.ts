@@ -1,10 +1,9 @@
+import type { RequestEventBase } from '@builder.io/qwik-city';
 import {
   type RequestEventLoader,
   routeLoader$,
   server$,
 } from '@builder.io/qwik-city';
-
-import type { RequestEventBase } from '@builder.io/qwik-city';
 
 import { INFERENCE_PROVIDERS } from '@huggingface/inference';
 import { appConfig } from '~/config';
@@ -52,7 +51,33 @@ export interface Model {
   size?: string;
   pipeline_tag?: string;
   trendingScore?: number;
+  picture?: string;
 }
+
+const cachedOrgAvatars: Record<string, string> = {};
+
+const fetchAvatar = async (modelId: string): Promise<string | undefined> => {
+  const org = modelId.split('/')[0];
+  if (cachedOrgAvatars[org] !== undefined) {
+    return cachedOrgAvatars[org];
+  }
+
+  try {
+    const response = await fetch(
+      `https://huggingface.co/api/organizations/${org}/avatar`,
+    );
+    const data = await response.json();
+
+    if (response.ok && data?.avatarUrl) {
+      cachedOrgAvatars[org] = data.avatarUrl;
+      return data.avatarUrl;
+    }
+  } catch {
+    cachedOrgAvatars[org] = '';
+  }
+
+  return undefined;
+};
 
 const listAllModels = server$(async function (
   this: RequestEventBase<QwikCityPlatform>,
@@ -86,9 +111,16 @@ const listAllModels = server$(async function (
     ),
   ]);
 
-  return models
+  const allModels = models
     .flat()
     .sort((a, b) => (b.trendingScore || 0) - (a.trendingScore || 0));
+
+  return await Promise.all(
+    allModels.map(async (m) => ({
+      ...m,
+      picture: await fetchAvatar(m.id),
+    })),
+  );
 });
 
 const fetchModelsForPipeline = async (
@@ -120,11 +152,14 @@ const fetchModelsForPipeline = async (
   } = appConfig;
 
   const token = session.anonymous ? hfToken : session.token;
+  const headers: HeadersInit = {};
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
   const response = await fetch(`${url}?${params.toString()}`, {
     method: 'GET',
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
+    headers,
   });
 
   if (!response.ok) {
@@ -206,7 +241,7 @@ export const useHubModels = routeLoader$(async function (
 
 interface TrendingModel {
   id: string;
-  picture: string;
+  picture?: string;
 }
 
 export const useTrendingHubModels = routeLoader$(async function (
@@ -215,34 +250,18 @@ export const useTrendingHubModels = routeLoader$(async function (
   const session = useServerSession(this);
   if (!session) return [];
 
-  const fetchTrending = async (
-    kind: 'text-generation' | 'image-text-to-text' | 'text-to-image',
-  ) => {
-    let limit = 1;
-
-    let trendingModel = null;
-
-    while (!trendingModel) {
-      const models = await fetchModelsForPipeline(session, kind, limit);
-
-      if (models.length > 0) {
-        trendingModel = models[0];
-      } else {
-        limit++;
-      }
-    }
-
-    return trendingModel;
-  };
-
   const models = await Promise.all([
-    fetchTrending('text-generation'),
-    fetchTrending('image-text-to-text'),
-    fetchTrending('text-to-image'),
+    fetchModelsForPipeline(session, 'text-generation', 2),
+    fetchModelsForPipeline(session, 'text-to-image', 1),
   ]);
 
-  return models.map((m: any) => ({
-    id: m.id,
-    picture: `https://huggingface.co/api/organizations/${m.id.split('/')[0]}/avatar`,
-  }));
+  return await Promise.all(
+    models
+      .flat()
+      .filter((m) => !!m)
+      .map(async (m) => ({
+        id: m.id,
+        picture: await fetchAvatar(m.id),
+      })),
+  );
 });

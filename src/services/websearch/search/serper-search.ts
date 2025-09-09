@@ -28,7 +28,10 @@ export class SerperSearch {
   async search({
     q,
     num,
-  }: { q: string; num: number }): Promise<SearchResult[]> {
+  }: {
+    q: string;
+    num: number;
+  }): Promise<SearchResult[]> {
     if (!q) {
       throw new Error('Query is required');
     }

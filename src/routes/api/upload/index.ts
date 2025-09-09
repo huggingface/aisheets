@@ -11,7 +11,7 @@ import fs from 'node:fs/promises';
 export const onPost: RequestHandler = async (event) => {
   const { request, json } = event;
 
-  let filePath: string | undefined = undefined;
+  let filePath: string | undefined;
 
   try {
     const session = useServerSession(event);

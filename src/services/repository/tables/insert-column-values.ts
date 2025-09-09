@@ -25,28 +25,24 @@ export const upsertColumnValuesFromGenerator = async ({
 
     for await (const [idx, value] of generator) {
       const result = await db.run(
-        `
-        SELECT * FROM ${tableName} WHERE rowIdx = $1 LIMIT 1;
-      `,
-        { 1: idx },
+        `SELECT * FROM ${tableName} WHERE rowIdx = ${idx} LIMIT 1;`,
       );
-
       if (result.rowCount > 0) {
         // Update existing row
         await db.run(
           `
-          UPDATE ${tableName} SET ${columnName} = $1 WHERE rowIdx = $2;
+          UPDATE ${tableName} SET ${columnName} = ? WHERE rowIdx = ${idx};
         `,
-          { 1: sanitizeValue(value), 2: idx },
+          [sanitizeValue(value)],
         );
       } else {
         // Insert new row
         await db.run(
           `
         INSERT INTO ${tableName} (rowIdx, ${columnName})
-        VALUES ($1, $2);
+        VALUES (${idx}, ?);
       `,
-          { 1: idx, 2: sanitizeValue(value) },
+          [sanitizeValue(value)],
         );
       }
     }

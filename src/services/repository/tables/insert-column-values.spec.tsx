@@ -4,6 +4,7 @@ import { randomUUID } from 'node:crypto';
 import { connectAndClose } from '~/services/db/duckdb';
 import { createDatasetTable } from './create-table';
 import { deleteDatasetTable } from './delete-table';
+import { deleteDatasetTableRows } from './delete-table-rows';
 import { upsertColumnValues } from './insert-column-values';
 import { getColumnName, getDatasetTableName } from './utils';
 
@@ -17,6 +18,21 @@ afterEach(async () => {
   await deleteDatasetTable(dataset);
 });
 
+const clearDatasetTable = async ({
+  dataset,
+}: {
+  dataset: {
+    id: string;
+    name: string;
+    createdBy: string;
+  };
+}): Promise<void> => {
+  await deleteDatasetTableRows({
+    dataset,
+    rowIdxs: Array.from({ length: 1000 }, (_, i) => i),
+  });
+};
+
 describe('insert-column-values', () => {
   it('should insert values from a generator function', async () => {
     const column = {
@@ -28,6 +44,10 @@ describe('insert-column-values', () => {
     await createDatasetTable({
       dataset,
       columns: [column],
+    });
+
+    await clearDatasetTable({
+      dataset,
     });
 
     await upsertColumnValues({
@@ -76,6 +96,10 @@ describe('insert-column-values', () => {
     await createDatasetTable({
       dataset,
       columns: [column],
+    });
+
+    await clearDatasetTable({
+      dataset,
     });
 
     await upsertColumnValues({
@@ -136,6 +160,10 @@ describe('insert-column-values', () => {
       columns: [column],
     });
 
+    await clearDatasetTable({
+      dataset,
+    });
+
     await upsertColumnValues({
       dataset,
       column,
@@ -184,6 +212,10 @@ describe('insert-column-values', () => {
       columns: [column],
     });
 
+    await clearDatasetTable({
+      dataset,
+    });
+
     await upsertColumnValues({
       dataset,
       column,
@@ -218,6 +250,10 @@ describe('insert-column-values', () => {
     await createDatasetTable({
       dataset,
       columns: [column],
+    });
+
+    await clearDatasetTable({
+      dataset,
     });
 
     await upsertColumnValues({
@@ -266,6 +302,10 @@ describe('insert-column-values', () => {
     await createDatasetTable({
       dataset,
       columns: [column],
+    });
+
+    await clearDatasetTable({
+      dataset,
     });
 
     await upsertColumnValues({

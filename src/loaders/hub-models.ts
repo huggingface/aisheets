@@ -250,43 +250,14 @@ export const useTrendingHubModels = routeLoader$(async function (
   const session = useServerSession(this);
   if (!session) return [];
 
-  const fetchTrending = async (
-    kind: 'text-generation' | 'image-text-to-text' | 'text-to-image',
-  ) => {
-    let retries = 3;
-    let limit = 1;
-    let trendingModel = null;
-
-    for (; retries > 0; retries--) {
-      try {
-        const models = await fetchModelsForPipeline(session, kind, limit);
-
-        if (models?.length > 0 && models[0]) {
-          trendingModel = models[0];
-          break;
-        }
-
-        limit++;
-      } catch (error) {
-        console.warn(`Error fetching trending model for ${kind}`, error);
-      }
-    }
-
-    if (!trendingModel) {
-      console.warn(`Failed to fetch trending model for ${kind}`);
-    }
-
-    return trendingModel;
-  };
-
   const models = await Promise.all([
-    fetchTrending('text-generation'),
-    fetchTrending('image-text-to-text'),
-    fetchTrending('text-to-image'),
+    fetchModelsForPipeline(session, 'text-generation', 2),
+    fetchModelsForPipeline(session, 'text-to-image', 1),
   ]);
 
   return await Promise.all(
     models
+      .flat()
       .filter((m) => !!m)
       .map(async (m) => ({
         id: m.id,

@@ -10,7 +10,7 @@ import { cn } from '@qwik-ui/utils';
 import { LuArrowUp, LuEgg, LuGlobe } from '@qwikest/icons/lucide';
 import { Button, Textarea } from '~/components';
 import { Login } from '~/components/ui/login/Login';
-import { MainLogo } from '~/components/ui/logo/logo';
+import { MainLogo, ModelImage } from '~/components/ui/logo/logo';
 import { BigTips } from '~/components/ui/tips/big-tips';
 import { Tips } from '~/components/ui/tips/tips';
 import { StepsStatus } from '~/features/autodataset/steps-status';
@@ -353,7 +353,7 @@ export default component$(() => {
                     key={model.id}
                     class="flex items-center p-1 gap-1 font-mono"
                   >
-                    <img src={model.picture} alt={model.id} class="w-4 h-4" />
+                    <ModelImage model={model} />
                     <span class="text-sm text-neutral-700">{model.id}</span>
                   </div>
                 ))}

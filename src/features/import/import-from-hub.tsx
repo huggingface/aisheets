@@ -29,6 +29,8 @@ export const ImportFromHub = component$(() => {
   const repoId = useSignal<string | undefined>(undefined);
   const filePath = useSignal<string | undefined>(undefined);
 
+  const importError = useSignal<string | null>(null);
+
   useVisibleTask$(({ track }) => {
     track(repoId);
 
@@ -38,14 +40,20 @@ export const ImportFromHub = component$(() => {
   const handleOnClickImportFromHub = $(async () => {
     try {
       isImportingData.value = true;
+      importError.value = null;
 
-      const { id } = await importFromHub({
+      const { dataset, error } = await importFromHub({
         repoId: repoId.value!,
         filePath: filePath.value!,
       });
-      await nav('/home/dataset/' + id);
-    } catch (error) {
-      console.error(error);
+
+      if (error) {
+        importError.value = error;
+        isImportingData.value = false;
+        return;
+      }
+
+      await nav('/home/dataset/' + dataset!.id);
     } finally {
       isImportingData.value = false;
     }
@@ -126,6 +134,9 @@ export const ImportFromHub = component$(() => {
               </div>
             )}
           </Button>
+          {importError.value && (
+            <div class="text-sm text-red-500">{importError.value}</div>
+          )}
         </div>
       </div>
     </div>

@@ -24,7 +24,7 @@ import { useClickOutside } from '~/components/hooks/click/outside';
 import { nextTick } from '~/components/hooks/tick';
 import {
   ExtraProviders,
-  HuggingFace,
+  ModelImage,
   Provider,
 } from '~/components/ui/logo/logo';
 
@@ -680,11 +680,3 @@ export const ModelFlag = component$(
     );
   },
 );
-
-const ModelImage = component$(({ model }: { model: Model }) => {
-  if (!model?.picture) {
-    return <HuggingFace />;
-  }
-
-  return <img src={model.picture} alt={model.id} class="w-4 h-4" />;
-});

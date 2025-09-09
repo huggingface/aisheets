@@ -48,9 +48,11 @@ export const augmentDatasetJob = async ({
   } = appConfig;
 
   try {
-    const secrets: any = {
-      HF_TOKEN: hfToken ?? accessToken,
+    const secrets: Record<string, string> = {
+      HF_TOKEN: accessToken,
     };
+
+    if (hfToken) secrets['HF_INFERENCE_TOKEN'] = hfToken;
     if (billTo) secrets['ORG_BILLING'] = billTo;
 
     return runHfJobCommand(jobCommand, {

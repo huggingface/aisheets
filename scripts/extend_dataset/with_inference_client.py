@@ -229,22 +229,20 @@ class Pipeline:
         """Generate completion using the specified model."""
         messages = [{"role": "user", "content": prompt}]
 
-        # Implement retry with exponential backoff for rate limiting
-        max_retries = 5
         retry_count = 0
-        base_delay = self.request_delay or 1.0  # Use request_delay if set, otherwise default to 1 second
+        # Implement retry with exponential backoff for rate limiting
+        max_retries = 10
+        base_delay = self.request_delay
 
         while retry_count < max_retries:
             try:
-                # Add delay if specified to avoid rate limiting
-                if retry_count > 0 or self.request_delay > 0:
-                    # Calculate exponential backoff with jitter
-                    if retry_count > 0:
-                        delay = base_delay * (2 ** retry_count) + random.uniform(0, 1)
-                        self._debug_log(
-                            f"[yellow]Rate limit hit. Retrying in {delay:.2f} seconds (attempt {retry_count + 1}/{max_retries})")
-                    else:
-                        delay = base_delay
+                delay = base_delay * (2 ** retry_count) + random.uniform(0, 1)
+
+                if delay > 0:
+                    self._debug_log(
+                        f"[yellow]Rate limit hit. Retrying in {delay:.2f} seconds "
+                        f"(attempt {retry_count + 1}/{max_retries})"
+                    )
                     time.sleep(delay)
 
                 completion = client.chat.completions.create(
@@ -254,15 +252,13 @@ class Pipeline:
                 return completion.choices[0].message.content
 
             except Exception as e:
-                # Check if it's a rate limit error
-                if "429" in str(e) or "rate_limit" in str(e).lower():
-                    retry_count += 1
-                    if retry_count >= max_retries:
-                        self._debug_log(f"[red]Max retries reached for rate limit. Giving up.")
-                        raise
-                else:
-                    # Not a rate limit error, re-raise
+                if retry_count >= max_retries:
+                    self._debug_log(f"[red]Max retries reached. Giving up...")
                     raise
+
+                retry_count += 1
+                self._debug_log(f"[red]Error generating completion: {str(e)}")
+                self._debug_log(f"[yellow]Retrying... (attempt {retry_count}/{max_retries})")
 
         # Should not reach here, but just in case
         raise Exception("Failed to generate completion after maximum retries")

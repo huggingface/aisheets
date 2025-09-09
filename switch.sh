@@ -35,7 +35,7 @@ fi
 
 # Install dependencies with pnpm
 echo "Installing dependencies with pnpm..."
-pnpm install
+pnpm install --frozen-lockfile
 if [ $? -ne 0 ]; then
   echo "Error: pnpm install failed."
   exit 1

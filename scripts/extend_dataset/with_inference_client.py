@@ -26,6 +26,9 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TaskProgressColumn
 
+hf_token = os.environ["HF_TOKEN"]
+inference_token = os.environ.get("HF_INFERENCE_TOKEN") or hf_token
+
 
 class Pipeline:
     """A parallel pipeline for generating dataset rows using language models."""
@@ -74,7 +77,8 @@ class Pipeline:
             else:
 
                 if not config:
-                    self.console.print("[bold red]Warning: No config file provided. Using config default './config.yml'.")
+                    self.console.print(
+                        "[bold red]Warning: No config file provided. Using config default './config.yml'.")
                     config = './config.yml'
 
                 self.config = self._load_config(config)
@@ -175,6 +179,7 @@ class Pipeline:
         return InferenceClient(
             provider=config['modelProvider'],
             bill_to=bill_to,
+            token=inference_token,
         )
 
     def _debug_log(self, message: str) -> None:
@@ -378,8 +383,6 @@ class Pipeline:
                         processed_rows += 1
                         rprint(f"[green]Processed {processed_rows} of {self.num_rows} rows.")
 
-
-
         total_time = time.time() - start_time
         minutes = int(total_time // 60)
         seconds = int(total_time % 60)
@@ -426,7 +429,8 @@ class Pipeline:
             repo_id,
             subset,
             split=split,
-            streaming=True
+            streaming=True,
+            token=hf_token,
         )
 
     def _display_configuration_summary(self) -> None:
@@ -513,7 +517,12 @@ def main(
     )
 
     augmented_dataset = pipeline.run()
-    augmented_dataset.push_to_hub(destination, split=destination_split, create_pr=create_pr)
+    augmented_dataset.push_to_hub(
+        destination,
+        split=destination_split,
+        create_pr=create_pr,
+        token=hf_token
+    )
 
     rprint(
         f"\n[bold green]✓[/] Successfully pushed augmented dataset to [cyan] https://huggingface.co/datasets/{destination}[/].")

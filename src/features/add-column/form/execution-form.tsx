@@ -4,7 +4,6 @@ import {
   noSerialize,
   type QRL,
   useComputed$,
-  useContext,
   useSignal,
   useTask$,
   useVisibleTask$,
@@ -35,7 +34,7 @@ import {
 import { useExecution } from '~/features/add-column/form/execution';
 import { hasBlobContent } from '~/features/utils/columns';
 import type { Model } from '~/loaders/hub-models';
-import { configContext, modelsContext } from '~/routes/home/layout';
+import { useConfigContext, useModelsContext } from '~/routes/home/layout';
 import {
   type Column,
   type CreateColumn,
@@ -59,6 +58,7 @@ class Models {
 
   getModelsByType(type: SupportedType): Model[] {
     if (type === 'image') return this.getImageModels();
+
     return this.getTextModels();
   }
 
@@ -158,7 +158,7 @@ class GroupedModels {
     ];
   }
 
-  groupsByCategory(): {
+  byCategory(): {
     label: string;
     class: string;
     models: ModelWithExtraTags[];
@@ -177,6 +177,11 @@ class GroupedModels {
 
     return [
       {
+        label: 'Custom Models',
+        class: 'h-10 p-2 bg-primary-50 text-primary-400',
+        models: this.models.filter((c) => c.custom),
+      },
+      {
         label: 'Recommended Models',
         class: 'h-10 p-2 bg-primary-50 text-primary-400',
         models: recommended,
@@ -184,10 +189,12 @@ class GroupedModels {
       {
         label: 'All models available on Hugging Face',
         class: 'h-10 p-2 bg-[#FFF0D9] text-[#FF9D00]',
-        models: this.models.filter(
-          (model) =>
-            !this.recommendedModelIds.map((r) => r.id).includes(model.id),
-        ),
+        models: this.models
+          .filter((c) => !c.custom)
+          .filter(
+            (model) =>
+              !this.recommendedModelIds.map((r) => r.id).includes(model.id),
+          ),
       },
     ];
   }
@@ -200,17 +207,15 @@ export const ExecutionForm = component$<SidebarProps>(
     const { firstColumn, columns, removeTemporalColumn, updateColumn } =
       useColumnsStore();
 
-    const allModels = useContext<Model[]>(modelsContext);
-
-    const { DEFAULT_MODEL, DEFAULT_MODEL_PROVIDER, modelEndpointEnabled } =
-      useContext(configContext);
+    const allModels = useModelsContext();
+    const { DEFAULT_MODEL, DEFAULT_MODEL_PROVIDER } = useConfigContext();
 
     const models = useComputed$(() => {
-      console.log(allModels.filter((p) => !!p.picture));
       return new Models(allModels).getModelsByType(
         column.type as SupportedType,
       );
     });
+
     const filteredModels = useSignal<Model[]>(models.value);
 
     const prompt = useSignal<string>('');
@@ -224,15 +229,12 @@ export const ExecutionForm = component$<SidebarProps>(
     const selectedProvider = useSignal<string>('');
     const modelProviders = useSignal<string[]>([]);
 
-    const enableCustomEndpoint = useSignal(modelEndpointEnabled);
-    const endpointURLSelected = useSignal(false);
-
     const onSelectedVariables = $((variables: { id: string }[]) => {
       columnsReferences.value = variables.map((v) => v.id);
     });
 
     const groupedModels = useComputed$(() => {
-      return new GroupedModels(filteredModels.value).groupsByCategory();
+      return new GroupedModels(filteredModels.value).byCategory();
     });
 
     const isImageColumn = useComputed$(() => {
@@ -275,18 +277,11 @@ export const ExecutionForm = component$<SidebarProps>(
     useTask$(({ track }) => {
       track(() => column);
 
-      if (isImageColumn.value) {
-        // Currently, we custom endpoint only for text models
-        enableCustomEndpoint.value = false;
-      }
-
       const { process } = column;
       if (!process) return;
 
       prompt.value = process.prompt;
       searchOnWeb.value = process.searchEnabled || false;
-      endpointURLSelected.value =
-        (enableCustomEndpoint.value && process.useEndpointURL) || false;
 
       if (process.modelName) {
         // If there's a previously selected model, use that
@@ -386,7 +381,6 @@ export const ExecutionForm = component$<SidebarProps>(
             ...column.process,
             modelName,
             modelProvider,
-            useEndpointURL: endpointURLSelected.value,
             prompt: prompt.value,
             columnsReferences: columnsReferences.value,
             searchEnabled: searchOnWeb.value,
@@ -574,7 +568,6 @@ export const ExecutionForm = component$<SidebarProps>(
                                         class="text-foreground hover:bg-accent"
                                         onClick$={() => {
                                           isModelDropdownOpen.value = false;
-                                          endpointURLSelected.value = false;
 
                                           selectedModelId.value = model.id;
                                           modelSearchQuery.value = model.id;
@@ -631,7 +624,6 @@ export const ExecutionForm = component$<SidebarProps>(
                               class="text-foreground hover:bg-accent"
                               onClick$={() => {
                                 selectedProvider.value = provider; // Redundant but ensures the value is set sometimes does not work...
-                                endpointURLSelected.value = false;
                               }}
                             >
                               <div class="flex text-xs items-center p-1 gap-2 font-mono">

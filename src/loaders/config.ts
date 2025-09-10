@@ -1,8 +1,8 @@
 import { type RequestEventLoader, routeLoader$ } from '@builder.io/qwik-city';
 import {
+  appConfig,
   GOOGLE_OAUTH_CLIENT_ID,
   GOOGLE_OAUTH_REDIRECT_URI,
-  appConfig,
 } from '~/config';
 import { useServerSession } from '~/state';
 
@@ -10,17 +10,20 @@ import { useServerSession } from '~/state';
  * All config variables that are needed on the client side.
  * This is used to pass the config variables to the client.
  */
-export const useClientConfig = routeLoader$(async function (
-  this: RequestEventLoader,
-): Promise<{
+
+export interface ClientConfig {
   DEFAULT_MODEL: string;
   DEFAULT_MODEL_PROVIDER: string;
-  modelEndpointEnabled: boolean;
-  MODEL_ENDPOINT_NAME: string;
+  CUSTOM_MODELS?: string[];
+  CUSTOM_MODEL_ENDPOINT_URL?: string;
   isGoogleAuthEnabled: boolean;
   GOOGLE_CLIENT_ID?: string;
   GOOGLE_REDIRECT_URI?: string;
-}> {
+}
+
+export const useClientConfig = routeLoader$(async function (
+  this: RequestEventLoader,
+): Promise<ClientConfig> {
   useServerSession(this);
 
   const { textGeneration } = appConfig.inference.tasks;
@@ -28,8 +31,8 @@ export const useClientConfig = routeLoader$(async function (
   return {
     DEFAULT_MODEL: textGeneration.defaultModel,
     DEFAULT_MODEL_PROVIDER: textGeneration.defaultProvider,
-    modelEndpointEnabled: textGeneration.endpointUrl !== undefined,
-    MODEL_ENDPOINT_NAME: textGeneration.endpointName,
+    CUSTOM_MODELS: textGeneration.customModels,
+    CUSTOM_MODEL_ENDPOINT_URL: textGeneration.endpointUrl,
     isGoogleAuthEnabled: Boolean(
       GOOGLE_OAUTH_CLIENT_ID && GOOGLE_OAUTH_REDIRECT_URI,
     ),

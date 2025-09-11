@@ -673,6 +673,7 @@ export const runAutoDataset = async function* (
       data: { dataset },
     };
   } catch (error) {
+    console.log('❌ [RunAutoDataset] Error:', error);
     const message = error instanceof Error ? error.message : String(error);
 
     yield {

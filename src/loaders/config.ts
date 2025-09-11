@@ -15,8 +15,10 @@ export const useClientConfig = routeLoader$(async function (
 ): Promise<{
   DEFAULT_MODEL: string;
   DEFAULT_MODEL_PROVIDER: string;
-  modelEndpointEnabled: boolean;
-  MODEL_ENDPOINT_NAME: string;
+
+  MODEL_ENDPOINT_NAME: string | undefined;
+  MODEL_ENDPOINT_URL: string | undefined;
+
   isGoogleAuthEnabled: boolean;
   GOOGLE_CLIENT_ID?: string;
   GOOGLE_REDIRECT_URI?: string;
@@ -28,8 +30,9 @@ export const useClientConfig = routeLoader$(async function (
   return {
     DEFAULT_MODEL: textGeneration.defaultModel,
     DEFAULT_MODEL_PROVIDER: textGeneration.defaultProvider,
-    modelEndpointEnabled: textGeneration.endpointUrl !== undefined,
     MODEL_ENDPOINT_NAME: textGeneration.endpointName,
+    MODEL_ENDPOINT_URL: textGeneration.endpointUrl,
+
     isGoogleAuthEnabled: Boolean(
       GOOGLE_OAUTH_CLIENT_ID && GOOGLE_OAUTH_REDIRECT_URI,
     ),

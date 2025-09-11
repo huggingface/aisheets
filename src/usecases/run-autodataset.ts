@@ -388,7 +388,7 @@ async function createDatasetWithColumns(
         prompt: column.prompt,
         modelName: processModelName,
         modelProvider: processModelProvider,
-        useEndpointURL: textGeneration.endpointUrl !== undefined && !isImage,
+        endpointUrl: textGeneration.endpointUrl,
         searchEnabled,
         columnsReferences: columnReferences.map((ref) => {
           const refIndex = columnNames.indexOf(ref);
@@ -453,8 +453,8 @@ async function populateDataset(
         process: {
           ...column.process,
           // Custom endpoint URL is only available for text columns
-          useEndpointURL:
-            textGeneration.endpointUrl !== undefined && column.type !== 'image',
+          endpointUrl:
+            column.type !== 'image' ? textGeneration.endpointUrl : undefined,
         },
         stream: false,
         session,

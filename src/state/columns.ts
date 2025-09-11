@@ -10,7 +10,7 @@ export interface Process {
   prompt: string;
   modelName: string;
   modelProvider: string;
-  useEndpointURL?: boolean;
+  endpointUrl?: string;
   columnsReferences: string[];
   updatedAt: Date;
   searchEnabled: boolean;
@@ -33,7 +33,7 @@ export interface CreateColumn {
   process?: {
     modelName: string;
     modelProvider: string;
-    useEndpointURL?: boolean;
+    endpointUrl?: string;
     prompt: string;
     searchEnabled: boolean;
     columnsReferences: string[];

@@ -453,8 +453,8 @@ async function populateDataset(
         process: {
           ...column.process,
           // Custom endpoint URL is only available for text columns
-          useEndpointURL:
-            textGeneration.endpointUrl !== undefined && column.type !== 'image',
+          endpointUrl:
+            column.type !== 'image' ? textGeneration.endpointUrl : undefined,
         },
         stream: false,
         session,

@@ -87,17 +87,9 @@ const ORG_BILLING = process.env.ORG_BILLING ?? undefined;
  * Otherwise, the default model and provider will be used.
  * Default value: undefined
  */
-const MODEL_ENDPOINT_URL: string | undefined = process.env.MODEL_ENDPOINT_URL;
-
-/**
- * The name of the model endpoint for inference operations.
- *
- * This value is retrieved from the environment variable `MODEL_ENDPOINT_NAME`.
- *
- * Default value: 'unknown'
- */
-const MODEL_ENDPOINT_NAME: string =
-  process.env.MODEL_ENDPOINT_NAME ?? 'unknown';
+const CUSTOM_MODELS_ENDPOINT_URL: string | undefined =
+  process.env.CUSTOM_MODELS_ENDPOINT_URL;
+const CUSTOM_MODELS: string | undefined = process.env.CUSTOM_MODELS;
 
 /**
  * List of model IDs that should be excluded from the model list.
@@ -263,8 +255,8 @@ export const appConfig = {
         defaultModel: DEFAULT_MODEL,
         defaultProvider: DEFAULT_MODEL_PROVIDER,
 
-        endpointUrl: MODEL_ENDPOINT_URL,
-        endpointName: MODEL_ENDPOINT_NAME,
+        customModels: CUSTOM_MODELS?.trim().split(',') || undefined,
+        endpointUrl: CUSTOM_MODELS_ENDPOINT_URL,
       },
 
       featureExtraction: {

@@ -52,6 +52,7 @@ export interface Model {
   pipeline_tag?: string;
   trendingScore?: number;
   picture?: string;
+  custom?: boolean;
 }
 
 const cachedOrgAvatars: Record<string, string> = {};
@@ -214,6 +215,22 @@ const fetchModelsForPipeline = async (
 export const useHubModels = routeLoader$(async function (
   this: RequestEventLoader,
 ): Promise<Model[]> {
+  const { customModels = [] } = appConfig.inference.tasks.textGeneration;
+
+  // Remove this constant when we want tu support custom models and HF models at the same time
+  const hideHFModels = customModels.length > 0;
+
+  if (hideHFModels) {
+    return customModels.map((c) => ({
+      id: c,
+      supportedType: 'text',
+      tags: [],
+      pipeline_tag: 'text-generation',
+      providers: ['provider1', 'provider2'],
+      custom: true,
+    }));
+  }
+
   const models = await listAllModels();
 
   const {
@@ -244,7 +261,7 @@ interface TrendingModel {
   picture?: string;
 }
 
-export const useTrendingHubModels = routeLoader$(async function (
+export const _useTrendingHubModels = routeLoader$(async function (
   this: RequestEventLoader,
 ): Promise<TrendingModel[]> {
   const session = useServerSession(this);

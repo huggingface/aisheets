@@ -1,22 +1,34 @@
 import {
-  Slot,
   component$,
   createContextId,
+  Slot,
+  useContext,
   useContextProvider,
 } from '@builder.io/qwik';
 
 import { ModalsProvider } from '~/components';
 import { MainSidebar } from '~/features/main-sidebar';
-import { type Model, useClientConfig } from '~/loaders';
-import { useHubModels } from '~/loaders';
+import {
+  type ClientConfig,
+  type Model,
+  useClientConfig,
+  useHubModels,
+} from '~/loaders';
 import { ActiveDatasetProvider } from '~/state';
 
 export * from '~/loaders';
 
-export const configContext =
-  createContextId<Record<string, any>>('config.context');
+export const configContext = createContextId<ClientConfig>('config.context');
+
+export const useConfigContext = () => {
+  return useContext(configContext);
+};
 
 export const modelsContext = createContextId<Model[]>('models.context');
+
+export const useModelsContext = () => {
+  return useContext(modelsContext);
+};
 
 export default component$(() => {
   const config = useClientConfig();

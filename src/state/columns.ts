@@ -10,7 +10,6 @@ export interface Process {
   prompt: string;
   modelName: string;
   modelProvider: string;
-  useEndpointURL?: boolean;
   columnsReferences: string[];
   updatedAt: Date;
   searchEnabled: boolean;

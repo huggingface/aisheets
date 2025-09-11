@@ -15,6 +15,7 @@ import {
   LuCheck,
   LuEgg,
   LuGlobe,
+  LuLink2,
   LuStopCircle,
   LuX,
 } from '@qwikest/icons/lucide';
@@ -512,7 +513,7 @@ export const ExecutionForm = component$<SidebarProps>(
                             'flex text-xs items-center px-2 gap-2 font-mono',
                           )}
                         >
-                          <LuGlobe class="text-lg" />
+                          <ModelImage model={{ id: MODEL_ENDPOINT_NAME! }} />
                           <input
                             bind:value={MODEL_ENDPOINT_NAME}
                             class="h-8 w-full outline-none font-mono text-xs"
@@ -529,7 +530,7 @@ export const ExecutionForm = component$<SidebarProps>(
                             'flex text-xs items-center px-2 gap-2 font-mono',
                           )}
                         >
-                          <LuGlobe class="text-lg" />
+                          <LuLink2 class="text-lg" />
                           <input
                             value={MODEL_ENDPOINT_URL}
                             class="h-8 w-full outline-none font-mono text-xs"

@@ -388,7 +388,7 @@ async function createDatasetWithColumns(
         prompt: column.prompt,
         modelName: processModelName,
         modelProvider: processModelProvider,
-        useEndpointURL: textGeneration.endpointUrl !== undefined && !isImage,
+        endpointUrl: textGeneration.endpointUrl,
         searchEnabled,
         columnsReferences: columnReferences.map((ref) => {
           const refIndex = columnNames.indexOf(ref);

@@ -5,7 +5,7 @@ export interface CreateProcess {
   prompt: string;
   modelName: string;
   modelProvider: string;
-  useEndpointURL?: boolean;
+  endpointUrl?: string;
   searchEnabled: boolean;
   columnsReferences?: string[];
 }
@@ -23,7 +23,7 @@ export const createProcess = async ({
     prompt: process.prompt,
     modelName: process.modelName,
     modelProvider: process.modelProvider,
-    useCustomEndpoint: process.useEndpointURL ?? false,
+    endpointUrl: process.endpointUrl ?? null,
     searchEnabled: process.searchEnabled,
     columnId: column.id,
   });
@@ -42,7 +42,7 @@ export const createProcess = async ({
     prompt: model.prompt,
     modelName: model.modelName,
     modelProvider: model.modelProvider,
-    useEndpointURL: model.useCustomEndpoint,
+    endpointUrl: model.endpointUrl ?? undefined,
     searchEnabled: model.searchEnabled,
     columnsReferences: process?.columnsReferences || [],
     updatedAt: model.updatedAt,
@@ -61,7 +61,7 @@ export const updateProcess = async (process: Process): Promise<Process> => {
     prompt: process.prompt,
     modelName: process.modelName,
     modelProvider: process.modelProvider,
-    useCustomEndpoint: process.useEndpointURL ?? false,
+    endpointUrl: process.endpointUrl ?? null,
     searchEnabled: process.searchEnabled,
   });
 
@@ -81,7 +81,7 @@ export const updateProcess = async (process: Process): Promise<Process> => {
     prompt: model.prompt,
     modelName: model.modelName,
     modelProvider: model.modelProvider,
-    useEndpointURL: model.useCustomEndpoint,
+    endpointUrl: model.endpointUrl ?? undefined,
     searchEnabled: model.searchEnabled,
     columnsReferences: process.columnsReferences,
     updatedAt: model.updatedAt,

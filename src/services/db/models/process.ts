@@ -21,7 +21,7 @@ export class ProcessModel extends Model<
   declare modelName: string;
 
   declare modelProvider: string;
-  declare useCustomEndpoint: boolean;
+  declare endpointUrl: CreationOptional<string | null>;
 
   declare searchEnabled: boolean;
   declare columnId: ForeignKey<ColumnModel['id']>;
@@ -55,9 +55,10 @@ ProcessModel.init(
       type: DataTypes.STRING,
       allowNull: false,
     },
-    useCustomEndpoint: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: false,
+    endpointUrl: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      defaultValue: null,
     },
     searchEnabled: {
       type: DataTypes.BOOLEAN,

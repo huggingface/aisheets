@@ -26,7 +26,7 @@ export const augmentDatasetJob = async ({
 }): Promise<string> => {
   const jobScriptURL =
     //  'https://github.com/huggingface/aisheets/raw/refs/heads/main/scripts/extend_dataset/with_inference_client.py';
-    'https://raw.githubusercontent.com/huggingface/aisheets/refs/heads/feat/running-generation-as-jobs/scripts/extend_dataset/with_inference_client.py';
+    'https://raw.githubusercontent.com/huggingface/aisheets/refs/heads/feat/running-generation-as-jobs/scripts/extend_dataset/with_inference_client_v2.py';
 
   if (!source.repoId) {
     throw new Error('Source repoId is required to run the job');

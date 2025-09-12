@@ -1,8 +1,8 @@
 import { type RequestEventLoader, routeLoader$ } from '@builder.io/qwik-city';
 import {
+  appConfig,
   GOOGLE_OAUTH_CLIENT_ID,
   GOOGLE_OAUTH_REDIRECT_URI,
-  appConfig,
 } from '~/config';
 import { useServerSession } from '~/state';
 
@@ -22,6 +22,8 @@ export const useClientConfig = routeLoader$(async function (
   isGoogleAuthEnabled: boolean;
   GOOGLE_CLIENT_ID?: string;
   GOOGLE_REDIRECT_URI?: string;
+
+  MAX_ROWS_IMPORT: number;
 }> {
   useServerSession(this);
 
@@ -38,5 +40,7 @@ export const useClientConfig = routeLoader$(async function (
     ),
     GOOGLE_CLIENT_ID: GOOGLE_OAUTH_CLIENT_ID,
     GOOGLE_REDIRECT_URI: GOOGLE_OAUTH_REDIRECT_URI,
+
+    MAX_ROWS_IMPORT: appConfig.data.maxRowsImport,
   };
 });

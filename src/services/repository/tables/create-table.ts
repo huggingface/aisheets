@@ -1,3 +1,4 @@
+import { appConfig } from '~/config';
 import { connectAndClose } from '~/services/db/duckdb';
 import { getColumnName, getDatasetTableName } from './utils';
 
@@ -27,7 +28,7 @@ export const createDatasetTable = async ({
 
   const tableName = getDatasetTableName(dataset);
 
-  const numberOfRows = 1000;
+  const numberOfRows = appConfig.data.maxRowsImport;
 
   const insertValues = Array.from({ length: numberOfRows }, (_, i) => {
     return `(${i})`;

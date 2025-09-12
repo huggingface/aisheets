@@ -1,21 +1,20 @@
 import {
   $,
+  component$,
   Fragment,
   type HTMLAttributes,
   type QRL,
   type Signal,
-  component$,
   useSignal,
   useTask$,
-  useVisibleTask$,
 } from '@builder.io/qwik';
 import { isBrowser } from '@builder.io/qwik/build';
 import {
-  type VirtualItem,
-  Virtualizer,
   elementScroll,
   observeElementOffset,
   observeElementRect,
+  type VirtualItem,
+  Virtualizer,
 } from '@tanstack/virtual-core';
 import { nextTick } from '~/components/hooks/tick';
 import { makeSerializable } from './make-serializable';
@@ -73,9 +72,9 @@ export const VirtualScrollContainer = component$(
     itemRenderer,
     scrollElement,
     estimateSize,
-    overscan,
-    pageSize = 10,
-    buffer = 3,
+    overscan = 1,
+    pageSize = 1,
+    buffer = 1,
     debug = false,
   }: {
     totalCount: number;
@@ -133,7 +132,7 @@ export const VirtualScrollContainer = component$(
       }
     });
 
-    useVisibleTask$(({ track }) => {
+    useTask$(({ track }) => {
       track(scrollElement);
 
       if (!virtualState.value) {
@@ -142,7 +141,7 @@ export const VirtualScrollContainer = component$(
     });
 
     const visibleRows = useSignal<VirtualItem[]>([]);
-    useVisibleTask$(({ track }) => {
+    useTask$(({ track }) => {
       track(() => virtualState.state.range);
       if (!virtualState.value) return;
 

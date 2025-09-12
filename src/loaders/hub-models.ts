@@ -261,7 +261,7 @@ interface TrendingModel {
   picture?: string;
 }
 
-export const _useTrendingHubModels = routeLoader$(async function (
+export const useTrendingHubModels = routeLoader$(async function (
   this: RequestEventLoader,
 ): Promise<TrendingModel[]> {
   const session = useServerSession(this);

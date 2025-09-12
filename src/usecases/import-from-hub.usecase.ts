@@ -28,6 +28,7 @@ export const useImportFromHub = () =>
     const session = useServerSession(this);
 
     consola.info('Downloading file', repoId, filePath);
+
     try {
       const downloadedFilePath = await downloadDatasetFile({
         repoId,
@@ -47,6 +48,7 @@ export const useImportFromHub = () =>
           name: `${repoId} [${filePath}]`,
           createdBy: session.user.username,
           file: downloadedFilePath,
+          fromRepoId: repoId,
         },
         {
           limit: 1000,

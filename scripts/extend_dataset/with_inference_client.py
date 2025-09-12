@@ -512,6 +512,8 @@ def main(
         debug=debug,
     )
 
+    start_time = time.time()
+
     augmented_dataset = pipeline.run()
     augmented_dataset.push_to_hub(
         destination,
@@ -520,8 +522,13 @@ def main(
         token=hf_token
     )
 
-    rprint(
-        f"\n[bold green]✓[/] Successfully pushed augmented dataset to [cyan] https://huggingface.co/datasets/{destination}[/].")
+    total_time = time.time() - start_time
+    minutes = int(total_time // 60)
+    seconds = int(total_time % 60)
+
+    rprint(Panel(
+        f"[bold green]Dataset successfully extended and pushed to https://huggingface.co/datasets/{destination}[/]\nTotal time: {minutes}m {seconds}s"
+    ))
 
 
 if __name__ == "__main__":

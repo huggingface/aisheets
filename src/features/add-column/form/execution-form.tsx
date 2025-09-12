@@ -287,7 +287,7 @@ export const ExecutionForm = component$<SidebarProps>(
       }
 
       const { process } = column;
-      if (!process) return;
+      if (!process || process.isExecuting) return;
 
       prompt.value = process.prompt;
       searchOnWeb.value = process.searchEnabled || false;

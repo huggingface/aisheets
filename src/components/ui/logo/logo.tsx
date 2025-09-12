@@ -720,7 +720,7 @@ export const ExtraProviders = component$(
         SUPPORT_PROVIDERS[provider as keyof typeof SUPPORT_PROVIDERS],
     );
 
-    const VISIBLE_PROVIDERS = 2;
+    const VISIBLE_PROVIDERS = 1;
 
     let visibleProviders = providers
       .filter((provider) => provider !== selected)

@@ -44,15 +44,15 @@ const MODEL_EXPANDABLE_KEYS = [
 
 export interface Model {
   id: string;
-  providers: string[];
   supportedType: string;
+  providers?: string[];
+  endpointUrl?: string;
   tags?: string[];
   safetensors?: unknown;
   size?: string;
   pipeline_tag?: string;
   trendingScore?: number;
   picture?: string;
-  custom?: boolean;
 }
 
 const cachedOrgAvatars: Record<string, string> = {};
@@ -216,19 +216,18 @@ export const useHubModels = routeLoader$(async function (
   this: RequestEventLoader,
 ): Promise<Model[]> {
   const { customModels = [] } = appConfig.inference.tasks.textGeneration;
-
   // Remove this constant when we want tu support custom models and HF models at the same time
   const hideHFModels = customModels.length > 0;
 
   if (hideHFModels) {
-    return customModels.map((c) => ({
-      id: c,
-      supportedType: 'text',
-      tags: [],
-      pipeline_tag: 'text-generation',
-      providers: ['provider1', 'provider2'],
-      custom: true,
-    }));
+    return customModels.map((c) => {
+      const [id, endpointUrl] = c.split('|');
+      return {
+        id,
+        endpointUrl,
+        supportedType: 'text',
+      };
+    });
   }
 
   const models = await listAllModels();

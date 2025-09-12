@@ -179,7 +179,7 @@ class GroupedModels {
       {
         label: 'Custom Models',
         class: 'h-10 p-2 bg-primary-50 text-primary-400',
-        models: this.models.filter((c) => c.custom),
+        models: this.models.filter((c) => !!c.endpointUrl),
       },
       {
         label: 'Recommended Models',
@@ -190,7 +190,7 @@ class GroupedModels {
         label: 'All models available on Hugging Face',
         class: 'h-10 p-2 bg-[#FFF0D9] text-[#FF9D00]',
         models: this.models
-          .filter((c) => !c.custom)
+          .filter((c) => !c.endpointUrl)
           .filter(
             (model) =>
               !this.recommendedModelIds.map((r) => r.id).includes(model.id),
@@ -208,7 +208,8 @@ export const ExecutionForm = component$<SidebarProps>(
       useColumnsStore();
 
     const allModels = useModelsContext();
-    const { DEFAULT_MODEL, DEFAULT_MODEL_PROVIDER } = useConfigContext();
+    const { DEFAULT_MODEL, DEFAULT_MODEL_PROVIDER, CUSTOM_MODELS } =
+      useConfigContext();
 
     const models = useComputed$(() => {
       return new Models(allModels).getModelsByType(
@@ -333,7 +334,9 @@ export const ExecutionForm = component$<SidebarProps>(
 
       if (!model) return;
 
-      modelProviders.value = model.providers ?? [];
+      modelProviders.value = model.endpointUrl
+        ? [model.endpointUrl]
+        : (model.providers ?? []);
 
       nextTick(() => {
         if (
@@ -602,20 +605,32 @@ export const ExecutionForm = component$<SidebarProps>(
 
                     <div class="flex-1 w-1/4">
                       <Select.Root bind:value={selectedProvider}>
-                        <Select.Label>Inference Providers</Select.Label>
+                        <Select.Label>
+                          {CUSTOM_MODELS?.length
+                            ? 'Endpoint url'
+                            : 'Inference Providers'}
+                        </Select.Label>
                         <Select.Trigger class="bg-white rounded-base border-neutral-300-foreground">
-                          <div class="flex text-xs items-center justify-between gap-2 font-mono w-full">
+                          <div class="flex text-xs items-center justify-between gap-2 font-mono w-40">
                             <div class="flex items-center gap-2">
                               <Provider name={selectedProvider.value} />
-                              <Select.DisplayValue />
+                              <Select.DisplayValue
+                                class={cn('truncate w-fit', {
+                                  'max-w-16': modelProviders.value.length > 1,
+                                  'max-w-28': modelProviders.value.length === 1,
+                                })}
+                              />
                             </div>
 
-                            <ExtraProviders
-                              selected={selectedProvider.value}
-                              providers={modelProviders.value}
-                            />
+                            {modelProviders.value.length > 1 && (
+                              <ExtraProviders
+                                selected={selectedProvider.value}
+                                providers={modelProviders.value}
+                              />
+                            )}
                           </div>
                         </Select.Trigger>
+
                         <Select.Popover class="border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto mt-1 min-w-[200px]">
                           {modelProviders.value.map((provider) => (
                             <Select.Item

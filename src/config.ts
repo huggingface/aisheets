@@ -80,15 +80,7 @@ const DEFAULT_MODEL_PROVIDER: string =
  */
 const ORG_BILLING = process.env.ORG_BILLING ?? undefined;
 
-/**
- * The URL of the model endpoint for inference operations.
- * This value is retrieved from the environment variable `MODEL_ENDPOINT_URL`.
- * If this value is defined, it will be used to send requests and the default model and provider will be ignored.
- * Otherwise, the default model and provider will be used.
- * Default value: undefined
- */
-const CUSTOM_MODELS_ENDPOINT_URL: string | undefined =
-  process.env.CUSTOM_MODELS_ENDPOINT_URL;
+//FORMAT --> CUSTOM_MODELS=<MODEL_ID>:<ENDPOINT_URL>,<MODEL_ID>:<ENDPOINT_URL>
 const CUSTOM_MODELS: string | undefined = process.env.CUSTOM_MODELS;
 
 /**
@@ -256,7 +248,6 @@ export const appConfig = {
         defaultProvider: DEFAULT_MODEL_PROVIDER,
 
         customModels: CUSTOM_MODELS?.trim().split(',') || undefined,
-        endpointUrl: CUSTOM_MODELS_ENDPOINT_URL,
       },
 
       featureExtraction: {

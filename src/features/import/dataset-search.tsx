@@ -1,12 +1,12 @@
-import { $, type QRL, component$, useSignal, useTask$ } from '@builder.io/qwik';
+import { $, component$, type QRL, useSignal, useTask$ } from '@builder.io/qwik';
 import { cn } from '@qwik-ui/utils';
 import { LuCheck } from '@qwikest/icons/lucide';
 import { Select, triggerLooks } from '~/components';
 import { useClickOutside } from '~/components/hooks/click/outside';
 import { useDebounce } from '~/components/hooks/debounce/debounce';
 import { nextTick } from '~/components/hooks/tick';
-import { useSession } from '~/loaders';
-import { listDatasets } from '~/services/repository/hub/list-datasets';
+
+import { useListHubDatasets } from '~/usecases/list-hub-datasets.usecase';
 
 export const DatasetSearch = component$(
   ({
@@ -22,11 +22,13 @@ export const DatasetSearch = component$(
         isOpen.value = false;
       }),
     );
-    const session = useSession();
+
     const searchQuery = useSignal('');
     const searchQueryDebounced = useSignal('');
     const selectedDataset = useSignal('');
     const datasets = useSignal<string[]>([]);
+
+    const listHubDatasets = useListHubDatasets();
 
     useDebounce(
       searchQuery,
@@ -39,13 +41,7 @@ export const DatasetSearch = component$(
     const onSearch = $(async (searchQuery: string) => {
       const query = searchQuery.trim();
 
-      const datasets = await listDatasets({
-        query,
-        accessToken: session.value.token,
-        limit: 10,
-      });
-
-      return datasets.map((dataset) => dataset.name);
+      return await listHubDatasets(query);
     });
 
     const handleChangeDataset$ = $((value: string | string[]) => {

@@ -1,8 +1,8 @@
 import {
   $,
+  component$,
   type QRL,
   Resource,
-  component$,
   useComputed$,
   useResource$,
   useSignal,
@@ -22,6 +22,7 @@ import { DatasetSearch } from './dataset-search';
 export const ImportFromHub = component$(() => {
   const session = useSession();
   const importFromHub = useImportFromHub();
+
   const nav = useNavigate();
 
   const isImportingData = useSignal(false);

@@ -157,58 +157,63 @@ const fetchModelsForPipeline = async (
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const response = await fetch(`${url}?${params.toString()}`, {
-    method: 'GET',
-    headers,
-  });
+  try {
+    const response = await fetch(`${url}?${params.toString()}`, {
+      method: 'GET',
+      headers,
+    });
 
-  if (!response.ok) {
-    const message = await response.text();
-    console.warn(`Failed to fetch ${kind} models`, response.status, message);
-    return [];
-  }
-
-  const data: any[] = await response.json();
-
-  const models = data.reduce((acc: Model[], model) => {
-    const providers = model.inferenceProviderMapping;
-
-    if (!providers?.length) return acc;
-
-    const availableProviders = providers
-      .filter((provider: any) => provider.status === 'live')
-      .map((provider: any) => provider.provider);
-
-    if (
-      availableProviders.length > 0 &&
-      !excludedHubModels.includes(model.id)
-    ) {
-      let sizeInB = 0;
-      if (model.safetensors) {
-        const paramCounts = Object.entries(
-          model.safetensors.parameters || {},
-        ).map(([_, value]) => Number(value));
-
-        sizeInB = Math.max(...paramCounts) / 1e9;
-      }
-
-      let size: string | undefined;
-      if (Number.isFinite(sizeInB) && sizeInB > 0) {
-        size = `${Math.floor(sizeInB)}B`;
-      }
-
-      acc.push({
-        ...model,
-        providers: availableProviders,
-        size,
-        pipeline_tag: kind,
-      });
+    if (!response.ok) {
+      const message = await response.text();
+      console.warn(`Failed to fetch ${kind} models`, response.status, message);
+      return [];
     }
 
-    return acc;
-  }, []) as Model[];
+    const data: any[] = await response.json();
 
-  return models;
+    const models = data.reduce((acc: Model[], model) => {
+      const providers = model.inferenceProviderMapping;
+
+      if (!providers?.length) return acc;
+
+      const availableProviders = providers
+        .filter((provider: any) => provider.status === 'live')
+        .map((provider: any) => provider.provider);
+
+      if (
+        availableProviders.length > 0 &&
+        !excludedHubModels.includes(model.id)
+      ) {
+        let sizeInB = 0;
+        if (model.safetensors) {
+          const paramCounts = Object.entries(
+            model.safetensors.parameters || {},
+          ).map(([_, value]) => Number(value));
+
+          sizeInB = Math.max(...paramCounts) / 1e9;
+        }
+
+        let size: string | undefined;
+        if (Number.isFinite(sizeInB) && sizeInB > 0) {
+          size = `${Math.floor(sizeInB)}B`;
+        }
+
+        acc.push({
+          ...model,
+          providers: availableProviders,
+          size,
+          pipeline_tag: kind,
+        });
+      }
+
+      return acc;
+    }, []) as Model[];
+
+    return models;
+  } catch (error) {
+    console.warn(`Unexpected error getting models`, String(error));
+    return [];
+  }
 };
 
 export const useHubModels = routeLoader$(async function (

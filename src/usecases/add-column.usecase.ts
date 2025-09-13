@@ -42,10 +42,7 @@ export const useAddColumnUseCase = () =>
 
     for await (const { cell } of generateCells({
       column,
-      process: {
-        ...column.process!,
-        useEndpointURL: newColum.process.useEndpointURL,
-      },
+      process: column.process!,
       session,
     })) {
       this.signal.onabort = () => {

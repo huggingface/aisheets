@@ -1,8 +1,8 @@
 import {
   $,
+  component$,
   type QRL,
   Resource,
-  component$,
   useComputed$,
   useResource$,
   useSignal,
@@ -18,13 +18,15 @@ import { useClickOutside } from '~/components/hooks/click/outside';
 import { useDebounce } from '~/components/hooks/debounce/debounce';
 import { nextTick } from '~/components/hooks/tick';
 import { useSession } from '~/loaders';
-import { listDatasets } from '~/services/repository/hub/list-datasets';
+
 import { listHubDatasetDataFiles } from '~/services/repository/hub/list-hub-dataset-files';
 import { useImportFromHub } from '~/usecases/import-from-hub.usecase';
+import { useListHubDatasets } from '~/usecases/list-hub-datasets.usecase';
 
 export const ImportFromHub = component$(() => {
   const session = useSession();
   const importFromHub = useImportFromHub();
+
   const nav = useNavigate();
 
   const isImportingData = useSignal(false);
@@ -152,6 +154,8 @@ const DatasetSearch = component$(
   }: {
     onSelectedDataset$: QRL<(dataset: string) => void>;
   }) => {
+    const listHubDatasets = useListHubDatasets();
+
     const isOpen = useSignal(false);
     const isFocusing = useSignal(false);
     const containerRef = useClickOutside(
@@ -160,7 +164,7 @@ const DatasetSearch = component$(
         isOpen.value = false;
       }),
     );
-    const session = useSession();
+
     const searchQuery = useSignal('');
     const searchQueryDebounced = useSignal('');
     const selectedDataset = useSignal('');
@@ -177,13 +181,7 @@ const DatasetSearch = component$(
     const onSearch = $(async (searchQuery: string) => {
       const query = searchQuery.trim();
 
-      const datasets = await listDatasets({
-        query,
-        accessToken: session.value.token,
-        limit: 10,
-      });
-
-      return datasets.map((dataset) => dataset.name);
+      return await listHubDatasets(query);
     });
 
     const handleChangeDataset$ = $((value: string | string[]) => {

@@ -15,6 +15,7 @@ import {
   LuCheck,
   LuEgg,
   LuGlobe,
+  LuLink2,
   LuStopCircle,
   LuX,
 } from '@qwikest/icons/lucide';
@@ -202,8 +203,13 @@ export const ExecutionForm = component$<SidebarProps>(
 
     const allModels = useContext<Model[]>(modelsContext);
 
-    const { DEFAULT_MODEL, DEFAULT_MODEL_PROVIDER, modelEndpointEnabled } =
-      useContext(configContext);
+    const {
+      DEFAULT_MODEL,
+      DEFAULT_MODEL_PROVIDER,
+
+      MODEL_ENDPOINT_NAME,
+      MODEL_ENDPOINT_URL,
+    } = useContext(configContext);
 
     const models = useComputed$(() => {
       console.log(allModels.filter((p) => !!p.picture));
@@ -224,7 +230,7 @@ export const ExecutionForm = component$<SidebarProps>(
     const selectedProvider = useSignal<string>('');
     const modelProviders = useSignal<string[]>([]);
 
-    const enableCustomEndpoint = useSignal(modelEndpointEnabled);
+    const enableCustomEndpoint = useSignal(MODEL_ENDPOINT_URL !== undefined);
     const endpointURLSelected = useSignal(false);
 
     const onSelectedVariables = $((variables: { id: string }[]) => {
@@ -286,7 +292,8 @@ export const ExecutionForm = component$<SidebarProps>(
       prompt.value = process.prompt;
       searchOnWeb.value = process.searchEnabled || false;
       endpointURLSelected.value =
-        (enableCustomEndpoint.value && process.useEndpointURL) || false;
+        (enableCustomEndpoint.value && process.endpointUrl !== undefined) ||
+        false;
 
       if (process.modelName) {
         // If there's a previously selected model, use that
@@ -386,7 +393,7 @@ export const ExecutionForm = component$<SidebarProps>(
             ...column.process,
             modelName,
             modelProvider,
-            useEndpointURL: endpointURLSelected.value,
+            endpointUrl: MODEL_ENDPOINT_URL,
             prompt: prompt.value,
             columnsReferences: columnsReferences.value,
             searchEnabled: searchOnWeb.value,
@@ -494,164 +501,217 @@ export const ExecutionForm = component$<SidebarProps>(
                 </div>
               </div>
 
-              <div class="px-3 pb-12 pt-2 bg-white border border-secondary-foreground rounded-sm">
-                <div class="flex flex-col gap-4">
-                  <div class="flex gap-4">
-                    <div class="flex-[2] w-3/4">
-                      <Select.Root
-                        ref={modelSearchContainerRef}
-                        key={modelSearchQuery.value}
-                        bind:open={isModelDropdownOpen}
-                        value={selectedModelId.value}
-                      >
-                        <Select.Label>Model</Select.Label>
+              {enableCustomEndpoint.value ? (
+                <div class="px-3 pb-12 pt-2 bg-white border border-secondary-foreground rounded-sm">
+                  <div class="flex flex-col gap-4">
+                    <div class="flex gap-4">
+                      <div class="flex-[2] w-3/4">
+                        <div class="text-xs font-medium mb-1">Model</div>
                         <div
                           class={cn(
                             triggerLooks('default'),
                             'flex text-xs items-center px-2 gap-2 font-mono',
                           )}
                         >
-                          {modelSearchQuery.value == selectedModelId.value && (
-                            <ModelImage
-                              model={
-                                models.value.find(
-                                  (m) => m.id === selectedModelId.value,
-                                )!
-                              }
-                            />
-                          )}
-
+                          <ModelImage model={{ id: MODEL_ENDPOINT_NAME! }} />
                           <input
-                            placeholder="Search models..."
-                            bind:value={modelSearchQuery}
+                            bind:value={MODEL_ENDPOINT_NAME}
                             class="h-8 w-full outline-none font-mono text-xs"
-                            onFocusIn$={() => {
-                              if (
-                                selectedModelId.value === modelSearchQuery.value
-                              ) {
-                                modelSearchQuery.value = '';
-                              }
-                            }}
-                            onKeyDown$={() => {
-                              nextTick(() => {
-                                isModelDropdownOpen.value = false;
-                              });
-                            }}
-                            onClick$={() => {
-                              isModelDropdownOpen.value = false;
-                              nextTick(() => {
-                                isModelDropdownOpen.value = true;
-                              }, 100);
-                            }}
+                            disabled
                           />
-
-                          <Select.Trigger look="headless" />
                         </div>
-                        <Select.Popover
-                          key={modelSearchQuery.value}
-                          floating="bottom-end"
-                          gutter={8}
-                          class="border border-border max-h-[300px] overflow-y-auto overflow-x-hidden top-[100%] bottom-auto p-0 mt-2 ml-24 min-w-[450px]"
+                      </div>
+
+                      <div class="flex-[2] w-3/4">
+                        <div class="text-xs font-medium mb-1">Endpoint Url</div>
+                        <div
+                          class={cn(
+                            triggerLooks('default'),
+                            'flex text-xs items-center px-2 gap-2 font-mono',
+                          )}
                         >
-                          <div class="flex flex-col">
-                            {Object.entries(groupedModels.value).map(
-                              ([category, models]) => {
-                                if (models.models.length === 0) return null;
-                                return (
-                                  <div key={category}>
-                                    <div
-                                      class={cn(
-                                        'text-[13px] font-semibold rounded-sm rounded-b-none',
-                                        models.class,
-                                      )}
-                                    >
-                                      {models.label}
-                                    </div>
-                                    {models.models.map((model) => (
-                                      <Select.Item
-                                        key={model.id}
-                                        value={model.id}
-                                        class="text-foreground hover:bg-accent"
-                                        onClick$={() => {
-                                          isModelDropdownOpen.value = false;
-                                          endpointURLSelected.value = false;
-
-                                          selectedModelId.value = model.id;
-                                          modelSearchQuery.value = model.id;
-                                        }}
-                                      >
-                                        <div class="flex text-xs items-center justify-between p-1 gap-2 font-mono w-full">
-                                          <div class="flex items-center gap-2">
-                                            <ModelImage model={model} />
-                                            <Select.ItemLabel>
-                                              {model.id}
-                                            </Select.ItemLabel>
-                                          </div>
-
-                                          <ModelFlag model={model} />
-                                        </div>
-
-                                        {model.id === selectedModelId.value && (
-                                          // We cannot use the Select.ItemIndicator here
-                                          // because it doesn't work when the model list changes
-                                          <LuCheck class="h-4 w4 text-primary-500 absolute right-2 top-1/2 -translate-y-1/2" />
-                                        )}
-                                      </Select.Item>
-                                    ))}
-                                  </div>
-                                );
-                              },
-                            )}
-                          </div>
-                        </Select.Popover>
-                      </Select.Root>
+                          <LuLink2 class="text-lg" />
+                          <input
+                            value={MODEL_ENDPOINT_URL}
+                            class="h-8 w-full outline-none font-mono text-xs"
+                            disabled
+                          />
+                        </div>
+                      </div>
                     </div>
 
-                    <div class="flex-1 w-1/4">
-                      <Select.Root bind:value={selectedProvider}>
-                        <Select.Label>Inference Providers</Select.Label>
-                        <Select.Trigger class="bg-white rounded-base border-neutral-300-foreground">
-                          <div class="flex text-xs items-center justify-between gap-2 font-mono w-full">
-                            <div class="flex items-center gap-2">
-                              <Provider name={selectedProvider.value} />
-                              <Select.DisplayValue />
-                            </div>
-
-                            <ExtraProviders
-                              selected={selectedProvider.value}
-                              providers={modelProviders.value}
-                            />
-                          </div>
-                        </Select.Trigger>
-                        <Select.Popover class="border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto mt-1 min-w-[200px]">
-                          {modelProviders.value.map((provider) => (
-                            <Select.Item
-                              key={provider}
-                              value={provider}
-                              class="text-foreground hover:bg-accent"
-                              onClick$={() => {
-                                selectedProvider.value = provider; // Redundant but ensures the value is set sometimes does not work...
-                                endpointURLSelected.value = false;
-                              }}
-                            >
-                              <div class="flex text-xs items-center p-1 gap-2 font-mono">
-                                <Provider name={provider} />
-
-                                <Select.ItemLabel>{provider}</Select.ItemLabel>
-                                {provider === selectedProvider.value && (
-                                  // We cannot use the Select.ItemIndicator here
-                                  // because it doesn't work when the model list changes
-                                  <LuCheck class="h-4 w4 text-primary-500 absolute right-2 top-1/2 -translate-y-1/2" />
-                                )}
-                              </div>
-                            </Select.Item>
-                          ))}
-                        </Select.Popover>
-                      </Select.Root>
+                    <div class="text-sm text-neutral-500">
+                      You are using a custom model endpoint. Make sure the model
+                      behind the endpoint is compatible with the column type (
+                      {column.type}).
                     </div>
                   </div>
                 </div>
-              </div>
+              ) : (
+                <div class="px-3 pb-12 pt-2 bg-white border border-secondary-foreground rounded-sm">
+                  <div class="flex flex-col gap-4">
+                    <div class="flex gap-4">
+                      <div class="flex-[2] w-3/4">
+                        <Select.Root
+                          ref={modelSearchContainerRef}
+                          key={modelSearchQuery.value}
+                          bind:open={isModelDropdownOpen}
+                          value={selectedModelId.value}
+                        >
+                          <Select.Label>Model</Select.Label>
+                          <div
+                            class={cn(
+                              triggerLooks('default'),
+                              'flex text-xs items-center px-2 gap-2 font-mono',
+                            )}
+                          >
+                            {modelSearchQuery.value ==
+                              selectedModelId.value && (
+                              <ModelImage
+                                model={
+                                  models.value.find(
+                                    (m) => m.id === selectedModelId.value,
+                                  )!
+                                }
+                              />
+                            )}
+
+                            <input
+                              placeholder="Search models..."
+                              bind:value={modelSearchQuery}
+                              class="h-8 w-full outline-none font-mono text-xs"
+                              onFocusIn$={() => {
+                                if (
+                                  selectedModelId.value ===
+                                  modelSearchQuery.value
+                                ) {
+                                  modelSearchQuery.value = '';
+                                }
+                              }}
+                              onKeyDown$={() => {
+                                nextTick(() => {
+                                  isModelDropdownOpen.value = false;
+                                });
+                              }}
+                              onClick$={() => {
+                                isModelDropdownOpen.value = false;
+                                nextTick(() => {
+                                  isModelDropdownOpen.value = true;
+                                }, 100);
+                              }}
+                            />
+
+                            <Select.Trigger look="headless" />
+                          </div>
+                          <Select.Popover
+                            key={modelSearchQuery.value}
+                            floating="bottom-end"
+                            gutter={8}
+                            class="border border-border max-h-[300px] overflow-y-auto overflow-x-hidden top-[100%] bottom-auto p-0 mt-2 ml-24 min-w-[450px]"
+                          >
+                            <div class="flex flex-col">
+                              {Object.entries(groupedModels.value).map(
+                                ([category, models]) => {
+                                  if (models.models.length === 0) return null;
+                                  return (
+                                    <div key={category}>
+                                      <div
+                                        class={cn(
+                                          'text-[13px] font-semibold rounded-sm rounded-b-none',
+                                          models.class,
+                                        )}
+                                      >
+                                        {models.label}
+                                      </div>
+                                      {models.models.map((model) => (
+                                        <Select.Item
+                                          key={model.id}
+                                          value={model.id}
+                                          class="text-foreground hover:bg-accent"
+                                          onClick$={() => {
+                                            isModelDropdownOpen.value = false;
+                                            endpointURLSelected.value = false;
+
+                                            selectedModelId.value = model.id;
+                                            modelSearchQuery.value = model.id;
+                                          }}
+                                        >
+                                          <div class="flex text-xs items-center justify-between p-1 gap-2 font-mono w-full">
+                                            <div class="flex items-center gap-2">
+                                              <ModelImage model={model} />
+                                              <Select.ItemLabel>
+                                                {model.id}
+                                              </Select.ItemLabel>
+                                            </div>
+
+                                            <ModelFlag model={model} />
+                                          </div>
+
+                                          {model.id ===
+                                            selectedModelId.value && (
+                                            // We cannot use the Select.ItemIndicator here
+                                            // because it doesn't work when the model list changes
+                                            <LuCheck class="h-4 w4 text-primary-500 absolute right-2 top-1/2 -translate-y-1/2" />
+                                          )}
+                                        </Select.Item>
+                                      ))}
+                                    </div>
+                                  );
+                                },
+                              )}
+                            </div>
+                          </Select.Popover>
+                        </Select.Root>
+                      </div>
+
+                      <div class="flex-1 w-1/4">
+                        <Select.Root bind:value={selectedProvider}>
+                          <Select.Label>Inference Providers</Select.Label>
+                          <Select.Trigger class="bg-white rounded-base border-neutral-300-foreground">
+                            <div class="flex text-xs items-center justify-between gap-2 font-mono w-full">
+                              <div class="flex items-center gap-2">
+                                <Provider name={selectedProvider.value} />
+                                <Select.DisplayValue />
+                              </div>
+
+                              <ExtraProviders
+                                selected={selectedProvider.value}
+                                providers={modelProviders.value}
+                              />
+                            </div>
+                          </Select.Trigger>
+                          <Select.Popover class="border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto mt-1 min-w-[200px]">
+                            {modelProviders.value.map((provider) => (
+                              <Select.Item
+                                key={provider}
+                                value={provider}
+                                class="text-foreground hover:bg-accent"
+                                onClick$={() => {
+                                  selectedProvider.value = provider; // Redundant but ensures the value is set sometimes does not work...
+                                  endpointURLSelected.value = false;
+                                }}
+                              >
+                                <div class="flex text-xs items-center p-1 gap-2 font-mono">
+                                  <Provider name={provider} />
+
+                                  <Select.ItemLabel>
+                                    {provider}
+                                  </Select.ItemLabel>
+                                  {provider === selectedProvider.value && (
+                                    // We cannot use the Select.ItemIndicator here
+                                    // because it doesn't work when the model list changes
+                                    <LuCheck class="h-4 w4 text-primary-500 absolute right-2 top-1/2 -translate-y-1/2" />
+                                  )}
+                                </div>
+                              </Select.Item>
+                            ))}
+                          </Select.Popover>
+                        </Select.Root>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

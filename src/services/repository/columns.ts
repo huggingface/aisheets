@@ -29,7 +29,7 @@ export const modelToColumn = (model: ColumnModel): Column => {
       prompt: model.process?.prompt ?? '',
       modelName: model.process?.modelName ?? '',
       modelProvider: model.process?.modelProvider ?? '',
-      useEndpointURL: model.process?.useCustomEndpoint ?? false,
+      endpointUrl: model.process?.endpointUrl ?? undefined,
       searchEnabled: model.process?.searchEnabled,
       updatedAt: model.process?.updatedAt,
     },

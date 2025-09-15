@@ -16,7 +16,7 @@ import {
   LuEgg,
   LuGlobe,
   LuLink2,
-  LuStopCircle,
+  LuSquare,
   LuX,
 } from '@qwikest/icons/lucide';
 
@@ -489,7 +489,7 @@ export const ExecutionForm = component$<SidebarProps>(
                           !prompt.value.trim()
                         }
                       >
-                        <LuStopCircle class="text-lg" />
+                        <LuSquare class="text-lg" />
                       </Button>
                     </Tooltip>
                   ) : (

@@ -28,6 +28,7 @@ import {
   ModelImage,
   Provider,
 } from '~/components/ui/logo/logo';
+import { Tooltip } from '~/components/ui/tooltip/tooltip';
 
 import {
   TemplateTextArea,
@@ -490,13 +491,15 @@ export const ExecutionForm = component$<SidebarProps>(
                       <LuStopCircle class="text-lg" />
                     </Button>
                   ) : (
-                    <Button
-                      look="primary"
-                      class="w-[30px] h-[30px] rounded-full flex items-center justify-center p-0"
-                      onClick$={onGenerate}
-                    >
-                      <LuEgg class="text-lg" />
-                    </Button>
+                    <Tooltip text="Generate">
+                      <Button
+                        look="primary"
+                        class="w-[30px] h-[30px] rounded-full flex items-center justify-center p-0"
+                        onClick$={onGenerate}
+                      >
+                        <LuEgg class="text-lg" />
+                      </Button>
+                    </Tooltip>
                   )}
                 </div>
               </div>

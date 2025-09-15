@@ -267,6 +267,9 @@ export const ExecutionForm = component$<SidebarProps>(
       if (initialProcess.value.modelProvider) {
         selectedProvider.value = initialProcess.value.modelProvider;
       }
+      if (initialProcess.value.endpointUrl && selectedProvider.value === '') {
+        selectedProvider.value = initialProcess.value.endpointUrl;
+      }
     });
 
     const providerComponent = $((name: string) => {
@@ -300,8 +303,12 @@ export const ExecutionForm = component$<SidebarProps>(
       if (process.modelName) {
         // If there's a previously selected model, use that
         selectedModelId.value = process.modelName;
-        selectedProvider.value =
-          process.modelProvider || process.endpointUrl || '';
+
+        if (showEndpointUrl.value) {
+          selectedProvider.value = process.endpointUrl || '';
+        } else {
+          selectedProvider.value = process.modelProvider || '';
+        }
       } else {
         const defaultModel =
           models.value?.find(
@@ -390,11 +397,15 @@ export const ExecutionForm = component$<SidebarProps>(
 
       try {
         const modelName = selectedModelId.value;
-        const modelProvider = selectedProvider.value;
-        // TODO: Revise this
-        const endpointUrl = models.value.find(
-          (m) => m.id === modelName,
-        )?.endpointUrl;
+
+        let modelProvider: string | undefined;
+        let endpointUrl: string | undefined;
+
+        if (showEndpointUrl.value) {
+          endpointUrl = selectedProvider.value!;
+        } else {
+          modelProvider = selectedProvider.value!;
+        }
 
         const columnToSave = {
           ...column,
@@ -503,6 +514,11 @@ export const ExecutionForm = component$<SidebarProps>(
                       look="primary"
                       class="w-[30px] h-[30px] rounded-full flex items-center justify-center p-0"
                       onClick$={onGenerate}
+                      disabled={
+                        selectedModelId.value === '' ||
+                        selectedProvider.value === '' ||
+                        !prompt.value.trim()
+                      }
                     >
                       <LuEgg class="text-lg" />
                     </Button>

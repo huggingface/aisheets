@@ -218,6 +218,12 @@ export const ExecutionForm = component$<SidebarProps>(
       );
     });
 
+    const showEndpointUrl = useComputed$(() => {
+      return (
+        column.type === 'text' && CUSTOM_MODELS && CUSTOM_MODELS?.length > 0
+      );
+    });
+
     const filteredModels = useSignal<Model[]>(models.value);
 
     const prompt = useSignal<string>('');
@@ -612,7 +618,7 @@ export const ExecutionForm = component$<SidebarProps>(
                     <div class="flex-1 w-1/4">
                       <Select.Root bind:value={selectedProvider}>
                         <Select.Label>
-                          {CUSTOM_MODELS?.length
+                          {showEndpointUrl.value
                             ? 'Endpoint url'
                             : 'Inference Providers'}
                         </Select.Label>

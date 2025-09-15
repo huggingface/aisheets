@@ -257,14 +257,27 @@ export const ExecutionForm = component$<SidebarProps>(
 
     useVisibleTask$(() => {
       if (initialProcess.value.prompt) {
-        prompt.value = initialProcess.value.prompt;
+        column.process = {
+          ...column.process!,
+          prompt: initialProcess.value.prompt,
+        };
       }
+
       if (initialProcess.value.modelName) {
-        selectedModelId.value = initialProcess.value.modelName;
+        column.process = {
+          ...column.process!,
+          modelName: initialProcess.value.modelName,
+        };
       }
+
       if (initialProcess.value.modelProvider) {
-        selectedProvider.value = initialProcess.value.modelProvider;
+        column.process = {
+          ...column.process!,
+          modelProvider: initialProcess.value.modelProvider,
+        };
       }
+
+      updateColumn(column);
     });
 
     useTask$(({ track }) => {

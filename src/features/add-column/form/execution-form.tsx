@@ -478,18 +478,20 @@ export const ExecutionForm = component$<SidebarProps>(
                     <div class="h-4 w-4 animate-spin rounded-full border-2 border-primary-100 border-t-transparent" />
                   )}
                   {column.process?.isExecuting ? (
-                    <Button
-                      look="primary"
-                      class="w-[30px] h-[30px] rounded-full flex items-center justify-center p-0"
-                      onClick$={onStop}
-                      disabled={
-                        (column.process?.isExecuting &&
-                          column.id === TEMPORAL_ID) ||
-                        !prompt.value.trim()
-                      }
-                    >
-                      <LuStopCircle class="text-lg" />
-                    </Button>
+                    <Tooltip text="Stop Generating">
+                      <Button
+                        look="primary"
+                        class="w-[30px] h-[30px] rounded-full flex items-center justify-center p-0"
+                        onClick$={onStop}
+                        disabled={
+                          (column.process?.isExecuting &&
+                            column.id === TEMPORAL_ID) ||
+                          !prompt.value.trim()
+                        }
+                      >
+                        <LuStopCircle class="text-lg" />
+                      </Button>
+                    </Tooltip>
                   ) : (
                     <Tooltip text="Generate">
                       <Button

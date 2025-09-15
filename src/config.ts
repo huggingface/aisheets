@@ -80,8 +80,31 @@ const DEFAULT_MODEL_PROVIDER: string =
  */
 const ORG_BILLING = process.env.ORG_BILLING ?? undefined;
 
+/**
+ * The URL of the model endpoint for inference operations.
+ * This value is retrieved from the environment variable `MODEL_ENDPOINT_URL`.
+ * If this value is defined, it will be used to send requests and the default model and provider will be ignored.
+ * Otherwise, the default model and provider will be used.
+ * Default value: undefined
+ */
+const MODEL_ENDPOINT_URL: string | undefined = process.env.MODEL_ENDPOINT_URL;
+
+/**
+ * The name of the model endpoint for inference operations.
+ *
+ * This value is retrieved from the environment variable `MODEL_ENDPOINT_NAME`.
+ *
+ * Default value: 'unknown'
+ */
+const MODEL_ENDPOINT_NAME: string =
+  process.env.MODEL_ENDPOINT_NAME ?? 'unknown';
+
 //FORMAT --> CUSTOM_MODELS=<MODEL_ID>:<ENDPOINT_URL>,<MODEL_ID>:<ENDPOINT_URL>
-const CUSTOM_MODELS: string | undefined = process.env.CUSTOM_MODELS;
+const CUSTOM_MODELS: string | undefined =
+  process.env.CUSTOM_MODELS ??
+  (MODEL_ENDPOINT_URL !== undefined
+    ? `${MODEL_ENDPOINT_NAME}|${MODEL_ENDPOINT_URL}`
+    : undefined);
 
 /**
  * List of model IDs that should be excluded from the model list.
@@ -254,7 +277,7 @@ export const appConfig = {
               const [id, endpointUrl] = model
                 .split('|')
                 .map((part) => part.trim());
-              return { id, endpointUrl };
+              return { id, endpointUrl, supportedType: 'text' };
             }) || undefined,
       },
 

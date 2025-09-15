@@ -247,7 +247,15 @@ export const appConfig = {
         defaultModel: DEFAULT_MODEL,
         defaultProvider: DEFAULT_MODEL_PROVIDER,
 
-        customModels: CUSTOM_MODELS?.trim().split(',') || undefined,
+        customModels:
+          CUSTOM_MODELS?.trim()
+            .split(',')
+            .map((model) => {
+              const [id, endpointUrl] = model
+                .split('|')
+                .map((part) => part.trim());
+              return { id, endpointUrl };
+            }) || undefined,
       },
 
       featureExtraction: {

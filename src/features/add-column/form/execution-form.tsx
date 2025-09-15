@@ -208,6 +208,7 @@ export const ExecutionForm = component$<SidebarProps>(
       useColumnsStore();
 
     const allModels = useModelsContext();
+
     const { DEFAULT_MODEL, DEFAULT_MODEL_PROVIDER, CUSTOM_MODELS } =
       useConfigContext();
 
@@ -377,6 +378,10 @@ export const ExecutionForm = component$<SidebarProps>(
       try {
         const modelName = selectedModelId.value;
         const modelProvider = selectedProvider.value;
+        // TODO: Revise this
+        const endpointUrl = models.value.find(
+          (m) => m.id === modelName,
+        )?.endpointUrl;
 
         const columnToSave = {
           ...column,
@@ -384,6 +389,7 @@ export const ExecutionForm = component$<SidebarProps>(
             ...column.process,
             modelName,
             modelProvider,
+            endpointUrl,
             prompt: prompt.value,
             columnsReferences: columnsReferences.value,
             searchEnabled: searchOnWeb.value,

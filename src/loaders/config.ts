@@ -14,7 +14,9 @@ import { useServerSession } from '~/state';
 export interface ClientConfig {
   DEFAULT_MODEL: string;
   DEFAULT_MODEL_PROVIDER: string;
-  CUSTOM_MODELS?: string[];
+
+  CUSTOM_MODELS?: { id: string; endpointUrl: string }[];
+
   isGoogleAuthEnabled: boolean;
   GOOGLE_CLIENT_ID?: string;
   GOOGLE_REDIRECT_URI?: string;
@@ -30,7 +32,9 @@ export const useClientConfig = routeLoader$(async function (
   return {
     DEFAULT_MODEL: textGeneration.defaultModel,
     DEFAULT_MODEL_PROVIDER: textGeneration.defaultProvider,
+
     CUSTOM_MODELS: textGeneration.customModels,
+
     isGoogleAuthEnabled: Boolean(
       GOOGLE_OAUTH_CLIENT_ID && GOOGLE_OAUTH_REDIRECT_URI,
     ),

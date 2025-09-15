@@ -9,9 +9,9 @@ import {
   renderInstruction,
 } from '~/services/inference/materialize-prompt';
 import {
-  type PromptExecutionParams,
   normalizeChatCompletionArgs,
   normalizeOptions,
+  type PromptExecutionParams,
   runPromptExecution,
   runPromptExecutionStream,
 } from '~/services/inference/run-prompt-execution';
@@ -152,7 +152,7 @@ async function* generateCellsFromScratch({
   timeout: number | undefined;
   session: Session;
 }) {
-  const { modelName, modelProvider, prompt, searchEnabled, useEndpointURL } =
+  const { modelName, modelProvider, prompt, searchEnabled, endpointUrl } =
     process;
 
   // Get all existing cells in the column, excluding those not validated that will
@@ -223,17 +223,6 @@ async function* generateCellsFromScratch({
 
   const validatedIdxs = validatedCells?.map((cell) => cell.idx);
 
-  const {
-    inference: {
-      tasks: { textGeneration },
-    },
-  } = appConfig;
-
-  const endpointUrl =
-    useEndpointURL && textGeneration.endpointUrl
-      ? textGeneration.endpointUrl
-      : undefined;
-
   for (let i = offset; i < limit + offset; i++) {
     if (validatedIdxs?.includes(i)) continue;
 
@@ -248,7 +237,7 @@ async function* generateCellsFromScratch({
 
     const args = {
       accessToken: session.token,
-      modelName: endpointUrl ? textGeneration.endpointName : modelName,
+      modelName,
       modelProvider,
       endpointUrl,
       examples: existingCellsExamples,
@@ -310,18 +299,12 @@ async function singleCellGeneration({
   cell: Cell;
 }> {
   const {
-    inference: {
-      tasks: { textGeneration },
-    },
-  } = appConfig;
-
-  const {
     columnsReferences,
     modelName,
     modelProvider,
     prompt,
     searchEnabled,
-    useEndpointURL,
+    endpointUrl,
   } = process;
 
   const rowCells = await getRowCells({
@@ -342,14 +325,9 @@ async function singleCellGeneration({
     rowCells.map((cell) => [cell.column!.name, cell.value]),
   );
 
-  const endpointUrl =
-    useEndpointURL && textGeneration.endpointUrl
-      ? textGeneration.endpointUrl
-      : undefined;
-
   const args: PromptExecutionParams = {
     accessToken: session.token,
-    modelName: endpointUrl ? textGeneration.endpointName : modelName,
+    modelName,
     modelProvider,
     endpointUrl,
     examples,
@@ -553,6 +531,8 @@ async function buildWebSearchQueries({
     },
   } = appConfig;
 
+  // TODO: Review custom config in case we want to use a specific model for
+  // this task
   const {
     modelName = textGeneration.defaultModel,
     modelProvider = textGeneration.defaultProvider,

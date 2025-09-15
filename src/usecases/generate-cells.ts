@@ -99,13 +99,11 @@ export const generateCells = async function* ({
 
     const maxSize = Math.max(...columnSizes);
 
-    // If no rows exist (new column), generate a default number of cells
     limit = maxSize > 0 ? maxSize : 5;
   }
   if (!offset) offset = 0;
 
   try {
-    // Use data flow if we have column references OR if it's an image-text-to-text column
     const hasColumnReferences =
       columnsReferences && columnsReferences.length > 0;
     const isImageTextToText =

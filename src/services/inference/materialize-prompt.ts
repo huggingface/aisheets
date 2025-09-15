@@ -120,8 +120,6 @@ The following are correct, accurate example outputs with respect to the user ins
 {{/examples}}
 `;
 
-  // For image-text-to-text columns without data, use instruction as-is
-  // The image data is handled separately in the inference service
   const hasData = data && Object.keys(data).length > 0;
   const isImageTextToText = columnType === 'text-image';
   const finalInstruction =

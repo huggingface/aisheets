@@ -218,7 +218,6 @@ export const ExecutionForm = component$<SidebarProps>(
       MODEL_ENDPOINT_URL,
     } = useContext(configContext);
 
-    // Detect scenarios based on column type (robust approach)
     const isImageTextToText = useComputed$(() => {
       return column.type === 'text-image';
     });
@@ -228,7 +227,6 @@ export const ExecutionForm = component$<SidebarProps>(
     });
 
     const models = useComputed$(() => {
-      // Use column type directly for model filtering
       return new Models(allModels).getModelsByType(
         column.type as SupportedType,
       );

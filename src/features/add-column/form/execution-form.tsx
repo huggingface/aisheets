@@ -14,6 +14,7 @@ import {
   LuCheck,
   LuEgg,
   LuGlobe,
+  LuLink2,
   LuStopCircle,
   LuX,
 } from '@qwikest/icons/lucide';
@@ -209,8 +210,7 @@ export const ExecutionForm = component$<SidebarProps>(
 
     const allModels = useModelsContext();
 
-    const { DEFAULT_MODEL, DEFAULT_MODEL_PROVIDER, CUSTOM_MODELS } =
-      useConfigContext();
+    const { DEFAULT_MODEL, DEFAULT_MODEL_PROVIDER } = useConfigContext();
 
     const models = useComputed$(() => {
       return new Models(allModels).getModelsByType(
@@ -219,9 +219,7 @@ export const ExecutionForm = component$<SidebarProps>(
     });
 
     const showEndpointUrl = useComputed$(() => {
-      return (
-        column.type === 'text' && CUSTOM_MODELS && CUSTOM_MODELS?.length > 0
-      );
+      return models.value.some((m) => !!m.endpointUrl);
     });
 
     const filteredModels = useSignal<Model[]>(models.value);
@@ -271,6 +269,14 @@ export const ExecutionForm = component$<SidebarProps>(
       }
     });
 
+    const providerComponent = $((name: string) => {
+      if (showEndpointUrl.value) {
+        return <LuLink2 class="text-indigo-500 w-4 h-4" />;
+      }
+
+      return <Provider name={name} />;
+    });
+
     useTask$(({ track }) => {
       track(columns);
 
@@ -294,7 +300,8 @@ export const ExecutionForm = component$<SidebarProps>(
       if (process.modelName) {
         // If there's a previously selected model, use that
         selectedModelId.value = process.modelName;
-        selectedProvider.value = process.modelProvider!;
+        selectedProvider.value =
+          process.modelProvider || process.endpointUrl || '';
       } else {
         const defaultModel =
           models.value?.find(
@@ -625,7 +632,7 @@ export const ExecutionForm = component$<SidebarProps>(
                         <Select.Trigger class="bg-white rounded-base border-neutral-300-foreground">
                           <div class="flex text-xs items-center justify-between gap-2 font-mono w-40">
                             <div class="flex items-center gap-2">
-                              <Provider name={selectedProvider.value} />
+                              {providerComponent(selectedProvider.value)}
                               <Select.DisplayValue
                                 class={cn('truncate w-fit', {
                                   'max-w-16': modelProviders.value.length > 1,
@@ -654,7 +661,7 @@ export const ExecutionForm = component$<SidebarProps>(
                               }}
                             >
                               <div class="flex text-xs items-center p-1 gap-2 font-mono">
-                                <Provider name={provider} />
+                                {providerComponent(provider)}
 
                                 <Select.ItemLabel>{provider}</Select.ItemLabel>
                                 {provider === selectedProvider.value && (

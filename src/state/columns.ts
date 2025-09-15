@@ -14,6 +14,7 @@ export interface Process {
   columnsReferences: string[];
   updatedAt: Date;
   searchEnabled: boolean;
+  imageColumnId?: string; // For image processing workflows
   // Non persisted data
   isExecuting?: boolean;
   cancellable?: NoSerialize<AbortController>;
@@ -37,6 +38,7 @@ export interface CreateColumn {
     prompt: string;
     searchEnabled: boolean;
     columnsReferences: string[];
+    imageColumnId?: string; // For image processing workflows
     isExecuting?: boolean;
     cancellable?: NoSerialize<AbortController>;
   };

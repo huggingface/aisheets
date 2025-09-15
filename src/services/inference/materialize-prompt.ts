@@ -19,6 +19,7 @@ export interface MaterializePromptParams {
   data?: object;
   examples?: Example[];
   renderInstruction?: boolean;
+  columnType?: string; // Add column type to detect image-text-to-text
 }
 
 export function materializePrompt({
@@ -26,9 +27,20 @@ export function materializePrompt({
   sourcesContext,
   data,
   examples,
+  columnType,
 }: MaterializePromptParams): string {
-  return data && Object.keys(data).length > 0
-    ? materializePromptFromData(instruction, data, sourcesContext, examples)
+  // Force image-text-to-text columns to use data flow even without column references
+  const hasData = data && Object.keys(data).length > 0;
+  const isImageTextToText = columnType === 'text-image';
+
+  return hasData || isImageTextToText
+    ? materializePromptFromData(
+        instruction,
+        data || {},
+        sourcesContext,
+        examples,
+        columnType,
+      )
     : materializePromptFromScratch(instruction, sourcesContext, examples);
 }
 
@@ -94,6 +106,7 @@ function materializePromptFromData(
     text: string;
   }[],
   examples?: Example[],
+  columnType?: string,
 ): string {
   const examplesTemplate = `# Examples
 The following are correct, accurate example outputs with respect to the user instruction:
@@ -106,6 +119,15 @@ The following are correct, accurate example outputs with respect to the user ins
 {{output}}
 {{/examples}}
 `;
+
+  // For image-text-to-text columns without data, use instruction as-is
+  // The image data is handled separately in the inference service
+  const hasData = data && Object.keys(data).length > 0;
+  const isImageTextToText = columnType === 'text-image';
+  const finalInstruction =
+    hasData || !isImageTextToText
+      ? renderInstruction(instruction, data)
+      : instruction;
 
   return mustache.render(
     `
@@ -121,7 +143,7 @@ You are a rigorous, intelligent data-processing engine. Generate only the reques
 # Your response
     `,
     {
-      instruction: renderInstruction(instruction, data),
+      instruction: finalInstruction,
       examplesSection: examplesSection(
         examples?.map((example) => ({
           ...example,

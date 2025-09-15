@@ -3,6 +3,7 @@ import { getColumnName, getDatasetTableName } from './utils';
 
 const TYPES_MAP: Record<string, string> = {
   image: 'BLOB',
+  'text-image': 'TEXT', // text-image workflow stores text data
 };
 
 export const createDatasetTableColumn = async ({

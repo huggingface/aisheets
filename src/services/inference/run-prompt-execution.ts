@@ -1,12 +1,11 @@
+import { isDev } from '@builder.io/qwik';
 import {
+  chatCompletion,
+  chatCompletionStream,
   type FeatureExtractionArgs,
   type InferenceProvider,
   type Options,
-  chatCompletion,
-  chatCompletionStream,
 } from '@huggingface/inference';
-
-import { isDev } from '@builder.io/qwik';
 import { appConfig } from '~/config';
 import { cacheGet, cacheSet } from '~/services/cache';
 import { type Example, materializePrompt } from './materialize-prompt';
@@ -27,6 +26,7 @@ export interface PromptExecutionParams {
   timeout?: number;
   accessToken?: string;
   endpointUrl?: string;
+  columnType?: string; // Add column type for image-text-to-text detection
 }
 
 export interface PromptExecutionResponse {
@@ -50,12 +50,14 @@ export const runPromptExecution = async ({
   examples,
   timeout,
   endpointUrl,
+  columnType,
 }: PromptExecutionParams): Promise<PromptExecutionResponse> => {
   const inputPrompt = materializePrompt({
     instruction,
     sourcesContext,
     data,
     examples,
+    columnType,
   });
   const args = normalizeChatCompletionArgs({
     messages: [{ role: 'user', content: inputPrompt }],
@@ -117,12 +119,14 @@ export const runPromptExecutionStream = async function* ({
   timeout,
   accessToken,
   endpointUrl,
+  columnType,
 }: PromptExecutionParams): AsyncGenerator<PromptExecutionResponse> {
   const inputPrompt = materializePrompt({
     instruction,
     sourcesContext,
     data,
     examples,
+    columnType,
   });
   const args = normalizeChatCompletionArgs({
     messages: [{ role: 'user', content: inputPrompt }],

@@ -8,6 +8,7 @@ export interface CreateProcess {
   endpointUrl?: string;
   searchEnabled: boolean;
   columnsReferences?: string[];
+  imageColumnId?: string; // For image processing workflows
 }
 
 export const createProcess = async ({
@@ -26,6 +27,7 @@ export const createProcess = async ({
     endpointUrl: process.endpointUrl ?? null,
     searchEnabled: process.searchEnabled,
     columnId: column.id,
+    imageColumnId: process.imageColumnId ?? null,
   });
 
   // TODO: Try to create junction model when creating a process
@@ -45,6 +47,7 @@ export const createProcess = async ({
     endpointUrl: model.endpointUrl ?? undefined,
     searchEnabled: model.searchEnabled,
     columnsReferences: process?.columnsReferences || [],
+    imageColumnId: model.imageColumnId ?? undefined,
     updatedAt: model.updatedAt,
   };
 };

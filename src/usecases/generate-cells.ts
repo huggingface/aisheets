@@ -3,15 +3,16 @@ import { appConfig } from '~/config';
 import { updateProcess } from '~/services';
 import { cacheGet, cacheSet } from '~/services/cache';
 import { MAX_SOURCE_SNIPPET_LENGTH } from '~/services/db/models/cell';
+import { imageTextToTextGeneration } from '~/services/inference/image-text-to-text';
 import {
   type Example,
   type MaterializePromptParams,
   renderInstruction,
 } from '~/services/inference/materialize-prompt';
 import {
-  type PromptExecutionParams,
   normalizeChatCompletionArgs,
   normalizeOptions,
+  type PromptExecutionParams,
   runPromptExecution,
   runPromptExecutionStream,
 } from '~/services/inference/run-prompt-execution';
@@ -25,7 +26,7 @@ import {
 import { countDatasetTableRows } from '~/services/repository/tables';
 import { queryDatasetSources } from '~/services/websearch/embed';
 import { createSourcesFromWebQueries } from '~/services/websearch/search-sources';
-import type { Cell, Column, Process, Session } from '~/state';
+import type { Cell, CellSource, Column, Process, Session } from '~/state';
 import { collectValidatedExamples } from './collect-examples';
 
 export interface GenerateCellsParams {
@@ -96,12 +97,32 @@ export const generateCells = async function* ({
       }),
     );
 
-    limit = Math.max(...columnSizes);
+    const maxSize = Math.max(...columnSizes);
+
+    // If no rows exist (new column), generate a default number of cells
+    limit = maxSize > 0 ? maxSize : 5;
   }
   if (!offset) offset = 0;
 
   try {
-    if (!columnsReferences?.length) {
+    // Use data flow if we have column references OR if it's an image-text-to-text column
+    const hasColumnReferences =
+      columnsReferences && columnsReferences.length > 0;
+    const isImageTextToText =
+      column.type === 'text-image' && process.imageColumnId;
+
+    if (hasColumnReferences || isImageTextToText) {
+      yield* generateCellsFromColumnsReferences({
+        column,
+        process,
+        validatedCells,
+        offset,
+        limit,
+        updateOnly,
+        timeout,
+        session,
+      });
+    } else {
       yield* generateCellsFromScratch({
         column,
         process,
@@ -109,17 +130,6 @@ export const generateCells = async function* ({
         offset,
         limit,
         stream,
-        updateOnly,
-        timeout,
-        session,
-      });
-    } else {
-      yield* generateCellsFromColumnsReferences({
-        column,
-        process,
-        validatedCells,
-        offset,
-        limit,
         updateOnly,
         timeout,
         session,
@@ -324,7 +334,13 @@ async function singleCellGeneration({
     columns: columnsReferences,
   });
 
-  if (rowCells?.filter((cell) => cell.value).length === 0) {
+  // Only check for empty data if we have column references
+  // For custom text generation without column references, this check should be skipped
+  if (
+    columnsReferences &&
+    columnsReferences.length > 0 &&
+    rowCells?.filter((cell) => cell.value).length === 0
+  ) {
     cell.generating = false;
     cell.error = 'No input data found';
 
@@ -333,9 +349,12 @@ async function singleCellGeneration({
     return { cell };
   }
 
-  const data = Object.fromEntries(
-    rowCells.map((cell) => [cell.column!.name, cell.value]),
-  );
+  const data =
+    rowCells && rowCells.length > 0
+      ? Object.fromEntries(
+          rowCells.map((cell) => [cell.column!.name, cell.value]),
+        )
+      : {};
 
   const args: PromptExecutionParams = {
     accessToken: session.token,
@@ -360,6 +379,21 @@ async function singleCellGeneration({
       cell.value = response.value;
       cell.error = response.error;
       cell.generating = false;
+
+      break;
+    }
+    case 'text-image': {
+      const response = await generateImageTextToText({
+        column,
+        prompt,
+        args,
+        session,
+      });
+
+      cell.value = response.value;
+      cell.error = response.error;
+      cell.generating = false;
+      if (cell.value && !cell.error) cell.sources = response.sources;
 
       break;
     }
@@ -664,7 +698,10 @@ const _generateText = async ({
     args.sourcesContext = sourcesContext;
   }
 
-  const response = await runPromptExecution(args);
+  const response = await runPromptExecution({
+    ...args,
+    columnType: column.type,
+  });
 
   // Extract sources (url + snippet) if available
   const sources = sourcesContext
@@ -700,5 +737,80 @@ const generateImage = async ({
   return {
     value: response.value ?? undefined,
     error: response.error,
+  };
+};
+
+const generateImageTextToText = async ({
+  column,
+  prompt,
+  args,
+  session,
+}: {
+  column: Column;
+  prompt: string;
+  args: PromptExecutionParams;
+  session: Session;
+}): Promise<{
+  value?: string;
+  error?: string;
+  sources?: CellSource[];
+}> => {
+  // Get the image column ID from the process
+  const imageColumnId = column.process?.imageColumnId;
+
+  if (!imageColumnId) {
+    return {
+      error: 'No image column selected for image-text-to-text processing',
+    };
+  }
+
+  // Get the image data from the selected image column
+  const imageCell = await getColumnCellByIdx({
+    columnId: imageColumnId,
+    idx: args.idx || 0,
+  });
+
+  if (!imageCell || !imageCell.value) {
+    return {
+      error: 'No image data found in the selected image column',
+    };
+  }
+
+  // Convert image data to Uint8Array if it's not already
+  let imageData: Uint8Array;
+
+  if (imageCell.value instanceof Uint8Array) {
+    imageData = imageCell.value;
+  } else if (typeof imageCell.value === 'string') {
+    // Handle base64 encoded images
+    const base64Data = imageCell.value.replace(
+      /^data:image\/[a-z]+;base64,/,
+      '',
+    );
+    imageData = new Uint8Array(Buffer.from(base64Data, 'base64'));
+  } else if (imageCell.value instanceof ArrayBuffer) {
+    imageData = new Uint8Array(imageCell.value);
+  } else {
+    return {
+      error: 'Unsupported image data format',
+    };
+  }
+
+  // Generate text from image using the image-text-to-text service
+  const response = await imageTextToTextGeneration({
+    ...args,
+    instruction: prompt,
+    imageData,
+    accessToken: session.token,
+  });
+
+  // For now, we don't support web search for image-text-to-text
+  // but we could add it in the future if needed
+  const sources: CellSource[] = [];
+
+  return {
+    value: response.value,
+    error: response.error,
+    sources,
   };
 };

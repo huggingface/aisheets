@@ -49,7 +49,7 @@ interface SidebarProps {
   onGenerateColumn: QRL<(column: CreateColumn) => Promise<void>>;
 }
 
-type SupportedType = 'text' | 'image';
+type SupportedType = 'text' | 'image' | 'text-image';
 
 class Models {
   private models: Model[];
@@ -60,6 +60,7 @@ class Models {
 
   getModelsByType(type: SupportedType): Model[] {
     if (type === 'image') return this.getImageModels();
+    if (type === 'text-image') return this.getImageTextToTextModels();
     return this.getTextModels();
   }
 
@@ -69,6 +70,12 @@ class Models {
 
   private getImageModels(): Model[] {
     return this.models.filter((model) => model.supportedType === 'image');
+  }
+
+  private getImageTextToTextModels(): Model[] {
+    return this.models.filter(
+      (model) => model.supportedType === 'image-text-to-text',
+    );
   }
 }
 
@@ -211,8 +218,17 @@ export const ExecutionForm = component$<SidebarProps>(
       MODEL_ENDPOINT_URL,
     } = useContext(configContext);
 
+    // Detect scenarios based on column type (robust approach)
+    const isImageTextToText = useComputed$(() => {
+      return column.type === 'text-image';
+    });
+
+    const needsImageColumn = useComputed$(() => {
+      return isImageTextToText.value;
+    });
+
     const models = useComputed$(() => {
-      console.log(allModels.filter((p) => !!p.picture));
+      // Use column type directly for model filtering
       return new Models(allModels).getModelsByType(
         column.type as SupportedType,
       );
@@ -233,9 +249,15 @@ export const ExecutionForm = component$<SidebarProps>(
     const enableCustomEndpoint = useSignal(MODEL_ENDPOINT_URL !== undefined);
     const endpointURLSelected = useSignal(false);
 
+    // Image column selector for image-text-to-text and image-to-image scenarios
+    const selectedImageColumn = useSignal<string>('');
+    const imageColumns = useSignal<Variable[]>([]);
+
     const onSelectedVariables = $((variables: { id: string }[]) => {
       columnsReferences.value = variables.map((v) => v.id);
     });
+
+    // Image column selection is separate from prompt text variables
 
     const groupedModels = useComputed$(() => {
       return new GroupedModels(filteredModels.value).groupsByCategory();
@@ -276,6 +298,23 @@ export const ExecutionForm = component$<SidebarProps>(
           id: c.id,
           name: c.name,
         }));
+
+      // Populate image columns for image-text-to-text and image-to-image scenarios
+      imageColumns.value = columns.value
+        .filter((c) => c.id !== column.id && c.type === 'image')
+        .map((c) => ({
+          id: c.id,
+          name: c.name,
+        }));
+
+      // Auto-select first image column if none selected and we need one
+      if (
+        needsImageColumn.value &&
+        !selectedImageColumn.value &&
+        imageColumns.value.length > 0
+      ) {
+        selectedImageColumn.value = imageColumns.value[0].id;
+      }
     });
 
     useTask$(({ track }) => {
@@ -294,6 +333,11 @@ export const ExecutionForm = component$<SidebarProps>(
       endpointURLSelected.value =
         (enableCustomEndpoint.value && process.endpointUrl !== undefined) ||
         false;
+
+      // Initialize image column selection if editing an existing column
+      if (process.imageColumnId) {
+        selectedImageColumn.value = process.imageColumnId;
+      }
 
       if (process.modelName) {
         // If there's a previously selected model, use that
@@ -397,6 +441,11 @@ export const ExecutionForm = component$<SidebarProps>(
             prompt: prompt.value,
             columnsReferences: columnsReferences.value,
             searchEnabled: searchOnWeb.value,
+            // Add selected image column for image processing workflows
+            ...(needsImageColumn.value &&
+              selectedImageColumn.value && {
+                imageColumnId: selectedImageColumn.value,
+              }),
           },
         };
 
@@ -550,6 +599,42 @@ export const ExecutionForm = component$<SidebarProps>(
               ) : (
                 <div class="px-3 pb-12 pt-2 bg-white border border-secondary-foreground rounded-sm">
                   <div class="flex flex-col gap-4">
+                    {/* Image Column Selector for image-text-to-text and image-to-image */}
+                    {needsImageColumn.value &&
+                      imageColumns.value.length > 0 && (
+                        <div class="flex gap-4">
+                          <div class="flex-1">
+                            <Select.Root bind:value={selectedImageColumn}>
+                              <Select.Label>Image Column</Select.Label>
+                              <Select.Trigger class="bg-white rounded-base border-neutral-300-foreground">
+                                <div class="flex text-xs items-center justify-between gap-2 font-mono w-full">
+                                  <Select.DisplayValue />
+                                </div>
+                              </Select.Trigger>
+                              <Select.Popover class="border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto mt-1 min-w-[200px]">
+                                {imageColumns.value.map((imageColumn) => (
+                                  <Select.Item
+                                    key={imageColumn.id}
+                                    value={imageColumn.id}
+                                    class="text-foreground hover:bg-accent"
+                                  >
+                                    <div class="flex text-xs items-center p-1 gap-2 font-mono">
+                                      <Select.ItemLabel>
+                                        {imageColumn.name}
+                                      </Select.ItemLabel>
+                                      {imageColumn.id ===
+                                        selectedImageColumn.value && (
+                                        <LuCheck class="h-4 w4 text-primary-500 absolute right-2 top-1/2 -translate-y-1/2" />
+                                      )}
+                                    </div>
+                                  </Select.Item>
+                                ))}
+                              </Select.Popover>
+                            </Select.Root>
+                          </div>
+                        </div>
+                      )}
+
                     <div class="flex gap-4">
                       <div class="flex-[2] w-3/4">
                         <Select.Root

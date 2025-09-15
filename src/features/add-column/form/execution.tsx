@@ -1,9 +1,9 @@
 import {
   $,
-  type Signal,
-  Slot,
   component$,
   createContextId,
+  type Signal,
+  Slot,
   useComputed$,
   useContext,
   useContextProvider,
@@ -16,6 +16,13 @@ export type Execution = {
   modelName?: string;
   modelProvider?: string;
   mode?: 'add' | 'edit';
+  actionType?:
+    | 'translate'
+    | 'extractKeywords'
+    | 'summarize'
+    | 'textToImage'
+    | 'imageTextToText'
+    | 'custom';
 };
 
 const executionContext =
@@ -38,6 +45,7 @@ export const useExecution = () => {
       prompt: context.value.prompt,
       modelName: context.value.modelName,
       modelProvider: context.value.modelProvider,
+      actionType: context.value.actionType,
     };
   });
 
@@ -52,8 +60,16 @@ export const useExecution = () => {
         prompt?: string,
         modelName?: string,
         modelProvider?: string,
+        actionType?: Execution['actionType'],
       ) => {
-        context.value = { columnId, mode, prompt, modelName, modelProvider };
+        context.value = {
+          columnId,
+          mode,
+          prompt,
+          modelName,
+          modelProvider,
+          actionType,
+        };
       },
     ),
     close: $(() => {

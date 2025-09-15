@@ -31,6 +31,7 @@ export const modelToColumn = (model: ColumnModel): Column => {
       modelProvider: model.process?.modelProvider ?? '',
       endpointUrl: model.process?.endpointUrl ?? undefined,
       searchEnabled: model.process?.searchEnabled,
+      imageColumnId: model.process?.imageColumnId ?? undefined,
       updatedAt: model.process?.updatedAt,
     },
     cells: [], // TODO: Cells should be loaded separately and this attribute should be removed

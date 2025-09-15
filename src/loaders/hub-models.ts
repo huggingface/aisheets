@@ -88,17 +88,20 @@ const listAllModels = server$(async function (
   // Fetch models for both pipeline tags
   const models = await Promise.all([
     // All text generation models that support conversational
-    Promise.all([
-      fetchModelsForPipeline(session, 'text-generation'),
-      fetchModelsForPipeline(session, 'image-text-to-text'),
-    ]).then((models) =>
+    fetchModelsForPipeline(session, 'text-generation').then((models) =>
       models
-        .flat()
         .filter((model) => model.tags?.includes('conversational'))
         .map((model) => ({
           ...model,
           supportedType: 'text',
         })),
+    ),
+    // All image-text-to-text models
+    fetchModelsForPipeline(session, 'image-text-to-text').then((models) =>
+      models.map((model) => ({
+        ...model,
+        supportedType: 'image-text-to-text',
+      })),
     ),
     // All image generation models
     // TODO: Add pagination support since image generation models can be large

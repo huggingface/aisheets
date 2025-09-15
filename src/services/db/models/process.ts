@@ -25,6 +25,7 @@ export class ProcessModel extends Model<
 
   declare searchEnabled: boolean;
   declare columnId: ForeignKey<ColumnModel['id']>;
+  declare imageColumnId: CreationOptional<string | null>;
 
   declare referredColumns: NonAttribute<ColumnModel[]>; // This is a virtual attribute
 
@@ -67,6 +68,11 @@ ProcessModel.init(
     columnId: {
       type: DataTypes.UUID,
       allowNull: false,
+    },
+    imageColumnId: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      defaultValue: null,
     },
   },
   {

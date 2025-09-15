@@ -212,7 +212,6 @@ export const ExecutionForm = component$<SidebarProps>(
     } = useContext(configContext);
 
     const models = useComputed$(() => {
-      console.log(allModels.filter((p) => !!p.picture));
       return new Models(allModels).getModelsByType(
         column.type as SupportedType,
       );
@@ -481,11 +480,6 @@ export const ExecutionForm = component$<SidebarProps>(
                       look="primary"
                       class="w-[30px] h-[30px] rounded-full flex items-center justify-center p-0"
                       onClick$={onStop}
-                      disabled={
-                        (column.process?.isExecuting &&
-                          column.id === TEMPORAL_ID) ||
-                        !prompt.value.trim()
-                      }
                     >
                       <LuStopCircle class="text-lg" />
                     </Button>

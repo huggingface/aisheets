@@ -323,6 +323,8 @@ def process_column(
 
         return prompt
 
+
+
     def map_function(batch: dict):
 
         prompt_template = column_config["prompt"]
@@ -357,7 +359,7 @@ def process_column(
                 result = future.result()
 
                 results.append(result)
-                rprint(f"[green] {len(results)}[/] {len(futures)} completed")
+                rprint(f"[green] {len(results)}/{len(futures)} completed")
 
         return {column_name: results}
 

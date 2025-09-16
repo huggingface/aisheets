@@ -382,7 +382,6 @@ async function singleCellGeneration({
     }
     case 'text-image': {
       const response = await generateImageTextToText({
-        column,
         prompt,
         args,
         session,
@@ -740,13 +739,11 @@ const generateImage = async ({
 };
 
 const generateImageTextToText = async ({
-  column,
   prompt,
   args,
   session,
   process,
 }: {
-  column: Column;
   prompt: string;
   args: PromptExecutionParams;
   session: Session;

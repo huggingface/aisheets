@@ -1,6 +1,6 @@
-import { component$ } from '@builder.io/qwik';
+import { $, component$ } from '@builder.io/qwik';
 import { cn } from '@qwik-ui/utils';
-import { LuEgg } from '@qwikest/icons/lucide';
+import { LuEgg, LuEggOff } from '@qwikest/icons/lucide';
 import { Tooltip } from '~/components/ui/tooltip/tooltip';
 import { useExecution } from '~/features/add-column';
 import { useGenerateColumn } from '~/features/execution';
@@ -13,6 +13,12 @@ export const CellGeneration = component$<{ column: Column }>(({ column }) => {
   if (column.id === TEMPORAL_ID || column.kind !== 'dynamic') return null;
   if (!column.process) return null;
 
+  const handleGenerate = $(() => {
+    if (column.process?.isExecuting) return;
+
+    onRegenerateCells(column);
+  });
+
   return (
     <Tooltip text="Regenerate">
       <div
@@ -22,14 +28,18 @@ export const CellGeneration = component$<{ column: Column }>(({ column }) => {
             'hover:bg-neutral-300': columnId.value === column.id,
           },
         )}
-        onClick$={() => onRegenerateCells(column)}
+        onClick$={handleGenerate}
         role="button"
         tabIndex={0}
         aria-label="Regenerate"
         preventdefault:click
         stoppropagation:click
       >
-        <LuEgg class="text-sm text-neutral" />
+        {column.process?.isExecuting ? (
+          <LuEggOff class="text-sm text-neutral" />
+        ) : (
+          <LuEgg class="text-sm text-neutral" />
+        )}
       </div>
     </Tooltip>
   );

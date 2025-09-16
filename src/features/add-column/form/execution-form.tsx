@@ -476,7 +476,7 @@ export const ExecutionForm = component$<SidebarProps>(
                   )}
 
                   {column.process?.isExecuting ? (
-                    <Tooltip text="Stop Generating">
+                    <Tooltip text="Stop generating">
                       <Button
                         look="primary"
                         class="w-[30px] h-[30px] rounded-full flex items-center justify-center p-0"

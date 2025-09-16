@@ -801,7 +801,7 @@ const generateImageTextToText = async ({
 
   try {
     imageData = convertToUint8Array(imageCell.value);
-  } catch (error) {
+  } catch (_error) {
     return {
       error: 'Unsupported image data format',
     };

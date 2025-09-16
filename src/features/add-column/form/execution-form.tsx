@@ -466,6 +466,7 @@ export const ExecutionForm = component$<SidebarProps>(
                       onClick$={() => {
                         searchOnWeb.value = !searchOnWeb.value;
                       }}
+                      disabled={column.process?.isExecuting}
                     >
                       <LuGlobe class="text-lg" />
                       Search the web
@@ -474,9 +475,6 @@ export const ExecutionForm = component$<SidebarProps>(
                     <div class="flex items-center gap-2 text-neutral-500" />
                   )}
 
-                  {column.process?.isExecuting && (
-                    <div class="h-4 w-4 animate-spin rounded-full border-2 border-primary-100 border-t-transparent" />
-                  )}
                   {column.process?.isExecuting ? (
                     <Tooltip text="Stop Generating">
                       <Button

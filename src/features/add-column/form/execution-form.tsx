@@ -390,11 +390,6 @@ export const ExecutionForm = component$<SidebarProps>(
     });
 
     const onGenerate = $(async () => {
-      column.process!.cancellable = noSerialize(new AbortController());
-      column.process!.isExecuting = true;
-
-      updateColumn(column);
-
       try {
         const modelName = selectedModelId.value;
 
@@ -407,20 +402,20 @@ export const ExecutionForm = component$<SidebarProps>(
           modelProvider = selectedProvider.value!;
         }
 
-        const columnToSave = {
-          ...column,
-          process: {
-            ...column.process,
-            modelName,
-            modelProvider,
-            endpointUrl,
-            prompt: prompt.value,
-            columnsReferences: columnsReferences.value,
-            searchEnabled: searchOnWeb.value,
-          },
+        column.process = {
+          ...column.process,
+          cancellable: noSerialize(new AbortController()),
+          isExecuting: true,
+          modelName,
+          modelProvider,
+          endpointUrl,
+          prompt: prompt.value,
+          columnsReferences: columnsReferences.value,
+          searchEnabled: searchOnWeb.value,
         };
 
-        await onGenerateColumn(columnToSave);
+        updateColumn(column);
+        await onGenerateColumn(column);
       } catch {}
     });
 

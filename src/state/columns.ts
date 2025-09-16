@@ -12,8 +12,8 @@ export interface Process {
   modelProvider?: string;
   endpointUrl?: string;
   columnsReferences: string[];
-  updatedAt: Date;
   searchEnabled: boolean;
+  updatedAt?: Date;
   // Non persisted data
   isExecuting?: boolean;
   cancellable?: NoSerialize<AbortController>;

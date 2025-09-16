@@ -34,7 +34,10 @@ import {
   type Variable,
 } from '~/features/add-column/components/template-textarea';
 import { useExecution } from '~/features/add-column/form/execution';
-import { hasBlobContent } from '~/features/utils/columns';
+import {
+  isImageColumn as checkIsImageColumn,
+  hasBlobContent,
+} from '~/features/utils/columns';
 import type { Model } from '~/loaders/hub-models';
 import { configContext, modelsContext } from '~/routes/home/layout';
 import {
@@ -298,21 +301,30 @@ export const ExecutionForm = component$<SidebarProps>(
         }));
 
       // Populate image columns for image-text-to-text and image-to-image scenarios
-      imageColumns.value = columns.value
-        .filter((c) => c.id !== column.id && c.type === 'image')
-        .map((c) => ({
-          id: c.id,
-          name: c.name,
-        }));
+      // This now includes both explicit image columns and blob columns that contain image data
+      const updateImageColumns = async () => {
+        const imageCols = [];
+        for (const c of columns.value) {
+          if (c.id !== column.id && (await checkIsImageColumn(c))) {
+            imageCols.push({
+              id: c.id,
+              name: c.name,
+            });
+          }
+        }
+        imageColumns.value = imageCols;
 
-      // Auto-select first image column if none selected and we need one
-      if (
-        needsImageColumn.value &&
-        !selectedImageColumn.value &&
-        imageColumns.value.length > 0
-      ) {
-        selectedImageColumn.value = imageColumns.value[0].id;
-      }
+        // Auto-select first image column if none selected and we need one
+        if (
+          needsImageColumn.value &&
+          !selectedImageColumn.value &&
+          imageColumns.value.length > 0
+        ) {
+          selectedImageColumn.value = imageColumns.value[0].id;
+        }
+      };
+
+      updateImageColumns();
     });
 
     useTask$(({ track }) => {

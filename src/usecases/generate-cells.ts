@@ -43,6 +43,28 @@ export interface GenerateCellsParams {
 
 const MAX_CONCURRENCY = appConfig.inference.numConcurrentRequests;
 
+function convertToUint8Array(value: any): Uint8Array {
+  if (value instanceof Uint8Array) {
+    return value;
+  }
+  if (typeof value === 'string') {
+    const base64Data = value.replace(/^data:image\/[a-z]+;base64,/, '');
+    return new Uint8Array(Buffer.from(base64Data, 'base64'));
+  }
+  if (value instanceof ArrayBuffer) {
+    return new Uint8Array(value);
+  }
+  if (value && typeof value === 'object' && 'bytes' in value) {
+    if (value.bytes instanceof Uint8Array) {
+      return value.bytes;
+    }
+    if (value.bytes instanceof ArrayBuffer) {
+      return new Uint8Array(value.bytes);
+    }
+  }
+  throw new Error('Unsupported image data format');
+}
+
 /**
  * Generates cells for a given column based on the provided parameters.
  * This function supports two modes of generation:
@@ -777,18 +799,9 @@ const generateImageTextToText = async ({
   // Convert image data to Uint8Array if it's not already
   let imageData: Uint8Array;
 
-  if (imageCell.value instanceof Uint8Array) {
-    imageData = imageCell.value;
-  } else if (typeof imageCell.value === 'string') {
-    // Handle base64 encoded images
-    const base64Data = imageCell.value.replace(
-      /^data:image\/[a-z]+;base64,/,
-      '',
-    );
-    imageData = new Uint8Array(Buffer.from(base64Data, 'base64'));
-  } else if (imageCell.value instanceof ArrayBuffer) {
-    imageData = new Uint8Array(imageCell.value);
-  } else {
+  try {
+    imageData = convertToUint8Array(imageCell.value);
+  } catch (error) {
     return {
       error: 'Unsupported image data format',
     };

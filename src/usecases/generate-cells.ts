@@ -386,6 +386,7 @@ async function singleCellGeneration({
         prompt,
         args,
         session,
+        process,
       });
 
       cell.value = response.value;
@@ -743,18 +744,20 @@ const generateImageTextToText = async ({
   prompt,
   args,
   session,
+  process,
 }: {
   column: Column;
   prompt: string;
   args: PromptExecutionParams;
   session: Session;
+  process: Process;
 }): Promise<{
   value?: string;
   error?: string;
   sources?: CellSource[];
 }> => {
   // Get the image column ID from the process
-  const imageColumnId = column.process?.imageColumnId;
+  const imageColumnId = process.imageColumnId;
 
   if (!imageColumnId) {
     return {

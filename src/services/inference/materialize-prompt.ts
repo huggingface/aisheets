@@ -29,7 +29,6 @@ export function materializePrompt({
   examples,
   columnType,
 }: MaterializePromptParams): string {
-  // Force image-text-to-text columns to use data flow even without column references
   const hasData = data && Object.keys(data).length > 0;
   const isImageTextToText = columnType === 'text-image';
 

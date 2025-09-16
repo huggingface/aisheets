@@ -66,6 +66,7 @@ export const updateProcess = async (process: Process): Promise<Process> => {
     modelProvider: process.modelProvider,
     endpointUrl: process.endpointUrl ?? null,
     searchEnabled: process.searchEnabled,
+    imageColumnId: process.imageColumnId ?? null,
   });
 
   await model.save();
@@ -87,6 +88,7 @@ export const updateProcess = async (process: Process): Promise<Process> => {
     endpointUrl: model.endpointUrl ?? undefined,
     searchEnabled: model.searchEnabled,
     columnsReferences: process.columnsReferences,
+    imageColumnId: model.imageColumnId ?? undefined,
     updatedAt: model.updatedAt,
   };
 };

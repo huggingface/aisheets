@@ -27,6 +27,7 @@ from rich.panel import Panel
 
 import concurrent.futures
 
+
 @dataclasses.dataclass
 class ProcessorConfig:
     """
@@ -336,7 +337,7 @@ def process_column(
         rows = [dict(zip(batch.keys(), values)) for values in zip(*batch.values())]
 
         with concurrent.futures.ThreadPoolExecutor(
-                max_workers=processor_config.max_workers
+            max_workers=processor_config.max_workers
         ) as executor:
             futures = []
             for row in rows:
@@ -424,6 +425,7 @@ def main(
         destination,
         split=destination_split,
         create_pr=create_pr,
+        num_proc=max_workers,
     )
 
     total_time = time.time() - start_time

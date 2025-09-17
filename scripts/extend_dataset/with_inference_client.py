@@ -5,6 +5,7 @@
 #     "huggingface-hub",
 #     "rich",
 #     "typer",
+#     "pillow",
 # ]
 # ///
 import multiprocessing

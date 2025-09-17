@@ -17,7 +17,8 @@ import { Button, Select, triggerLooks } from '~/components';
 import { useClickOutside } from '~/components/hooks/click/outside';
 import { useDebounce } from '~/components/hooks/debounce/debounce';
 import { nextTick } from '~/components/hooks/tick';
-import { useClientConfig, useSession } from '~/loaders';
+import { useSession } from '~/loaders';
+import { useConfigContext } from '~/routes/home/layout';
 
 import { listHubDatasetDataFiles } from '~/services/repository/hub/list-hub-dataset-files';
 import { useImportFromHub } from '~/usecases/import-from-hub.usecase';
@@ -25,9 +26,8 @@ import { useListHubDatasets } from '~/usecases/list-hub-datasets.usecase';
 
 export const ImportFromHub = component$(() => {
   const session = useSession();
+  const { MAX_ROWS_IMPORT } = useConfigContext();
   const importFromHub = useImportFromHub();
-  const config = useClientConfig();
-  const { MAX_ROWS_IMPORT } = config.value;
 
   const nav = useNavigate();
 

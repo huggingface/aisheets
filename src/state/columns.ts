@@ -15,6 +15,7 @@ export interface Process {
   updatedAt: Date;
   searchEnabled: boolean;
   // Non persisted data
+  processedCells?: number;
   isExecuting?: boolean;
   cancellable?: NoSerialize<AbortController>;
   offset?: number;
@@ -284,6 +285,11 @@ export const useColumnsStore = () => {
       } else {
         column.cells.push(cell);
         column.cells.sort((a, b) => a.idx - b.idx);
+      }
+
+      if (column.process) {
+        column.process.processedCells =
+          (column.process.processedCells ?? 0) + 1;
       }
 
       replaceColumns(columns.value);

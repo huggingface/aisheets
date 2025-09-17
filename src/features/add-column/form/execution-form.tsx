@@ -473,32 +473,56 @@ export const ExecutionForm = component$<SidebarProps>(
                     <div class="flex items-center gap-2 text-neutral-500" />
                   )}
 
-                  {column.process?.isExecuting ? (
-                    <Tooltip text="Stop generating">
-                      <Button
-                        look="primary"
-                        class="w-[30px] h-[30px] rounded-full flex items-center justify-center p-0"
-                        onClick$={onStop}
-                        disabled={
-                          (column.process?.isExecuting &&
-                            column.id === TEMPORAL_ID) ||
-                          !prompt.value.trim()
-                        }
-                      >
-                        <LuSquare class="text-lg" />
-                      </Button>
-                    </Tooltip>
-                  ) : (
-                    <Tooltip text="Generate">
-                      <Button
-                        look="primary"
-                        class="w-[30px] h-[30px] rounded-full flex items-center justify-center p-0"
-                        onClick$={onGenerate}
-                      >
-                        <LuEgg class="text-lg" />
-                      </Button>
-                    </Tooltip>
-                  )}
+                  <div class="flex items-center gap-4">
+                    {!column.process?.isExecuting &&
+                      column.cells.some((c) => c.error) && (
+                        <div class="p-[2px] rounded-lg bg-red-500 w-16 h-8">
+                          <div class="rounded-md bg-white w-full h-full flex items-center justify-center">
+                            {column.cells.some((c) => c.error)}
+                          </div>
+                        </div>
+                      )}
+
+                    {column.process?.isExecuting &&
+                      column.process?.processedCells && (
+                        <div class="p-[2px] rounded-lg bg-gradient-to-b from-[#4057BF] to-[#6B86FF] w-16 h-8">
+                          <div class="rounded-md bg-white w-full h-full flex items-center justify-center">
+                            {firstColumn.value.cells.length -
+                              Math.min(
+                                column.process?.processedCells,
+                                firstColumn.value.cells.length,
+                              )}
+                          </div>
+                        </div>
+                      )}
+
+                    {column.process?.isExecuting ? (
+                      <Tooltip text="Stop generating">
+                        <Button
+                          look="primary"
+                          class="w-[30px] h-[30px] rounded-full flex items-center justify-center p-0"
+                          onClick$={onStop}
+                          disabled={
+                            (column.process?.isExecuting &&
+                              column.id === TEMPORAL_ID) ||
+                            !prompt.value.trim()
+                          }
+                        >
+                          <LuSquare class="text-lg" />
+                        </Button>
+                      </Tooltip>
+                    ) : (
+                      <Tooltip text="Generate">
+                        <Button
+                          look="primary"
+                          class="w-[30px] h-[30px] rounded-full flex items-center justify-center p-0"
+                          onClick$={onGenerate}
+                        >
+                          <LuEgg class="text-lg" />
+                        </Button>
+                      </Tooltip>
+                    )}
+                  </div>
                 </div>
               </div>
 

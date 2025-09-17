@@ -1,4 +1,5 @@
 import { type RequestEventBase, server$ } from '@builder.io/qwik-city';
+import { appConfig } from '~/config';
 
 import { importDatasetFromFile } from '~/services/repository/datasets';
 import { type Dataset, useServerSession } from '~/state';
@@ -17,6 +18,7 @@ export const useImportFromURL = () =>
     },
   ): Promise<Dataset> {
     const session = useServerSession(this);
+    const numberOfRows = appConfig.data.maxRowsImport;
 
     return await importDatasetFromFile(
       {
@@ -25,7 +27,7 @@ export const useImportFromURL = () =>
         file: url,
       },
       {
-        limit: 1000,
+        limit: numberOfRows,
         secrets: {
           googleSheets: secretToken,
         },

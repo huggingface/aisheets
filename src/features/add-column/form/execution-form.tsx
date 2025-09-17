@@ -278,9 +278,7 @@ export const ExecutionForm = component$<SidebarProps>(
         }));
     });
 
-    useTask$(({ track }) => {
-      track(() => column);
-
+    useTask$(() => {
       if (isImageColumn.value) {
         // Currently, we custom endpoint only for text models
         enableCustomEndpoint.value = false;

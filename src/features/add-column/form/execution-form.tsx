@@ -668,7 +668,7 @@ export const ExecutionForm = component$<SidebarProps>(
                             <Select.Item
                               key={provider}
                               value={provider}
-                              class="text-foreground hover:bg-accent w-fit"
+                              class="text-foreground hover:bg-accent w-fit min-w-full"
                               onClick$={() => {
                                 selectedProvider.value = provider; // Redundant but ensures the value is set sometimes does not work...
                               }}

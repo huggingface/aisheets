@@ -477,7 +477,7 @@ export const ExecutionForm = component$<SidebarProps>(
                     {!column.process?.isExecuting &&
                       column.cells.some((c) => c.error) && (
                         <div class="p-[2px] rounded-lg bg-red-500 w-16 h-8">
-                          <div class="rounded-md bg-white w-full h-full flex items-center justify-center">
+                          <div class="rounded-md bg-white w-full h-full flex items-center justify-center text-red-500">
                             {column.cells.some((c) => c.error)}
                           </div>
                         </div>

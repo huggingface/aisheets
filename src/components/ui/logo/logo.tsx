@@ -1,6 +1,6 @@
 import { component$, type PropsOf } from '@builder.io/qwik';
 import { cn } from '@qwik-ui/utils';
-import { LuPlugZap } from '@qwikest/icons/lucide';
+import { LuLink2 } from '@qwikest/icons/lucide';
 
 interface LogoProps extends PropsOf<'svg'> {
   fillColor?: string;
@@ -161,7 +161,7 @@ export const Provider = component$<{
   const Component = SUPPORT_PROVIDERS[name as keyof typeof SUPPORT_PROVIDERS];
 
   if (!Component) {
-    return <LuPlugZap class="text-indigo-500 w-4 h-4" />;
+    return <LuLink2 class="text-indigo-500 w-4 h-4" />;
   }
 
   return <Component />;

@@ -14,7 +14,6 @@ import {
   LuCheck,
   LuEgg,
   LuGlobe,
-  LuLink2,
   LuStopCircle,
   LuX,
 } from '@qwikest/icons/lucide';
@@ -272,14 +271,6 @@ export const ExecutionForm = component$<SidebarProps>(
       }
     });
 
-    const providerComponent = $((name: string) => {
-      if (showEndpointUrl.value) {
-        return <LuLink2 class="text-indigo-500 w-4 h-4" />;
-      }
-
-      return <Provider name={name} />;
-    });
-
     useTask$(({ track }) => {
       track(columns);
 
@@ -524,7 +515,12 @@ export const ExecutionForm = component$<SidebarProps>(
               <div class="px-3 pb-12 pt-2 bg-white border border-secondary-foreground rounded-sm">
                 <div class="flex flex-col gap-4">
                   <div class="flex gap-4">
-                    <div class="flex-[2] w-3/4">
+                    <div
+                      class={cn({
+                        'w-1/2': showEndpointUrl.value,
+                        'flex-[2] w-3/4': !showEndpointUrl.value,
+                      })}
+                    >
                       <Select.Root
                         ref={modelSearchContainerRef}
                         key={modelSearchQuery.value}
@@ -633,7 +629,12 @@ export const ExecutionForm = component$<SidebarProps>(
                       </Select.Root>
                     </div>
 
-                    <div class="flex-1 w-1/4">
+                    <div
+                      class={cn({
+                        'w-1/2': showEndpointUrl.value,
+                        'flex-1 w-1/4': !showEndpointUrl.value,
+                      })}
+                    >
                       <Select.Root bind:value={selectedProvider}>
                         <Select.Label>
                           {showEndpointUrl.value
@@ -643,11 +644,12 @@ export const ExecutionForm = component$<SidebarProps>(
                         <Select.Trigger class="bg-white rounded-base border-neutral-300-foreground">
                           <div class="flex text-xs items-center justify-between gap-2 font-mono w-40">
                             <div class="flex items-center gap-2">
-                              {providerComponent(selectedProvider.value)}
+                              <Provider name={selectedProvider.value} />
+
                               <Select.DisplayValue
                                 class={cn('truncate w-fit', {
                                   'max-w-16': modelProviders.value.length > 1,
-                                  'max-w-28': modelProviders.value.length === 1,
+                                  'max-w-52': modelProviders.value.length === 1,
                                 })}
                               />
                             </div>
@@ -666,13 +668,13 @@ export const ExecutionForm = component$<SidebarProps>(
                             <Select.Item
                               key={provider}
                               value={provider}
-                              class="text-foreground hover:bg-accent"
+                              class="text-foreground hover:bg-accent w-fit"
                               onClick$={() => {
                                 selectedProvider.value = provider; // Redundant but ensures the value is set sometimes does not work...
                               }}
                             >
                               <div class="flex text-xs items-center p-1 gap-2 font-mono">
-                                {providerComponent(provider)}
+                                <Provider name={provider} />
 
                                 <Select.ItemLabel>{provider}</Select.ItemLabel>
                                 {provider === selectedProvider.value && (

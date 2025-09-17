@@ -18,6 +18,7 @@ import { useClickOutside } from '~/components/hooks/click/outside';
 import { useDebounce } from '~/components/hooks/debounce/debounce';
 import { nextTick } from '~/components/hooks/tick';
 import { useSession } from '~/loaders';
+import { useConfigContext } from '~/routes/home/layout';
 
 import { listHubDatasetDataFiles } from '~/services/repository/hub/list-hub-dataset-files';
 import { useImportFromHub } from '~/usecases/import-from-hub.usecase';
@@ -25,6 +26,7 @@ import { useListHubDatasets } from '~/usecases/list-hub-datasets.usecase';
 
 export const ImportFromHub = component$(() => {
   const session = useSession();
+  const { MAX_ROWS_IMPORT } = useConfigContext();
   const importFromHub = useImportFromHub();
 
   const nav = useNavigate();
@@ -100,7 +102,9 @@ export const ImportFromHub = component$(() => {
         <div class="flex flex-col w-full gap-4 mt-4">
           {repoId.value && filePath.value && (
             <div class="text-foreground text-sm">
-              <span>Only the first 1000 rows will be imported.</span>
+              <span>
+                Only the first {MAX_ROWS_IMPORT} rows will be imported.
+              </span>
             </div>
           )}
           <Button

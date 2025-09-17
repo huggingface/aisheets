@@ -45,6 +45,18 @@ const DATA_DIR: string = process.env.DATA_DIR ?? './data';
 const INFERENCE_TIMEOUT = 90000;
 
 /**
+ * The maximum number of rows to import from a file or a Hugging Face dataset.
+ *
+ * This constant defines the upper limit on the number of rows that can be imported
+ * to prevent performance issues and excessive resource consumption.
+ *
+ * Default value: 1000
+ */
+const MAX_ROWS_IMPORT = process.env.MAX_ROWS_IMPORT
+  ? Number(process.env.MAX_ROWS_IMPORT)
+  : 1000;
+
+/**
  * The number of parallel requests to the Inference Endpoint to generate cells
  *
  * This constant defines the number of concurrent requests to be sent to the endpoint while generating cells
@@ -280,6 +292,7 @@ export const appConfig = {
   },
 
   data: {
+    maxRowsImport: MAX_ROWS_IMPORT,
     dataDir: DATA_DIR,
     vectorDbDir: join(RUNTIME_ENV, 'embeddings'),
     sqliteDb: join(RUNTIME_ENV, '.sqlite3'),

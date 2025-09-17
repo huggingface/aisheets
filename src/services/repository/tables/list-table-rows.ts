@@ -1,9 +1,9 @@
-import { connectAndClose } from '~/services/db/duckdb';
-import { getColumnName, getDatasetTableName } from './utils';
-
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import { connectAndClose } from '~/services/db/duckdb';
+import { bigIntStringify } from '~/usecases/utils/serializer';
+import { getColumnName, getDatasetTableName } from './utils';
 
 export const countDatasetTableRows = async ({
   dataset,
@@ -118,7 +118,7 @@ export const exportDatasetTableRows = async ({
       // Render featuresInfo as a single quote map with unquoted keys
 
       formatArgs = `, KV_METADATA {
-        huggingface: '${JSON.stringify(featuresInfo)}',
+        huggingface: '${JSON.stringify(featuresInfo, bigIntStringify)}',
         generated_by: 'Sheets'
       }`;
     }

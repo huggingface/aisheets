@@ -1,9 +1,9 @@
 import {
   $,
-  type Signal,
-  Slot,
   component$,
   createContextId,
+  type Signal,
+  Slot,
   useComputed$,
   useContext,
   useContextProvider,
@@ -15,6 +15,7 @@ export type Execution = {
   prompt?: string;
   modelName?: string;
   modelProvider?: string;
+  endpointUrl?: string;
   mode?: 'add' | 'edit';
 };
 
@@ -38,6 +39,7 @@ export const useExecution = () => {
       prompt: context.value.prompt,
       modelName: context.value.modelName,
       modelProvider: context.value.modelProvider,
+      endpointUrl: context.value.endpointUrl,
     };
   });
 
@@ -52,8 +54,16 @@ export const useExecution = () => {
         prompt?: string,
         modelName?: string,
         modelProvider?: string,
+        endpointUrl?: string,
       ) => {
-        context.value = { columnId, mode, prompt, modelName, modelProvider };
+        context.value = {
+          columnId,
+          mode,
+          prompt,
+          modelName,
+          modelProvider,
+          endpointUrl,
+        };
       },
     ),
     close: $(() => {

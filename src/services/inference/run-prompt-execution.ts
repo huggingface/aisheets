@@ -13,7 +13,8 @@ import { type Example, materializePrompt } from './materialize-prompt';
 
 export interface PromptExecutionParams {
   modelName: string;
-  modelProvider: string;
+  modelProvider?: string;
+  endpointUrl?: string;
   instruction: string;
   sourcesContext?: {
     source_uri: string;
@@ -26,7 +27,6 @@ export interface PromptExecutionParams {
 
   timeout?: number;
   accessToken?: string;
-  endpointUrl?: string;
 }
 
 export interface PromptExecutionResponse {
@@ -221,9 +221,9 @@ export const normalizeChatCompletionArgs = ({
 }: {
   messages: any[];
   modelName: string;
-  modelProvider: string;
-  accessToken?: string;
+  modelProvider?: string;
   endpointUrl?: string;
+  accessToken?: string;
 }) => {
   const {
     authentication: { hfToken },
@@ -263,7 +263,7 @@ export const normalizeOptions = (timeout?: number | undefined): Options => {
 
 function showPromptInfo(
   modelName: string,
-  modelProvider: string,
+  modelProvider: string | undefined,
   endpointUrl: string | undefined,
   inputPrompt: string,
 ) {

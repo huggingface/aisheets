@@ -1,5 +1,6 @@
-import { DatasetModel } from '~/services/db/models';
-import type { Dataset } from '~/state';
+import { ColumnModel, DatasetModel } from '~/services/db/models';
+import type { Column, Dataset } from '~/state';
+import { detectMimeTypeFromBytes } from '~/usecases/utils/mime-types';
 import { getColumnCells } from './cells';
 import { getDatasetColumns } from './columns';
 import { sendTelemetry } from './hub/telemetry';
@@ -7,7 +8,9 @@ import {
   countDatasetTableRows,
   createDatasetTable,
   createDatasetTableFromFile,
+  listDatasetTableRows,
 } from './tables';
+import { describeTableColumns } from './tables/describe-table-columns';
 
 interface CreateDatasetParams {
   name: string;
@@ -80,7 +83,7 @@ export const importDatasetFromFile = async (
   });
 
   try {
-    const columns = await createDatasetTableFromFile(
+    let columns = await createDatasetTableFromFile(
       {
         dataset: {
           id: model.id,
@@ -91,6 +94,11 @@ export const importDatasetFromFile = async (
       },
       options,
     );
+
+    columns = await normalizeDatasetColumnTypes({
+      dataset: model,
+      columns,
+    });
 
     const datasetSize = await countDatasetTableRows({ dataset: model });
 
@@ -200,4 +208,117 @@ export const updateDataset = async ({
     columns: [],
     size: datasetSize,
   };
+};
+
+const normalizeDatasetColumnTypes = async ({
+  dataset,
+  columns,
+}: {
+  dataset: DatasetModel;
+  columns: Column[];
+}): Promise<Column[]> => {
+  const duckDBColumns = await describeTableColumns(dataset);
+
+  return Promise.all(
+    columns.map(async (column) => {
+      const dbCol = duckDBColumns.find((col) => col.name === column.id);
+      if (!dbCol) return column;
+
+      if (await isImageFeature(dataset, dbCol)) {
+        let type = 'image';
+        if (column.type.endsWith('[]')) type += '[]';
+
+        await ColumnModel.update({ type }, { where: { id: column.id } });
+        return { ...column, type };
+      }
+
+      return column;
+    }),
+  );
+};
+
+const isImageFeature = async (
+  dataset: {
+    id: string;
+    name: string;
+  },
+  dbCol: {
+    name: string;
+    type: string;
+    properties?: Array<{ name: string; type: string }>;
+  },
+) => {
+  let blobProp:
+    | {
+        name: string;
+        type: string;
+        properties?: Array<{
+          name: string;
+          type: string;
+        }>;
+      }
+    | undefined;
+  if (dbCol.type.toLowerCase() === 'blob') {
+    blobProp = dbCol;
+  } else if (dbCol.properties) {
+    blobProp = dbCol.properties.find(
+      (prop) => prop.type.toLowerCase() === 'blob',
+    );
+  }
+
+  if (blobProp) {
+    const columnMimeType = await extractDatasetColumnMimeType({
+      dataset,
+      columnId: dbCol.name,
+    });
+
+    return columnMimeType?.startsWith('image/');
+  }
+
+  return false;
+};
+
+const extractDatasetColumnMimeType = async ({
+  dataset,
+  columnId,
+}: {
+  dataset: {
+    id: string;
+    name: string;
+  };
+  columnId: string;
+}): Promise<string | null> => {
+  try {
+    const row = await listDatasetTableRows({
+      dataset,
+      columns: [{ id: columnId }],
+      offset: 0,
+      limit: 1,
+    });
+
+    if (row.length === 0) return null;
+
+    const value = row[0][columnId];
+
+    if (value instanceof Uint8Array) {
+      return detectMimeTypeFromBytes(value);
+    }
+    if ('bytes' in value && value.bytes instanceof Uint8Array) {
+      return detectMimeTypeFromBytes(value.bytes);
+    }
+    if (Array.isArray(value) && value.length > 0) {
+      const first = value[0];
+      if (first instanceof Uint8Array) {
+        return detectMimeTypeFromBytes(first);
+      }
+      if (first && 'bytes' in first && first.bytes instanceof Uint8Array) {
+        return detectMimeTypeFromBytes(first.bytes);
+      }
+    }
+
+    return null;
+  } catch (error) {
+    console.error('Error extracting mime type:', error);
+    return null;
+  }
 };

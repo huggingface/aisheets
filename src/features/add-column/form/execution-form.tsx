@@ -34,10 +34,7 @@ import {
   type Variable,
 } from '~/features/add-column/components/template-textarea';
 import { useExecution } from '~/features/add-column/form/execution';
-import {
-  isImageColumn as checkIsImageColumn,
-  hasBlobContent,
-} from '~/features/utils/columns';
+import { hasBlobContent, isImage } from '~/features/utils/columns';
 import type { Model } from '~/loaders/hub-models';
 import { configContext, modelsContext } from '~/routes/home/layout';
 import {
@@ -298,7 +295,7 @@ export const ExecutionForm = component$<SidebarProps>(
       const updateImageColumns = async () => {
         const imageCols = [];
         for (const c of columns.value) {
-          if (c.id !== column.id && (await checkIsImageColumn(c))) {
+          if (c.id !== column.id && isImage(c)) {
             imageCols.push({
               id: c.id,
               name: c.name,

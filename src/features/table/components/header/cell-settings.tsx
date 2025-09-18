@@ -1,11 +1,12 @@
-import { $, Slot, component$ } from '@builder.io/qwik';
+import { $, component$, Slot } from '@builder.io/qwik';
+import { cn } from '@qwik-ui/utils';
 import { LuSettings2 } from '@qwikest/icons/lucide';
 import { nextTick } from '~/components/hooks/tick';
 import { useExecution } from '~/features/add-column';
 import { type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
 
 export const CellSettings = component$<{ column: Column }>(({ column }) => {
-  const { open } = useExecution();
+  const { open, columnId } = useExecution();
   const { removeTemporalColumn } = useColumnsStore();
 
   const editCell = $(async () => {
@@ -23,7 +24,12 @@ export const CellSettings = component$<{ column: Column }>(({ column }) => {
 
   return (
     <div
-      class="p-2 cursor-pointer flex flex-row gap-1 items-center hover:bg-neutral-100 rounded-full"
+      class={cn(
+        'p-2 cursor-pointer flex flex-row gap-1 items-center hover:bg-neutral-100 rounded-full',
+        {
+          'hover:bg-neutral-300': columnId.value === column.id,
+        },
+      )}
       onClick$={editCell}
       role="button"
       tabIndex={0}

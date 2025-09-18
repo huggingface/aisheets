@@ -44,8 +44,9 @@ const MODEL_EXPANDABLE_KEYS = [
 
 export interface Model {
   id: string;
-  providers: string[];
   supportedType: string;
+  providers?: string[];
+  endpointUrl?: string;
   tags?: string[];
   safetensors?: unknown;
   size?: string;
@@ -79,44 +80,52 @@ const fetchAvatar = async (modelId: string): Promise<string | undefined> => {
   return undefined;
 };
 
+const listTextGenerationModels = async (session: Session): Promise<Model[]> => {
+  const textModels = await Promise.all([
+    fetchModelsForPipeline(session, 'text-generation'),
+    fetchModelsForPipeline(session, 'image-text-to-text'),
+  ]);
+
+  return textModels
+    .flat()
+    .map((model) => ({
+      ...model,
+      supportedType: 'text',
+    }))
+    .sort((a, b) => (b.trendingScore || 0) - (a.trendingScore || 0));
+};
+
+const listImageGenerationModels = async (
+  session: Session,
+): Promise<Model[]> => {
+  const imageModels = await fetchModelsForPipeline(session, 'text-to-image');
+
+  return imageModels
+    .map((model) => ({
+      ...model,
+      supportedType: 'image',
+    }))
+    .sort((a, b) => (b.trendingScore || 0) - (a.trendingScore || 0));
+};
+
 const listAllModels = server$(async function (
   this: RequestEventBase<QwikCityPlatform>,
 ): Promise<Model[]> {
   const session = useServerSession(this);
   if (!session) return [];
 
-  // Fetch models for both pipeline tags
+  // Fetch models for all supported generation types
   const models = await Promise.all([
     // All text generation models that support conversational
-    Promise.all([
-      fetchModelsForPipeline(session, 'text-generation'),
-      fetchModelsForPipeline(session, 'image-text-to-text'),
-    ]).then((models) =>
-      models
-        .flat()
-        .filter((model) => model.tags?.includes('conversational'))
-        .map((model) => ({
-          ...model,
-          supportedType: 'text',
-        })),
-    ),
+    listTextGenerationModels(session),
     // All image generation models
     // TODO: Add pagination support since image generation models can be large
     // and we might want to fetch more than just the first 1000 models.
-    fetchModelsForPipeline(session, 'text-to-image').then((models) =>
-      models.map((model) => ({
-        ...model,
-        supportedType: 'image',
-      })),
-    ),
+    listImageGenerationModels(session),
   ]);
 
-  const allModels = models
-    .flat()
-    .sort((a, b) => (b.trendingScore || 0) - (a.trendingScore || 0));
-
   return await Promise.all(
-    allModels.map(async (m) => ({
+    models.flat().map(async (m) => ({
       ...m,
       picture: await fetchAvatar(m.id),
     })),
@@ -219,6 +228,18 @@ const fetchModelsForPipeline = async (
 export const useHubModels = routeLoader$(async function (
   this: RequestEventLoader,
 ): Promise<Model[]> {
+  const { customModels = [] } = appConfig.inference.tasks.textGeneration;
+  // Remove this constant when we want tu support custom models and HF models at the same time
+  const hideHFModels = customModels.length > 0;
+
+  if (hideHFModels) {
+    const imageModels = await listImageGenerationModels(
+      useServerSession(this)!,
+    );
+
+    return [...customModels, ...imageModels];
+  }
+
   const models = await listAllModels();
 
   const {

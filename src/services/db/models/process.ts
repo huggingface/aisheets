@@ -20,7 +20,7 @@ export class ProcessModel extends Model<
   declare prompt: string;
   declare modelName: string;
 
-  declare modelProvider: string;
+  declare modelProvider: CreationOptional<string | null>;
   declare endpointUrl: CreationOptional<string | null>;
 
   declare searchEnabled: boolean;
@@ -53,7 +53,8 @@ ProcessModel.init(
     },
     modelProvider: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
+      defaultValue: null,
     },
     endpointUrl: {
       type: DataTypes.STRING,

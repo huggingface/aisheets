@@ -1,6 +1,7 @@
 import type { RequestEventBase } from '@builder.io/qwik-city';
 import { chatCompletion } from '@huggingface/inference';
 import { appConfig } from '~/config';
+import { cacheGet, cacheSet } from '~/services/cache';
 import {
   normalizeChatCompletionArgs,
   normalizeOptions,
@@ -8,8 +9,6 @@ import {
 import { createColumn, getDatasetColumns } from '~/services/repository/columns';
 import { createDataset } from '~/services/repository/datasets';
 import { createProcess } from '~/services/repository/processes';
-
-import { cacheGet, cacheSet } from '~/services/cache';
 import { indexDatasetSources } from '~/services/websearch/embed';
 import { scrapeUrlsBatch } from '~/services/websearch/scrape';
 import {
@@ -390,6 +389,7 @@ async function createDatasetWithColumns(
         modelProvider: processModelProvider,
         endpointUrl: textGeneration.endpointUrl,
         searchEnabled,
+        task: isImage ? 'text-to-image' : 'text-generation',
         columnsReferences: columnReferences.map((ref) => {
           const refIndex = columnNames.indexOf(ref);
           return createdColumns[refIndex].id;

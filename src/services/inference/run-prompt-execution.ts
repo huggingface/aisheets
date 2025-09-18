@@ -8,6 +8,7 @@ import {
 } from '@huggingface/inference';
 import { appConfig } from '~/config';
 import { cacheGet, cacheSet } from '~/services/cache';
+import type { TaskType } from '~/state/columns';
 import { type Example, materializePrompt } from './materialize-prompt';
 
 export interface PromptExecutionParams {
@@ -26,7 +27,7 @@ export interface PromptExecutionParams {
   timeout?: number;
   accessToken?: string;
   endpointUrl?: string;
-  columnType?: string; // Add column type for image-text-to-text detection
+  task?: TaskType;
 }
 
 export interface PromptExecutionResponse {
@@ -50,14 +51,14 @@ export const runPromptExecution = async ({
   examples,
   timeout,
   endpointUrl,
-  columnType,
+  task,
 }: PromptExecutionParams): Promise<PromptExecutionResponse> => {
   const inputPrompt = materializePrompt({
     instruction,
     sourcesContext,
     data,
     examples,
-    columnType,
+    task,
   });
   const args = normalizeChatCompletionArgs({
     messages: [{ role: 'user', content: inputPrompt }],
@@ -119,14 +120,14 @@ export const runPromptExecutionStream = async function* ({
   timeout,
   accessToken,
   endpointUrl,
-  columnType,
+  task,
 }: PromptExecutionParams): AsyncGenerator<PromptExecutionResponse> {
   const inputPrompt = materializePrompt({
     instruction,
     sourcesContext,
     data,
     examples,
-    columnType,
+    task,
   });
   const args = normalizeChatCompletionArgs({
     messages: [{ role: 'user', content: inputPrompt }],

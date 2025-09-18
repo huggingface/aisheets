@@ -10,12 +10,15 @@ import {
   useSignal,
 } from '@builder.io/qwik';
 
+import type { TaskType } from '~/state/columns';
+
 export type Execution = {
   columnId?: string;
   prompt?: string;
   modelName?: string;
   modelProvider?: string;
   mode?: 'add' | 'edit';
+  task?: TaskType;
 };
 
 const executionContext =
@@ -33,6 +36,7 @@ export const useExecution = () => {
 
   const columnId = useComputed$(() => context.value.columnId);
   const mode = useComputed$(() => context.value.mode);
+  const task = useComputed$(() => context.value.task);
   const initialProcess = useComputed$(() => {
     return {
       prompt: context.value.prompt,
@@ -44,21 +48,26 @@ export const useExecution = () => {
   return {
     columnId,
     mode,
+    task,
     initialProcess,
     open: $(
       (
         columnId: Execution['columnId'],
         mode: Execution['mode'],
-        prompt?: string,
-        modelName?: string,
-        modelProvider?: string,
+        options?: {
+          prompt?: string;
+          modelName?: string;
+          modelProvider?: string;
+          task?: TaskType;
+        },
       ) => {
         context.value = {
           columnId,
           mode,
-          prompt,
-          modelName,
-          modelProvider,
+          prompt: options?.prompt,
+          modelName: options?.modelName,
+          modelProvider: options?.modelProvider,
+          task: options?.task,
         };
       },
     ),

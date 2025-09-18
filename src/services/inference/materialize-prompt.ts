@@ -3,6 +3,7 @@ import {
   EXAMPLES_PROMPT_MAX_CONTEXT_SIZE,
   SOURCES_PROMPT_MAX_CONTEXT_SIZE,
 } from '~/config';
+import type { TaskType } from '~/state/columns';
 
 export interface Example {
   output: string;
@@ -19,7 +20,7 @@ export interface MaterializePromptParams {
   data?: object;
   examples?: Example[];
   renderInstruction?: boolean;
-  columnType?: string; // Add column type to detect image-text-to-text
+  task?: TaskType;
 }
 
 export function materializePrompt({
@@ -27,10 +28,10 @@ export function materializePrompt({
   sourcesContext,
   data,
   examples,
-  columnType,
+  task,
 }: MaterializePromptParams): string {
   const hasData = data && Object.keys(data).length > 0;
-  const isImageTextToText = columnType === 'text-image';
+  const isImageTextToText = task === 'image-text-to-text';
 
   return hasData || isImageTextToText
     ? materializePromptFromData(
@@ -38,7 +39,7 @@ export function materializePrompt({
         data || {},
         sourcesContext,
         examples,
-        columnType,
+        task,
       )
     : materializePromptFromScratch(instruction, sourcesContext, examples);
 }
@@ -105,7 +106,7 @@ function materializePromptFromData(
     text: string;
   }[],
   examples?: Example[],
-  columnType?: string,
+  task?: 'text-generation' | 'image-text-to-text' | 'text-to-image',
 ): string {
   const examplesTemplate = `# Examples
 The following are correct, accurate example outputs with respect to the user instruction:
@@ -120,7 +121,7 @@ The following are correct, accurate example outputs with respect to the user ins
 `;
 
   const hasData = data && Object.keys(data).length > 0;
-  const isImageTextToText = columnType === 'text-image';
+  const isImageTextToText = task === 'image-text-to-text';
   const finalInstruction =
     hasData || !isImageTextToText
       ? renderInstruction(instruction, data)

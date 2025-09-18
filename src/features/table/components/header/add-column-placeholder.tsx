@@ -12,7 +12,7 @@ import { Tooltip } from '~/components/ui/tooltip/tooltip';
 import { useExecution } from '~/features/add-column/form';
 import { hasBlobContent } from '~/features/utils/columns';
 
-import { TEMPORAL_ID, useColumnsStore } from '~/state';
+import { type TaskType, TEMPORAL_ID, useColumnsStore } from '~/state';
 
 const COLUMN_PROMPTS = {
   translate: `Translate English to French, ensuring grammatical accuracy and natural, human-like phrasing.
@@ -65,17 +65,28 @@ export const TableAddCellHeaderPlaceHolder = component$(() => {
   const handleNewColumn = $(async (promptType: ColumnPromptType) => {
     if (lastColumnId.value === TEMPORAL_ID) return;
 
-    // Map prompt types to column types
+    // Map prompt types to column types (based on output data type)
     const typeMap = {
       translate: 'text',
       extractKeywords: 'text',
       summarize: 'text',
       textToImage: 'image',
-      imageTextToText: 'text-image',
+      imageTextToText: 'text',
       custom: 'text',
     };
 
+    // Map prompt types to task types (based on model pipeline)
+    const taskMap: Record<ColumnPromptType, TaskType> = {
+      translate: 'text-generation',
+      extractKeywords: 'text-generation',
+      summarize: 'text-generation',
+      textToImage: 'text-to-image',
+      imageTextToText: 'image-text-to-text',
+      custom: 'text-generation',
+    };
+
     const type = typeMap[promptType];
+    const task = taskMap[promptType];
 
     await addTemporalColumn(type);
 
@@ -89,9 +100,15 @@ export const TableAddCellHeaderPlaceHolder = component$(() => {
         `{{${firstValidColumnToReference.name}}}`,
       );
 
-      open(TEMPORAL_ID, 'add', initialPrompt);
+      open(TEMPORAL_ID, 'add', {
+        prompt: initialPrompt,
+        task,
+      });
     } else {
-      open(TEMPORAL_ID, 'add', '');
+      open(TEMPORAL_ID, 'add', {
+        prompt: '',
+        task,
+      });
     }
   });
 

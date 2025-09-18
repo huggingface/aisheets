@@ -134,7 +134,7 @@ export const generateCells = async function* ({
     const hasColumnReferences =
       columnsReferences && columnsReferences.length > 0;
     const isImageTextToText =
-      column.type === 'text-image' && process.imageColumnId;
+      process.task === 'image-text-to-text' && process.imageColumnId;
 
     if (hasColumnReferences || isImageTextToText) {
       yield* generateCellsFromColumnsReferences({
@@ -391,10 +391,11 @@ async function singleCellGeneration({
     timeout,
     data,
     idx: rowIdx,
+    task: process.task,
   };
 
-  switch (column.type.toLowerCase().trim()) {
-    case 'image': {
+  switch (process.task) {
+    case 'text-to-image': {
       const response = await generateImage({
         prompt,
         args,
@@ -407,7 +408,7 @@ async function singleCellGeneration({
 
       break;
     }
-    case 'text-image': {
+    case 'image-text-to-text': {
       const response = await generateImageTextToText({
         prompt,
         args,
@@ -422,6 +423,7 @@ async function singleCellGeneration({
 
       break;
     }
+    case 'text-generation':
     default: {
       const response = await _generateText({
         column,
@@ -725,7 +727,7 @@ const _generateText = async ({
 
   const response = await runPromptExecution({
     ...args,
-    columnType: column.type,
+    task: args.task,
   });
 
   // Extract sources (url + snippet) if available

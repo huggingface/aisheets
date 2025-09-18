@@ -43,6 +43,7 @@ import { configContext, modelsContext } from '~/routes/home/layout';
 import {
   type Column,
   type CreateColumn,
+  type TaskType,
   TEMPORAL_ID,
   useColumnsStore,
 } from '~/state';
@@ -52,8 +53,6 @@ interface SidebarProps {
   onGenerateColumn: QRL<(column: CreateColumn) => Promise<void>>;
 }
 
-type SupportedType = 'text' | 'image' | 'text-image';
-
 class Models {
   private models: Model[];
 
@@ -61,9 +60,9 @@ class Models {
     this.models = models;
   }
 
-  getModelsByType(type: SupportedType): Model[] {
-    if (type === 'image') return this.getImageModels();
-    if (type === 'text-image') return this.getImageTextToTextModels();
+  getModelsByTask(task: TaskType): Model[] {
+    if (task === 'text-to-image') return this.getImageModels();
+    if (task === 'image-text-to-text') return this.getImageTextToTextModels();
     return this.getTextModels();
   }
 
@@ -207,7 +206,7 @@ class GroupedModels {
 export const ExecutionForm = component$<SidebarProps>(
   ({ column, onGenerateColumn }) => {
     const executionFormRef = useSignal<HTMLElement>();
-    const { initialProcess, mode, close } = useExecution();
+    const { initialProcess, mode, close, task } = useExecution();
     const { firstColumn, columns, removeTemporalColumn, updateColumn } =
       useColumnsStore();
 
@@ -221,17 +220,13 @@ export const ExecutionForm = component$<SidebarProps>(
       MODEL_ENDPOINT_URL,
     } = useContext(configContext);
 
-    const isImageTextToText = useComputed$(() => {
-      return column.type === 'text-image';
-    });
-
     const needsImageColumn = useComputed$(() => {
-      return isImageTextToText.value;
+      return task.value === 'image-text-to-text';
     });
 
     const models = useComputed$(() => {
-      return new Models(allModels).getModelsByType(
-        column.type as SupportedType,
+      return new Models(allModels).getModelsByTask(
+        task.value || 'text-generation',
       );
     });
     const filteredModels = useSignal<Model[]>(models.value);
@@ -449,6 +444,7 @@ export const ExecutionForm = component$<SidebarProps>(
             prompt: prompt.value,
             columnsReferences: columnsReferences.value,
             searchEnabled: searchOnWeb.value,
+            task: task.value || 'text-generation',
             // Add selected image column for image processing workflows
             ...(needsImageColumn.value &&
               selectedImageColumn.value && {
@@ -607,7 +603,6 @@ export const ExecutionForm = component$<SidebarProps>(
               ) : (
                 <div class="px-3 pb-12 pt-2 bg-white border border-secondary-foreground rounded-sm">
                   <div class="flex flex-col gap-4">
-                    {/* Image Column Selector for image-text-to-text and image-to-image */}
                     {needsImageColumn.value &&
                       imageColumns.value.length > 0 && (
                         <div class="flex gap-4">

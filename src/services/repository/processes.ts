@@ -1,5 +1,5 @@
 import { ProcessColumnModel, ProcessModel } from '~/services/db/models';
-import type { Process } from '~/state';
+import type { Process, TaskType } from '~/state';
 
 export interface CreateProcess {
   prompt: string;
@@ -9,6 +9,7 @@ export interface CreateProcess {
   searchEnabled: boolean;
   columnsReferences?: string[];
   imageColumnId?: string; // For image processing workflows
+  task: TaskType;
 }
 
 export const createProcess = async ({
@@ -28,6 +29,7 @@ export const createProcess = async ({
     searchEnabled: process.searchEnabled,
     columnId: column.id,
     imageColumnId: process.imageColumnId ?? null,
+    task: process.task,
   });
 
   // TODO: Try to create junction model when creating a process
@@ -48,6 +50,7 @@ export const createProcess = async ({
     searchEnabled: model.searchEnabled,
     columnsReferences: process?.columnsReferences || [],
     imageColumnId: model.imageColumnId ?? undefined,
+    task: model.task as TaskType,
     updatedAt: model.updatedAt,
   };
 };
@@ -67,6 +70,7 @@ export const updateProcess = async (process: Process): Promise<Process> => {
     endpointUrl: process.endpointUrl ?? null,
     searchEnabled: process.searchEnabled,
     imageColumnId: process.imageColumnId ?? null,
+    task: process.task,
   });
 
   await model.save();
@@ -89,6 +93,7 @@ export const updateProcess = async (process: Process): Promise<Process> => {
     searchEnabled: model.searchEnabled,
     columnsReferences: process.columnsReferences,
     imageColumnId: model.imageColumnId ?? undefined,
+    task: model.task as TaskType,
     updatedAt: model.updatedAt,
   };
 };

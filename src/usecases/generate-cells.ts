@@ -423,7 +423,6 @@ async function singleCellGeneration({
 
       break;
     }
-    case 'text-generation':
     default: {
       const response = await _generateText({
         column,

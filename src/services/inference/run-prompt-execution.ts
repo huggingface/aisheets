@@ -1,14 +1,14 @@
+import { isDev } from '@builder.io/qwik';
 import {
+  chatCompletion,
+  chatCompletionStream,
   type FeatureExtractionArgs,
   type InferenceProvider,
   type Options,
-  chatCompletion,
-  chatCompletionStream,
 } from '@huggingface/inference';
-
-import { isDev } from '@builder.io/qwik';
 import { appConfig } from '~/config';
 import { cacheGet, cacheSet } from '~/services/cache';
+import { bigIntStringify } from '~/usecases/utils/serializer';
 import { type Example, materializePrompt } from './materialize-prompt';
 
 export interface PromptExecutionParams {
@@ -37,7 +37,7 @@ export interface PromptExecutionResponse {
 
 export const handleError = (e: unknown): string => {
   if (e instanceof Error) return e.message;
-  return JSON.stringify(e);
+  return JSON.stringify(e, bigIntStringify, 2);
 };
 
 export const runPromptExecution = async ({

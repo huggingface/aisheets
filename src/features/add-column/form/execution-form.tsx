@@ -212,7 +212,6 @@ export const ExecutionForm = component$<SidebarProps>(
     } = useContext(configContext);
 
     const models = useComputed$(() => {
-      console.log(allModels.filter((p) => !!p.picture));
       return new Models(allModels).getModelsByType(
         column.type as SupportedType,
       );

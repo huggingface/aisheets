@@ -89,9 +89,9 @@ export const TableAddCellHeaderPlaceHolder = component$(() => {
         `{{${firstValidColumnToReference.name}}}`,
       );
 
-      open(TEMPORAL_ID, 'add', initialPrompt, undefined, undefined, promptType);
+      open(TEMPORAL_ID, 'add', initialPrompt);
     } else {
-      open(TEMPORAL_ID, 'add', '', undefined, undefined, promptType);
+      open(TEMPORAL_ID, 'add', '');
     }
   });
 

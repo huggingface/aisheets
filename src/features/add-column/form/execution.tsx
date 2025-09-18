@@ -16,13 +16,6 @@ export type Execution = {
   modelName?: string;
   modelProvider?: string;
   mode?: 'add' | 'edit';
-  actionType?:
-    | 'translate'
-    | 'extractKeywords'
-    | 'summarize'
-    | 'textToImage'
-    | 'imageTextToText'
-    | 'custom';
 };
 
 const executionContext =
@@ -45,7 +38,6 @@ export const useExecution = () => {
       prompt: context.value.prompt,
       modelName: context.value.modelName,
       modelProvider: context.value.modelProvider,
-      actionType: context.value.actionType,
     };
   });
 
@@ -60,7 +52,6 @@ export const useExecution = () => {
         prompt?: string,
         modelName?: string,
         modelProvider?: string,
-        actionType?: Execution['actionType'],
       ) => {
         context.value = {
           columnId,
@@ -68,7 +59,6 @@ export const useExecution = () => {
           prompt,
           modelName,
           modelProvider,
-          actionType,
         };
       },
     ),

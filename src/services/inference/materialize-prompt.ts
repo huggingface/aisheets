@@ -3,6 +3,7 @@ import {
   EXAMPLES_PROMPT_MAX_CONTEXT_SIZE,
   SOURCES_PROMPT_MAX_CONTEXT_SIZE,
 } from '~/config';
+import { bigIntStringify } from '~/usecases/utils/serializer';
 
 export interface Example {
   output: string;
@@ -147,7 +148,7 @@ export const renderInstruction = (
 
 const escapeValues = (value: any): string => {
   if (typeof value === 'object' || Array.isArray(value)) {
-    return JSON.stringify(value);
+    return JSON.stringify(value, bigIntStringify, 2);
   }
 
   return value;

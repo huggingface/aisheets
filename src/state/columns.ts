@@ -9,11 +9,11 @@ export interface Process {
   id?: string;
   prompt: string;
   modelName: string;
-  modelProvider: string;
+  modelProvider?: string;
   endpointUrl?: string;
   columnsReferences: string[];
-  updatedAt: Date;
   searchEnabled: boolean;
+  updatedAt?: Date;
   // Non persisted data
   isExecuting?: boolean;
   cancellable?: NoSerialize<AbortController>;
@@ -32,7 +32,7 @@ export interface CreateColumn {
   };
   process?: {
     modelName: string;
-    modelProvider: string;
+    modelProvider?: string;
     endpointUrl?: string;
     prompt: string;
     searchEnabled: boolean;

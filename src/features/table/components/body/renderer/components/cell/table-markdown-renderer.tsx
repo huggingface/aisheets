@@ -1,12 +1,11 @@
 import { component$, useSignal, useVisibleTask$ } from '@builder.io/qwik';
-import type { CellProps } from '~/features/table/components/body/renderer/cell-props';
-
 import DOMPurify from 'dompurify';
 import hljs from 'highlight.js';
 import { marked } from 'marked';
 import { markedHighlight } from 'marked-highlight';
 import markedKatex from 'marked-katex-extension';
 import { CellActions } from '~/features/table/components/body/cell-actions';
+import type { CellProps } from '~/features/table/components/body/renderer/cell-props';
 import { TableSandbox } from '~/features/table/components/body/renderer/components/table-sandbox';
 import { removeThinking } from '~/features/utils/columns';
 
@@ -40,6 +39,7 @@ marked.use(
 
 export const TableMarkDownRenderer = component$<CellProps>((props) => {
   const { cell } = props;
+  const maxPreviewLength = 256;
   const htmlContent = useSignal<string | null>(null);
 
   useVisibleTask$(async ({ track }) => {
@@ -59,7 +59,9 @@ export const TableMarkDownRenderer = component$<CellProps>((props) => {
       }
     });
 
-    const html = await marked.parse(removeThinking(cell.value));
+    const html = await marked.parse(
+      removeThinking(cell.value).slice(0, maxPreviewLength),
+    );
 
     htmlContent.value = html;
   });

@@ -29,12 +29,12 @@ export const TableRenderer = component$<Required<CellProps>>((props) => {
     return <TableBlobRenderer {...props} />;
   }
 
-  if (isObjectType(cell.column)) {
-    return <TableObjectRenderer {...props} />;
-  }
-
   if (isArrayType(cell.column)) {
     return <TableArrayRenderer {...props} />;
+  }
+
+  if (isObjectType(cell.column)) {
+    return <TableObjectRenderer {...props} />;
   }
 
   if (isMarkDown(newValue.value)) {

@@ -1,6 +1,7 @@
 import { type RequestEventBase, server$ } from '@builder.io/qwik-city';
 import type { HubApiError } from '@huggingface/hub';
 import consola from 'consola';
+import { appConfig } from '~/config';
 import { importDatasetFromFile } from '~/services/repository/datasets';
 import { describeFromURI } from '~/services/repository/hub';
 import { downloadDatasetFile } from '~/services/repository/hub/download-file';
@@ -27,6 +28,8 @@ export const useImportFromHub = () =>
     const { repoId, filePath } = importParams;
     const session = useServerSession(this);
 
+    const numberOfRows = appConfig.data.maxRowsImport;
+
     consola.info('Downloading file', repoId, filePath);
     try {
       const downloadedFilePath = await downloadDatasetFile({
@@ -49,7 +52,7 @@ export const useImportFromHub = () =>
           file: downloadedFilePath,
         },
         {
-          limit: 1000,
+          limit: numberOfRows,
         },
       );
 

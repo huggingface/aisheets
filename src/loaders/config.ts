@@ -20,6 +20,8 @@ export interface ClientConfig {
   isGoogleAuthEnabled: boolean;
   GOOGLE_CLIENT_ID?: string;
   GOOGLE_REDIRECT_URI?: string;
+
+  MAX_ROWS_IMPORT: number;
 }
 
 export const useClientConfig = routeLoader$(async function (
@@ -40,5 +42,7 @@ export const useClientConfig = routeLoader$(async function (
     ),
     GOOGLE_CLIENT_ID: GOOGLE_OAUTH_CLIENT_ID,
     GOOGLE_REDIRECT_URI: GOOGLE_OAUTH_REDIRECT_URI,
+
+    MAX_ROWS_IMPORT: appConfig.data.maxRowsImport,
   };
 });

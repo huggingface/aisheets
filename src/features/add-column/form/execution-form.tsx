@@ -282,9 +282,7 @@ export const ExecutionForm = component$<SidebarProps>(
         }));
     });
 
-    useTask$(({ track }) => {
-      track(() => column);
-
+    useTask$(() => {
       const { process } = column;
       if (!process) return;
 

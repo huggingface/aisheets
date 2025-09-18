@@ -5,8 +5,6 @@ interface Typeable {
 }
 
 export const hasBlobContent = (column?: Typeable): boolean => {
-  // text-image columns store text data, not blob data
-  if (column?.type === 'text-image') return false;
   return column?.type?.toUpperCase().includes('BLOB') || isImage(column);
 };
 
@@ -59,8 +57,6 @@ export const isMarkDown = (value?: string): boolean => {
 };
 
 export const isImage = (column?: Typeable): boolean => {
-  // text-image is not an image column, it's a text column with image input
-  if (column?.type === 'text-image') return false;
   return column?.type?.toLowerCase().includes('image') ?? false;
 };
 

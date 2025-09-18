@@ -110,6 +110,11 @@ export const generateCells = async function* ({
       ? columnsReferences
       : [column.id];
 
+    // For image-text-to-text columns, also include the image column in size calculation
+    if (process.imageColumnId && !columnIds.includes(process.imageColumnId)) {
+      columnIds.push(process.imageColumnId);
+    }
+
     const columnSizes = await Promise.all(
       columnIds.map((colId) => {
         return countDatasetTableRows({

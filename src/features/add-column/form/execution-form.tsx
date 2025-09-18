@@ -300,8 +300,6 @@ export const ExecutionForm = component$<SidebarProps>(
           name: c.name,
         }));
 
-      // Populate image columns for image-text-to-text and image-to-image scenarios
-      // This now includes both explicit image columns and blob columns that contain image data
       const updateImageColumns = async () => {
         const imageCols = [];
         for (const c of columns.value) {

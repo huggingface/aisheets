@@ -110,7 +110,7 @@ export const generateCells = async function* ({
       ? columnsReferences
       : [column.id];
 
-    // For image-text-to-text columns, also include the image column in size calculation
+    // we need to include the image column in the calculation
     if (process.imageColumnId && !columnIds.includes(process.imageColumnId)) {
       columnIds.push(process.imageColumnId);
     }
@@ -124,9 +124,9 @@ export const generateCells = async function* ({
       }),
     );
 
-    const maxSize = Math.max(...columnSizes);
+    const minSize = Math.min(...columnSizes);
 
-    limit = maxSize > 0 ? maxSize : 5;
+    limit = minSize > 0 ? minSize : 5;
   }
   if (!offset) offset = 0;
 

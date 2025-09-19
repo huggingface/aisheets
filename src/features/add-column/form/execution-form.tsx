@@ -739,6 +739,8 @@ export const ExecutionForm = component$<SidebarProps>(
                   </div>
                 </div>
               )}
+
+              <ErrorInfo column={column} />
             </div>
           </div>
         </div>
@@ -767,3 +769,29 @@ export const ModelFlag = component$(
     );
   },
 );
+
+export const ErrorInfo = component$(({ column }: { column: Column }) => {
+  const hasErrors = column.cells.some((c) => c.error);
+  const errorCount = column.cells.filter((c) => c.error).length;
+
+  const errorMessages = column.cells
+    .filter((c) => c.error)
+    .map((c) => c.error)
+    .filter((msg, index, self) => msg && self.indexOf(msg) === index); // Unique messages
+
+  const errorMessage = useComputed$(() => {
+    if (errorMessages.length === 0) return '';
+    if (errorMessages.length === 1) return errorMessages[0];
+
+    return `${errorMessages[0]} (and ${errorMessages.length - 1} more)`;
+  });
+
+  if (!hasErrors) return null;
+
+  return (
+    <div class="text-sm text-red-500">
+      {errorCount} cell{errorCount > 1 ? 's' : ''} failed to generate:{' '}
+      {errorMessage.value}
+    </div>
+  );
+});

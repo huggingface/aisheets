@@ -106,7 +106,7 @@ function materializePromptFromData(
     text: string;
   }[],
   examples?: Example[],
-  _task?: 'text-generation' | 'image-text-to-text' | 'text-to-image',
+  _task?: TaskType,
 ): string {
   const examplesTemplate = `# Examples
 The following are correct, accurate example outputs with respect to the user instruction:

@@ -19,8 +19,8 @@ export interface Process {
   columnsReferences: string[];
   updatedAt: Date;
   searchEnabled: boolean;
-  imageColumnId?: string; // For image processing workflows
-  task: 'text-generation' | 'image-text-to-text' | 'text-to-image';
+  imageColumnId?: string;
+  task: TaskType;
   // Non persisted data
   isExecuting?: boolean;
   cancellable?: NoSerialize<AbortController>;

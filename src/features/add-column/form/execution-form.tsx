@@ -250,8 +250,6 @@ export const ExecutionForm = component$<SidebarProps>(
       columnsReferences.value = variables.map((v) => v.id);
     });
 
-    // Image column selection is separate from prompt text variables
-
     const groupedModels = useComputed$(() => {
       return new GroupedModels(filteredModels.value).groupsByCategory();
     });
@@ -304,7 +302,6 @@ export const ExecutionForm = component$<SidebarProps>(
         }
         imageColumns.value = imageCols;
 
-        // Auto-select first image column if none selected and we need one
         if (
           needsImageColumn.value &&
           !selectedImageColumn.value &&

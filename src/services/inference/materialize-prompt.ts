@@ -106,7 +106,7 @@ function materializePromptFromData(
     text: string;
   }[],
   examples?: Example[],
-  task?: 'text-generation' | 'image-text-to-text' | 'text-to-image',
+  _task?: 'text-generation' | 'image-text-to-text' | 'text-to-image',
 ): string {
   const examplesTemplate = `# Examples
 The following are correct, accurate example outputs with respect to the user instruction:
@@ -120,12 +120,7 @@ The following are correct, accurate example outputs with respect to the user ins
 {{/examples}}
 `;
 
-  const hasData = data && Object.keys(data).length > 0;
-  const isImageTextToText = task === 'image-text-to-text';
-  const finalInstruction =
-    hasData || !isImageTextToText
-      ? renderInstruction(instruction, data)
-      : instruction;
+  const finalInstruction = renderInstruction(instruction, data);
 
   return mustache.render(
     `

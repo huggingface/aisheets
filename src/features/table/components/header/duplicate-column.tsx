@@ -13,13 +13,12 @@ export const DuplicateColumn = component$<{
   const onDuplicateColumn = $(async () => {
     await addTemporalColumn(column.type, `${column.name} copy`);
 
-    open(
-      TEMPORAL_ID,
-      'add',
-      column.process?.prompt,
-      column.process?.modelName,
-      column.process?.modelProvider,
-    );
+    open(TEMPORAL_ID, 'add', {
+      prompt: column.process?.prompt,
+      modelName: column.process?.modelName,
+      modelProvider: column.process?.modelProvider,
+      task: column.process?.task,
+    });
   });
 
   if (

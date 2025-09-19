@@ -1,4 +1,4 @@
-import { $, Slot, component$ } from '@builder.io/qwik';
+import { $, component$, Slot } from '@builder.io/qwik';
 import { LuSettings2 } from '@qwikest/icons/lucide';
 import { nextTick } from '~/components/hooks/tick';
 import { useExecution } from '~/features/add-column';
@@ -13,7 +13,9 @@ export const CellSettings = component$<{ column: Column }>(({ column }) => {
     await removeTemporalColumn();
 
     nextTick(() => {
-      open(column.id, 'edit');
+      open(column.id, 'edit', {
+        task: column.process?.task,
+      });
     });
   });
 

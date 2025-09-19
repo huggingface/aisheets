@@ -1,6 +1,6 @@
 import { $ } from '@builder.io/qwik';
-import { QwikCityMockProvider } from '@builder.io/qwik-city';
 import { createDOM } from '@builder.io/qwik/testing';
+import { QwikCityMockProvider } from '@builder.io/qwik-city';
 import { expect, test, vi } from 'vitest';
 import { ModalsProvider } from '~/components';
 import { ExecutionForm } from '~/features/add-column';
@@ -32,6 +32,7 @@ test('should AddDynamicColumnSidebar does not call onCreateColumn initially', as
       prompt: 'prompt',
       searchEnabled: false,
       updatedAt: new Date(),
+      task: 'text-generation',
     },
     cells: [],
   };
@@ -66,6 +67,7 @@ test('should save 10 cells', async (t) => {
       modelProvider: 'hf-inference',
       prompt: 'prompt',
       searchEnabled: false,
+      task: 'text-generation',
     },
   };
 

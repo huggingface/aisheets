@@ -4,6 +4,11 @@ import { useDatasetsStore } from '~/state/datasets';
 
 export type ColumnKind = 'static' | 'dynamic';
 
+export type TaskType =
+  | 'text-generation'
+  | 'image-text-to-text'
+  | 'text-to-image';
+
 export interface Process {
   // Persisted data
   id?: string;
@@ -13,6 +18,8 @@ export interface Process {
   endpointUrl?: string;
   columnsReferences: string[];
   searchEnabled: boolean;
+  imageColumnId?: string;
+  task: TaskType;
   updatedAt?: Date;
   // Non persisted data
   isExecuting?: boolean;
@@ -37,6 +44,8 @@ export interface CreateColumn {
     prompt: string;
     searchEnabled: boolean;
     columnsReferences: string[];
+    imageColumnId?: string; // For image processing workflows
+    task: TaskType; // What the process does
     isExecuting?: boolean;
     cancellable?: NoSerialize<AbortController>;
   };
@@ -207,6 +216,7 @@ export const useColumnsStore = () => {
           prompt: '',
           searchEnabled: false,
           columnsReferences: [],
+          task: 'text-generation',
           updatedAt: new Date(),
         },
         dataset: {

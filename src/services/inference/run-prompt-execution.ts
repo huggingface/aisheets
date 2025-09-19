@@ -8,6 +8,7 @@ import {
 } from '@huggingface/inference';
 import { appConfig } from '~/config';
 import { cacheGet, cacheSet } from '~/services/cache';
+import type { TaskType } from '~/state/columns';
 import { bigIntStringify } from '~/usecases/utils/serializer';
 import { type Example, materializePrompt } from './materialize-prompt';
 
@@ -27,6 +28,7 @@ export interface PromptExecutionParams {
 
   timeout?: number;
   accessToken?: string;
+  task?: TaskType;
 }
 
 export interface PromptExecutionResponse {
@@ -50,12 +52,14 @@ export const runPromptExecution = async ({
   examples,
   timeout,
   endpointUrl,
+  task,
 }: PromptExecutionParams): Promise<PromptExecutionResponse> => {
   const inputPrompt = materializePrompt({
     instruction,
     sourcesContext,
     data,
     examples,
+    task,
   });
   const args = normalizeChatCompletionArgs({
     messages: [{ role: 'user', content: inputPrompt }],
@@ -117,12 +121,14 @@ export const runPromptExecutionStream = async function* ({
   timeout,
   accessToken,
   endpointUrl,
+  task,
 }: PromptExecutionParams): AsyncGenerator<PromptExecutionResponse> {
   const inputPrompt = materializePrompt({
     instruction,
     sourcesContext,
     data,
     examples,
+    task,
   });
   const args = normalizeChatCompletionArgs({
     messages: [{ role: 'user', content: inputPrompt }],

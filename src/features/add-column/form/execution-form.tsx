@@ -284,7 +284,7 @@ export const ExecutionForm = component$<SidebarProps>(
 
     useTask$(() => {
       const { process } = column;
-      if (!process) return;
+      if (!process || process.isExecuting) return;
 
       prompt.value = process.prompt;
       searchOnWeb.value = process.searchEnabled || false;
@@ -485,11 +485,6 @@ export const ExecutionForm = component$<SidebarProps>(
                       look="primary"
                       class="w-[30px] h-[30px] rounded-full flex items-center justify-center p-0"
                       onClick$={onStop}
-                      disabled={
-                        (column.process?.isExecuting &&
-                          column.id === TEMPORAL_ID) ||
-                        !prompt.value.trim()
-                      }
                     >
                       <LuStopCircle class="text-lg" />
                     </Button>

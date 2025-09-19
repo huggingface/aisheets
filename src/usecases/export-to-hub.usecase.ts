@@ -1,20 +1,15 @@
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import yaml from 'yaml';
-
-import { type HubApiError, createRepo, uploadFiles } from '@huggingface/hub';
-
 import { type RequestEventBase, server$ } from '@builder.io/qwik-city';
+
+import { createRepo, type HubApiError, uploadFiles } from '@huggingface/hub';
+import yaml from 'yaml';
 import { getDatasetById } from '~/services/repository/datasets';
-import {
-  exportDatasetTableRows,
-  listDatasetTableRows,
-} from '~/services/repository/tables';
+import { exportDatasetTableRows } from '~/services/repository/tables';
 import { describeTableColumns } from '~/services/repository/tables/describe-table-columns';
 import { type Dataset, useServerSession } from '~/state';
 import { generateDatasetConfig } from './create-dataset-config';
-import { detectMimeTypeFromBytes } from './utils/mime-types';
 
 export interface ExportDatasetParams {
   dataset: Dataset;
@@ -72,11 +67,11 @@ export const useExportDataset = () =>
         files: [
           {
             path: 'data/train.parquet',
-            content: new Blob([await fs.readFile(parquetFile)]),
+            content: new Blob([(await fs.readFile(parquetFile)) as BlobPart]),
           },
           {
             path: 'config.yml',
-            content: new Blob([await fs.readFile(configPath)]),
+            content: new Blob([(await fs.readFile(configPath)) as BlobPart]),
           },
         ],
       });
@@ -170,12 +165,19 @@ const generateFeaturesInfo = async (dataset: Dataset) => {
       };
     }
     // Image column
-    if (type === 'image' || (await isImageFeature(dataset, dbCol))) {
+    if (type === 'image') {
       return {
         name: column.name,
         dtype: 'image',
       };
     }
+    if (type === 'image[]') {
+      return {
+        name: column.name,
+        sequence: 'image',
+      };
+    }
+
     // Nested column (struct, map or list of struct)
     if (dbCol.properties && dbCol.properties.length > 0) {
       return {
@@ -203,84 +205,4 @@ const generateFeaturesInfo = async (dataset: Dataset) => {
   });
 
   return Promise.all(features);
-};
-
-const isImageFeature = async (
-  dataset: Dataset,
-  dbCol: {
-    name: string;
-    type: string;
-    properties?: Array<{ name: string; type: string }>;
-  },
-) => {
-  let blobProp:
-    | {
-        name: string;
-        type: string;
-        properties?: Array<{
-          name: string;
-          type: string;
-        }>;
-      }
-    | undefined;
-  if (dbCol.type.toLowerCase() === 'blob') {
-    blobProp = dbCol;
-  } else if (dbCol.properties) {
-    blobProp = dbCol.properties.find(
-      (prop) => prop.type.toLowerCase() === 'blob',
-    );
-  }
-
-  if (blobProp) {
-    const columnMimeType = await extractDatasetColumnMimeType({
-      dataset,
-      columnId: dbCol.name,
-    });
-
-    return columnMimeType?.startsWith('image/');
-  }
-
-  return false;
-};
-
-const extractDatasetColumnMimeType = async ({
-  dataset,
-  columnId,
-}: {
-  dataset: Dataset;
-  columnId: string;
-}): Promise<string | null> => {
-  try {
-    const row = await listDatasetTableRows({
-      dataset,
-      columns: [{ id: columnId }],
-      offset: 0,
-      limit: 1,
-    });
-
-    if (row.length === 0) return null;
-
-    const value = row[0][columnId];
-
-    if (value instanceof Uint8Array) {
-      return detectMimeTypeFromBytes(value);
-    }
-    if ('bytes' in value && value.bytes instanceof Uint8Array) {
-      return detectMimeTypeFromBytes(value.bytes);
-    }
-    if (Array.isArray(value) && value.length > 0) {
-      const first = value[0];
-      if (first instanceof Uint8Array) {
-        return detectMimeTypeFromBytes(first);
-      }
-      if (first && 'bytes' in first && first.bytes instanceof Uint8Array) {
-        return detectMimeTypeFromBytes(first.bytes);
-      }
-    }
-
-    return null;
-  } catch (error) {
-    console.error('Error extracting mime type:', error);
-    return null;
-  }
 };

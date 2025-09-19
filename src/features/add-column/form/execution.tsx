@@ -17,6 +17,7 @@ export type Execution = {
   prompt?: string;
   modelName?: string;
   modelProvider?: string;
+  endpointUrl?: string;
   mode?: 'add' | 'edit';
   task?: TaskType;
 };
@@ -42,6 +43,7 @@ export const useExecution = () => {
       prompt: context.value.prompt,
       modelName: context.value.modelName,
       modelProvider: context.value.modelProvider,
+      endpointUrl: context.value.endpointUrl,
     };
   });
 
@@ -58,6 +60,7 @@ export const useExecution = () => {
           prompt?: string;
           modelName?: string;
           modelProvider?: string;
+          endpointUrl?: string;
           task?: TaskType;
         },
       ) => {
@@ -67,6 +70,7 @@ export const useExecution = () => {
           prompt: options?.prompt,
           modelName: options?.modelName,
           modelProvider: options?.modelProvider,
+          endpointUrl: options?.endpointUrl,
           task: options?.task,
         };
       },

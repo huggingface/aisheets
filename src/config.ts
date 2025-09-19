@@ -45,6 +45,18 @@ const DATA_DIR: string = process.env.DATA_DIR ?? './data';
 const INFERENCE_TIMEOUT = 90000;
 
 /**
+ * The maximum number of rows to import from a file or a Hugging Face dataset.
+ *
+ * This constant defines the upper limit on the number of rows that can be imported
+ * to prevent performance issues and excessive resource consumption.
+ *
+ * Default value: 1000
+ */
+const MAX_ROWS_IMPORT = process.env.MAX_ROWS_IMPORT
+  ? Number(process.env.MAX_ROWS_IMPORT)
+  : 1000;
+
+/**
  * The number of parallel requests to the Inference Endpoint to generate cells
  *
  * This constant defines the number of concurrent requests to be sent to the endpoint while generating cells
@@ -98,6 +110,13 @@ const MODEL_ENDPOINT_URL: string | undefined = process.env.MODEL_ENDPOINT_URL;
  */
 const MODEL_ENDPOINT_NAME: string =
   process.env.MODEL_ENDPOINT_NAME ?? 'unknown';
+
+//FORMAT --> CUSTOM_MODELS=<MODEL_ID>:<ENDPOINT_URL>,<MODEL_ID>:<ENDPOINT_URL>
+const CUSTOM_MODELS: string | undefined =
+  process.env.CUSTOM_MODELS ??
+  (MODEL_ENDPOINT_URL !== undefined
+    ? `${MODEL_ENDPOINT_NAME}|${MODEL_ENDPOINT_URL}`
+    : undefined);
 
 /**
  * List of model IDs that should be excluded from the model list.
@@ -263,8 +282,15 @@ export const appConfig = {
         defaultModel: DEFAULT_MODEL,
         defaultProvider: DEFAULT_MODEL_PROVIDER,
 
-        endpointUrl: MODEL_ENDPOINT_URL,
-        endpointName: MODEL_ENDPOINT_NAME,
+        customModels:
+          CUSTOM_MODELS?.trim()
+            .split(',')
+            .map((model) => {
+              const [id, endpointUrl] = model
+                .split('|')
+                .map((part) => part.trim());
+              return { id, endpointUrl, supportedType: 'text' };
+            }) || undefined,
       },
 
       featureExtraction: {
@@ -280,6 +306,7 @@ export const appConfig = {
   },
 
   data: {
+    maxRowsImport: MAX_ROWS_IMPORT,
     dataDir: DATA_DIR,
     vectorDbDir: join(RUNTIME_ENV, 'embeddings'),
     sqliteDb: join(RUNTIME_ENV, '.sqlite3'),

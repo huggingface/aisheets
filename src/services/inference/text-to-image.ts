@@ -3,9 +3,9 @@ import { appConfig } from '~/config';
 import { cacheGet, cacheSet } from '../cache';
 import { renderInstruction } from './materialize-prompt';
 import {
-  type PromptExecutionParams,
   handleError,
   normalizeOptions,
+  type PromptExecutionParams,
 } from './run-prompt-execution';
 
 const normalizeTextToImageArgs = ({
@@ -17,9 +17,9 @@ const normalizeTextToImageArgs = ({
 }: {
   inputs: string;
   modelName: string;
-  modelProvider: string;
-  accessToken?: string;
+  modelProvider?: string;
   endpointUrl?: string;
+  accessToken?: string;
 }) => {
   const {
     authentication: { hfToken },

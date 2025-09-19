@@ -4,7 +4,7 @@ import type { Process, TaskType } from '~/state';
 export interface CreateProcess {
   prompt: string;
   modelName: string;
-  modelProvider: string;
+  modelProvider?: string;
   endpointUrl?: string;
   searchEnabled: boolean;
   columnsReferences?: string[];
@@ -45,7 +45,7 @@ export const createProcess = async ({
     id: model.id,
     prompt: model.prompt,
     modelName: model.modelName,
-    modelProvider: model.modelProvider,
+    modelProvider: model.modelProvider || undefined,
     endpointUrl: model.endpointUrl ?? undefined,
     searchEnabled: model.searchEnabled,
     columnsReferences: process?.columnsReferences || [],
@@ -88,7 +88,7 @@ export const updateProcess = async (process: Process): Promise<Process> => {
     id: model.id,
     prompt: model.prompt,
     modelName: model.modelName,
-    modelProvider: model.modelProvider,
+    modelProvider: model.modelProvider ?? undefined,
     endpointUrl: model.endpointUrl ?? undefined,
     searchEnabled: model.searchEnabled,
     columnsReferences: process.columnsReferences,

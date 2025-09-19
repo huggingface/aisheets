@@ -259,12 +259,6 @@ async function* generateCellsFromScratch({
 
   const validatedIdxs = validatedCells?.map((cell) => cell.idx);
 
-  const {
-    inference: {
-      tasks: { textGeneration },
-    },
-  } = appConfig;
-
   for (let i = offset; i < limit + offset; i++) {
     if (validatedIdxs?.includes(i)) continue;
 
@@ -279,7 +273,7 @@ async function* generateCellsFromScratch({
 
     const args = {
       accessToken: session.token,
-      modelName: endpointUrl ? textGeneration.endpointName : modelName,
+      modelName,
       modelProvider,
       endpointUrl,
       examples: existingCellsExamples,
@@ -341,12 +335,6 @@ async function singleCellGeneration({
   cell: Cell;
 }> {
   const {
-    inference: {
-      tasks: { textGeneration },
-    },
-  } = appConfig;
-
-  const {
     columnsReferences,
     modelName,
     modelProvider,
@@ -384,7 +372,7 @@ async function singleCellGeneration({
 
   const args: PromptExecutionParams = {
     accessToken: session.token,
-    modelName: endpointUrl ? textGeneration.endpointName : modelName,
+    modelName,
     modelProvider,
     endpointUrl,
     examples,
@@ -604,6 +592,8 @@ async function buildWebSearchQueries({
     },
   } = appConfig;
 
+  // TODO: Review custom config in case we want to use a specific model for
+  // this task
   const {
     modelName = textGeneration.defaultModel,
     modelProvider = textGeneration.defaultProvider,

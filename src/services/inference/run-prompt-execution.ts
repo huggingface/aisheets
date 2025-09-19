@@ -9,11 +9,13 @@ import {
 import { appConfig } from '~/config';
 import { cacheGet, cacheSet } from '~/services/cache';
 import type { TaskType } from '~/state/columns';
+import { bigIntStringify } from '~/usecases/utils/serializer';
 import { type Example, materializePrompt } from './materialize-prompt';
 
 export interface PromptExecutionParams {
   modelName: string;
-  modelProvider: string;
+  modelProvider?: string;
+  endpointUrl?: string;
   instruction: string;
   sourcesContext?: {
     source_uri: string;
@@ -38,7 +40,7 @@ export interface PromptExecutionResponse {
 
 export const handleError = (e: unknown): string => {
   if (e instanceof Error) return e.message;
-  return JSON.stringify(e);
+  return JSON.stringify(e, bigIntStringify, 2);
 };
 
 export const runPromptExecution = async ({
@@ -226,9 +228,9 @@ export const normalizeChatCompletionArgs = ({
 }: {
   messages: any[];
   modelName: string;
-  modelProvider: string;
-  accessToken?: string;
+  modelProvider?: string;
   endpointUrl?: string;
+  accessToken?: string;
 }) => {
   const {
     authentication: { hfToken },
@@ -268,7 +270,7 @@ export const normalizeOptions = (timeout?: number | undefined): Options => {
 
 function showPromptInfo(
   modelName: string,
-  modelProvider: string,
+  modelProvider: string | undefined,
   endpointUrl: string | undefined,
   inputPrompt: string,
 ) {

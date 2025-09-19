@@ -8,9 +8,11 @@
 #     "pillow",
 # ]
 # ///
+import concurrent.futures
 import dataclasses
 import json
 import multiprocessing
+import os
 import random
 import time
 from collections import defaultdict
@@ -24,8 +26,6 @@ from huggingface_hub import InferenceClient
 from rich import print as rprint
 from rich.console import Console
 from rich.panel import Panel
-
-import concurrent.futures
 
 
 @dataclasses.dataclass
@@ -314,57 +314,13 @@ def process_column(
 ) -> Dataset:
     column_config = processor_config.columns[column_name]
 
-    def prepare_prompt(prompt: str, row: dict) -> str:
-        """Prepare prompt template by filling in values from row."""
-        for key, value in row.items():
-            placeholder = f"{{{{{key}}}}}"
-            if placeholder in prompt:
-                prompt = prompt.replace(placeholder, str(value))
-
-        return prompt
-
-
-
-    def map_function(batch: dict):
-
-        prompt_template = column_config["prompt"]
-        # Process the batch of messages
-        client = _get_client_for_node(
-            column_name,
-            processor_config,
-            bill_to=processor_config.bill_to
-        )
-        model = column_config["modelName"]
-
-        rows = [dict(zip(batch.keys(), values)) for values in zip(*batch.values())]
-
-        with concurrent.futures.ThreadPoolExecutor(
-            max_workers=processor_config.max_workers
-        ) as executor:
-            futures = []
-            for row in rows:
-                prompt = prepare_prompt(prompt_template, row)
-
-                futures.append(
-                    executor.submit(
-                        _generate_completion,
-                        client,
-                        model,
-                        prompt,
-                    )
-                )
-
-            results = []
-            for future in concurrent.futures.as_completed(futures):
-                result = future.result()
-
-                results.append(result)
-                rprint(f"[green] {len(results)}/{len(futures)} completed")
-
-        return {column_name: results}
-
     return dataset.map(
         map_function,
+        fn_kwargs={
+            "column_config": column_config,
+            "column_name": column_name,
+            "processor_config": processor_config,
+        },
         batched=True,
         batch_size=processor_config.batch_size,  # Adjust batch size as needed
         features=Features({
@@ -372,6 +328,60 @@ def process_column(
             column_name: Value(column_config.get("dtype", "string")),  # Ensure the new column is of type string
         }),
     )
+
+
+def prepare_prompt(prompt: str, row: dict) -> str:
+    """Prepare prompt template by filling in values from row."""
+    for key, value in row.items():
+        placeholder = f"{{{{{key}}}}}"
+        if placeholder in prompt:
+            prompt = prompt.replace(placeholder, str(value))
+
+    return prompt
+
+
+def map_function(
+    batch: dict,
+    column_name: str,
+    column_config: dict,
+    processor_config: ProcessorConfig
+) -> dict:
+    prompt_template = column_config["prompt"]
+
+    # Process the batch of messages
+    client = _get_client_for_node(
+        column_name,
+        config=processor_config,
+        bill_to=processor_config.bill_to
+    )
+    model = column_config["modelName"]
+
+    rows = [dict(zip(batch.keys(), values)) for values in zip(*batch.values())]
+
+    with concurrent.futures.ThreadPoolExecutor(
+            max_workers=processor_config.max_workers
+    ) as executor:
+        futures = []
+        for row in rows:
+            prompt = prepare_prompt(prompt_template, row)
+
+            futures.append(
+                executor.submit(
+                    _generate_completion,
+                    client,
+                    model,
+                    prompt,
+                )
+            )
+
+        results = []
+        for future in concurrent.futures.as_completed(futures):
+            result = future.result()
+
+            results.append(result)
+            rprint(f"[green] {len(results)}/{len(futures)} completed")
+
+    return {column_name: results}
 
 
 def main(
@@ -389,6 +399,14 @@ def main(
     batch_size: int | None = 1000,
 ):
     max_workers = max_workers or max(1, multiprocessing.cpu_count() - 1)
+
+    if os.uname().sysname == "Darwin":
+        import multiprocessing as mp
+        import multiprocessing as mp
+        from datasets import iterable_dataset as it_ds
+
+        mp.set_start_method("spawn", force=True)
+        it_ds.Pool = mp.get_context("spawn").Pool
 
     dataset: Dataset = load_dataset(
         repo_id,

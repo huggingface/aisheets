@@ -28,7 +28,6 @@ export interface PromptExecutionParams {
 
   timeout?: number;
   accessToken?: string;
-  endpointUrl?: string;
   task?: TaskType;
 }
 

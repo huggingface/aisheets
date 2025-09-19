@@ -454,7 +454,7 @@ export const ExecutionForm = component$<SidebarProps>(
           task: task.value || 'text-generation',
           // Add selected image column for image processing workflows
           ...(needsImageColumn.value && {
-            imageColumnId: selectedImageColumn.value || null,
+            imageColumnId: selectedImageColumn.value || undefined,
           }),
         };
 

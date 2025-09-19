@@ -19,7 +19,7 @@ const normalizeImageTextToTextArgs = ({
   inputs: string;
   imageData: Uint8Array;
   modelName: string;
-  modelProvider: string;
+  modelProvider?: string;
   accessToken?: string;
   endpointUrl?: string;
 }) => {

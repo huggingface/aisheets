@@ -6,12 +6,15 @@ import { Label, Popover, buttonVariants } from '~/components';
 import { Tooltip } from '~/components/ui/tooltip/tooltip';
 import { useSession } from '~/loaders';
 import { TEMPORAL_ID, useDatasetsStore } from '~/state';
+import { AugmentDataset } from './augment-dataset';
 import { ExportToHub } from './export-to-hub';
 import { FileDownload } from './file-download';
 
 export const SaveDataset = component$(() => {
   const { activeDataset } = useDatasetsStore();
   const session = useSession();
+
+  const isImportedFromHub = activeDataset.value.fromRepoId !== undefined;
 
   return (
     <Popover.Root floating="bottom" gutter={14}>
@@ -36,6 +39,12 @@ export const SaveDataset = component$(() => {
           <>
             <ExportToHub />
             <hr class="border-t border-slate-200 dark:border-slate-700" />
+            {isImportedFromHub && (
+              <>
+                <AugmentDataset />
+                <hr class="border-t border-slate-200 dark:border-slate-700" />
+              </>
+            )}
           </>
         )}
         <FileDownload format="csv" />

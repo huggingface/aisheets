@@ -106,17 +106,18 @@ export const generateCells = async function* ({
   const { columnsReferences } = process;
 
   if (!limit) {
-    const columnIds = columnsReferences?.length
-      ? columnsReferences
-      : [column.id];
+    // Build list of input columns for size calculation
+    const inputColumnIds = [
+      ...(columnsReferences || []),
+      ...(process.imageColumnId ? [process.imageColumnId] : []),
+    ];
 
-    // we need to include the image column in the calculation
-    if (process.imageColumnId && !columnIds.includes(process.imageColumnId)) {
-      columnIds.push(process.imageColumnId);
-    }
+    // If no input columns, fall back to output column (for first column in autodatasets)
+    const columnsToCheck =
+      inputColumnIds.length > 0 ? inputColumnIds : [column.id];
 
     const columnSizes = await Promise.all(
-      columnIds.map((colId) => {
+      columnsToCheck.map((colId) => {
         return countDatasetTableRows({
           dataset: column.dataset,
           column: { id: colId },

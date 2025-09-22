@@ -240,11 +240,20 @@ export const useHubModels = routeLoader$(async function (
   const hideHFModels = customModels.length > 0;
 
   if (hideHFModels) {
-    const imageModels = await listImageGenerationModels(
-      useServerSession(this)!,
-    );
+    const [imageModels, imageTextToTextModels] = await Promise.all([
+      listImageGenerationModels(useServerSession(this)!),
+      fetchModelsForPipeline(
+        useServerSession(this)!,
+        'image-text-to-text',
+      ).then((models) =>
+        models.map((model) => ({
+          ...model,
+          supportedType: 'image-text-to-text',
+        })),
+      ),
+    ]);
 
-    return [...customModels, ...imageModels];
+    return [...customModels, ...imageModels, ...imageTextToTextModels];
   }
 
   const models = await listAllModels();

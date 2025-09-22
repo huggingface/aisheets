@@ -1,6 +1,6 @@
 import { ColumnModel } from '~/services/db/models/column';
 import { ProcessModel } from '~/services/db/models/process';
-import type { Column, ColumnKind, CreateColumn } from '~/state';
+import type { Column, ColumnKind, CreateColumn, TaskType } from '~/state';
 import { getGeneratedCellsCount, getMaxCellIdxByColumnId } from './cells';
 import { createProcess, updateProcess } from './processes';
 import { countDatasetTableRows, createDatasetTableColumn } from './tables';
@@ -31,6 +31,8 @@ export const modelToColumn = (model: ColumnModel): Column => {
       modelProvider: model.process?.modelProvider ?? '',
       endpointUrl: model.process?.endpointUrl ?? undefined,
       searchEnabled: model.process?.searchEnabled,
+      imageColumnId: model.process?.imageColumnId ?? undefined,
+      task: (model.process?.task as TaskType) ?? 'text-generation',
       updatedAt: model.process?.updatedAt,
     },
     cells: [], // TODO: Cells should be loaded separately and this attribute should be removed

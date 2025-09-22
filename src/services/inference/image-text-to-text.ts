@@ -1,5 +1,6 @@
 import { chatCompletion, type InferenceProvider } from '@huggingface/inference';
 import { appConfig } from '~/config';
+import { detectMimeType } from '~/features/table/utils/mime-types';
 import { cacheGet, cacheSet } from '../cache';
 import { renderInstruction } from './materialize-prompt';
 import {
@@ -27,6 +28,9 @@ const normalizeImageTextToTextArgs = ({
     authentication: { hfToken },
   } = appConfig;
 
+  const mimeType = detectMimeType(imageData, '');
+  const dataUri = `data:${mimeType};base64,${Buffer.from(imageData).toString('base64')}`;
+
   const args: any = {
     messages: [
       {
@@ -39,7 +43,7 @@ const normalizeImageTextToTextArgs = ({
           {
             type: 'image_url',
             image_url: {
-              url: `data:image/jpeg;base64,${Buffer.from(imageData).toString('base64')}`,
+              url: dataUri,
             },
           },
         ],

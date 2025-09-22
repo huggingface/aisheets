@@ -345,7 +345,7 @@ async function singleCellGeneration({
 
   const rowCells = await getRowCells({
     rowIdx,
-    columns: columnsReferences,
+    columns: columnsReferences || [],
   });
 
   // Only check for empty data if we have column references

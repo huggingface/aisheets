@@ -43,7 +43,7 @@ export interface CreateColumn {
     endpointUrl?: string;
     prompt: string;
     searchEnabled: boolean;
-    columnsReferences: string[];
+    columnsReferences?: string[];
     imageColumnId?: string; // For image processing workflows
     task: TaskType; // What the process does
     isExecuting?: boolean;

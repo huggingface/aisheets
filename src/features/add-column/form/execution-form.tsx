@@ -293,7 +293,7 @@ export const ExecutionForm = component$<SidebarProps>(
       }
     });
 
-    useTask$(({ track }) => {
+    useTask$(async ({ track }) => {
       track(columns);
 
       variables.value = columns.value
@@ -325,7 +325,7 @@ export const ExecutionForm = component$<SidebarProps>(
         }
       };
 
-      updateImageColumns();
+      await updateImageColumns();
     });
 
     useTask$(() => {

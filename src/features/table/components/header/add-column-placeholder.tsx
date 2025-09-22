@@ -42,10 +42,7 @@ Ensure the image captures the essence of the text, including key elements, color
 
 Description: {{REPLACE_ME}}`,
 
-  imageTextToText: `Analyze the provided image and generate a detailed text description based on what you see.
-
-Examine the visual elements, objects, people, settings, colors, composition, and any text visible in the image. Provide a comprehensive analysis that captures both the objective details and the overall context or mood.
-`,
+  imageTextToText: `Describe what you see in the image.`,
 
   custom: '',
 } as const;
@@ -176,7 +173,7 @@ export const TableAddCellHeaderPlaceHolder = component$(() => {
               />
               <hr class="border-t border-slate-200 dark:border-slate-700" />
               <ActionButton
-                label="Analyze image from"
+                label="Ask the image in"
                 column="column"
                 onClick$={() => handleNewColumn('imageTextToText')}
               />

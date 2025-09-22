@@ -14,6 +14,7 @@ import {
   LuCheck,
   LuEgg,
   LuGlobe,
+  LuImage,
   LuStopCircle,
   LuX,
 } from '@qwikest/icons/lucide';
@@ -511,26 +512,67 @@ export const ExecutionForm = component$<SidebarProps>(
                 </div>
 
                 <div class="w-full absolute bottom-0 p-4 flex flex-row items-center justify-between cursor-text">
-                  {isSearchOnWebAvailable.value ? (
-                    <Button
-                      look="secondary"
-                      class={cn(
-                        'flex px-[10px] py-[8px] gap-[10px] bg-white text-neutral-600 hover:bg-neutral-100 h-[30px] rounded-[8px]',
-                        {
-                          'border-primary-100 outline-primary-100 bg-primary-50 hover:bg-primary-50 text-primary-500 hover:text-primary-400':
-                            searchOnWeb.value,
-                        },
+                  <div class="flex items-center gap-3">
+                    {isSearchOnWebAvailable.value ? (
+                      <Button
+                        look="secondary"
+                        class={cn(
+                          'flex px-[10px] py-[8px] gap-[10px] bg-white text-neutral-600 hover:bg-neutral-100 h-[30px] rounded-[8px]',
+                          {
+                            'border-primary-100 outline-primary-100 bg-primary-50 hover:bg-primary-50 text-primary-500 hover:text-primary-400':
+                              searchOnWeb.value,
+                          },
+                        )}
+                        onClick$={() => {
+                          searchOnWeb.value = !searchOnWeb.value;
+                        }}
+                      >
+                        <LuGlobe class="text-lg" />
+                        Search the web
+                      </Button>
+                    ) : (
+                      <div class="flex items-center gap-2 text-neutral-500" />
+                    )}
+
+                    {/* Image column dropdown moved here */}
+                    {needsImageColumn.value &&
+                      imageColumns.value.length > 0 && (
+                        <div class="w-48">
+                          <Select.Root
+                            bind:value={selectedImageColumn}
+                            class="h-[30px]"
+                          >
+                            <Select.Trigger class="bg-white rounded-base border-neutral-300-foreground h-[30px] flex items-center px-[10px] py-[8px]">
+                              <div class="flex text-xs items-center justify-between gap-2 font-mono w-full">
+                                <div class="flex items-center gap-2">
+                                  <LuImage class="h-4 w-4 text-neutral-500" />
+                                  <Select.DisplayValue />
+                                </div>
+                              </div>
+                            </Select.Trigger>
+                            <Select.Popover class="border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto mt-1 min-w-[200px]">
+                              {imageColumns.value.map((imageColumn) => (
+                                <Select.Item
+                                  key={imageColumn.id}
+                                  value={imageColumn.id}
+                                  class="text-foreground hover:bg-accent"
+                                >
+                                  <div class="flex text-xs items-center p-1 gap-2 font-mono">
+                                    <Select.ItemLabel>
+                                      {imageColumn.name}
+                                    </Select.ItemLabel>
+                                    {imageColumn.id ===
+                                      selectedImageColumn.value && (
+                                      <LuCheck class="h-4 w4 text-primary-500 absolute right-2 top-1/2 -translate-y-1/2" />
+                                    )}
+                                  </div>
+                                </Select.Item>
+                              ))}
+                            </Select.Popover>
+                          </Select.Root>
+                        </div>
                       )}
-                      onClick$={() => {
-                        searchOnWeb.value = !searchOnWeb.value;
-                      }}
-                    >
-                      <LuGlobe class="text-lg" />
-                      Search the web
-                    </Button>
-                  ) : (
-                    <div class="flex items-center gap-2 text-neutral-500" />
-                  )}
+                  </div>
 
                   {column.process?.isExecuting && (
                     <div class="h-4 w-4 animate-spin rounded-full border-2 border-primary-100 border-t-transparent" />
@@ -567,40 +609,6 @@ export const ExecutionForm = component$<SidebarProps>(
 
               <div class="px-3 pb-12 pt-2 bg-white border border-secondary-foreground rounded-sm">
                 <div class="flex flex-col gap-4">
-                  {needsImageColumn.value && imageColumns.value.length > 0 && (
-                    <div class="flex gap-4">
-                      <div class="flex-1">
-                        <Select.Root bind:value={selectedImageColumn}>
-                          <Select.Label>Image Column</Select.Label>
-                          <Select.Trigger class="bg-white rounded-base border-neutral-300-foreground">
-                            <div class="flex text-xs items-center justify-between gap-2 font-mono w-full">
-                              <Select.DisplayValue />
-                            </div>
-                          </Select.Trigger>
-                          <Select.Popover class="border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto mt-1 min-w-[200px]">
-                            {imageColumns.value.map((imageColumn) => (
-                              <Select.Item
-                                key={imageColumn.id}
-                                value={imageColumn.id}
-                                class="text-foreground hover:bg-accent"
-                              >
-                                <div class="flex text-xs items-center p-1 gap-2 font-mono">
-                                  <Select.ItemLabel>
-                                    {imageColumn.name}
-                                  </Select.ItemLabel>
-                                  {imageColumn.id ===
-                                    selectedImageColumn.value && (
-                                    <LuCheck class="h-4 w4 text-primary-500 absolute right-2 top-1/2 -translate-y-1/2" />
-                                  )}
-                                </div>
-                              </Select.Item>
-                            ))}
-                          </Select.Popover>
-                        </Select.Root>
-                      </div>
-                    </div>
-                  )}
-
                   <div class="flex gap-4">
                     <div
                       class={cn({

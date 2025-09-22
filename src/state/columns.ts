@@ -16,7 +16,7 @@ export interface Process {
   modelName: string;
   modelProvider?: string;
   endpointUrl?: string;
-  columnsReferences: string[];
+  columnsReferences?: string[];
   searchEnabled: boolean;
   imageColumnId?: string;
   task: TaskType;

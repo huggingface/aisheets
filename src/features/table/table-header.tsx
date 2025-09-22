@@ -1,16 +1,11 @@
 import {
   $,
-  Fragment,
   component$,
+  Fragment,
   useSignal,
-  useStore,
-  useTask$,
   useVisibleTask$,
 } from '@builder.io/qwik';
 import { cn } from '@qwik-ui/utils';
-import { nextTick } from '~/components/hooks/tick';
-import { ExecutionForm, useExecution } from '~/features/add-column';
-import { useGenerateColumn } from '~/features/execution';
 import { useColumnsSizeContext } from '~/features/table/components/context/colunm-preferences.context';
 import {
   TableAddCellHeaderPlaceHolder,
@@ -253,7 +248,6 @@ export const TableHeader = component$(() => {
                   class={cn(
                     'min-w-[142px] w-[326px] h-[38px] border bg-neutral-100 text-primary-600 font-normal relative select-none cursor-grab',
                     {
-                      'border-r-0': column.id === TEMPORAL_ID,
                       'opacity-50 shadow-lg bg-primary-50':
                         draggedColId.value === column.id,
                       'cursor-grabbing':
@@ -271,8 +265,6 @@ export const TableHeader = component$(() => {
                     onDblClick$={(e) => autoResize(e, column)}
                   />
                 </th>
-
-                <ExecutionFormDebounced column={column} />
               </Fragment>
             ),
         )}
@@ -284,50 +276,9 @@ export const TableHeader = component$(() => {
         {columns.value
           .filter((c) => c.visible)
           .map((column) => (
-            <Fragment key={column.id}>
-              <TableCellHeader column={column} />
-              <ExecutionHeaderDebounced column={column} />
-            </Fragment>
+            <TableCellHeader key={column.id} column={column} />
           ))}
       </tr>
     </thead>
   );
 });
-
-const ExecutionFormDebounced = component$<{ column: Column }>(({ column }) => {
-  const { onGenerateColumn } = useGenerateColumn();
-  const { columnId } = useExecution();
-
-  const state = useStore({ isVisible: columnId.value === column.id });
-
-  useTask$(({ track }) => {
-    track(() => columnId.value);
-    nextTick(() => {
-      state.isVisible = columnId.value === column.id;
-    }, 100);
-  });
-
-  if (!state.isVisible) return null;
-
-  return <ExecutionForm column={column} onGenerateColumn={onGenerateColumn} />;
-});
-
-const ExecutionHeaderDebounced = component$<{ column: Column }>(
-  ({ column }) => {
-    const { columnId } = useExecution();
-    const state = useStore({ isVisible: columnId.value === column.id });
-
-    useTask$(({ track }) => {
-      track(() => columnId.value);
-      nextTick(() => {
-        state.isVisible = columnId.value === column.id;
-      }, 100);
-    });
-
-    if (!state.isVisible) return null;
-
-    return (
-      <th class="min-w-[660px] w-[660px] h-[38px] bg-neutral-100 border" />
-    );
-  },
-);

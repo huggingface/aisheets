@@ -9,6 +9,7 @@ import {
   useContextProvider,
   useSignal,
 } from '@builder.io/qwik';
+import { useModals } from '~/components';
 
 export type Execution = {
   columnId?: string;
@@ -31,6 +32,11 @@ export const ExecutionProvider = component$(() => {
 
 export const useExecution = () => {
   const context = useContext(executionContext);
+  const {
+    isOpenExecutionSidebar,
+    openExecutionSidebar,
+    closeExecutionSidebar,
+  } = useModals('executionSidebar');
 
   const columnId = useComputed$(() => context.value.columnId);
   const mode = useComputed$(() => context.value.mode);
@@ -47,6 +53,7 @@ export const useExecution = () => {
     columnId,
     mode,
     initialProcess,
+    isOpenExecutionSidebar,
     open: $(
       (
         columnId: Execution['columnId'],
@@ -56,6 +63,8 @@ export const useExecution = () => {
         modelProvider?: string,
         endpointUrl?: string,
       ) => {
+        openExecutionSidebar();
+
         context.value = {
           columnId,
           mode,
@@ -67,6 +76,7 @@ export const useExecution = () => {
       },
     ),
     close: $(() => {
+      closeExecutionSidebar();
       context.value = {};
     }),
   };

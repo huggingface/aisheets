@@ -15,7 +15,7 @@ import {
   isObjectType,
   isTextType,
 } from '~/features/utils/columns';
-import { type Column, TEMPORAL_ID } from '~/state';
+import type { Column } from '~/state';
 
 export const TableCellHeader = component$<{ column: Column }>(({ column }) => {
   const { columnId } = useExecution();
@@ -47,9 +47,7 @@ export const TableCellHeader = component$<{ column: Column }>(({ column }) => {
   return (
     <th
       id={column.id}
-      class={cn(`min-h-[50px] h-[50px] p-2 text-left border ${classes.value}`, {
-        'border-r-0': column.id === TEMPORAL_ID,
-      })}
+      class={`min-h-[50px] h-[50px] p-2 text-left border ${classes.value}`}
     >
       <Popover.Root flip={false} gutter={8} floating="bottom">
         <Popover.Trigger class="flex items-center justify-between w-full h-[20px] py-[10px]">

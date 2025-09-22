@@ -1,4 +1,4 @@
-export type ID = 'mainSidebar';
+export type ID = 'mainSidebar' | 'executionSidebar';
 
 export type Status = 'open' | 'closed';
 
@@ -8,6 +8,7 @@ type Modal = {
 
 export type Modals = {
   mainSidebar: Modal;
+  executionSidebar: Modal;
 };
 
 export interface State {

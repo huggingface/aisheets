@@ -1,13 +1,11 @@
 import {
   $,
+  component$,
   Fragment,
   type HTMLAttributes,
-  component$,
   noSerialize,
   useComputed$,
   useSignal,
-  useStore,
-  useTask$,
   useVisibleTask$,
 } from '@builder.io/qwik';
 import { server$ } from '@builder.io/qwik-city';
@@ -18,9 +16,9 @@ import { Button, Popover } from '~/components';
 import { nextTick } from '~/components/hooks/tick';
 import { Tooltip } from '~/components/ui/tooltip/tooltip';
 import { VirtualScrollContainer } from '~/components/ui/virtual-scroll/virtual-scroll';
-import { useExecution } from '~/features/add-column';
 import { useGenerateColumn } from '~/features/execution';
 import { isOverlayOpen } from '~/features/table/components/body/renderer/components/utils';
+
 import { useColumnsSizeContext } from '~/features/table/components/context/colunm-preferences.context';
 import { TableCell } from '~/features/table/table-cell';
 import { deleteRowsCells } from '~/services';
@@ -408,8 +406,6 @@ export const TableBody = component$(() => {
                     </div>
                   </td>
                 )}
-
-                <ExecutionFormDebounced column={cell.column} />
               </Fragment>
             );
           })}
@@ -442,30 +438,3 @@ export const TableBody = component$(() => {
     </tbody>
   );
 });
-
-const ExecutionFormDebounced = component$<{ column?: { id: Column['id'] } }>(
-  ({ column }) => {
-    // td for execution form
-    const { columnId } = useExecution();
-
-    const state = useStore({
-      isVisible: columnId.value === column?.id,
-    });
-
-    useTask$(({ track }) => {
-      track(() => columnId.value);
-
-      const isVisible = columnId.value === column?.id;
-
-      nextTick(() => {
-        state.isVisible = isVisible;
-      }, 100);
-    });
-
-    if (!state.isVisible) return null;
-
-    return (
-      <td class="min-w-[660px] w-[660px] border bg-neutral-100 border-t-0 border-l-0 border-b-0" />
-    );
-  },
-);

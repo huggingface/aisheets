@@ -10,7 +10,7 @@ import { LuPlus } from '@qwikest/icons/lucide';
 import { Button, buttonVariants, Popover } from '~/components';
 import { Tooltip } from '~/components/ui/tooltip/tooltip';
 import { useExecution } from '~/features/add-column/form';
-import { hasBlobContent } from '~/features/utils/columns';
+import { hasBlobContent, isImage } from '~/features/utils/columns';
 
 import { type TaskType, TEMPORAL_ID, useColumnsStore } from '~/state';
 
@@ -58,6 +58,10 @@ export const TableAddCellHeaderPlaceHolder = component$(() => {
   const lastColumnId = useComputed$(
     () => columns.value[columns.value.length - 1].id,
   );
+
+  const hasImageColumns = useComputed$(() => {
+    return columns.value.some((column) => isImage(column));
+  });
 
   const handleNewColumn = $(async (promptType: ColumnPromptType) => {
     if (lastColumnId.value === TEMPORAL_ID) return;
@@ -171,12 +175,16 @@ export const TableAddCellHeaderPlaceHolder = component$(() => {
                 column="column"
                 onClick$={() => handleNewColumn('textToImage')}
               />
-              <hr class="border-t border-slate-200 dark:border-slate-700" />
-              <ActionButton
-                label="Ask the image in"
-                column="column"
-                onClick$={() => handleNewColumn('imageTextToText')}
-              />
+              {hasImageColumns.value && (
+                <>
+                  <hr class="border-t border-slate-200 dark:border-slate-700" />
+                  <ActionButton
+                    label="Ask the image in"
+                    column="column"
+                    onClick$={() => handleNewColumn('imageTextToText')}
+                  />
+                </>
+              )}
               <hr class="border-t border-slate-200 dark:border-slate-700" />
               <ActionButton
                 label="Do something with"

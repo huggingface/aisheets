@@ -391,6 +391,7 @@ async function createDatasetWithColumns(
         modelProvider: processModelProvider,
         endpointUrl: isImage ? undefined : defaultCustomModel?.endpointUrl,
         searchEnabled,
+        task: isImage ? 'text-to-image' : 'text-generation',
         columnsReferences: columnReferences.map((ref) => {
           const refIndex = columnNames.indexOf(ref);
           return createdColumns[refIndex].id;

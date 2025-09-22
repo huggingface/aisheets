@@ -293,8 +293,9 @@ export const useTrendingHubModels = routeLoader$(async function (
   if (!session) return [];
 
   const models = await Promise.all([
-    fetchModelsForPipeline(session, 'text-generation', 2),
+    fetchModelsForPipeline(session, 'text-generation', 1),
     fetchModelsForPipeline(session, 'text-to-image', 1),
+    fetchModelsForPipeline(session, 'image-text-to-text', 1),
   ]);
 
   return await Promise.all(

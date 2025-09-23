@@ -1,26 +1,25 @@
 import {
   $,
-  type QRL,
   component$,
+  type QRL,
   useComputed$,
   useSignal,
+  useVisibleTask$,
 } from '@builder.io/qwik';
 import { cn } from '@qwik-ui/utils';
-import { LuPlus } from '@qwikest/icons/lucide';
-import { Button, Popover, buttonVariants } from '~/components';
+import { LuEgg, LuSparkles } from '@qwikest/icons/lucide';
+import { Button, buttonVariants, Input, Popover } from '~/components';
 import { Tooltip } from '~/components/ui/tooltip/tooltip';
 import { useExecution } from '~/features/add-column/form';
-import { hasBlobContent } from '~/features/utils/columns';
 
-import { TEMPORAL_ID, useColumnsStore } from '~/state';
+import { type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
 
 const COLUMN_PROMPTS = {
   translate: `Translate English to French, ensuring grammatical accuracy and natural, human-like phrasing.
 
 Maintain original meaning, context, and formatting. Adapt cultural references and review carefully.
 
-Original text: {{REPLACE_ME}}
-`,
+Original text: {{REPLACE_ME}}`,
 
   extractKeywords: `Identify and extract the most salient keywords or key phrases representing the core topics from the provided text.
 
@@ -47,128 +46,160 @@ Description: {{REPLACE_ME}}`,
 
 type ColumnPromptType = keyof typeof COLUMN_PROMPTS;
 
-export const TableAddCellHeaderPlaceHolder = component$(() => {
-  const ref = useSignal<HTMLElement>();
-  const isOpen = useSignal(false);
-  const { open } = useExecution();
-  const { columns, addTemporalColumn } = useColumnsStore();
+export const TableAddCellHeaderPlaceHolder = component$<{ column: Column }>(
+  ({ column }) => {
+    const ref = useSignal<HTMLElement>();
+    const isOpen = useSignal(false);
+    const { open } = useExecution();
+    const { columns, addTemporalColumn } = useColumnsStore();
+    const isUsingTemplate = useSignal<boolean>();
+    const prompt = useSignal<string>('');
 
-  const lastColumnId = useComputed$(
-    () => columns.value[columns.value.length - 1].id,
-  );
+    const isLastColumnTemporal = useComputed$(
+      () => columns.value[columns.value.length - 1].id == TEMPORAL_ID,
+    );
 
-  const handleNewColumn = $(async (promptType: ColumnPromptType) => {
-    if (lastColumnId.value === TEMPORAL_ID) return;
-
-    const type = promptType === 'textToImage' ? 'image' : 'text';
-
-    await addTemporalColumn(type);
-
-    const validColumns = columns.value.filter((c) => !hasBlobContent(c));
-
-    const firstValidColumnToReference = validColumns[0];
-
-    if (firstValidColumnToReference) {
+    const handleTemplate = $(async (promptType: ColumnPromptType) => {
       const initialPrompt = COLUMN_PROMPTS[promptType].replace(
         '{{REPLACE_ME}}',
-        `{{${firstValidColumnToReference.name}}}`,
+        `{{${column.name}}}`,
       );
 
+      await addTemporalColumn(promptType === 'textToImage' ? 'image' : 'text');
+
       open(TEMPORAL_ID, 'add', initialPrompt);
-    } else {
-      open(TEMPORAL_ID, 'add', '');
-    }
-  });
+    });
 
-  const isVisible = () => {
-    const rect = ref.value?.getBoundingClientRect();
-    if (!rect) return false;
+    const handleNewColumn = $(async () => {
+      if (!prompt.value.trim()) return;
 
-    return rect.left >= 0 && rect.right <= window.innerWidth;
-  };
+      // TODO: Ask for type if prompt includes {{REPLACE_ME}}???
+      await addTemporalColumn('text');
 
-  return (
-    <th
-      id={TEMPORAL_ID}
-      class={cn('visible w-[62px] h-[38px] flex justify-center items-center', {
-        hidden: lastColumnId.value === TEMPORAL_ID,
-      })}
-    >
-      <Tooltip text="Add column">
-        <Popover.Root
-          gutter={8}
-          floating={isVisible() ? 'bottom-end' : 'bottom-start'}
-        >
-          <Popover.Trigger
-            ref={ref}
-            class={cn(
-              buttonVariants({ look: 'ghost' }),
-              'w-[30px] h-[30px] bg-transparent text-primary rounded-full hover:bg-primary-100 flex items-center justify-center p-0',
-              {
-                'bg-primary-100': isOpen.value,
-              },
-            )}
-          >
-            <LuPlus class="text-lg" />
-          </Popover.Trigger>
+      prompt.value += `
+      Original text: {{${column.name}}}`;
 
-          <Popover.Panel
-            class="shadow-lg w-86 text-sm p-2"
-            onToggle$={() => {
-              isOpen.value = !isOpen.value;
-            }}
-          >
-            <div class="flex flex-col gap-0.5">
-              <ActionButton
-                label="Translate"
-                column="column"
-                onClick$={() => handleNewColumn('translate')}
-              />
-              <hr class="border-t border-slate-200 dark:border-slate-700" />
-              <ActionButton
-                label="Extract keywords from"
-                column="column"
-                onClick$={() => handleNewColumn('extractKeywords')}
-              />
-              <hr class="border-t border-slate-200 dark:border-slate-700" />
-              <ActionButton
-                label="Summarize"
-                column="column"
-                onClick$={() => handleNewColumn('summarize')}
-              />
-              <hr class="border-t border-slate-200 dark:border-slate-700" />
-              <ActionButton
-                label="Generate image from"
-                column="column"
-                onClick$={() => handleNewColumn('textToImage')}
-              />
-              <hr class="border-t border-slate-200 dark:border-slate-700" />
-              <ActionButton
-                label="Do something with"
-                column="column"
-                onClick$={() => handleNewColumn('custom')}
-              />
-            </div>
-          </Popover.Panel>
-        </Popover.Root>
-      </Tooltip>
-    </th>
-  );
-});
+      open(TEMPORAL_ID, 'add', prompt.value.trim());
+    });
+
+    useVisibleTask$(({ track }) => {
+      track(isOpen);
+
+      isUsingTemplate.value = false;
+    });
+
+    if (isLastColumnTemporal.value) return null;
+
+    return (
+      <div class="absolute top-0 right-0 m-1 mr-[6px] w-8 h-full">
+        <Tooltip text="Add column">
+          <Popover.Root gutter={8}>
+            <Popover.Trigger
+              ref={ref}
+              class={cn(
+                buttonVariants({ look: 'ghost' }),
+                'p-2 flex items-center justify-center transition-opacity duration-300 rounded-full',
+                {
+                  'bg-primary-100': isOpen.value,
+                  'opacity-0 group-hover:opacity-100 hover:bg-primary-100':
+                    !isOpen.value,
+                },
+              )}
+              preventdefault:mousedown
+              stoppropagation:mousedown
+            >
+              <LuSparkles class="text-sm text-primary" />
+            </Popover.Trigger>
+
+            <Popover.Panel
+              class="shadow-lg w-96 text-sm p-2"
+              onToggle$={() => {
+                isOpen.value = !isOpen.value;
+              }}
+            >
+              <div class="flex flex-col gap-2">
+                <div
+                  class="w-full h-10 flex items-center justify-between gap-3"
+                  stoppropagation:mousedown
+                >
+                  <Input
+                    class="h-8"
+                    placeholder='Ask anything like "Translate to French"'
+                    bind:value={prompt}
+                  />
+
+                  <Button
+                    look="primary"
+                    class="p-2 w-[30px] h-[30px] rounded-full flex items-center justify-center"
+                    onClick$={handleNewColumn}
+                  >
+                    <LuEgg class="text-sm text-white" />
+                  </Button>
+                </div>
+
+                <Button
+                  look="ghost"
+                  class="px-1 w-fit text-xs hover:underline"
+                  onClick$={() => {
+                    isUsingTemplate.value = !isUsingTemplate.value;
+                  }}
+                  aria-expanded={isUsingTemplate.value}
+                  aria-controls="template-options"
+                  preventdefault:mousedown
+                  stoppropagation:mousedown
+                >
+                  Or use a template
+                </Button>
+
+                {isUsingTemplate.value && (
+                  <div class="flex flex-col">
+                    <ActionButton
+                      label="Translate"
+                      onClick$={() => handleTemplate('translate')}
+                    />
+                    <hr class="border-t border-slate-200 dark:border-slate-700" />
+                    <ActionButton
+                      label="Extract keywords"
+                      onClick$={() => handleTemplate('extractKeywords')}
+                    />
+                    <hr class="border-t border-slate-200 dark:border-slate-700" />
+                    <ActionButton
+                      label="Summarize"
+                      onClick$={() => handleTemplate('summarize')}
+                    />
+                    <hr class="border-t border-slate-200 dark:border-slate-700" />
+                    <ActionButton
+                      label="Generate image"
+                      onClick$={() => handleTemplate('textToImage')}
+                    />
+                    <hr class="border-t border-slate-200 dark:border-slate-700" />
+                    <ActionButton
+                      label="Do something else..."
+                      onClick$={() => handleTemplate('custom')}
+                    />
+                  </div>
+                )}
+              </div>
+            </Popover.Panel>
+          </Popover.Root>
+        </Tooltip>
+      </div>
+    );
+  },
+);
 
 export const ActionButton = component$<{
   label: string;
-  column: string;
   onClick$: QRL<(event: PointerEvent, element: HTMLButtonElement) => any>;
-}>(({ label, column, onClick$ }) => {
+}>(({ label, onClick$ }) => {
   return (
     <Button
       look="ghost"
       class="flex items-center justify-start w-full gap-2.5 p-2 hover:bg-neutral-100 rounded-none first:rounded-tl-md first:rounded-tr-md last:rounded-bl-md last:rounded-br-md"
       onClick$={onClick$}
+      stoppropagation:mousedown
     >
       <span>{label}</span>
-      <span class="text-neutral-500">{`{{${column}}}`}</span>
     </Button>
   );
 });

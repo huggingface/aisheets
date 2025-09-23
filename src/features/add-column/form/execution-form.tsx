@@ -27,7 +27,7 @@ import { useGenerateColumn } from '~/features/execution';
 import { hasBlobContent } from '~/features/utils/columns';
 import type { Model } from '~/loaders/hub-models';
 import { useConfigContext, useModelsContext } from '~/routes/home/layout';
-import { useColumnsStore } from '~/state';
+import { TEMPORAL_ID, useColumnsStore } from '~/state';
 
 type SupportedType = 'text' | 'image';
 
@@ -437,8 +437,8 @@ export const ExecutionForm = component$(() => {
                     class="w-[30px] h-[30px] rounded-full flex items-center justify-center p-0"
                     onClick$={onStop}
                     disabled={
-                      (column.process?.isExecuting &&
-                        column.id === TEMPORAL_ID) ||
+                      (column.value.process?.isExecuting &&
+                        column.value.id === TEMPORAL_ID) ||
                       !prompt.value.trim()
                     }
                   >

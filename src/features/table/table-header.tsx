@@ -6,12 +6,14 @@ import {
   useVisibleTask$,
 } from '@builder.io/qwik';
 import { cn } from '@qwik-ui/utils';
+import { useExecution } from '~/features/add-column';
+
 import { useColumnsSizeContext } from '~/features/table/components/context/colunm-preferences.context';
 import {
   TableAddCellHeaderPlaceHolder,
   TableCellHeader,
 } from '~/features/table/components/header';
-import { type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
+import { type Column, useColumnsStore } from '~/state';
 
 export const TableHeader = component$(() => {
   const MAX_WIDTH = 1000;
@@ -22,6 +24,7 @@ export const TableHeader = component$(() => {
     startX: number;
     startWidth: number;
   } | null>(null);
+  const { columnId } = useExecution();
   const { columnSize, update } = useColumnsSizeContext();
   const draggedColId = useSignal<string | null>(null);
   const targetColId = useSignal<string | null>(null);
@@ -246,19 +249,23 @@ export const TableHeader = component$(() => {
                   id={`index-${column.id}`}
                   data-column-id={column.id}
                   class={cn(
-                    'min-w-[142px] w-[326px] h-[38px] border bg-neutral-100 text-primary-600 font-normal relative select-none cursor-grab',
+                    'min-w-[142px] w-[326px] h-[38px] border bg-neutral-100 text-primary-600 font-normal relative select-none cursor-grab group',
                     {
                       'opacity-50 shadow-lg bg-primary-50':
                         draggedColId.value === column.id,
                       'cursor-grabbing':
                         draggedColId.value === column.id ||
                         targetColId.value === column.id,
+                      'bg-blue-50': column.id == columnId.value,
                     },
                   )}
                   style={{ width: `${columnSize.value[column.id] || 326}px` }}
                   onMouseDown$={(e) => handleManualDragStart(e, column.id)}
                 >
                   {indexToAlphanumeric(i + 1)}
+
+                  <TableAddCellHeaderPlaceHolder column={column} />
+
                   <span
                     class="absolute top-0 -right-[3px] w-[4px] h-full cursor-col-resize bg-transparent hover:bg-primary-100 z-10"
                     onMouseDown$={(e) => handleResizeStart(e, column.id)}
@@ -267,9 +274,6 @@ export const TableHeader = component$(() => {
                 </th>
               </Fragment>
             ),
-        )}
-        {columns.value.filter((c) => c.id !== TEMPORAL_ID).length >= 1 && (
-          <TableAddCellHeaderPlaceHolder />
         )}
       </tr>
       <tr>

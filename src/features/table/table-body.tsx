@@ -355,7 +355,14 @@ export const TableBody = component$(() => {
             return (
               <Fragment key={`${cell.idx}-${cell.column!.id}`}>
                 {cell.column?.id === TEMPORAL_ID ? (
-                  <td class="relative min-w-[326px] w-[326px] max-w-[326px] h-[108px] border" />
+                  <td
+                    class={cn(
+                      'relative min-w-[326px] w-[326px] max-w-[326px] h-[108px] border',
+                      {
+                        'bg-blue-50': cell.column.id == columnId.value,
+                      },
+                    )}
+                  />
                 ) : (
                   <td
                     data-column-id={cell.column?.id}

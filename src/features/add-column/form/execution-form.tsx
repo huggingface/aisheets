@@ -183,7 +183,7 @@ class GroupedModels {
 }
 
 export const ExecutionForm = component$(() => {
-  const { columnId, initialProcess } = useExecution();
+  const { columnId } = useExecution();
   const { columns, updateColumn } = useColumnsStore();
   const allModels = useModelsContext();
   const { DEFAULT_MODEL, DEFAULT_MODEL_PROVIDER } = useConfigContext();
@@ -238,23 +238,6 @@ export const ExecutionForm = component$(() => {
   );
 
   useTask$(({ track }) => {
-    track(columnId);
-
-    if (initialProcess.value.prompt) {
-      prompt.value = initialProcess.value.prompt;
-    }
-    if (initialProcess.value.modelName) {
-      selectedModelId.value = initialProcess.value.modelName;
-    }
-    if (initialProcess.value.modelProvider) {
-      selectedProvider.value = initialProcess.value.modelProvider;
-    }
-    if (initialProcess.value.endpointUrl && selectedProvider.value === '') {
-      selectedProvider.value = initialProcess.value.endpointUrl;
-    }
-  });
-
-  useTask$(({ track }) => {
     track(columns);
 
     variables.value = columns.value
@@ -267,7 +250,10 @@ export const ExecutionForm = component$(() => {
 
   useTask$(({ track }) => {
     track(columnId);
+    track(() => column.value?.id);
+
     if (!column.value) return;
+    if (columnId.value != column.value.id) return;
 
     const { process } = column.value;
     if (!process) return;

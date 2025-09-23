@@ -41,17 +41,18 @@ Ensure the image captures the essence of the text, including key elements, color
 
 Description: {{REPLACE_ME}}`,
 
-  custom: '',
+  custom: `
+
+{{REPLACE_ME}}`,
 } as const;
 
 type ColumnPromptType = keyof typeof COLUMN_PROMPTS;
 
 export const TableAddCellHeaderPlaceHolder = component$<{ column: Column }>(
   ({ column }) => {
-    const ref = useSignal<HTMLElement>();
     const isOpen = useSignal(false);
     const { open } = useExecution();
-    const { columns, addTemporalColumn } = useColumnsStore();
+    const { columns } = useColumnsStore();
     const isUsingTemplate = useSignal<boolean>();
     const prompt = useSignal<string>('');
 
@@ -65,27 +66,35 @@ export const TableAddCellHeaderPlaceHolder = component$<{ column: Column }>(
         `{{${column.name}}}`,
       );
 
-      await addTemporalColumn(promptType === 'textToImage' ? 'image' : 'text');
-
-      open(TEMPORAL_ID, 'add', initialPrompt);
+      open('add', {
+        name: column.name,
+        type: promptType === 'textToImage' ? 'image' : 'text',
+        prompt: initialPrompt,
+      });
+      isOpen.value = false;
     });
 
     const handleNewColumn = $(async () => {
       if (!prompt.value.trim()) return;
 
-      // TODO: Ask for type if prompt includes {{REPLACE_ME}}???
-      await addTemporalColumn('text');
+      prompt.value += COLUMN_PROMPTS['custom'].replace(
+        '{{REPLACE_ME}}',
+        `{{${column.name}}}`,
+      );
 
-      prompt.value += `
-      Original text: {{${column.name}}}`;
-
-      open(TEMPORAL_ID, 'add', prompt.value.trim());
+      open('add', {
+        name: column.name,
+        type: 'unknown',
+        prompt: prompt.value.trim(),
+      });
+      isOpen.value = false;
     });
 
     useVisibleTask$(({ track }) => {
       track(isOpen);
 
       isUsingTemplate.value = false;
+      prompt.value = '';
     });
 
     if (isLastColumnTemporal.value) return null;
@@ -95,7 +104,6 @@ export const TableAddCellHeaderPlaceHolder = component$<{ column: Column }>(
         <Tooltip text="Add column">
           <Popover.Root gutter={8}>
             <Popover.Trigger
-              ref={ref}
               class={cn(
                 buttonVariants({ look: 'ghost' }),
                 'p-2 flex items-center justify-center transition-opacity duration-300 rounded-full',

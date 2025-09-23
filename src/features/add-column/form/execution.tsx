@@ -10,6 +10,7 @@ import {
   useSignal,
 } from '@builder.io/qwik';
 import { useModals } from '~/components';
+import { type Column, type ColumnPrototype, useColumnsStore } from '~/state';
 
 export type Execution = {
   columnId?: string;
@@ -30,6 +31,12 @@ export const ExecutionProvider = component$(() => {
   return <Slot />;
 });
 
+type ColumnPrototypeWithId = ColumnPrototype & { columnId: Column['id'] };
+
+type ExecutionInfo<T extends Execution['mode']> = T extends 'add'
+  ? ColumnPrototype
+  : ColumnPrototypeWithId;
+
 export const useExecution = () => {
   const context = useContext(executionContext);
   const {
@@ -37,46 +44,44 @@ export const useExecution = () => {
     openExecutionSidebar,
     closeExecutionSidebar,
   } = useModals('executionSidebar');
+  const { addTemporalColumn } = useColumnsStore();
 
   const columnId = useComputed$(() => context.value.columnId);
   const mode = useComputed$(() => context.value.mode);
-  const initialProcess = useComputed$(() => {
-    return {
-      prompt: context.value.prompt,
-      modelName: context.value.modelName,
-      modelProvider: context.value.modelProvider,
-      endpointUrl: context.value.endpointUrl,
-    };
-  });
 
   return {
     columnId,
     mode,
-    initialProcess,
     isOpenExecutionSidebar,
     open: $(
-      (
-        columnId: Execution['columnId'],
-        mode: Execution['mode'],
-        prompt?: string,
-        modelName?: string,
-        modelProvider?: string,
-        endpointUrl?: string,
-      ) => {
-        openExecutionSidebar();
+      async <T extends Execution['mode']>(
+        mode: T,
+        info: ExecutionInfo<T>,
+      ): Promise<void> => {
+        const casted = info as ColumnPrototypeWithId;
+
+        if (mode !== 'add' && !casted.columnId) {
+          throw new Error('columnId is required when mode is not "edit"');
+        }
+
+        if (mode === 'add') {
+          const newbie = await addTemporalColumn(info);
+          if (newbie) {
+            casted.columnId = newbie.id;
+          }
+        }
 
         context.value = {
-          columnId,
+          columnId: casted.columnId,
           mode,
-          prompt,
-          modelName,
-          modelProvider,
-          endpointUrl,
         };
+
+        openExecutionSidebar();
       },
     ),
     close: $(() => {
       closeExecutionSidebar();
+
       context.value = {};
     }),
   };

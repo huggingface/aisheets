@@ -14,6 +14,7 @@ import {
   LuCheck,
   LuEgg,
   LuGlobe,
+  LuImage,
   LuStopCircle,
   LuX,
 } from '@qwikest/icons/lucide';
@@ -32,12 +33,13 @@ import {
   type Variable,
 } from '~/features/add-column/components/template-textarea';
 import { useExecution } from '~/features/add-column/form/execution';
-import { hasBlobContent } from '~/features/utils/columns';
+import { hasBlobContent, isImage } from '~/features/utils/columns';
 import type { Model } from '~/loaders/hub-models';
 import { useConfigContext, useModelsContext } from '~/routes/home/layout';
 import {
   type Column,
   type CreateColumn,
+  type TaskType,
   TEMPORAL_ID,
   useColumnsStore,
 } from '~/state';
@@ -62,12 +64,24 @@ class Models {
     return this.getTextModels();
   }
 
+  getModelsByTask(task: TaskType): Model[] {
+    if (task === 'text-to-image') return this.getImageModels();
+    if (task === 'image-text-to-text') return this.getImageTextToTextModels();
+    return this.getTextModels();
+  }
+
   private getTextModels(): Model[] {
     return this.models.filter((model) => model.supportedType === 'text');
   }
 
   private getImageModels(): Model[] {
     return this.models.filter((model) => model.supportedType === 'image');
+  }
+
+  private getImageTextToTextModels(): Model[] {
+    return this.models.filter(
+      (model) => model.supportedType === 'image-text-to-text',
+    );
   }
 }
 
@@ -203,7 +217,7 @@ class GroupedModels {
 export const ExecutionForm = component$<SidebarProps>(
   ({ column, onGenerateColumn }) => {
     const executionFormRef = useSignal<HTMLElement>();
-    const { initialProcess, mode, close } = useExecution();
+    const { initialProcess, mode, close, task } = useExecution();
     const { firstColumn, columns, removeTemporalColumn, updateColumn } =
       useColumnsStore();
 
@@ -212,8 +226,8 @@ export const ExecutionForm = component$<SidebarProps>(
     const { DEFAULT_MODEL, DEFAULT_MODEL_PROVIDER } = useConfigContext();
 
     const models = useComputed$(() => {
-      return new Models(allModels).getModelsByType(
-        column.type as SupportedType,
+      return new Models(allModels).getModelsByTask(
+        task.value || 'text-generation',
       );
     });
 
@@ -233,6 +247,14 @@ export const ExecutionForm = component$<SidebarProps>(
     const selectedModelId = useSignal<string>('');
     const selectedProvider = useSignal<string>('');
     const modelProviders = useSignal<string[]>([]);
+
+    // Image column selector for image-text-to-text scenarios
+    const selectedImageColumn = useSignal<string>('');
+    const imageColumns = useSignal<Variable[]>([]);
+
+    const needsImageColumn = useComputed$(() => {
+      return task.value === 'image-text-to-text';
+    });
 
     const onSelectedVariables = $((variables: { id: string }[]) => {
       columnsReferences.value = variables.map((v) => v.id);
@@ -271,7 +293,7 @@ export const ExecutionForm = component$<SidebarProps>(
       }
     });
 
-    useTask$(({ track }) => {
+    useTask$(async ({ track }) => {
       track(columns);
 
       variables.value = columns.value
@@ -280,6 +302,30 @@ export const ExecutionForm = component$<SidebarProps>(
           id: c.id,
           name: c.name,
         }));
+
+      const updateImageColumns = async () => {
+        const imageCols = [];
+        for (const c of columns.value) {
+          if (c.id !== column.id && isImage(c)) {
+            imageCols.push({
+              id: c.id,
+              name: c.name,
+            });
+          }
+        }
+        imageColumns.value = imageCols;
+
+        if (
+          needsImageColumn.value &&
+          !selectedImageColumn.value &&
+          imageColumns.value.length > 0 &&
+          mode.value === 'add'
+        ) {
+          selectedImageColumn.value = imageColumns.value[0].id;
+        }
+      };
+
+      await updateImageColumns();
     });
 
     useTask$(() => {
@@ -308,6 +354,11 @@ export const ExecutionForm = component$<SidebarProps>(
         if (!defaultModel) return;
 
         selectedModelId.value = defaultModel.id;
+      }
+
+      // Initialize image column selection if editing an existing column
+      if (process.imageColumnId) {
+        selectedImageColumn.value = process.imageColumnId;
       }
     });
 
@@ -401,6 +452,11 @@ export const ExecutionForm = component$<SidebarProps>(
           prompt: prompt.value,
           columnsReferences: columnsReferences.value,
           searchEnabled: searchOnWeb.value,
+          task: task.value || 'text-generation',
+          // Add selected image column for image processing workflows
+          ...(needsImageColumn.value && {
+            imageColumnId: selectedImageColumn.value || undefined,
+          }),
         };
 
         updateColumn(column);
@@ -456,26 +512,67 @@ export const ExecutionForm = component$<SidebarProps>(
                 </div>
 
                 <div class="w-full absolute bottom-0 p-4 flex flex-row items-center justify-between cursor-text">
-                  {isSearchOnWebAvailable.value ? (
-                    <Button
-                      look="secondary"
-                      class={cn(
-                        'flex px-[10px] py-[8px] gap-[10px] bg-white text-neutral-600 hover:bg-neutral-100 h-[30px] rounded-[8px]',
-                        {
-                          'border-primary-100 outline-primary-100 bg-primary-50 hover:bg-primary-50 text-primary-500 hover:text-primary-400':
-                            searchOnWeb.value,
-                        },
+                  <div class="flex items-center gap-3">
+                    {isSearchOnWebAvailable.value ? (
+                      <Button
+                        look="secondary"
+                        class={cn(
+                          'flex px-[10px] py-[8px] gap-[10px] bg-white text-neutral-600 hover:bg-neutral-100 h-[30px] rounded-[8px]',
+                          {
+                            'border-primary-100 outline-primary-100 bg-primary-50 hover:bg-primary-50 text-primary-500 hover:text-primary-400':
+                              searchOnWeb.value,
+                          },
+                        )}
+                        onClick$={() => {
+                          searchOnWeb.value = !searchOnWeb.value;
+                        }}
+                      >
+                        <LuGlobe class="text-lg" />
+                        Search the web
+                      </Button>
+                    ) : (
+                      <div class="flex items-center gap-2 text-neutral-500" />
+                    )}
+
+                    {/* Image column dropdown moved here */}
+                    {needsImageColumn.value &&
+                      imageColumns.value.length > 0 && (
+                        <div class="w-48">
+                          <Select.Root
+                            bind:value={selectedImageColumn}
+                            class="h-[30px]"
+                          >
+                            <Select.Trigger class="bg-white rounded-base border-neutral-300-foreground h-[30px] flex items-center px-[10px] py-[8px]">
+                              <div class="flex text-xs items-center justify-between gap-2 font-mono w-full">
+                                <div class="flex items-center gap-2">
+                                  <LuImage class="h-4 w-4 text-neutral-500" />
+                                  <Select.DisplayValue />
+                                </div>
+                              </div>
+                            </Select.Trigger>
+                            <Select.Popover class="border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto mt-1 min-w-[200px]">
+                              {imageColumns.value.map((imageColumn) => (
+                                <Select.Item
+                                  key={imageColumn.id}
+                                  value={imageColumn.id}
+                                  class="text-foreground hover:bg-accent"
+                                >
+                                  <div class="flex text-xs items-center p-1 gap-2 font-mono">
+                                    <Select.ItemLabel>
+                                      {imageColumn.name}
+                                    </Select.ItemLabel>
+                                    {imageColumn.id ===
+                                      selectedImageColumn.value && (
+                                      <LuCheck class="h-4 w4 text-primary-500 absolute right-2 top-1/2 -translate-y-1/2" />
+                                    )}
+                                  </div>
+                                </Select.Item>
+                              ))}
+                            </Select.Popover>
+                          </Select.Root>
+                        </div>
                       )}
-                      onClick$={() => {
-                        searchOnWeb.value = !searchOnWeb.value;
-                      }}
-                    >
-                      <LuGlobe class="text-lg" />
-                      Search the web
-                    </Button>
-                  ) : (
-                    <div class="flex items-center gap-2 text-neutral-500" />
-                  )}
+                  </div>
 
                   {column.process?.isExecuting && (
                     <div class="h-4 w-4 animate-spin rounded-full border-2 border-primary-100 border-t-transparent" />

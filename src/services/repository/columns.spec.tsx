@@ -1,8 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
+import { DatasetModel } from '../db/models';
 import { ColumnModel, ProcessColumnModel } from '../db/models/column';
 import { ProcessModel } from '../db/models/process';
-
-import { DatasetModel } from '../db/models';
 import { createColumn } from './columns';
 
 afterEach(async () => {
@@ -28,6 +27,7 @@ describe('addColumn', () => {
         prompt: 'test prompt',
         searchEnabled: false,
         columnsReferences: [],
+        task: 'text-generation',
       },
       dataset: {
         id: dataset.id,
@@ -71,6 +71,7 @@ describe('addColumn', () => {
         prompt: 'test prompt',
         searchEnabled: false,
         columnsReferences: columns.map((c) => c.id),
+        task: 'text-generation',
       },
       dataset: {
         id: dataset.id,

@@ -1,18 +1,18 @@
 import {
   $,
-  type QRL,
   component$,
+  type QRL,
   useComputed$,
   useSignal,
 } from '@builder.io/qwik';
 import { cn } from '@qwik-ui/utils';
 import { LuPlus } from '@qwikest/icons/lucide';
-import { Button, Popover, buttonVariants } from '~/components';
+import { Button, buttonVariants, Popover } from '~/components';
 import { Tooltip } from '~/components/ui/tooltip/tooltip';
 import { useExecution } from '~/features/add-column/form';
-import { hasBlobContent } from '~/features/utils/columns';
+import { hasBlobContent, isImage } from '~/features/utils/columns';
 
-import { TEMPORAL_ID, useColumnsStore } from '~/state';
+import { type TaskType, TEMPORAL_ID, useColumnsStore } from '~/state';
 
 const COLUMN_PROMPTS = {
   translate: `Translate English to French, ensuring grammatical accuracy and natural, human-like phrasing.
@@ -42,6 +42,8 @@ Ensure the image captures the essence of the text, including key elements, color
 
 Description: {{REPLACE_ME}}`,
 
+  imageTextToText: `Describe what you see in the image.`,
+
   custom: '',
 } as const;
 
@@ -57,10 +59,35 @@ export const TableAddCellHeaderPlaceHolder = component$(() => {
     () => columns.value[columns.value.length - 1].id,
   );
 
+  const hasImageColumns = useComputed$(() => {
+    return columns.value.some((column) => isImage(column));
+  });
+
   const handleNewColumn = $(async (promptType: ColumnPromptType) => {
     if (lastColumnId.value === TEMPORAL_ID) return;
 
-    const type = promptType === 'textToImage' ? 'image' : 'text';
+    // Map prompt types to column types (based on output data type)
+    const typeMap = {
+      translate: 'text',
+      extractKeywords: 'text',
+      summarize: 'text',
+      textToImage: 'image',
+      imageTextToText: 'text',
+      custom: 'text',
+    };
+
+    // Map prompt types to task types (based on model pipeline)
+    const taskMap: Record<ColumnPromptType, TaskType> = {
+      translate: 'text-generation',
+      extractKeywords: 'text-generation',
+      summarize: 'text-generation',
+      textToImage: 'text-to-image',
+      imageTextToText: 'image-text-to-text',
+      custom: 'text-generation',
+    };
+
+    const type = typeMap[promptType];
+    const task = taskMap[promptType];
 
     await addTemporalColumn(type);
 
@@ -74,9 +101,15 @@ export const TableAddCellHeaderPlaceHolder = component$(() => {
         `{{${firstValidColumnToReference.name}}}`,
       );
 
-      open(TEMPORAL_ID, 'add', initialPrompt);
+      open(TEMPORAL_ID, 'add', {
+        prompt: initialPrompt,
+        task,
+      });
     } else {
-      open(TEMPORAL_ID, 'add', '');
+      open(TEMPORAL_ID, 'add', {
+        prompt: '',
+        task,
+      });
     }
   });
 
@@ -142,6 +175,16 @@ export const TableAddCellHeaderPlaceHolder = component$(() => {
                 column="column"
                 onClick$={() => handleNewColumn('textToImage')}
               />
+              {hasImageColumns.value && (
+                <>
+                  <hr class="border-t border-slate-200 dark:border-slate-700" />
+                  <ActionButton
+                    label="Ask the image in"
+                    column="column"
+                    onClick$={() => handleNewColumn('imageTextToText')}
+                  />
+                </>
+              )}
               <hr class="border-t border-slate-200 dark:border-slate-700" />
               <ActionButton
                 label="Do something with"

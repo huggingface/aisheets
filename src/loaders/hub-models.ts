@@ -7,7 +7,7 @@ import {
 
 import { INFERENCE_PROVIDERS } from '@huggingface/inference';
 import { appConfig } from '~/config';
-import { type Session, useServerSession } from '~/state';
+import { type Session, type TaskType, useServerSession } from '~/state';
 
 // This list helps to exclude providers that are not supported by the endpoint
 const UNSUPPORTED_PROVIDERS = ['openai', 'nscale', 'ovhcloud'];
@@ -118,6 +118,13 @@ const listAllModels = server$(async function (
   const models = await Promise.all([
     // All text generation models that support conversational
     listTextGenerationModels(session),
+    // All image-text-to-text models
+    fetchModelsForPipeline(session, 'image-text-to-text').then((models) =>
+      models.map((model) => ({
+        ...model,
+        supportedType: 'image-text-to-text',
+      })),
+    ),
     // All image generation models
     // TODO: Add pagination support since image generation models can be large
     // and we might want to fetch more than just the first 1000 models.
@@ -134,7 +141,7 @@ const listAllModels = server$(async function (
 
 const fetchModelsForPipeline = async (
   session: Session,
-  kind: 'text-generation' | 'image-text-to-text' | 'text-to-image',
+  kind: TaskType,
   limit?: number,
 ): Promise<Model[]> => {
   const url = 'https://huggingface.co/api/models';
@@ -233,11 +240,20 @@ export const useHubModels = routeLoader$(async function (
   const hideHFModels = customModels.length > 0;
 
   if (hideHFModels) {
-    const imageModels = await listImageGenerationModels(
-      useServerSession(this)!,
-    );
+    const [imageModels, imageTextToTextModels] = await Promise.all([
+      listImageGenerationModels(useServerSession(this)!),
+      fetchModelsForPipeline(
+        useServerSession(this)!,
+        'image-text-to-text',
+      ).then((models) =>
+        models.map((model) => ({
+          ...model,
+          supportedType: 'image-text-to-text',
+        })),
+      ),
+    ]);
 
-    return [...customModels, ...imageModels];
+    return [...customModels, ...imageModels, ...imageTextToTextModels];
   }
 
   const models = await listAllModels();
@@ -277,8 +293,9 @@ export const useTrendingHubModels = routeLoader$(async function (
   if (!session) return [];
 
   const models = await Promise.all([
-    fetchModelsForPipeline(session, 'text-generation', 2),
+    fetchModelsForPipeline(session, 'text-generation', 1),
     fetchModelsForPipeline(session, 'text-to-image', 1),
+    fetchModelsForPipeline(session, 'image-text-to-text', 1),
   ]);
 
   return await Promise.all(

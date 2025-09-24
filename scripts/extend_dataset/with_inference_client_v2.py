@@ -105,10 +105,8 @@ def _get_client_for_node(
 
 @contextmanager
 def retries(max_retries: int = 10, delay: float = 1.0):
+
     attempt = 0
-
-
-
     while True:
         try:
             yield
@@ -518,7 +516,7 @@ def main(
         destination,
         split=destination_split,
         create_pr=create_pr,
-        num_proc=max_workers,
+        num_proc=min(max_workers, dataset.num_shards),
     )
 
     total_time = time.time() - start_time

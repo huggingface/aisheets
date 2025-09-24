@@ -119,8 +119,8 @@ def retries(max_retries: int = 10, delay: float = 1.0):
             delay = delay * (2 ** attempt) + random.uniform(0, delay)
 
             rprint(
-                f"[yellow]Rate limit hit. Retrying in {delay:.2f} seconds "
-                f"(attempt {attempt + 1}/{max_retries})"
+                f"[yellow]Error occurred: {e}. Retrying in {delay:.2f} seconds "
+                f"(attempt {attempt}/{max_retries})"
             )
 
             time.sleep(delay)

@@ -52,6 +52,8 @@ class ProcessorConfig:
     num_rows: int | None = None
     bill_to: str | None = None
 
+    request_delay: float = 1.0  # Delay between requests to avoid rate limiting
+
     @property
     def sorted_columns(self) -> list[str]:
         """Return a sorted list of generated column names."""
@@ -105,7 +107,6 @@ def _get_client_for_node(
 
 @contextmanager
 def retries(max_retries: int = 10, delay: float = 1.0):
-
     attempt = 0
     delay = delay * (2 ** attempt) + random.uniform(0, delay)
 
@@ -131,7 +132,7 @@ def text_generation_task(
     client: InferenceClient,
     row: dict,
     prompt_template: str,
-    request_delay: float | None = 5.0,
+    request_delay: float,
 ) -> str:
     """Generate completion using the specified model."""
     prompt = prepare_prompt(prompt_template, row)
@@ -168,7 +169,7 @@ def image_text_generation_task(
     prompt_template: str,
     image_column: str,
     row: dict,
-    request_delay: float | None = 5.0,
+    request_delay: float,
 ) -> str:
     """Generate completion using the specified model."""
     prompt = prepare_prompt(prompt_template, row)
@@ -195,7 +196,7 @@ def text_to_image_generation_task(
     client: InferenceClient,
     instruction: str,
     row: dict,
-    request_delay: float | None = 5.0,
+    request_delay: float,
 ) -> Image:
     """Generate image using the specified model."""
     prompt = prepare_prompt(instruction, row)
@@ -443,7 +444,12 @@ def map_function(
 
         for row in rows:
             futures.append(
-                executor.submit(generation_task, client=client, row=row)
+                executor.submit(
+                    generation_task,
+                    client=client,
+                    row=row,
+                    request_delay=processor_config.request_delay,
+                )
             )
 
         results = []

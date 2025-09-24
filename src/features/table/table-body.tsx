@@ -1,8 +1,8 @@
 import {
   $,
+  component$,
   Fragment,
   type HTMLAttributes,
-  component$,
   noSerialize,
   useComputed$,
   useSignal,
@@ -14,6 +14,7 @@ import { server$ } from '@builder.io/qwik-city';
 import { cn } from '@qwik-ui/utils';
 import { LuDot, LuTrash } from '@qwikest/icons/lucide';
 import type { VirtualItem } from '@tanstack/virtual-core';
+
 import { Button, Popover } from '~/components';
 import { nextTick } from '~/components/hooks/tick';
 import { Tooltip } from '~/components/ui/tooltip/tooltip';
@@ -23,7 +24,7 @@ import { useGenerateColumn } from '~/features/execution';
 import { isOverlayOpen } from '~/features/table/components/body/renderer/components/utils';
 import { useColumnsSizeContext } from '~/features/table/components/context/colunm-preferences.context';
 import { TableCell } from '~/features/table/table-cell';
-import { deleteRowsCells } from '~/services';
+import { deleteRowsCells, getColumnCells } from '~/services';
 import {
   type Cell,
   type Column,
@@ -43,44 +44,10 @@ export const TableBody = component$(() => {
   const { onGenerateColumn } = useGenerateColumn();
   const selectedRows = useSignal<number[]>([]);
 
-  const datasetSize = useComputed$(() =>
-    Math.max(activeDataset.value?.size || 0, 100),
-  );
+  const datasetSize = useComputed$(() => activeDataset.value!.size);
 
-  const data = useComputed$(() => {
-    const getCell = (column: Column, rowIndex: number): Cell => {
-      const cell = column.cells[rowIndex];
+  const data = useSignal<Cell[][]>([]);
 
-      if (!cell) {
-        // Temporal cell for skeleton
-        return {
-          id: undefined,
-          value: '',
-          error: '',
-          validated: false,
-          column: {
-            id: column.id,
-            type: column.type,
-          },
-          updatedAt: new Date(),
-          generating: false,
-          idx: rowIndex,
-        };
-      }
-
-      return cell;
-    };
-
-    const visibleColumns = columns.value.filter((column) => column.visible);
-
-    return Array.from(
-      { length: Math.max(firstColumn.value.cells.length, 100) },
-      (_, rowIndex) =>
-        Array.from({ length: visibleColumns.length }, (_, colIndex) =>
-          getCell(visibleColumns[colIndex], rowIndex),
-        ),
-    );
-  });
   const scrollElement = useSignal<HTMLElement>();
   const dragStartCell = useSignal<Cell>();
   const lastMove = useSignal(0);
@@ -111,6 +78,43 @@ export const TableBody = component$(() => {
 
       selectedRows.value = [];
     }
+  });
+
+  useVisibleTask$(({ track }) => {
+    track(() => firstColumn.value.cells);
+
+    const getCell = (column: Column, rowIndex: number): Cell => {
+      const cell = column.cells[rowIndex];
+
+      if (!cell) {
+        // Temporal cell for skeleton
+        return {
+          id: undefined,
+          value: '',
+          error: '',
+          validated: false,
+          column: {
+            id: column.id,
+            type: column.type,
+          },
+          updatedAt: new Date(),
+          generating: false,
+          idx: rowIndex,
+        };
+      }
+
+      return cell;
+    };
+
+    const visibleColumns = columns.value.filter((column) => column.visible);
+
+    data.value = Array.from(
+      { length: firstColumn.value.cells.length },
+      (_, rowIndex) =>
+        Array.from({ length: visibleColumns.length }, (_, colIndex) =>
+          getCell(visibleColumns[colIndex], rowIndex),
+        ),
+    );
   });
 
   const handleSelectRow$ = $((idx: number) => {
@@ -220,6 +224,35 @@ export const TableBody = component$(() => {
         limit,
       },
     });
+  });
+
+  const fetchMoreData$ = $(async ({ rangeStart }: { rangeStart: number }) => {
+    const dataset = activeDataset.value;
+    if (!dataset) return;
+
+    const offset = rangeStart;
+    const limit = Math.min(100, dataset.size - rangeStart);
+
+    console.log('Fetching more data', { offset, limit });
+
+    if (limit <= 0) return;
+
+    const updatedColummns = await Promise.all(
+      dataset.columns.map(async (column) => {
+        const newCells = await server$(getColumnCells)({
+          column,
+          limit,
+        });
+
+        column.cells = column.cells.concat(newCells);
+
+        return column;
+      }),
+    );
+
+    for (const column of updatedColummns) {
+      updateColumn(column);
+    }
   });
 
   const handleMouseMove$ = $(async (e: MouseEvent) => {
@@ -435,9 +468,11 @@ export const TableBody = component$(() => {
         key={datasetSize.value}
         totalCount={datasetSize.value}
         estimateSize={rowSize}
+        buffer={50}
         data={data}
         itemRenderer={itemRenderer}
         scrollElement={scrollElement}
+        loadNextPage={fetchMoreData$}
       />
     </tbody>
   );

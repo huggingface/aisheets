@@ -291,7 +291,8 @@ def _display_configuration_summary(
         for node, column_cfg in config.columns.items():
             model_name = column_cfg['modelName']
             provider = column_cfg['modelProvider']
-            summary.append(f"• [cyan]{node}[/]: {model_name} ({provider})")
+            task = column_cfg['task']
+            summary.append(f"• [cyan]{node} - {task} [/]: {model_name} ({provider})")
 
         summary.append("\n[bold blue]Node Dependencies:[/]")
         # Add dependency information for each node
@@ -334,6 +335,13 @@ def _build_dependency_graph(
                 # Only mark as dependent if it depends on non-source columns
                 if dep not in source_columns:
                     dependent_nodes.add(col)
+
+        if image_column := config.get('imageColumn'):
+            if image_column not in source_columns:
+                raise ValueError(f"Invalid image column dependency for {col}: {image_column}")
+
+            graph[image_column].append(col)
+            reverse_graph[col].append(image_column)
 
     # A node is a root if it:
     # 1. Is not a source column AND
@@ -489,7 +497,7 @@ def main(
     dataset: Dataset = load_dataset(
         repo_id,
         split=split,
-        streaming=False,
+        streaming=True,
     )
 
     dataset_rows = _get_dataset_size(repo_id, split=split)

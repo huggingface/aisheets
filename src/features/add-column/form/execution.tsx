@@ -44,7 +44,8 @@ export const useExecution = () => {
     openExecutionSidebar,
     closeExecutionSidebar,
   } = useModals('executionSidebar');
-  const { columns, addTemporalColumn } = useColumnsStore();
+  const { columns, addTemporalColumn, removeTemporalColumn } =
+    useColumnsStore();
 
   const columnId = useComputed$(() => context.value.columnId);
   const mode = useComputed$(() => context.value.mode);
@@ -83,7 +84,11 @@ export const useExecution = () => {
         openExecutionSidebar();
       },
     ),
-    close: $(() => {
+    close: $(async () => {
+      if (mode.value === 'add') {
+        await removeTemporalColumn();
+      }
+
       closeExecutionSidebar();
 
       context.value = {};

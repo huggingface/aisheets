@@ -1,25 +1,12 @@
-import { $, component$, useComputed$ } from '@builder.io/qwik';
+import { component$ } from '@builder.io/qwik';
 import { cn } from '@qwik-ui/utils';
 import { LuX } from '@qwikest/icons/lucide';
 import { Button } from '~/components';
 import { useExecution } from '~/features/add-column/form/execution';
 import { ExecutionForm } from '~/features/add-column/form/execution-form';
-import { useColumnsStore } from '~/state';
 
 export const ExecutionSidebar = component$(() => {
-  const { columnId, isOpenExecutionSidebar, mode, close } = useExecution();
-  const { columns, removeTemporalColumn } = useColumnsStore();
-  const column = useComputed$(() =>
-    columns.value.find((col) => col.id === columnId.value),
-  );
-
-  const handleCloseForm = $(async () => {
-    if (mode.value === 'add') {
-      await removeTemporalColumn();
-    }
-
-    close();
-  });
+  const { column, isOpenExecutionSidebar, close } = useExecution();
 
   return (
     <aside
@@ -36,7 +23,7 @@ export const ExecutionSidebar = component$(() => {
           <Button
             look="ghost"
             class="rounded-full hover:bg-neutral-200 cursor-pointer transition-colors w-[30px] h-[30px]"
-            onClick$={handleCloseForm}
+            onClick$={close}
             tabIndex={0}
             aria-label="Close"
           >

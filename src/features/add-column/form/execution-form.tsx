@@ -6,9 +6,16 @@ import {
   useSignal,
   useTask$,
 } from '@builder.io/qwik';
+import { Collapsible } from '@qwik-ui/headless';
 
 import { cn } from '@qwik-ui/utils';
-import { LuCheck, LuEgg, LuGlobe, LuStopCircle } from '@qwikest/icons/lucide';
+import {
+  LuCheck,
+  LuChevronDown,
+  LuEgg,
+  LuGlobe,
+  LuStopCircle,
+} from '@qwikest/icons/lucide';
 import { Button, Select, triggerLooks } from '~/components';
 import { useClickOutside } from '~/components/hooks/click/outside';
 import { nextTick } from '~/components/hooks/tick';
@@ -187,7 +194,7 @@ class GroupedModels {
           class: 'h-10 p-2 bg-primary-50 text-secondary-400',
           models: this.models.filter((m) => m.supportedType === 'image'),
         },
-      ];
+      ].filter((g) => g.models.length > 0);
     }
 
     return [
@@ -202,7 +209,7 @@ class GroupedModels {
               !this.recommendedModelIds.map((r) => r.id).includes(model.id),
           ),
       },
-    ];
+    ].filter((g) => g.models.length > 0);
   }
 }
 
@@ -214,9 +221,9 @@ export const ExecutionForm = component$(() => {
   const { onGenerateColumn } = useGenerateColumn();
 
   const models = useComputed$(() => {
-    return new Models(allModels).getModelsByType(
-      column.value?.type as Column['type'],
-    );
+    if (!column.value) return [];
+
+    return new Models(allModels).getModelsByType(column.value.type);
   });
   const filteredModels = useSignal<Model[]>(models.value);
   const groupedModels = useComputed$(() => {
@@ -306,6 +313,8 @@ export const ExecutionForm = component$(() => {
 
   useTask$(({ track }) => {
     track(modelSearchQuery);
+    track(columnId);
+    track(() => column.value?.id);
 
     if (modelSearchQuery.value.length <= 1) return;
 
@@ -327,6 +336,9 @@ export const ExecutionForm = component$(() => {
 
   useTask$(({ track }) => {
     track(selectedModelId);
+    track(columnId);
+    track(() => column.value?.id);
+
     modelSearchQuery.value = selectedModelId.value || modelSearchQuery.value;
 
     const model = models.value.find(
@@ -534,48 +546,61 @@ export const ExecutionForm = component$(() => {
                       >
                         <div class="flex flex-col">
                           {Object.entries(groupedModels.value).map(
-                            ([category, models]) => {
-                              if (models.models.length === 0) return null;
+                            ([category, models], i) => {
                               return (
                                 <div key={category}>
-                                  <div
-                                    class={cn(
-                                      'text-[13px] font-semibold rounded-sm rounded-b-none',
-                                      models.class,
-                                    )}
+                                  <Collapsible.Root
+                                    open={groupedModels.value.length <= 2}
                                   >
-                                    {models.label}
-                                  </div>
-                                  {models.models.map((model) => (
-                                    <Select.Item
-                                      key={model.id}
-                                      value={model.id}
-                                      class="text-foreground hover:bg-accent"
-                                      onClick$={() => {
-                                        isModelDropdownOpen.value = false;
-
-                                        selectedModelId.value = model.id;
-                                        modelSearchQuery.value = model.id;
-                                      }}
-                                    >
-                                      <div class="flex text-xs items-center justify-between p-1 gap-2 font-mono w-full">
-                                        <div class="flex items-center gap-2">
-                                          <ModelImage model={model} />
-                                          <Select.ItemLabel>
-                                            {model.id}
-                                          </Select.ItemLabel>
-                                        </div>
-
-                                        <ModelFlag model={model} />
+                                    <Collapsible.Trigger class="w-full">
+                                      <div
+                                        class={cn(
+                                          'text-[13px] w-full font-semibold flex items-center justify-between',
+                                          models.class,
+                                          {
+                                            'rounded-sm rounded-b-none':
+                                              i === 0,
+                                          },
+                                        )}
+                                      >
+                                        {models.label}
+                                        <LuChevronDown />
                                       </div>
+                                    </Collapsible.Trigger>
+                                    <Collapsible.Content>
+                                      {models.models.map((model) => (
+                                        <Select.Item
+                                          key={model.id}
+                                          value={model.id}
+                                          class="text-foreground hover:bg-accent"
+                                          onClick$={() => {
+                                            isModelDropdownOpen.value = false;
 
-                                      {model.id === selectedModelId.value && (
-                                        // We cannot use the Select.ItemIndicator here
-                                        // because it doesn't work when the model list changes
-                                        <LuCheck class="h-4 w4 text-primary-500 absolute right-2 top-1/2 -translate-y-1/2" />
-                                      )}
-                                    </Select.Item>
-                                  ))}
+                                            selectedModelId.value = model.id;
+                                            modelSearchQuery.value = model.id;
+                                          }}
+                                        >
+                                          <div class="flex text-xs items-center justify-between p-1 gap-2 font-mono w-full">
+                                            <div class="flex items-center gap-2">
+                                              <ModelImage model={model} />
+                                              <Select.ItemLabel>
+                                                {model.id}
+                                              </Select.ItemLabel>
+                                            </div>
+
+                                            <ModelFlag model={model} />
+                                          </div>
+
+                                          {model.id ===
+                                            selectedModelId.value && (
+                                            // We cannot use the Select.ItemIndicator here
+                                            // because it doesn't work when the model list changes
+                                            <LuCheck class="h-4 w4 text-primary-500 absolute right-2 top-1/2 -translate-y-1/2" />
+                                          )}
+                                        </Select.Item>
+                                      ))}
+                                    </Collapsible.Content>
+                                  </Collapsible.Root>
                                 </div>
                               );
                             },

@@ -51,7 +51,7 @@ type ColumnPromptType = keyof typeof COLUMN_PROMPTS;
 export const TableAddCellHeaderPlaceHolder = component$<{ column: Column }>(
   ({ column }) => {
     const isOpen = useSignal(false);
-    const { open } = useExecution();
+    const { open, close } = useExecution();
     const { columns } = useColumnsStore();
     const isUsingTemplate = useSignal<boolean>();
     const prompt = useSignal<string>('');
@@ -60,18 +60,27 @@ export const TableAddCellHeaderPlaceHolder = component$<{ column: Column }>(
       () => columns.value[columns.value.length - 1].id == TEMPORAL_ID,
     );
 
+    const onCreateColumn = $(async (type: Column['type'], prompt: string) => {
+      isOpen.value = false;
+
+      await close();
+
+      await open('add', {
+        type,
+        prompt,
+      });
+    });
+
     const handleTemplate = $(async (promptType: ColumnPromptType) => {
       const initialPrompt = COLUMN_PROMPTS[promptType].replace(
         '{{REPLACE_ME}}',
         `{{${column.name}}}`,
       );
 
-      open('add', {
-        name: column.name,
-        type: promptType === 'textToImage' ? 'image' : 'text',
-        prompt: initialPrompt,
-      });
-      isOpen.value = false;
+      onCreateColumn(
+        promptType === 'textToImage' ? 'image' : 'text',
+        initialPrompt,
+      );
     });
 
     const handleNewColumn = $(async () => {
@@ -82,12 +91,7 @@ export const TableAddCellHeaderPlaceHolder = component$<{ column: Column }>(
         `{{${column.name}}}`,
       );
 
-      open('add', {
-        name: column.name,
-        type: 'unknown',
-        prompt: prompt.value.trim(),
-      });
-      isOpen.value = false;
+      onCreateColumn('unknown', prompt.value.trim());
     });
 
     useVisibleTask$(({ track }) => {

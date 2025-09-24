@@ -43,7 +43,6 @@ export interface CreateColumn {
 }
 
 export interface ColumnPrototype {
-  name?: string;
   type?: Column['type'];
   prompt?: string;
   modelName?: string;
@@ -108,7 +107,7 @@ export const useColumnsStore = () => {
 
     return {
       id: TEMPORAL_ID,
-      name: info?.name ?? getNextColumnName(),
+      name: getNextColumnName(),
       kind: 'dynamic',
       type,
       visible: true,

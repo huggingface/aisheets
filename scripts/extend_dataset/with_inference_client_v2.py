@@ -523,7 +523,7 @@ def main(
         destination,
         split=destination_split,
         create_pr=create_pr,
-        num_proc=min(max_workers, dataset.num_shards),
+        num_proc=min(2, dataset.num_shards),
     )
 
     total_time = time.time() - start_time

@@ -73,7 +73,7 @@ export type Cell = {
 export interface Column {
   id: string;
   name: string;
-  type: string;
+  type: 'text' | 'image' | 'unknown';
   kind: ColumnKind;
   visible: boolean;
   process?: Process | undefined;

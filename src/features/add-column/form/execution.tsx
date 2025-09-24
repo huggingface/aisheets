@@ -44,13 +44,17 @@ export const useExecution = () => {
     openExecutionSidebar,
     closeExecutionSidebar,
   } = useModals('executionSidebar');
-  const { addTemporalColumn } = useColumnsStore();
+  const { columns, addTemporalColumn } = useColumnsStore();
 
   const columnId = useComputed$(() => context.value.columnId);
   const mode = useComputed$(() => context.value.mode);
+  const column = useComputed$(() =>
+    columns.value.find((c) => c.id === columnId.value),
+  );
 
   return {
     columnId,
+    column,
     mode,
     isOpenExecutionSidebar,
     open: $(

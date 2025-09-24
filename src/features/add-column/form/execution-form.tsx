@@ -27,28 +27,30 @@ import { useGenerateColumn } from '~/features/execution';
 import { hasBlobContent } from '~/features/utils/columns';
 import type { Model } from '~/loaders/hub-models';
 import { useConfigContext, useModelsContext } from '~/routes/home/layout';
-import { TEMPORAL_ID, useColumnsStore } from '~/state';
+import { type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
 
-type SupportedType = 'text' | 'image';
+export class Models {
+  constructor(private readonly models: Model[]) {}
 
-class Models {
-  private models: Model[];
-
-  constructor(models: Model[]) {
-    this.models = models;
+  get(value: string) {
+    return this.models.find(
+      (m: Model) => m.id.toLocaleLowerCase() === value.toLocaleLowerCase(),
+    );
   }
 
-  getModelsByType(type: SupportedType): Model[] {
+  getModelsByType(type: Column['type']): Model[] {
     if (type === 'image') return this.getImageModels();
 
-    return this.getTextModels();
+    if (type === 'text') return this.getTextModels();
+
+    return this.models;
   }
 
-  private getTextModels(): Model[] {
+  getTextModels(): Model[] {
     return this.models.filter((model) => model.supportedType === 'text');
   }
 
-  private getImageModels(): Model[] {
+  getImageModels(): Model[] {
     return this.models.filter((model) => model.supportedType === 'image');
   }
 }
@@ -57,7 +59,6 @@ type ModelWithExtraTags = Model & {
   extraTags?: { label: string; class: string }[];
 };
 class GroupedModels {
-  private models: Model[];
   private tags = {
     LIGHT: {
       label: 'lightweight',
@@ -93,9 +94,10 @@ class GroupedModels {
     },
   };
 
-  constructor(models: Model[]) {
-    this.models = models;
-  }
+  constructor(
+    private readonly column: Column,
+    private readonly models: Model[],
+  ) {}
 
   private get recommendedModelIds(): {
     id: Model['id'];
@@ -140,12 +142,8 @@ class GroupedModels {
     ];
   }
 
-  byCategory(): {
-    label: string;
-    class: string;
-    models: ModelWithExtraTags[];
-  }[] {
-    const recommended: ModelWithExtraTags[] = this.recommendedModelIds
+  private getRecommendedModels(): ModelWithExtraTags[] {
+    return this.recommendedModelIds
       .map((recommendedModel) => {
         const model = this.models.find((m) => m.id === recommendedModel.id);
         return model
@@ -156,8 +154,14 @@ class GroupedModels {
           : null;
       })
       .filter((model): model is NonNullable<typeof model> => model !== null);
+  }
 
-    return [
+  byCategory(): {
+    label: string;
+    class: string;
+    models: ModelWithExtraTags[];
+  }[] {
+    const models = [
       {
         label: 'Custom Models',
         class: 'h-10 p-2 bg-primary-50 text-primary-400',
@@ -166,8 +170,28 @@ class GroupedModels {
       {
         label: 'Recommended Models',
         class: 'h-10 p-2 bg-primary-50 text-primary-400',
-        models: recommended,
+        models: this.getRecommendedModels(),
       },
+    ];
+
+    if (this.column.type === 'unknown') {
+      return [
+        ...models,
+        {
+          label: 'Text Models',
+          class: 'h-10 p-2 bg-primary-50 text-primary-400',
+          models: this.models.filter((m) => m.supportedType === 'text'),
+        },
+        {
+          label: 'Image Models',
+          class: 'h-10 p-2 bg-primary-50 text-secondary-400',
+          models: this.models.filter((m) => m.supportedType === 'image'),
+        },
+      ];
+    }
+
+    return [
+      ...models,
       {
         label: 'All models available on Hugging Face',
         class: 'h-10 p-2 bg-[#FFF0D9] text-[#FF9D00]',
@@ -183,26 +207,27 @@ class GroupedModels {
 }
 
 export const ExecutionForm = component$(() => {
-  const { columnId } = useExecution();
+  const { columnId, column } = useExecution();
   const { columns, updateColumn } = useColumnsStore();
   const allModels = useModelsContext();
   const { DEFAULT_MODEL, DEFAULT_MODEL_PROVIDER } = useConfigContext();
   const { onGenerateColumn } = useGenerateColumn();
-  const column = useComputed$(() =>
-    columns.value.find((c) => c.id === columnId.value),
-  );
 
   const models = useComputed$(() => {
     return new Models(allModels).getModelsByType(
-      column.value?.type as SupportedType,
+      column.value?.type as Column['type'],
     );
+  });
+  const filteredModels = useSignal<Model[]>(models.value);
+  const groupedModels = useComputed$(() => {
+    if (!column.value) return [];
+
+    return new GroupedModels(column.value!, filteredModels.value).byCategory();
   });
 
   const showEndpointUrl = useComputed$(() => {
     return models.value.some((m) => !!m.endpointUrl);
   });
-
-  const filteredModels = useSignal<Model[]>(models.value);
 
   const prompt = useSignal<string>('');
   const columnsReferences = useSignal<string[]>([]);
@@ -217,10 +242,6 @@ export const ExecutionForm = component$(() => {
 
   const onSelectedVariables = $((variables: { id: string }[]) => {
     columnsReferences.value = variables.map((v) => v.id);
-  });
-
-  const groupedModels = useComputed$(() => {
-    return new GroupedModels(filteredModels.value).byCategory();
   });
 
   const isImageColumn = useComputed$(() => {

@@ -16,11 +16,14 @@ import os
 import random
 import time
 from collections import defaultdict
+from contextlib import contextmanager
+from functools import partial
 from typing import Tuple
 
 import requests
 import typer
 import yaml
+from PIL.Image import Image
 from datasets import load_dataset, Value, Features, Dataset
 from huggingface_hub import InferenceClient
 from rich import print as rprint
@@ -93,55 +96,115 @@ def _get_client_for_node(
     config = config.columns[node]
 
     return InferenceClient(
+        model=config["modelName"],
         provider=config['modelProvider'],
         bill_to=bill_to,
         # token=hf_inference_token,  # Optionally set a token if needed
     )
 
 
-def _generate_completion(
+@contextmanager
+def retries(max_retries: int = 10, delay: float = 1.0):
+    attempt = 0
+
+
+
+    while True:
+        try:
+            yield
+            break
+        except Exception as e:
+            attempt += 1
+            if attempt > max_retries:
+                raise Exception("Max retries exceeded") from e
+
+            delay = delay * (2 ** attempt) + random.uniform(0, 1)
+
+            rprint(
+                f"[yellow]Rate limit hit. Retrying in {delay:.2f} seconds "
+                f"(attempt {attempt + 1}/{max_retries})"
+            )
+
+            time.sleep(delay)
+
+
+def text_generation_task(
     client: InferenceClient,
-    model: str,
-    prompt: str,
+    row: dict,
+    prompt_template: str,
     request_delay: float | None = 5.0,
 ) -> str:
     """Generate completion using the specified model."""
+    prompt = prepare_prompt(prompt_template, row)
     messages = [{"role": "user", "content": prompt}]
 
-    retry_count = 0
-    # Implement retry with exponential backoff for rate limiting
-    max_retries = 10
-    base_delay = request_delay
+    with retries(delay=request_delay):
+        completion = client.chat.completions.create(messages=messages)
+        return completion.choices[0].message.content
 
-    while retry_count < max_retries:
-        try:
-            delay = base_delay * (2 ** retry_count) + random.uniform(0, request_delay)
 
-            if retry_count > 0:
-                rprint(
-                    f"[yellow]Rate limit hit. Retrying in {delay:.2f} seconds "
-                    f"(attempt {retry_count + 1}/{max_retries})"
-                )
-                time.sleep(delay)
+def image_data_to_data_uri(image: Image) -> str:
+    if isinstance(image, str) and image.startswith("http"):
+        return image
+    elif isinstance(image, str) and os.path.isfile(image):
+        with open(image, "rb") as f:
+            import base64
+            encoded_string = base64.b64encode(f.read()).decode('utf-8')
+            return f"data:image/{os.path.splitext(image)[1][1:]};base64,{encoded_string}"
+    elif isinstance(image, Image):
+        import io
+        import base64
 
-            completion = client.chat.completions.create(
-                model=model,
-                messages=messages,
-            )
+        buffered = io.BytesIO()
+        image.save(buffered, format="PNG")
 
-            return completion.choices[0].message.content
+        encoded_string = base64.b64encode(buffered.getvalue()).decode('utf-8')
+        return f"data:image/png;base64,{encoded_string}"
+    else:
+        raise ValueError("Unsupported image format")
 
-        except Exception as e:
-            if retry_count >= max_retries:
-                rprint(f"[red]Max retries reached. Giving up...")
-                raise
 
-            retry_count += 1
-            rprint(f"[red]Error generating completion: {str(e)}")
-            rprint(f"[yellow]Retrying... (attempt {retry_count}/{max_retries})")
+def image_text_generation_task(
+    client: InferenceClient,
+    prompt_template: str,
+    image_column: str,
+    row: dict,
+    request_delay: float | None = 5.0,
+) -> str:
+    """Generate completion using the specified model."""
+    prompt = prepare_prompt(prompt_template, row)
+    image_data = row[image_column]
 
-    # Should not reach here, but just in case
-    raise Exception("Failed to generate completion after maximum retries")
+    messages = [
+        {
+            "role": "user",
+            "content": [
+                {"type": "text", "text": prompt},
+                {"type": "image_url", "image_url": {
+                    "url": image_data_to_data_uri(image_data)
+                }},
+            ]
+        }
+    ]
+
+    with retries(delay=request_delay):
+        completion = client.chat.completions.create(messages=messages)
+        return completion.choices[0].message.content
+
+
+def text_to_image_generation_task(
+    client: InferenceClient,
+    instruction: str,
+    row: dict,
+    request_delay: float | None = 5.0,
+) -> Image:
+    """Generate image using the specified model."""
+    prompt = prepare_prompt(instruction, row)
+
+    with retries(delay=request_delay):
+        generation = client.text_to_image(prompt)
+
+        return generation
 
 
 def load_processor_config(
@@ -346,7 +409,8 @@ def map_function(
     column_config: dict,
     processor_config: ProcessorConfig
 ) -> dict:
-    prompt_template = column_config["prompt"]
+    task = column_config.get("task", "text-generation")
+    rows = [dict(zip(batch.keys(), values)) for values in zip(*batch.values())]
 
     # Process the batch of messages
     client = _get_client_for_node(
@@ -354,24 +418,33 @@ def map_function(
         config=processor_config,
         bill_to=processor_config.bill_to
     )
-    model = column_config["modelName"]
 
-    rows = [dict(zip(batch.keys(), values)) for values in zip(*batch.values())]
+    generation_task = None
+    if task == "text-generation":
+        generation_task = partial(
+            text_generation_task,
+            prompt_template=column_config["prompt"])
+    elif task == "image-text-to-text":
+        generation_task = partial(
+            image_text_generation_task,
+            prompt_template=column_config["prompt"],
+            image_column=column_config["imageColumn"],
+        )
+    elif task == "text-to-image":
+        generation_task = partial(
+            text_to_image_generation_task,
+            instruction=column_config["instruction"],
+        )
 
     with concurrent.futures.ThreadPoolExecutor(
             max_workers=processor_config.max_workers
     ) as executor:
-        futures = []
-        for row in rows:
-            prompt = prepare_prompt(prompt_template, row)
 
+        futures = []
+
+        for row in rows:
             futures.append(
-                executor.submit(
-                    _generate_completion,
-                    client,
-                    model,
-                    prompt,
-                )
+                executor.submit(generation_task, client=client, row=row)
             )
 
         results = []

@@ -186,12 +186,12 @@ class GroupedModels {
         ...models,
         {
           label: 'Text Models',
-          class: 'h-10 p-2 bg-primary-50 text-primary-400',
+          class: 'h-10 p-2 bg-amber-50 text-amber-400',
           models: this.models.filter((m) => m.supportedType === 'text'),
         },
         {
           label: 'Image Models',
-          class: 'h-10 p-2 bg-primary-50 text-secondary-400',
+          class: 'h-10 p-2 bg-secondary-50 text-secondary-400',
           models: this.models.filter((m) => m.supportedType === 'image'),
         },
       ].filter((g) => g.models.length > 0);
@@ -379,7 +379,13 @@ export const ExecutionForm = component$(() => {
     try {
       if (!column.value) return;
 
-      const modelName = selectedModelId.value;
+      const model = models.value.find(
+        (m: Model) =>
+          m.id.toLocaleLowerCase() ===
+          selectedModelId.value.toLocaleLowerCase(),
+      );
+
+      if (!model) return;
 
       let modelProvider: string | undefined;
       let endpointUrl: string | undefined;
@@ -390,11 +396,15 @@ export const ExecutionForm = component$(() => {
         modelProvider = selectedProvider.value!;
       }
 
+      if (column.value.type === 'unknown') {
+        column.value.type = model.supportedType as Column['type'];
+      }
+
       column.value.process = {
         ...column.value.process,
         cancellable: noSerialize(new AbortController()),
         isExecuting: true,
-        modelName,
+        modelName: model.id,
         modelProvider,
         endpointUrl,
         prompt: prompt.value,

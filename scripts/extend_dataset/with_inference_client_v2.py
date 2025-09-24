@@ -489,7 +489,7 @@ def main(
     dataset: Dataset = load_dataset(
         repo_id,
         split=split,
-        streaming=True,
+        streaming=False,
     )
 
     dataset_rows = _get_dataset_size(repo_id, split=split)
@@ -523,7 +523,7 @@ def main(
         destination,
         split=destination_split,
         create_pr=create_pr,
-        num_proc=min(2, dataset.num_shards),
+        num_proc=min(2, dataset.num_shards, processor_config.max_workers),
     )
 
     total_time = time.time() - start_time

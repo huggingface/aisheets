@@ -116,7 +116,7 @@ def retries(max_retries: int = 10, delay: float = 1.0):
             if attempt > max_retries:
                 raise Exception("Max retries exceeded") from e
 
-            delay = delay * (2 ** attempt) + random.uniform(0, 1)
+            delay = delay * (2 ** attempt) + random.uniform(0, delay)
 
             rprint(
                 f"[yellow]Rate limit hit. Retrying in {delay:.2f} seconds "

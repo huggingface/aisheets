@@ -31,6 +31,7 @@ export const useImportFromHub = () =>
     const numberOfRows = appConfig.data.maxRowsImport;
 
     consola.info('Downloading file', repoId, filePath);
+
     try {
       const downloadedFilePath = await downloadDatasetFile({
         repoId,
@@ -50,6 +51,7 @@ export const useImportFromHub = () =>
           name: `${repoId} [${filePath}]`,
           createdBy: session.user.username,
           file: downloadedFilePath,
+          fromRepoId: repoId,
         },
         {
           limit: numberOfRows,

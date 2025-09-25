@@ -18,6 +18,7 @@ export interface Dataset {
   size: number;
   createdAt?: Date;
   updatedAt?: Date;
+  fromRepoId?: string;
 }
 
 const datasetsContext = createContextId<Signal<Dataset>>('datasets.context');

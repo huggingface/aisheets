@@ -242,6 +242,7 @@ export const TableBody = component$(() => {
         const newCells = await server$(getColumnCells)({
           column,
           limit,
+          offset,
         });
 
         column.cells = column.cells.concat(newCells);

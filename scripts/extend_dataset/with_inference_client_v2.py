@@ -113,8 +113,8 @@ def retries(max_retries: int = 10, delay: float = 1.0):
     while True:
         try:
             time.sleep(delay)
-
             yield
+            rprint(f"[green]Request succeeded after {attempt} retries.[/]")
             break
         except Exception as e:
             attempt += 1
@@ -259,7 +259,7 @@ def load_processor_config(
             max_workers=max_workers,
             num_rows=num_rows,
             bill_to=bill_to,
-            batch_size=batch_size,
+            batch_size=batch_size or max_workers * 3,
         )
 
         _display_configuration_summary(processor_config)
@@ -445,11 +445,12 @@ def map_function(
         )
 
     with concurrent.futures.ThreadPoolExecutor(
-            max_workers=processor_config.max_workers
+        max_workers=processor_config.max_workers,
+        thread_name_prefix='batch-inference',
     ) as executor:
+        rprint(f"[blue]Processing {len(rows)} rows for column '{column_name}' using task '{task}'...[/]")
 
         futures = []
-
         for row in rows:
             futures.append(
                 executor.submit(
@@ -460,12 +461,13 @@ def map_function(
                 )
             )
 
-        results = []
-        for future in concurrent.futures.as_completed(futures):
-            result = future.result()
+        # Wait until all are finished
+        concurrent.futures.wait(futures)
 
-            results.append(result)
-            rprint(f"[green] {len(results)}/{len(futures)} completed")
+        # Now it's safe to gather results
+        results = [f.result() for f in futures]
+
+        rprint(f"[green]Finished processing {len(rows)} for column '{column_name}'.[/]")
 
     return {column_name: results}
 
@@ -482,7 +484,7 @@ def main(
     num_rows: int | None = None,
     bill_to: str | None = None,
     max_workers: int | None = None,
-    batch_size: int | None = 1000,
+    batch_size: int | None = None,
 ):
     max_workers = max_workers or max(1, multiprocessing.cpu_count() - 1)
 

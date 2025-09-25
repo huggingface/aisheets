@@ -39,6 +39,8 @@ export const augmentDatasetJob = async ({
   const configJson = JSON.stringify(config);
   const jobCommand = `
     ${jobScriptURL} ${source.repoId} ${target.repoId} \
+    --split ${source.split ?? 'train'} \
+    --destination-split ${target.split ?? 'train'} \
     --config-json '${configJson}'
   `.trim();
 

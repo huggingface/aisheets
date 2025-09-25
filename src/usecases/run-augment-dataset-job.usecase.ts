@@ -10,13 +10,13 @@ export const useRunAugmentDatasetJob = () => {
     params: {
       source: {
         repoId: string;
-        split?: 'train';
-        config?: 'default';
+        split?: string;
+        config?: string;
       };
       target: {
         repoId: string;
-        split?: 'train';
-        config?: 'default';
+        split?: string;
+        config?: string;
       };
       dataset: Dataset;
     },

@@ -231,7 +231,7 @@ export const TableBody = component$(() => {
     if (!dataset) return;
 
     const offset = rangeStart;
-    const limit = Math.min(100, dataset.size - rangeStart);
+    const limit = Math.min(250, dataset.size - rangeStart);
 
     console.log('Fetching more data', { offset, limit });
 
@@ -468,7 +468,7 @@ export const TableBody = component$(() => {
         key={datasetSize.value}
         totalCount={datasetSize.value}
         estimateSize={rowSize}
-        buffer={50}
+        buffer={200}
         data={data}
         itemRenderer={itemRenderer}
         scrollElement={scrollElement}

@@ -24,7 +24,7 @@ import requests
 import typer
 import yaml
 from PIL.Image import Image
-from datasets import load_dataset, Value, Features, Dataset
+from datasets import load_dataset, Value, Features, Dataset, IterableDataset
 from huggingface_hub import InferenceClient
 from rich import print as rprint
 from rich.console import Console
@@ -211,7 +211,7 @@ def load_processor_config(
     *,
     config_path: str | None = None,
     config_json: str | None = None,
-    dataset: Dataset,
+    dataset: IterableDataset,
     bill_to: str | None = None,
     max_workers: int | None = None,
     num_rows: int | None = None,
@@ -292,7 +292,7 @@ def _display_configuration_summary(
             model_name = column_cfg['modelName']
             provider = column_cfg['modelProvider']
             task = column_cfg['task']
-            summary.append(f"• [cyan]{node} [{task}] [/]: {model_name} ({provider})")
+            summary.append(f"• [cyan]{node} ({task}) [/]: {model_name} ({provider})")
 
         summary.append("\n[bold blue]Node Dependencies:[/]")
         # Add dependency information for each node
@@ -379,10 +379,10 @@ def _load_config(path: str) -> dict:
 
 def process_column(
     *,
-    dataset: Dataset,
+    dataset: IterableDataset,
     processor_config: ProcessorConfig,
     column_name: str
-) -> Dataset:
+) -> IterableDataset:
     column_config = processor_config.columns[column_name]
 
     return dataset.map(
@@ -494,7 +494,7 @@ def main(
         mp.set_start_method("spawn", force=True)
         it_ds.Pool = mp.get_context("spawn").Pool
 
-    dataset: Dataset = load_dataset(
+    dataset: IterableDataset = load_dataset(
         repo_id,
         split=split,
         streaming=True,

@@ -292,7 +292,7 @@ def _display_configuration_summary(
             model_name = column_cfg['modelName']
             provider = column_cfg['modelProvider']
             task = column_cfg['task']
-            summary.append(f"• [cyan]{node} - {task} [/]: {model_name} ({provider})")
+            summary.append(f"• [cyan]{node} [{task}] [/]: {model_name} ({provider})")
 
         summary.append("\n[bold blue]Node Dependencies:[/]")
         # Add dependency information for each node
@@ -531,7 +531,7 @@ def main(
         destination,
         split=destination_split,
         create_pr=create_pr,
-        num_proc=min(2, dataset.num_shards, processor_config.max_workers),
+        num_proc=min(2, processor_config.max_workers, dataset.num_shards),
     )
 
     total_time = time.time() - start_time

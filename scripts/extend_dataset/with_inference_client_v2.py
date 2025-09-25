@@ -113,19 +113,19 @@ def retries(max_retries: int = 10, delay: float = 1.0):
     while True:
         try:
             time.sleep(delay)
+
             yield
             break
         except Exception as e:
             attempt += 1
             if attempt > max_retries:
-                raise Exception("Max retries exceeded") from e
+                raise StopIteration("Max retries exceeded") from e
 
+            delay = delay * (2 ** attempt) + random.uniform(0, delay)
             rprint(
                 f"[yellow]Error occurred: {e}. Retrying in {delay:.2f} seconds "
                 f"(attempt {attempt}/{max_retries})"
             )
-
-            time.sleep(delay)
 
 
 def text_generation_task(

@@ -509,7 +509,6 @@ async function* generateCellsFromColumnsReferences({
   session: Session;
 }) {
   // Set generating state for all cells upfront
-  const cellsToGenerate = [];
   const validatedIdxs = validatedCells?.map((cell) => cell.idx);
 
   // Get initial examples from validated cells

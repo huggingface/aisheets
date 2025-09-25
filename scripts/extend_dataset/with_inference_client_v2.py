@@ -116,7 +116,7 @@ def retries(max_retries: int = 10, delay: float = 1.0):
             yield
             rprint(f"[green]Request succeeded after {attempt} retries.[/]")
             break
-        except Exception as e:
+        except BaseException as e:
             attempt += 1
             if attempt > max_retries:
                 raise StopIteration("Max retries exceeded") from e

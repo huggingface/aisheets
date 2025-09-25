@@ -99,7 +99,7 @@ export const generateCells = async function* ({
   limit,
   offset,
   validatedCells = [],
-  stream = true,
+  stream = false,
   updateOnly = false,
   timeout,
 }: GenerateCellsParams) {
@@ -518,27 +518,25 @@ async function* generateCellsFromColumnsReferences({
     columnsReferences: process.columnsReferences,
   });
 
-  for (let i = offset; i < limit + offset; i++) {
-    if (validatedIdxs?.includes(i)) continue;
-
-    const cell = await (updateOnly
-      ? getColumnCellByIdx({ idx: i, columnId: column.id })
-      : getOrCreateCellInDB(column.id, i));
-
-    if (!cell) continue;
-
-    cellsToGenerate.push(cell);
-  }
-
-  for await (const { cell } of cellGenerationInBatch({
-    cells: cellsToGenerate,
-    column,
-    examples: currentExamples,
-    process,
-    session,
-    timeout,
-  })) {
-    yield { cell };
+  for (let i = offset; i < limit + offset; i += MAX_CONCURRENCY) {
+    const batch: Cell[] = [];
+    for (let j = i; j < Math.min(i + MAX_CONCURRENCY, limit + offset); j++) {
+      if (validatedIdxs?.includes(j)) continue;
+      const cell = await (updateOnly
+        ? getColumnCellByIdx({ idx: j, columnId: column.id })
+        : getOrCreateCellInDB(column.id, j));
+      if (cell) batch.push(cell);
+    }
+    for await (const { cell } of cellGenerationInBatch({
+      cells: batch,
+      column,
+      examples: currentExamples,
+      process,
+      session,
+      timeout,
+    })) {
+      yield { cell };
+    }
   }
 }
 

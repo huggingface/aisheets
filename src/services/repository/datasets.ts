@@ -179,7 +179,7 @@ export const getDatasetById = async (id: string): Promise<Dataset | null> => {
     dataset.columns.map(async (column) => {
       column.cells = await getColumnCells({
         column,
-        limit: 200,
+        limit: 20,
       });
     }),
   );

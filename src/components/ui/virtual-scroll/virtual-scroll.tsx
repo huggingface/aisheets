@@ -1,21 +1,21 @@
 import {
   $,
+  component$,
   Fragment,
   type HTMLAttributes,
   type QRL,
   type Signal,
-  component$,
   useSignal,
   useTask$,
   useVisibleTask$,
 } from '@builder.io/qwik';
 import { isBrowser } from '@builder.io/qwik/build';
 import {
-  type VirtualItem,
-  Virtualizer,
   elementScroll,
   observeElementOffset,
   observeElementRect,
+  type VirtualItem,
+  Virtualizer,
 } from '@tanstack/virtual-core';
 import { nextTick } from '~/components/hooks/tick';
 import { makeSerializable } from './make-serializable';
@@ -68,6 +68,7 @@ const { getSerializable: getVirtual, useSerializable: useVirtualScroll } =
 export const VirtualScrollContainer = component$(
   ({
     totalCount,
+    loadedCount,
     data,
     loadNextPage,
     itemRenderer,
@@ -79,6 +80,7 @@ export const VirtualScrollContainer = component$(
     debug = false,
   }: {
     totalCount: number;
+    loadedCount: number;
     data: Signal<unknown[]>;
     loadNextPage?: QRL<
       ({ rangeStart }: { rangeStart: number }) => Promise<void>
@@ -121,7 +123,7 @@ export const VirtualScrollContainer = component$(
       if (
         isBrowser &&
         indexToFetch < totalCount &&
-        indexToFetch > data.value.length &&
+        indexToFetch > loadedCount &&
         !loadingData.value
       ) {
         const rangeStart = Math.floor(indexToFetch / pageSize) * pageSize;

@@ -108,12 +108,10 @@ export const TableBody = component$(() => {
 
     const visibleColumns = columns.value.filter((column) => column.visible);
 
-    data.value = Array.from(
-      { length: firstColumn.value.cells.length },
-      (_, rowIndex) =>
-        Array.from({ length: visibleColumns.length }, (_, colIndex) =>
-          getCell(visibleColumns[colIndex], rowIndex),
-        ),
+    data.value = Array.from({ length: datasetSize.value }, (_, rowIndex) =>
+      Array.from({ length: visibleColumns.length }, (_, colIndex) =>
+        getCell(visibleColumns[colIndex], rowIndex),
+      ),
     );
   });
 
@@ -231,9 +229,7 @@ export const TableBody = component$(() => {
     if (!dataset) return;
 
     const offset = rangeStart;
-    const limit = Math.min(250, dataset.size - rangeStart);
-
-    console.log('Fetching more data', { offset, limit });
+    const limit = Math.min(20, dataset.size - rangeStart);
 
     if (limit <= 0) return;
 
@@ -468,8 +464,9 @@ export const TableBody = component$(() => {
       <VirtualScrollContainer
         key={datasetSize.value}
         totalCount={datasetSize.value}
+        loadedCount={firstColumn.value.cells.length}
         estimateSize={rowSize}
-        buffer={200}
+        buffer={10}
         data={data}
         itemRenderer={itemRenderer}
         scrollElement={scrollElement}

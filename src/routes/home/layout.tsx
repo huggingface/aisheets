@@ -13,6 +13,7 @@ import {
   type Model,
   useClientConfig,
   useHubModels,
+  useTrendingHubModels,
 } from '~/loaders';
 import { ActiveDatasetProvider } from '~/state';
 
@@ -30,12 +31,24 @@ export const useModelsContext = () => {
   return useContext(modelsContext);
 };
 
+export const trendingModelsContext = createContextId<Model[]>(
+  'trending-models.context',
+);
+
+export const useTrendingModelsContext = () => {
+  return useContext(trendingModelsContext);
+};
+
 export default component$(() => {
   const config = useClientConfig();
   const models = useHubModels();
+  const trendingModels = useTrendingHubModels();
+
+  console.log('In layout');
 
   useContextProvider(configContext, config.value);
   useContextProvider(modelsContext, models.value);
+  useContextProvider(trendingModelsContext, trendingModels.value);
 
   return (
     <ModalsProvider>

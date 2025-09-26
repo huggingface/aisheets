@@ -45,8 +45,12 @@ export const TableBody = component$(() => {
   const selectedRows = useSignal<number[]>([]);
 
   const datasetSize = useComputed$(() => activeDataset.value!.size);
+  const datasetId = useComputed$(() => activeDataset.value!.id);
 
   const data = useSignal<Cell[][]>([]);
+  const loadedDataCount = useComputed$(() => {
+    return firstColumn.value.cells.length;
+  });
 
   const scrollElement = useSignal<HTMLElement>();
   const dragStartCell = useSignal<Cell>();
@@ -224,33 +228,40 @@ export const TableBody = component$(() => {
     });
   });
 
-  const fetchMoreData$ = $(async ({ rangeStart }: { rangeStart: number }) => {
-    const dataset = activeDataset.value;
-    if (!dataset) return;
+  const fetchMoreData$ = $(
+    async ({
+      rangeStart,
+      pageSize,
+    }: {
+      rangeStart: number;
+      pageSize: number;
+    }) => {
+      const dataset = activeDataset.value;
+      if (!dataset) return;
 
-    const offset = rangeStart;
-    const limit = Math.min(10, dataset.size - rangeStart);
+      const offset = rangeStart;
+      const limit = Math.min(pageSize, dataset.size - rangeStart);
 
-    if (limit <= 0) return;
+      console.log('Fetching more data...', { offset, limit });
 
-    const updatedColummns = await Promise.all(
-      dataset.columns.map(async (column) => {
-        const newCells = await server$(getColumnCells)({
-          column,
-          limit,
-          offset,
-        });
+      if (limit <= 0) return;
 
-        column.cells = column.cells.concat(newCells);
+      await Promise.all(
+        dataset.columns.map(async (column) => {
+          const newCells = await server$(getColumnCells)({
+            column,
+            limit,
+            offset,
+          });
 
-        return column;
-      }),
-    );
+          column.cells = column.cells.concat(newCells);
+          updateColumn(column);
 
-    for (const column of updatedColummns) {
-      updateColumn(column);
-    }
-  });
+          return column;
+        }),
+      );
+    },
+  );
 
   const handleMouseMove$ = $(async (e: MouseEvent) => {
     if (e.buttons !== 1 /* Primary button not pressed */) return;
@@ -462,9 +473,9 @@ export const TableBody = component$(() => {
       }}
     >
       <VirtualScrollContainer
-        key={datasetSize.value}
+        key={datasetId.value}
         totalCount={datasetSize.value}
-        loadedCount={firstColumn.value.cells.length}
+        loadedCount={loadedDataCount}
         estimateSize={rowSize}
         buffer={40}
         data={data}

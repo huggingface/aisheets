@@ -80,10 +80,17 @@ export const VirtualScrollContainer = component$(
     debug = false,
   }: {
     totalCount: number;
-    loadedCount: number;
+    loadedCount: Signal<number>;
     data: Signal<unknown[]>;
+
     loadNextPage?: QRL<
-      ({ rangeStart }: { rangeStart: number }) => Promise<void>
+      ({
+        rangeStart,
+        pageSize,
+      }: {
+        rangeStart: number;
+        pageSize: number;
+      }) => Promise<void>
     >;
     itemRenderer: QRL<
       (
@@ -115,21 +122,20 @@ export const VirtualScrollContainer = component$(
     });
 
     useTask$(({ track }) => {
-      if (!loadNextPage) return;
       track(() => virtualState.state.range);
+      track(loadedCount);
+
+      if (!loadNextPage) return;
+      if (loadingData.value) return;
+      if (!isBrowser) return;
 
       const indexToFetch = (virtualState.state.range?.endIndex ?? 0) + buffer;
 
-      if (
-        isBrowser &&
-        indexToFetch < totalCount &&
-        indexToFetch > loadedCount &&
-        !loadingData.value
-      ) {
-        const rangeStart = Math.floor(indexToFetch / pageSize) * pageSize;
+      if (indexToFetch < totalCount && indexToFetch > loadedCount.value) {
+        const rangeStart = loadedCount.value;
         loadingData.value = true;
         // Do this in a hanging promise rather than await so that we don't block the state from updating further
-        loadNextPage({ rangeStart }).then(() => {
+        loadNextPage({ rangeStart, pageSize }).then(() => {
           loadingData.value = false;
         });
       }

@@ -242,8 +242,6 @@ export const TableBody = component$(() => {
       const offset = rangeStart;
       const limit = Math.min(pageSize, dataset.size - rangeStart);
 
-      console.log('Fetching more data...', { offset, limit });
-
       if (limit <= 0) return;
 
       await Promise.all(

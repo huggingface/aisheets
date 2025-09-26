@@ -38,6 +38,7 @@ export const DeleteColumn = component$<{
   if (isReferenced.value) {
     return (
       <Tooltip
+        class="max-w-64"
         text={`Referenced in ${references.value.map((c) => '{{' + c.name + '}}').join(', ')}`}
       >
         <Button

@@ -44,7 +44,6 @@ export default component$(() => {
   const models = useHubModels();
   const trendingModels = useTrendingHubModels();
 
-  console.log('In layout');
 
   useContextProvider(configContext, config.value);
   useContextProvider(modelsContext, models.value);

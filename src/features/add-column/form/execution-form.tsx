@@ -66,7 +66,7 @@ type ModelWithExtraTags = Model & {
   extraTags?: { label: string; class: string }[];
 };
 class GroupedModels {
-  private tags = {
+  private readonly tags = {
     LIGHT: {
       label: 'lightweight',
       class: 'bg-[#FFF9C4]',
@@ -229,7 +229,7 @@ export const ExecutionForm = component$(() => {
   const groupedModels = useComputed$(() => {
     if (!column.value) return [];
 
-    return new GroupedModels(column.value!, filteredModels.value).byCategory();
+    return new GroupedModels(column.value, filteredModels.value).byCategory();
   });
 
   const showEndpointUrl = useComputed$(() => {

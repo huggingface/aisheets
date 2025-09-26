@@ -12,7 +12,7 @@ export const Table = component$(() => {
       </div>
 
       <div class="overflow-auto w-full max-h-full h-screen scrollable rounded-tl-sm relative">
-        <table class="grid text-sm border-separate border-spacing-0 mr-2 min-w-max">
+        <table class="text-sm min-w-max grid border-separate border-spacing-0">
           <ColumnSizeProvider>
             <TableHeader />
             <TableBody />

@@ -229,7 +229,7 @@ export const TableHeader = component$(() => {
   });
 
   return (
-    <thead class="sticky top-0 bg-white z-50">
+    <thead class="box-border sticky top-0 bg-white z-50">
       <tr>
         <th
           class="sticky left-0 z-[10] min-w-10 w-10 min-h-[50px] h-[50px] p-2 border rounded-tl-sm bg-neutral-100"
@@ -250,7 +250,7 @@ export const TableHeader = component$(() => {
                         draggedColId.value === column.id ||
                         targetColId.value === column.id,
                       'bg-blue-50': column.id == columnId.value,
-                      'border-r-[2px] border-l-[2px] border-t-[2px] border-l-primary-400 border-r-primary-400 border-t-primary-400 rounded-tl-[6px] rounded-tr-[6px]':
+                      'shadow-[inset_2px_0_0_theme(colors.primary.400),inset_-2px_0_0_theme(colors.primary.400),inset_0_2px_0_theme(colors.primary.400)] rounded-tl-[6px] rounded-tr-[6px]':
                         columnPreferences.value[column.id]?.aiTooltipOpen,
                     },
                   )}

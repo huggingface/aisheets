@@ -371,7 +371,7 @@ export const TableBody = component$(() => {
                       getBoundary(cell),
                       {
                         'bg-blue-50': cell.column!.id == columnId.value,
-                        'border-r-[2px] border-l-[2px] border-l-primary-400 border-r-primary-400':
+                        'shadow-[inset_2px_0_0_theme(colors.primary.400),inset_-2px_0_0_theme(colors.primary.400)]':
                           columnPreferences.value[cell.column!.id]
                             ?.aiTooltipOpen,
                       },

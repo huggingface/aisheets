@@ -229,7 +229,7 @@ export const TableBody = component$(() => {
     if (!dataset) return;
 
     const offset = rangeStart;
-    const limit = Math.min(20, dataset.size - rangeStart);
+    const limit = Math.min(10, dataset.size - rangeStart);
 
     if (limit <= 0) return;
 
@@ -466,7 +466,7 @@ export const TableBody = component$(() => {
         totalCount={datasetSize.value}
         loadedCount={firstColumn.value.cells.length}
         estimateSize={rowSize}
-        buffer={10}
+        buffer={40}
         data={data}
         itemRenderer={itemRenderer}
         scrollElement={scrollElement}

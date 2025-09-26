@@ -10,7 +10,11 @@ import {
   useSignal,
 } from '@builder.io/qwik';
 import { useModals } from '~/components';
-import { type Column, type ColumnPrototype, useColumnsStore } from '~/state';
+import {
+  type ColumnPrototypeWithId,
+  type ColumnPrototypeWithNextColumnId,
+  useColumnsStore,
+} from '~/state';
 
 export type Execution = {
   columnId?: string;
@@ -31,10 +35,8 @@ export const ExecutionProvider = component$(() => {
   return <Slot />;
 });
 
-type ColumnPrototypeWithId = ColumnPrototype & { columnId: Column['id'] };
-
 type ExecutionInfo<T extends Execution['mode']> = T extends 'add'
-  ? ColumnPrototype
+  ? ColumnPrototypeWithNextColumnId
   : ColumnPrototypeWithId;
 
 export const useExecution = () => {
@@ -63,25 +65,36 @@ export const useExecution = () => {
         mode: T,
         info: ExecutionInfo<T>,
       ): Promise<void> => {
-        const casted = info as ColumnPrototypeWithId;
+        if (mode === 'edit') {
+          const casted = info as ColumnPrototypeWithId;
 
-        if (mode !== 'add' && !casted.columnId) {
-          throw new Error('columnId is required when mode is not "edit"');
+          if (!casted.columnId) {
+            throw new Error('columnId is required when mode is "edit"');
+          }
+
+          context.value = {
+            columnId: casted.columnId,
+            mode,
+          };
+
+          openExecutionSidebar();
+
+          return;
         }
 
         if (mode === 'add') {
-          const newbie = await addTemporalColumn(info);
-          if (newbie) {
-            casted.columnId = newbie.id;
-          }
+          const casted = info as ColumnPrototypeWithNextColumnId;
+
+          const newbie = await addTemporalColumn(casted);
+          if (!newbie) return;
+
+          context.value = {
+            columnId: newbie.id,
+            mode,
+          };
+
+          openExecutionSidebar();
         }
-
-        context.value = {
-          columnId: casted.columnId,
-          mode,
-        };
-
-        openExecutionSidebar();
       },
     ),
     close: $(async () => {

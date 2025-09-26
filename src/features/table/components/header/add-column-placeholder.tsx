@@ -62,6 +62,7 @@ export const TableAddCellHeaderPlaceHolder = component$<{ column: Column }>(
       await close();
 
       await open('add', {
+        nextColumnId: column.id,
         type,
         prompt,
       });

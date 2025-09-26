@@ -42,7 +42,15 @@ export interface CreateColumn {
   };
 }
 
+export type ColumnPrototypeWithId = ColumnPrototype & {
+  columnId: Column['id'];
+};
+export type ColumnPrototypeWithNextColumnId = ColumnPrototype & {
+  nextColumnId: Column['id'];
+};
+
 export interface ColumnPrototype {
+  name?: string;
   type?: Column['type'];
   prompt?: string;
   modelName?: string;
@@ -107,7 +115,7 @@ export const useColumnsStore = () => {
 
     return {
       id: TEMPORAL_ID,
-      name: getNextColumnName(),
+      name: info?.name ?? getNextColumnName(),
       kind: 'dynamic',
       type,
       visible: true,
@@ -244,12 +252,24 @@ export const useColumnsStore = () => {
     columns,
     firstColumn,
     replaceColumns,
-    addTemporalColumn: $(async (info: ColumnPrototype) => {
+    addTemporalColumn: $(async (info: ColumnPrototypeWithNextColumnId) => {
       if (activeDataset.value.columns.some((c) => c.id === TEMPORAL_ID)) return;
 
       const newTemporalColumn = await createPlaceholderColumn(info);
 
-      replaceColumns([...columns.value, newTemporalColumn]);
+      const nextColumnIndex = activeDataset.value.columns.findIndex(
+        (c) => c.id === info.nextColumnId,
+      );
+
+      if (nextColumnIndex === -1) {
+        throw new Error('nextColumnId not found');
+      }
+
+      replaceColumns([
+        ...activeDataset.value.columns.slice(0, nextColumnIndex + 1),
+        newTemporalColumn,
+        ...activeDataset.value.columns.slice(nextColumnIndex + 1),
+      ]);
 
       return newTemporalColumn;
     }),

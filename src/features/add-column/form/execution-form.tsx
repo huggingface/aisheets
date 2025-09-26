@@ -5,6 +5,7 @@ import {
   useComputed$,
   useSignal,
   useTask$,
+  useVisibleTask$,
 } from '@builder.io/qwik';
 import { Collapsible } from '@qwik-ui/headless';
 
@@ -415,6 +416,14 @@ export const ExecutionForm = component$(() => {
       updateColumn(column.value);
       await onGenerateColumn(column.value);
     } catch {}
+  });
+
+  useVisibleTask$(({ track }) => {
+    track(columnId);
+
+    if (columnId.value === TEMPORAL_ID) {
+      onGenerate();
+    }
   });
 
   if (!column.value) return null;

@@ -7,6 +7,7 @@ import {
 
 import { INFERENCE_PROVIDERS } from '@huggingface/inference';
 import { appConfig } from '~/config';
+import { cacheGet, cacheSet } from '~/services/cache';
 import { type Session, type TaskType, useServerSession } from '~/state';
 
 // This list helps to exclude providers that are not supported by the endpoint
@@ -144,6 +145,9 @@ const fetchModelsForPipeline = async (
   kind: TaskType,
   limit?: number,
 ): Promise<Model[]> => {
+  const cachedValue = cacheGet({ kind, limit });
+  if (cachedValue) return cachedValue as Model[];
+
   const url = 'https://huggingface.co/api/models';
 
   const params = new URLSearchParams([
@@ -224,6 +228,8 @@ const fetchModelsForPipeline = async (
 
       return acc;
     }, []) as Model[];
+
+    cacheSet({ kind, limit }, models);
 
     return models;
   } catch (error) {

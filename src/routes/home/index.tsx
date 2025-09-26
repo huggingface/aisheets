@@ -17,9 +17,10 @@ import { StepsStatus } from '~/features/autodataset/steps-status';
 import { DragAndDrop } from '~/features/import/drag-n-drop';
 import { MainSidebarButton } from '~/features/main-sidebar';
 import { Username } from '~/features/user/username';
-import { useSession, useTrendingHubModels } from '~/loaders';
+import { useSession } from '~/loaders';
 import { ActiveDatasetProvider } from '~/state';
 import { runAutoDataset } from '~/usecases/run-autodataset';
+import { useTrendingModelsContext } from './layout';
 
 const runAutoDatasetAction = server$(async function* (
   instruction: string,
@@ -43,7 +44,7 @@ export default component$(() => {
   const searchOnWeb = useSignal(false);
   const prompt = useSignal('');
   const currentStep = useSignal('');
-  const trendingModels = useTrendingHubModels();
+  const trendingModels = useTrendingModelsContext();
   const textAreaElement = useSignal<HTMLTextAreaElement>();
 
   const creationFlow = useStore({
@@ -348,7 +349,7 @@ export default component$(() => {
                 <p class="text-sm text-center w-full lg:text-left lg:w-fit">
                   Trending for vibe testing:
                 </p>
-                {trendingModels.value.map((model) => (
+                {trendingModels.map((model) => (
                   <div
                     key={model.id}
                     class="flex items-center p-1 gap-1 font-mono"

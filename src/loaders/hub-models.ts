@@ -295,7 +295,6 @@ interface TrendingModel {
 export const useTrendingHubModels = routeLoader$(async function (
   this: RequestEventLoader,
 ): Promise<TrendingModel[]> {
-  console.log('Loading trending models...');
   const session = useServerSession(this);
   if (!session) return [];
 

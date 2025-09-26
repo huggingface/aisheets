@@ -50,7 +50,10 @@ export const useGenerateColumn = () => {
         column.process!.isExecuting = newColumn.process!.isExecuting;
 
         addColumn(column);
-        open(column.id, 'edit');
+        open('edit', {
+          columnId: column.id,
+        });
+
         newColumnId = column.id;
       }
       if (cell) {

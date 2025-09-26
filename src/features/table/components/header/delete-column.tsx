@@ -3,6 +3,7 @@ import { server$ } from '@builder.io/qwik-city';
 import { LuTrash } from '@qwikest/icons/lucide';
 import { Button } from '~/components';
 import { Tooltip } from '~/components/ui/tooltip/tooltip';
+import { useExecution } from '~/features/add-column';
 import { deleteColumn } from '~/services';
 import { type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
 
@@ -10,6 +11,7 @@ export const DeleteColumn = component$<{
   column: Column;
 }>(({ column }) => {
   const { columns, removeColumn } = useColumnsStore();
+  const { close } = useExecution();
   const references = useComputed$(() => {
     return columns.value.filter((c) =>
       c.process?.columnsReferences?.includes(column.id),
@@ -25,7 +27,8 @@ export const DeleteColumn = component$<{
       await deleteColumn(columnId);
     })(column.id);
 
-    removeColumn(column);
+    await close();
+    await removeColumn(column);
   });
 
   if (column.id === TEMPORAL_ID || columns.value.length <= 1) {

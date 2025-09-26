@@ -353,18 +353,16 @@ export const ExecutionForm = component$(() => {
       ? [model.endpointUrl]
       : (model.providers ?? []);
 
-    nextTick(() => {
-      if (
-        !selectedProvider.value ||
-        !modelProviders.value.includes(selectedProvider.value)
-      ) {
-        const defaultModel = modelProviders.value.find(
-          (provider) => provider === DEFAULT_MODEL_PROVIDER,
-        );
+    if (
+      !selectedProvider.value ||
+      !modelProviders.value.includes(selectedProvider.value)
+    ) {
+      const defaultModel = modelProviders.value.find(
+        (provider) => provider === DEFAULT_MODEL_PROVIDER,
+      );
 
-        selectedProvider.value = defaultModel || modelProviders.value[0];
-      }
-    });
+      selectedProvider.value = defaultModel || modelProviders.value[0];
+    }
   });
 
   const onStop = $(async () => {

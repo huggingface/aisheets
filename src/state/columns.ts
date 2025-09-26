@@ -280,6 +280,20 @@ export const useColumnsStore = () => {
       return columns.value.find((c) => c.id === id);
     }),
     addColumn: $((newbie: Column) => {
+      const temporalColumnIndex = columns.value.findIndex(
+        (c) => c.id === TEMPORAL_ID,
+      );
+
+      if (temporalColumnIndex !== -1) {
+        replaceColumns([
+          ...columns.value.slice(0, temporalColumnIndex),
+          newbie,
+          ...columns.value.slice(temporalColumnIndex + 1),
+        ]);
+
+        return;
+      }
+
       replaceColumns([
         ...columns.value.filter((c) => c.id !== TEMPORAL_ID),
         newbie,

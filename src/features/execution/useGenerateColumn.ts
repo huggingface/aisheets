@@ -49,21 +49,22 @@ export const useGenerateColumn = () => {
         column.process!.cancellable = newColumn.process!.cancellable;
         column.process!.isExecuting = newColumn.process!.isExecuting;
 
-        addColumn(column);
-        open('edit', {
+        await addColumn(column);
+        await open('edit', {
           columnId: column.id,
         });
 
         newColumnId = column.id;
       }
+
       if (cell) {
-        replaceCell(cell);
+        await replaceCell(cell);
       }
     }
 
     const newbie = await getColumnById$(newColumnId!);
     if (newbie) {
-      updateColumn(newbie);
+      await updateColumn(newbie);
     }
   });
 

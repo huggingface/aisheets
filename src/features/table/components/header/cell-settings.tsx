@@ -5,18 +5,21 @@ import { useExecution } from '~/features/add-column';
 import { type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
 
 export const CellSettings = component$<{ column: Column }>(({ column }) => {
-  const { open } = useExecution();
+  const { columnId, open, close } = useExecution();
   const { removeTemporalColumn } = useColumnsStore();
 
   const editCell = $(async () => {
     if (column.id === TEMPORAL_ID) return;
+    if (column.id === columnId.value) return;
+
     await removeTemporalColumn();
+    await close();
 
     nextTick(() => {
       open('edit', {
         columnId: column.id,
       });
-    });
+    }, 300);
   });
 
   if (column.id === TEMPORAL_ID || column.kind !== 'dynamic') {

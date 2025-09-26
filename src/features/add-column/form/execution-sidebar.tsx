@@ -8,6 +8,8 @@ import { ExecutionForm } from '~/features/add-column/form/execution-form';
 export const ExecutionSidebar = component$(() => {
   const { column, isOpenExecutionSidebar, close } = useExecution();
 
+  if (!column.value) return null;
+
   return (
     <aside
       class={cn(

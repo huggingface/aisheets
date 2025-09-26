@@ -314,8 +314,7 @@ export const ExecutionForm = component$(() => {
 
   useTask$(({ track }) => {
     track(modelSearchQuery);
-    track(columnId);
-    track(() => column.value?.id);
+    track(models);
 
     if (modelSearchQuery.value.length <= 1) return;
 
@@ -337,8 +336,7 @@ export const ExecutionForm = component$(() => {
 
   useTask$(({ track }) => {
     track(selectedModelId);
-    track(columnId);
-    track(() => column.value?.id);
+    track(models);
 
     modelSearchQuery.value = selectedModelId.value || modelSearchQuery.value;
 
@@ -360,7 +358,6 @@ export const ExecutionForm = component$(() => {
       const defaultModel = modelProviders.value.find(
         (provider) => provider === DEFAULT_MODEL_PROVIDER,
       );
-
       selectedProvider.value = defaultModel || modelProviders.value[0];
     }
   });

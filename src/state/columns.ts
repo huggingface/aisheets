@@ -97,7 +97,7 @@ export const useColumnsStore = () => {
         const manyColumnsWithName = activeDataset.value.columns.filter(
           (c) => c.id !== TEMPORAL_ID,
         );
-        const newPosibleColumnName = `Column ${manyColumnsWithName.length + 1}`;
+        const newPosibleColumnName = `column_${manyColumnsWithName.length + 1}`;
 
         if (!manyColumnsWithName.find((c) => c.name === newPosibleColumnName)) {
           return newPosibleColumnName;

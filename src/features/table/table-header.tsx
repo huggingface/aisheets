@@ -10,6 +10,7 @@ import {
 import { Popover, usePopover } from '@qwik-ui/headless';
 import { cn } from '@qwik-ui/utils';
 import { useClickOutside } from '~/components/hooks/click/outside';
+import { nextTick } from '~/components/hooks/tick';
 
 import { useExecution } from '~/features/add-column';
 import { useColumnsPreference } from '~/features/table/components/context/colunm-preferences.context';
@@ -17,7 +18,7 @@ import {
   TableAddCellHeaderPlaceHolder,
   TableCellHeader,
 } from '~/features/table/components/header';
-import { type Column, useColumnsStore } from '~/state';
+import { type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
 
 export const TableHeader = component$(() => {
   const MAX_WIDTH = 1000;
@@ -296,6 +297,7 @@ export const TableIndexTableHeader = component$<{
   const { showPopover, hidePopover } = usePopover(popoverId);
   const { columnPreferences, openAiColumn, closeAiColumn } =
     useColumnsPreference();
+  const { columnId } = useExecution();
 
   const indexToAlphanumeric = $((index: number): string => {
     let result = '';
@@ -309,14 +311,16 @@ export const TableIndexTableHeader = component$<{
 
   const clickOutsideRef = useClickOutside(
     $(() => {
-      hidePopover();
+      nextTick(() => {
+        hidePopover();
+      });
     }),
   );
 
   const isAnyAiPromptOpen = useComputed$(() => {
     return (
       columnPreferences.value &&
-      Object.values(columnPreferences.value).some((pref) => pref.aiPromptOpen)
+      Object.values(columnPreferences.value).some((pref) => !!pref.aiPromptOpen)
     );
   });
 
@@ -333,7 +337,9 @@ export const TableIndexTableHeader = component$<{
       onMouseLeave$={() => {
         if (isAnyAiPromptOpen.value) return;
 
-        hidePopover();
+        nextTick(() => {
+          hidePopover();
+        });
       }}
     >
       <div
@@ -343,6 +349,7 @@ export const TableIndexTableHeader = component$<{
         onMouseOver$={() => {
           if (draggedColId.value) return;
           if (isAnyAiPromptOpen.value) return;
+          if (columnId.value === TEMPORAL_ID) return;
 
           showPopover();
         }}
@@ -361,9 +368,7 @@ export const TableIndexTableHeader = component$<{
           }
         }}
       >
-        {!draggedColId.value && (
-          <TableAddCellHeaderPlaceHolder column={column} />
-        )}
+        <TableAddCellHeaderPlaceHolder column={column} />
       </Popover.Panel>
     </Popover.Root>
   );

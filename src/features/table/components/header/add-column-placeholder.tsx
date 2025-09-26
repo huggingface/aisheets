@@ -4,11 +4,11 @@ import {
   type QRL,
   useComputed$,
   useSignal,
-  useTask$,
 } from '@builder.io/qwik';
 import { cn } from '@qwik-ui/utils';
-import { LuChevronDown, LuEgg } from '@qwikest/icons/lucide';
+import { LuChevronDown, LuEgg, LuLoader2 } from '@qwikest/icons/lucide';
 import { Button, buttonVariants, Popover, Textarea } from '~/components';
+import { nextTick } from '~/components/hooks/tick';
 import { IAColumn } from '~/components/ui/logo/logo';
 import { useExecution } from '~/features/add-column/form';
 import { useColumnsPreference } from '~/features/table/components/context/colunm-preferences.context';
@@ -45,27 +45,38 @@ type ColumnPromptType = keyof typeof COLUMN_PROMPTS;
 
 export const TableAddCellHeaderPlaceHolder = component$<{ column: Column }>(
   ({ column }) => {
-    const isOpen = useSignal(false);
     const { open, close } = useExecution();
     const { columns } = useColumnsStore();
     const isUsingTemplate = useSignal<boolean>();
     const prompt = useSignal<string>('');
-    const { openAiPrompt, closeAiPrompt } = useColumnsPreference();
+    const { openAiPrompt, closeAiPrompt, closeAiColumn } =
+      useColumnsPreference();
+    const isGenerating = useSignal(false);
 
-    const isLastColumnTemporal = useComputed$(
-      () => columns.value[columns.value.length - 1].id == TEMPORAL_ID,
+    const isAnyColumnTemporal = useComputed$(() =>
+      columns.value.some((c) => c.id === TEMPORAL_ID),
     );
 
+    const cleanUp = $(() => {
+      isUsingTemplate.value = false;
+      prompt.value = '';
+      isGenerating.value = false;
+    });
+
     const onCreateColumn = $(async (type: Column['type'], prompt: string) => {
-      isOpen.value = false;
+      isGenerating.value = true;
 
-      await close();
+      nextTick(async () => {
+        await close();
+        await open('add', {
+          nextColumnId: column.id,
+          type,
+          prompt,
+        });
 
-      await open('add', {
-        nextColumnId: column.id,
-        type,
-        prompt,
-      });
+        await closeAiColumn(column.id);
+        await closeAiPrompt(column.id);
+      }, 300);
     });
 
     const handleTemplate = $(async (promptType: ColumnPromptType) => {
@@ -74,7 +85,7 @@ export const TableAddCellHeaderPlaceHolder = component$<{ column: Column }>(
         `{{${column.name}}}`,
       );
 
-      onCreateColumn(
+      await onCreateColumn(
         promptType === 'textToImage' ? 'image' : 'text',
         initialPrompt,
       );
@@ -88,25 +99,10 @@ export const TableAddCellHeaderPlaceHolder = component$<{ column: Column }>(
         `{{${column.name}}}`,
       );
 
-      onCreateColumn('unknown', prompt.value.trim());
+      await onCreateColumn('unknown', prompt.value.trim());
     });
 
-    useTask$(({ track }) => {
-      track(isOpen);
-
-      if (isOpen.value) {
-        isUsingTemplate.value = false;
-        prompt.value = '';
-      }
-
-      if (isOpen.value) {
-        openAiPrompt(column.id);
-      } else {
-        closeAiPrompt(column.id);
-      }
-    });
-
-    if (isLastColumnTemporal.value) return null;
+    if (isAnyColumnTemporal.value) return null;
 
     return (
       <Popover.Root gutter={8} floating="right-start">
@@ -123,8 +119,13 @@ export const TableAddCellHeaderPlaceHolder = component$<{ column: Column }>(
 
         <Popover.Panel
           class="shadow-lg w-96 text-sm p-0"
-          onToggle$={() => {
-            isOpen.value = !isOpen.value;
+          onToggle$={(e) => {
+            if (e.newState === 'open') {
+              openAiPrompt(column.id);
+              cleanUp();
+            } else {
+              closeAiPrompt(column.id);
+            }
           }}
         >
           <div class="flex flex-col">
@@ -170,8 +171,13 @@ export const TableAddCellHeaderPlaceHolder = component$<{ column: Column }>(
                   look="primary"
                   class="p-2 w-[30px] h-[30px] rounded-full flex items-center justify-center"
                   onClick$={handleNewColumn}
+                  disabled={isGenerating.value || !prompt.value.trim()}
                 >
-                  <LuEgg class="text-sm text-white" />
+                  {isGenerating.value ? (
+                    <LuLoader2 class="text-sm text-white animate-spin" />
+                  ) : (
+                    <LuEgg class="text-sm text-white" />
+                  )}
                 </Button>
               </div>
             </div>

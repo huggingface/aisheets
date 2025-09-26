@@ -2,12 +2,14 @@ import {
   $,
   component$,
   Fragment,
+  type Signal,
   useSignal,
   useVisibleTask$,
 } from '@builder.io/qwik';
+import { Popover, usePopover } from '@qwik-ui/headless';
 import { cn } from '@qwik-ui/utils';
-import { useExecution } from '~/features/add-column';
 
+import { useExecution } from '~/features/add-column';
 import { useColumnsSizeContext } from '~/features/table/components/context/colunm-preferences.context';
 import {
   TableAddCellHeaderPlaceHolder,
@@ -224,16 +226,6 @@ export const TableHeader = component$(() => {
     }
   });
 
-  const indexToAlphanumeric = $((index: number): string => {
-    let result = '';
-    while (index > 0) {
-      index--;
-      result = String.fromCharCode('A'.charCodeAt(0) + (index % 26)) + result;
-      index = Math.floor(index / 26);
-    }
-    return result;
-  });
-
   return (
     <thead class="sticky top-0 bg-white z-50">
       <tr>
@@ -247,7 +239,6 @@ export const TableHeader = component$(() => {
               <Fragment key={column.id}>
                 <th
                   id={`index-${column.id}`}
-                  data-column-id={column.id}
                   class={cn(
                     'min-w-[142px] w-[326px] h-[38px] border bg-neutral-100 text-primary-600 font-normal relative select-none cursor-grab group',
                     {
@@ -262,9 +253,11 @@ export const TableHeader = component$(() => {
                   style={{ width: `${columnSize.value[column.id] || 326}px` }}
                   onMouseDown$={(e) => handleManualDragStart(e, column.id)}
                 >
-                  {indexToAlphanumeric(i + 1)}
-
-                  <TableAddCellHeaderPlaceHolder column={column} />
+                  <TableIndexTableHeader
+                    column={column}
+                    index={i}
+                    draggedColId={draggedColId}
+                  />
 
                   <span
                     class="absolute top-0 -right-[3px] w-[4px] h-full cursor-col-resize bg-transparent hover:bg-primary-100 z-10"
@@ -284,5 +277,61 @@ export const TableHeader = component$(() => {
           ))}
       </tr>
     </thead>
+  );
+});
+
+export const TableIndexTableHeader = component$<{
+  column: Column;
+  index: number;
+  draggedColId: Signal<string | null>;
+}>(({ column, index, draggedColId }) => {
+  const popoverId = `ai-column-${column.id}-popover`;
+  const anchorRef = useSignal<HTMLElement | undefined>();
+  const { showPopover, hidePopover } = usePopover(popoverId);
+
+  const indexToAlphanumeric = $((index: number): string => {
+    let result = '';
+    while (index > 0) {
+      index--;
+      result = String.fromCharCode('A'.charCodeAt(0) + (index % 26)) + result;
+      index = Math.floor(index / 26);
+    }
+    return result;
+  });
+
+  return (
+    <Popover.Root
+      flip={false}
+      class="h-[38px]"
+      gutter={-10}
+      floating="top"
+      id={popoverId}
+      bind:anchor={anchorRef}
+      manual
+      onMouseLeave$={(ev) => {
+        const nextEl = ev.relatedTarget as HTMLElement | null;
+        if (!nextEl?.closest('[data-popover-panel]')) {
+          hidePopover();
+        }
+      }}
+    >
+      <div
+        data-column-id={column.id}
+        ref={anchorRef}
+        class="h-[38px] w-full flex items-center justify-center"
+        onMouseOver$={() => showPopover()}
+      >
+        {indexToAlphanumeric(index + 1)}
+      </div>
+      <Popover.Panel
+        class="p-0"
+        preventdefault:mousedown
+        stoppropagation:mousedown
+      >
+        {!draggedColId.value && (
+          <TableAddCellHeaderPlaceHolder column={column} />
+        )}
+      </Popover.Panel>
+    </Popover.Root>
   );
 });

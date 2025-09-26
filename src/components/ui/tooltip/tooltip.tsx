@@ -1,4 +1,4 @@
-import { type PropsOf, Slot, component$ } from '@builder.io/qwik';
+import { component$, type PropsOf, Slot } from '@builder.io/qwik';
 import type { Popover } from '~/components/ui/popover/popover';
 import { HTooltipPanel } from '~/components/ui/tooltip/headless/tooltip-panel';
 import { HTooltipRoot } from '~/components/ui/tooltip/headless/tooltip-root';

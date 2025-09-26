@@ -7,20 +7,14 @@ import {
   useVisibleTask$,
 } from '@builder.io/qwik';
 import { cn } from '@qwik-ui/utils';
-import { LuEgg, LuSparkles } from '@qwikest/icons/lucide';
-import { Button, buttonVariants, Input, Popover } from '~/components';
-import { Tooltip } from '~/components/ui/tooltip/tooltip';
+import { LuChevronDown, LuEgg } from '@qwikest/icons/lucide';
+import { Button, buttonVariants, Popover, Textarea } from '~/components';
+import { IAColumn } from '~/components/ui/logo/logo';
 import { useExecution } from '~/features/add-column/form';
 
 import { type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
 
 const COLUMN_PROMPTS = {
-  translate: `Translate English to French, ensuring grammatical accuracy and natural, human-like phrasing.
-
-Maintain original meaning, context, and formatting. Adapt cultural references and review carefully.
-
-Original text: {{REPLACE_ME}}`,
-
   extractKeywords: `Identify and extract the most salient keywords or key phrases representing the core topics from the provided text.
 
 Return these as a single, comma-separated string. Prioritize relevance and conciseness, avoiding common stop words.
@@ -104,54 +98,51 @@ export const TableAddCellHeaderPlaceHolder = component$<{ column: Column }>(
     if (isLastColumnTemporal.value) return null;
 
     return (
-      <div class="absolute top-0 right-0 m-1 mr-[6px] w-8 h-full">
-        <Tooltip text="Add column">
-          <Popover.Root gutter={8}>
-            <Popover.Trigger
-              class={cn(
-                buttonVariants({ look: 'ghost' }),
-                'p-2 flex items-center justify-center transition-opacity duration-300 rounded-full',
-                {
-                  'bg-primary-100': isOpen.value,
-                  'opacity-0 group-hover:opacity-100 hover:bg-primary-100':
-                    !isOpen.value,
-                },
-              )}
-              preventdefault:mousedown
-              stoppropagation:mousedown
-            >
-              <LuSparkles class="text-sm text-primary" />
-            </Popover.Trigger>
+      <Popover.Root gutter={8} floating="right-start">
+        <Popover.Trigger
+          class={cn(
+            buttonVariants({ look: 'ghost' }),
+            'w-8 h-8 rounded-md bg-primary-300',
+          )}
+          preventdefault:mousedown
+          stoppropagation:mousedown
+        >
+          <IAColumn class="text-sm text-white" />
+        </Popover.Trigger>
 
-            <Popover.Panel
-              class="shadow-lg w-96 text-sm p-2"
-              onToggle$={() => {
-                isOpen.value = !isOpen.value;
-              }}
-            >
-              <div class="flex flex-col gap-2">
-                <div
-                  class="w-full h-10 flex items-center justify-between gap-3"
-                  stoppropagation:mousedown
-                >
-                  <Input
-                    class="h-8"
-                    placeholder='Ask anything like "Translate to French"'
-                    bind:value={prompt}
-                  />
+        <Popover.Panel
+          class="shadow-lg w-96 text-sm p-0"
+          onToggle$={() => {
+            isOpen.value = !isOpen.value;
+          }}
+        >
+          <div class="flex flex-col">
+            <div class="flex flex-col gap-2">
+              <Textarea
+                look="ghost"
+                class="h-[52px] min-h-[52px] max-h-28 overflow-hidden resize-none"
+                placeholder="Prompt to generate (e.g Translate in French)"
+                bind:value={prompt}
+                onInput$={(event) => {
+                  const textarea = event.target as HTMLTextAreaElement;
 
-                  <Button
-                    look="primary"
-                    class="p-2 w-[30px] h-[30px] rounded-full flex items-center justify-center"
-                    onClick$={handleNewColumn}
-                  >
-                    <LuEgg class="text-sm text-white" />
-                  </Button>
-                </div>
+                  textarea.style.height = 'auto';
 
+                  const newHeight = Math.min(textarea.scrollHeight, 112);
+                  textarea.style.height = `${newHeight}px`;
+                }}
+                stoppropagation:mousedown
+              />
+
+              <hr class="border-t border-[1px] border-neutral-300" />
+
+              <div
+                class="flex items-center justify-between px-3 pb-2"
+                stoppropagation:mousedown
+              >
                 <Button
                   look="ghost"
-                  class="px-1 w-fit text-xs hover:underline"
+                  class="w-fit flex gap-1 items-center justify-between text-neutral-700"
                   onClick$={() => {
                     isUsingTemplate.value = !isUsingTemplate.value;
                   }}
@@ -160,42 +151,42 @@ export const TableAddCellHeaderPlaceHolder = component$<{ column: Column }>(
                   preventdefault:mousedown
                   stoppropagation:mousedown
                 >
-                  Or use a template
+                  Use Template
+                  <LuChevronDown />
                 </Button>
 
-                {isUsingTemplate.value && (
-                  <div class="flex flex-col">
-                    <ActionButton
-                      label="Translate"
-                      onClick$={() => handleTemplate('translate')}
-                    />
-                    <hr class="border-t border-slate-200 dark:border-slate-700" />
-                    <ActionButton
-                      label="Extract keywords"
-                      onClick$={() => handleTemplate('extractKeywords')}
-                    />
-                    <hr class="border-t border-slate-200 dark:border-slate-700" />
-                    <ActionButton
-                      label="Summarize"
-                      onClick$={() => handleTemplate('summarize')}
-                    />
-                    <hr class="border-t border-slate-200 dark:border-slate-700" />
-                    <ActionButton
-                      label="Generate image"
-                      onClick$={() => handleTemplate('textToImage')}
-                    />
-                    <hr class="border-t border-slate-200 dark:border-slate-700" />
-                    <ActionButton
-                      label="Do something else..."
-                      onClick$={() => handleTemplate('custom')}
-                    />
-                  </div>
-                )}
+                <Button
+                  look="primary"
+                  class="p-2 w-[30px] h-[30px] rounded-full flex items-center justify-center"
+                  onClick$={handleNewColumn}
+                >
+                  <LuEgg class="text-sm text-white" />
+                </Button>
               </div>
-            </Popover.Panel>
-          </Popover.Root>
-        </Tooltip>
-      </div>
+            </div>
+
+            {isUsingTemplate.value && (
+              <div class="flex flex-col">
+                <hr class="border-t border-slate-200 dark:border-slate-700" />
+                <ActionButton
+                  label="Extract keywords"
+                  onClick$={() => handleTemplate('extractKeywords')}
+                />
+                <hr class="border-t border-slate-200 dark:border-slate-700" />
+                <ActionButton
+                  label="Summarize"
+                  onClick$={() => handleTemplate('summarize')}
+                />
+                <hr class="border-t border-slate-200 dark:border-slate-700" />
+                <ActionButton
+                  label="Generate image"
+                  onClick$={() => handleTemplate('textToImage')}
+                />
+              </div>
+            )}
+          </div>
+        </Popover.Panel>
+      </Popover.Root>
     );
   },
 );
@@ -207,11 +198,11 @@ export const ActionButton = component$<{
   return (
     <Button
       look="ghost"
-      class="flex items-center justify-start w-full gap-2.5 p-2 hover:bg-neutral-100 rounded-none first:rounded-tl-md first:rounded-tr-md last:rounded-bl-md last:rounded-br-md"
+      class="flex items-center justify-start w-full gap-2.5 p-2 px-3 hover:bg-neutral-100 rounded-none last:rounded-bl-md last:rounded-br-md text-neutral-700"
       onClick$={onClick$}
       stoppropagation:mousedown
     >
-      <span>{label}</span>
+      {label}
     </Button>
   );
 });

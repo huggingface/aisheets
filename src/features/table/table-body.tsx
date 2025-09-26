@@ -20,7 +20,7 @@ import { useExecution } from '~/features/add-column';
 import { useGenerateColumn } from '~/features/execution';
 import { isOverlayOpen } from '~/features/table/components/body/renderer/components/utils';
 
-import { useColumnsSizeContext } from '~/features/table/components/context/colunm-preferences.context';
+import { useColumnsPreference } from '~/features/table/components/context/colunm-preferences.context';
 import { TableCell } from '~/features/table/table-cell';
 import { deleteRowsCells } from '~/services';
 import {
@@ -35,7 +35,7 @@ export const TableBody = component$(() => {
   const rowSize = 108; // px
 
   const { columnId } = useExecution();
-  const { columnSize } = useColumnsSizeContext();
+  const { columnPreferences } = useColumnsPreference();
   const { activeDataset } = useDatasetsStore();
 
   const { columns, firstColumn, updateColumn, deleteCellByIdx } =
@@ -367,14 +367,17 @@ export const TableBody = component$(() => {
                   <td
                     data-column-id={cell.column?.id}
                     class={cn(
-                      'relative transition-colors box-border min-w-[142px] w-[326px] h-[108px] break-words align-top border border-neutral-300 hover:bg-gray-50/50',
+                      'relative transition-colors min-w-[142px] w-[326px] h-[108px] break-words align-top border border-neutral-300 hover:bg-gray-50/50',
                       getBoundary(cell),
                       {
                         'bg-blue-50': cell.column!.id == columnId.value,
+                        'border-r-[2px] border-l-[2px] border-l-primary-400 border-r-primary-400':
+                          columnPreferences.value[cell.column!.id]
+                            ?.aiTooltipOpen,
                       },
                     )}
                     style={{
-                      width: `${columnSize.value[cell.column!.id] || 326}px`,
+                      width: `${columnPreferences.value[cell.column!.id]?.width || 326}px`,
                     }}
                   >
                     <div

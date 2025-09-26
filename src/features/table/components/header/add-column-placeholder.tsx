@@ -4,13 +4,14 @@ import {
   type QRL,
   useComputed$,
   useSignal,
-  useVisibleTask$,
+  useTask$,
 } from '@builder.io/qwik';
 import { cn } from '@qwik-ui/utils';
 import { LuChevronDown, LuEgg } from '@qwikest/icons/lucide';
 import { Button, buttonVariants, Popover, Textarea } from '~/components';
 import { IAColumn } from '~/components/ui/logo/logo';
 import { useExecution } from '~/features/add-column/form';
+import { useColumnsPreference } from '~/features/table/components/context/colunm-preferences.context';
 
 import { type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
 
@@ -49,6 +50,7 @@ export const TableAddCellHeaderPlaceHolder = component$<{ column: Column }>(
     const { columns } = useColumnsStore();
     const isUsingTemplate = useSignal<boolean>();
     const prompt = useSignal<string>('');
+    const { openAiPrompt, closeAiPrompt } = useColumnsPreference();
 
     const isLastColumnTemporal = useComputed$(
       () => columns.value[columns.value.length - 1].id == TEMPORAL_ID,
@@ -88,11 +90,19 @@ export const TableAddCellHeaderPlaceHolder = component$<{ column: Column }>(
       onCreateColumn('unknown', prompt.value.trim());
     });
 
-    useVisibleTask$(({ track }) => {
+    useTask$(({ track }) => {
       track(isOpen);
 
-      isUsingTemplate.value = false;
-      prompt.value = '';
+      if (isOpen.value) {
+        isUsingTemplate.value = false;
+        prompt.value = '';
+      }
+
+      if (isOpen.value) {
+        openAiPrompt(column.id);
+      } else {
+        closeAiPrompt(column.id);
+      }
     });
 
     if (isLastColumnTemporal.value) return null;

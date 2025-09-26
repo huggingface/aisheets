@@ -3,6 +3,7 @@ import { cn } from '@qwik-ui/utils';
 import { buttonVariants, Popover } from '~/components';
 import { Tooltip } from '~/components/ui/tooltip/tooltip';
 import { useExecution } from '~/features/add-column';
+import { useColumnsPreference } from '~/features/table/components/context/colunm-preferences.context';
 import { CellGeneration } from '~/features/table/components/header/cell-generation';
 import { CellSettings } from '~/features/table/components/header/cell-settings';
 import { ColumnNameEdition } from '~/features/table/components/header/column-name-edition';
@@ -19,6 +20,7 @@ import type { Column } from '~/state';
 
 export const TableCellHeader = component$<{ column: Column }>(({ column }) => {
   const { columnId } = useExecution();
+  const { columnPreferences } = useColumnsPreference();
 
   const visibleColumnType = useComputed$(() => {
     let columnType = column.type.toLowerCase();
@@ -45,6 +47,8 @@ export const TableCellHeader = component$<{ column: Column }>(({ column }) => {
       id={column.id}
       class={cn('min-h-[50px] h-[50px] p-2 text-left border', {
         'bg-blue-50': column.id == columnId.value,
+        'border-r-[2px] border-l-[2px] border-l-primary-400 border-r-primary-400':
+          columnPreferences.value[column.id]?.aiTooltipOpen,
       })}
     >
       <Popover.Root flip={false} gutter={8} floating="bottom">

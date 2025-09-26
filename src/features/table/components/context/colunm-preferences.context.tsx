@@ -1,31 +1,78 @@
 import {
   $,
-  type Signal,
-  Slot,
   component$,
   createContextId,
+  type Signal,
+  Slot,
   useContext,
   useContextProvider,
   useSignal,
 } from '@builder.io/qwik';
 import type { Column } from '~/state';
 
-const columnSizeContext =
-  createContextId<Signal<Record<Column['id'], number>>>('column-ui.context');
+interface Pref {
+  width?: number;
+  aiTooltipOpen?: boolean;
+  aiPromptOpen?: boolean;
+}
+
+const columnPreferenceContext =
+  createContextId<Signal<Record<Column['id'], Pref>>>('column-ui.context');
 
 export const ColumnSizeProvider = component$(() => {
-  useContextProvider(columnSizeContext, useSignal({}));
+  useContextProvider(columnPreferenceContext, useSignal({}));
 
   return <Slot />;
 });
 
-export const useColumnsSizeContext = () => {
-  const columnSize = useContext(columnSizeContext);
+export const useColumnsPreference = () => {
+  const columnPreferences = useContext(columnPreferenceContext);
 
   return {
-    columnSize,
-    update: $((columnId: string, width: number) => {
-      columnSize.value = { ...columnSize.value, [columnId]: width };
+    columnPreferences,
+    resize: $((columnId: string, width: number) => {
+      columnPreferences.value = {
+        ...columnPreferences.value,
+        [columnId]: {
+          width,
+        },
+      };
+    }),
+    openAiColumn: $((columnId: string) => {
+      columnPreferences.value = {
+        ...columnPreferences.value,
+        [columnId]: {
+          ...columnPreferences.value[columnId],
+          aiTooltipOpen: true,
+        },
+      };
+    }),
+    closeAiColumn: $((columnId: string) => {
+      columnPreferences.value = {
+        ...columnPreferences.value,
+        [columnId]: {
+          ...columnPreferences.value[columnId],
+          aiTooltipOpen: false,
+        },
+      };
+    }),
+    openAiPrompt: $((columnId: string) => {
+      columnPreferences.value = {
+        ...columnPreferences.value,
+        [columnId]: {
+          ...columnPreferences.value[columnId],
+          aiPromptOpen: true,
+        },
+      };
+    }),
+    closeAiPrompt: $((columnId: string) => {
+      columnPreferences.value = {
+        ...columnPreferences.value,
+        [columnId]: {
+          ...columnPreferences.value[columnId],
+          aiPromptOpen: false,
+        },
+      };
     }),
   };
 };

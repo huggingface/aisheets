@@ -3,14 +3,16 @@ import {
   component$,
   Fragment,
   type Signal,
+  useComputed$,
   useSignal,
   useVisibleTask$,
 } from '@builder.io/qwik';
 import { Popover, usePopover } from '@qwik-ui/headless';
 import { cn } from '@qwik-ui/utils';
+import { useClickOutside } from '~/components/hooks/click/outside';
 
 import { useExecution } from '~/features/add-column';
-import { useColumnsSizeContext } from '~/features/table/components/context/colunm-preferences.context';
+import { useColumnsPreference } from '~/features/table/components/context/colunm-preferences.context';
 import {
   TableAddCellHeaderPlaceHolder,
   TableCellHeader,
@@ -27,7 +29,7 @@ export const TableHeader = component$(() => {
     startWidth: number;
   } | null>(null);
   const { columnId } = useExecution();
-  const { columnSize, update } = useColumnsSizeContext();
+  const { columnPreferences, resize } = useColumnsPreference();
   const draggedColId = useSignal<string | null>(null);
   const targetColId = useSignal<string | null>(null);
 
@@ -88,7 +90,7 @@ export const TableHeader = component$(() => {
           resizingColumn.value.startWidth + deltaX,
         );
 
-        update(resizingColumn.value.columnId, newWidth);
+        resize(resizingColumn.value.columnId, newWidth);
       }
     };
 
@@ -101,7 +103,7 @@ export const TableHeader = component$(() => {
     resizingColumn.value = {
       columnId,
       startX: event.clientX,
-      startWidth: columnSize.value[columnId] || 326,
+      startWidth: columnPreferences.value[columnId]?.width || 326,
     };
 
     document.addEventListener('mousemove', handleResize);
@@ -141,7 +143,7 @@ export const TableHeader = component$(() => {
     );
     const finalWidth = Math.min(maxContentWidth, MAX_WIDTH);
 
-    update(column.id, finalWidth);
+    resize(column.id, finalWidth);
   });
 
   useVisibleTask$(({ track }) => {
@@ -240,7 +242,7 @@ export const TableHeader = component$(() => {
                 <th
                   id={`index-${column.id}`}
                   class={cn(
-                    'min-w-[142px] w-[326px] h-[38px] border bg-neutral-100 text-primary-600 font-normal relative select-none cursor-grab group',
+                    'min-w-[142px] w-[326px] max-h-[38px] h-[38px] border bg-neutral-100 text-primary-600 font-normal relative select-none cursor-grab group',
                     {
                       'opacity-50 shadow-lg bg-primary-50':
                         draggedColId.value === column.id,
@@ -248,9 +250,13 @@ export const TableHeader = component$(() => {
                         draggedColId.value === column.id ||
                         targetColId.value === column.id,
                       'bg-blue-50': column.id == columnId.value,
+                      'border-r-[2px] border-l-[2px] border-t-[2px] border-l-primary-400 border-r-primary-400 border-t-primary-400 rounded-tl-[6px] rounded-tr-[6px]':
+                        columnPreferences.value[column.id]?.aiTooltipOpen,
                     },
                   )}
-                  style={{ width: `${columnSize.value[column.id] || 326}px` }}
+                  style={{
+                    width: `${columnPreferences.value[column.id]?.width || 326}px`,
+                  }}
                   onMouseDown$={(e) => handleManualDragStart(e, column.id)}
                 >
                   <TableIndexTableHeader
@@ -288,6 +294,8 @@ export const TableIndexTableHeader = component$<{
   const popoverId = `ai-column-${column.id}-popover`;
   const anchorRef = useSignal<HTMLElement | undefined>();
   const { showPopover, hidePopover } = usePopover(popoverId);
+  const { columnPreferences, openAiColumn, closeAiColumn } =
+    useColumnsPreference();
 
   const indexToAlphanumeric = $((index: number): string => {
     let result = '';
@@ -299,8 +307,22 @@ export const TableIndexTableHeader = component$<{
     return result;
   });
 
+  const clickOutsideRef = useClickOutside(
+    $(() => {
+      hidePopover();
+    }),
+  );
+
+  const isAnyAiPromptOpen = useComputed$(() => {
+    return (
+      columnPreferences.value &&
+      Object.values(columnPreferences.value).some((pref) => pref.aiPromptOpen)
+    );
+  });
+
   return (
     <Popover.Root
+      ref={clickOutsideRef}
       flip={false}
       class="h-[38px]"
       gutter={-10}
@@ -308,18 +330,22 @@ export const TableIndexTableHeader = component$<{
       id={popoverId}
       bind:anchor={anchorRef}
       manual
-      onMouseLeave$={(ev) => {
-        const nextEl = ev.relatedTarget as HTMLElement | null;
-        if (!nextEl?.closest('[data-popover-panel]')) {
-          hidePopover();
-        }
+      onMouseLeave$={() => {
+        if (isAnyAiPromptOpen.value) return;
+
+        hidePopover();
       }}
     >
       <div
         data-column-id={column.id}
         ref={anchorRef}
         class="h-[38px] w-full flex items-center justify-center"
-        onMouseOver$={() => showPopover()}
+        onMouseOver$={() => {
+          if (draggedColId.value) return;
+          if (isAnyAiPromptOpen.value) return;
+
+          showPopover();
+        }}
       >
         {indexToAlphanumeric(index + 1)}
       </div>
@@ -327,6 +353,13 @@ export const TableIndexTableHeader = component$<{
         class="p-0"
         preventdefault:mousedown
         stoppropagation:mousedown
+        onToggle$={(e) => {
+          if (e.newState === 'open') {
+            openAiColumn(column.id);
+          } else {
+            closeAiColumn(column.id);
+          }
+        }}
       >
         {!draggedColId.value && (
           <TableAddCellHeaderPlaceHolder column={column} />

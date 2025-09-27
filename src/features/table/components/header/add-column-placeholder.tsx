@@ -52,6 +52,7 @@ export const TableAddCellHeaderPlaceHolder = component$<{ column: Column }>(
     const { openAiPrompt, closeAiPrompt, closeAiColumn } =
       useColumnsPreference();
     const isGenerating = useSignal(false);
+    const textAreaRef = useSignal<HTMLTextAreaElement>();
 
     const isAnyColumnTemporal = useComputed$(() =>
       columns.value.some((c) => c.id === TEMPORAL_ID),
@@ -121,6 +122,9 @@ export const TableAddCellHeaderPlaceHolder = component$<{ column: Column }>(
           class="shadow-lg w-96 text-sm p-0"
           onToggle$={(e) => {
             if (e.newState === 'open') {
+              nextTick(() => {
+                textAreaRef.value?.focus();
+              });
               openAiPrompt(column.id);
               cleanUp();
             } else {
@@ -131,10 +135,20 @@ export const TableAddCellHeaderPlaceHolder = component$<{ column: Column }>(
           <div class="flex flex-col">
             <div class="flex flex-col gap-2">
               <Textarea
+                ref={textAreaRef}
                 look="ghost"
                 class="h-[52px] min-h-[52px] max-h-28 overflow-hidden resize-none"
                 placeholder="Prompt to generate (e.g Translate in French)"
                 bind:value={prompt}
+                onKeyDown$={(event) => {
+                  if (
+                    event.key === 'Enter' &&
+                    (event.metaKey || event.ctrlKey)
+                  ) {
+                    event.preventDefault();
+                    handleNewColumn();
+                  }
+                }}
                 onInput$={(event) => {
                   const textarea = event.target as HTMLTextAreaElement;
 

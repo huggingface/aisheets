@@ -47,7 +47,7 @@ export default component$(() => {
       <ExecutionSidebar />
       <div class="flex flex-col h-full w-full">
         <div
-          class={cn('flex flex-col flex-1 transition-all duration-300 mr-0', {
+          class={cn('flex flex-col flex-1 transition-all duration-200 mr-0', {
             'mr-[700px]': isOpenExecutionSidebar.value,
           })}
         >

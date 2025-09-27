@@ -8,12 +8,12 @@ import { ExecutionForm } from '~/features/add-column/form/execution-form';
 export const ExecutionSidebar = component$(() => {
   const { column, isOpenExecutionSidebar, close } = useExecution();
 
-  if (!column.value) return null;
+  if (!column.value) return 'Loading...';
 
   return (
     <aside
       class={cn(
-        'fixed top-0 right-0 z-[52] h-screen w-[700px] bg-gradient-to-r from-white to-gray-50 shadow-lg transition-transform duration-300 translate-x-full',
+        'fixed top-0 right-0 z-[52] h-screen w-[700px] bg-gradient-to-r from-white to-gray-50 shadow-lg transition-transform duration-200 translate-x-full',
         {
           'translate-x-0': isOpenExecutionSidebar.value,
         },
@@ -33,7 +33,10 @@ export const ExecutionSidebar = component$(() => {
           </Button>
         </div>
 
-        <div class="flex-1 overflow-y-auto p-4">
+        <div
+          class="flex-1 overflow-y-auto p-4"
+          key={`${column.value.id}-${Date.now()}`}
+        >
           <ExecutionForm />
         </div>
       </div>

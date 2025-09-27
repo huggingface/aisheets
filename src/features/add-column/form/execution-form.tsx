@@ -374,6 +374,7 @@ export const ExecutionForm = component$(() => {
   const onGenerate = $(async () => {
     try {
       if (!column.value) return;
+      if (column.value.process?.isExecuting) return;
 
       const model = models.value.find(
         (m: Model) =>
@@ -413,18 +414,27 @@ export const ExecutionForm = component$(() => {
     } catch {}
   });
 
-  useVisibleTask$(({ track }) => {
-    track(columnId);
+  const shouldDisable = useComputed$(() => {
+    return columnId.value === TEMPORAL_ID || column.value?.process?.isExecuting;
+  });
 
+  useVisibleTask$(() => {
     if (columnId.value === TEMPORAL_ID) {
-      onGenerate();
+      nextTick(() => {
+        onGenerate();
+      });
     }
   });
 
   if (!column.value) return null;
 
   return (
-    <div class="min-w-[660px] w-[660px] font-normal text-left">
+    <div
+      class={cn('min-w-[660px] w-[660px] font-normal text-left', {
+        'cursor-not-allowed pointer-events-none opacity-70':
+          shouldDisable.value,
+      })}
+    >
       <span>Instructions to generate cells</span>
 
       <div class="relative h-full w-full">
@@ -461,19 +471,15 @@ export const ExecutionForm = component$(() => {
                   <div class="flex items-center gap-2 text-neutral-500" />
                 )}
 
-                {column.value.process?.isExecuting && (
+                {shouldDisable.value && (
                   <div class="h-4 w-4 animate-spin rounded-full border-2 border-primary-100 border-t-transparent" />
                 )}
-                {column.value.process?.isExecuting ? (
+                {shouldDisable.value ? (
                   <Button
                     look="primary"
                     class="w-[30px] h-[30px] rounded-full flex items-center justify-center p-0"
                     onClick$={onStop}
-                    disabled={
-                      (column.value.process?.isExecuting &&
-                        column.value.id === TEMPORAL_ID) ||
-                      !prompt.value.trim()
-                    }
+                    disabled={shouldDisable.value || !prompt.value.trim()}
                   >
                     <LuStopCircle class="text-lg" />
                   </Button>
@@ -556,7 +562,7 @@ export const ExecutionForm = component$(() => {
                         key={modelSearchQuery.value}
                         floating="bottom-end"
                         gutter={8}
-                        class="border border-border max-h-[300px] overflow-y-auto overflow-x-hidden top-[100%] bottom-auto p-0 mt-2 ml-24 min-w-[450px]"
+                        class="border border-border max-h-[300px] overflow-y-auto overflow-x-hidden top-[100%] bottom-auto p-0 ml-9 mt-2 min-w-[450px]"
                       >
                         <div class="flex flex-col">
                           {Object.entries(groupedModels.value).map(

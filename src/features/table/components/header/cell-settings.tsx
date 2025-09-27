@@ -1,6 +1,5 @@
 import { $, component$, Slot } from '@builder.io/qwik';
 import { LuSettings2 } from '@qwikest/icons/lucide';
-import { nextTick } from '~/components/hooks/tick';
 import { useExecution } from '~/features/add-column';
 import { type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
 
@@ -13,13 +12,10 @@ export const CellSettings = component$<{ column: Column }>(({ column }) => {
     if (column.id === columnId.value) return;
 
     await removeTemporalColumn();
-    await close();
 
-    nextTick(() => {
-      open('edit', {
-        columnId: column.id,
-      });
-    }, 300);
+    open('edit', {
+      columnId: column.id,
+    });
   });
 
   if (column.id === TEMPORAL_ID || column.kind !== 'dynamic') {

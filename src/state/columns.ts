@@ -274,37 +274,41 @@ export const useColumnsStore = () => {
       return newTemporalColumn;
     }),
     removeTemporalColumn: $(() => {
-      replaceColumns(columns.value.filter((c) => c.id !== TEMPORAL_ID));
+      replaceColumns(
+        activeDataset.value.columns.filter((c) => c.id !== TEMPORAL_ID),
+      );
     }),
     getColumn: $((id: string) => {
-      return columns.value.find((c) => c.id === id);
+      return activeDataset.value.columns.find((c) => c.id === id);
     }),
-    addColumn: $((newbie: Column) => {
-      const temporalColumnIndex = columns.value.findIndex(
+    addColumn: $(async (newbie: Column) => {
+      const temporalColumnIndex = activeDataset.value.columns.findIndex(
         (c) => c.id === TEMPORAL_ID,
       );
 
       if (temporalColumnIndex !== -1) {
-        replaceColumns([
-          ...columns.value.slice(0, temporalColumnIndex),
+        await replaceColumns([
+          ...activeDataset.value.columns.slice(0, temporalColumnIndex),
           newbie,
-          ...columns.value.slice(temporalColumnIndex + 1),
+          ...activeDataset.value.columns.slice(temporalColumnIndex + 1),
         ]);
 
         return;
       }
 
-      replaceColumns([
-        ...columns.value.filter((c) => c.id !== TEMPORAL_ID),
+      await replaceColumns([
+        ...activeDataset.value.columns.filter((c) => c.id !== TEMPORAL_ID),
         newbie,
       ]);
     }),
     removeColumn: $((removed: Column) => {
-      replaceColumns(columns.value.filter((c) => c.id !== removed.id));
+      replaceColumns(
+        activeDataset.value.columns.filter((c) => c.id !== removed.id),
+      );
     }),
     updateColumn: $((updated: Column) => {
       replaceColumns(
-        columns.value.map((c) =>
+        activeDataset.value.columns.map((c) =>
           c.id === updated.id
             ? {
                 ...updated,
@@ -315,10 +319,14 @@ export const useColumnsStore = () => {
       );
     }),
     deleteColumn: $((deleted: Column) => {
-      replaceColumns(columns.value.filter((c) => c.id !== deleted.id));
+      replaceColumns(
+        activeDataset.value.columns.filter((c) => c.id !== deleted.id),
+      );
     }),
     replaceCell: $((cell: Cell) => {
-      const column = columns.value.find((c) => c.id === cell.column?.id);
+      const column = activeDataset.value.columns.find(
+        (c) => c.id === cell.column?.id,
+      );
       if (!column) return;
 
       if (column.cells.some((c) => c.idx === cell.idx)) {
@@ -330,10 +338,10 @@ export const useColumnsStore = () => {
         column.cells.sort((a, b) => a.idx - b.idx);
       }
 
-      replaceColumns(columns.value);
+      replaceColumns(activeDataset.value.columns);
     }),
     deleteCellByIdx: $((...idxs: number[]) => {
-      for (const column of columns.value) {
+      for (const column of activeDataset.value.columns) {
         for (const idx of idxs) {
           column.cells = column.cells.filter((c) => c.idx !== idx);
         }
@@ -345,7 +353,7 @@ export const useColumnsStore = () => {
         }
       }
 
-      replaceColumns(columns.value);
+      replaceColumns(activeDataset.value.columns);
     }),
   };
 };

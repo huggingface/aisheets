@@ -302,7 +302,6 @@ export const TableIndexTableHeader = component$<{
     showAiButton,
     hideAiButton,
   } = useColumnsPreference();
-  const { columnId } = useExecution();
   const aiButtonVisible = useComputed$(() => {
     return columnPreferences.value[column.id]?.aiButtonVisible;
   });
@@ -319,6 +318,8 @@ export const TableIndexTableHeader = component$<{
 
   const clickOutsideRef = useClickOutside(
     $(() => {
+      if (!aiButtonVisible.value) return;
+
       nextTick(() => {
         hideAiButton(column.id);
       });

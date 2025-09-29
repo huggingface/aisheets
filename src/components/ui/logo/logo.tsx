@@ -767,7 +767,7 @@ export const ModelImage = component$(
   },
 );
 
-export const IAColumn = component$<LogoProps>((props) => {
+export const SparkIcon = component$<LogoProps>((props) => {
   return (
     <svg
       {...props}

@@ -8,10 +8,11 @@ import {
   useContextProvider,
   useSignal,
 } from '@builder.io/qwik';
-import type { Column } from '~/state';
+import { type Column, TEMPORAL_ID } from '~/state';
 
 interface Pref {
   width?: number;
+  aiButtonVisible?: boolean;
   aiTooltipOpen?: boolean;
   aiPromptOpen?: boolean;
 }
@@ -19,7 +20,7 @@ interface Pref {
 const columnPreferenceContext =
   createContextId<Signal<Record<Column['id'], Pref>>>('column-ui.context');
 
-export const ColumnSizeProvider = component$(() => {
+export const ColumnPreferencesProvider = component$(() => {
   useContextProvider(columnPreferenceContext, useSignal({}));
 
   return <Slot />;
@@ -34,7 +35,43 @@ export const useColumnsPreference = () => {
       columnPreferences.value = {
         ...columnPreferences.value,
         [columnId]: {
+          ...columnPreferences.value[columnId],
           width,
+        },
+      };
+    }),
+    showAiButton: $((columnId: string) => {
+      if (columnId === TEMPORAL_ID) return;
+      if (
+        Object.values(columnPreferences.value).some(
+          (pref) => !!pref.aiPromptOpen,
+        )
+      ) {
+        return;
+      }
+
+      columnPreferences.value = {
+        ...columnPreferences.value,
+        [columnId]: {
+          ...columnPreferences.value[columnId],
+          aiButtonVisible: true,
+        },
+      };
+    }),
+    hideAiButton: $((columnId: string) => {
+      if (
+        Object.values(columnPreferences.value).some(
+          (pref) => !!pref.aiPromptOpen,
+        )
+      ) {
+        return;
+      }
+
+      columnPreferences.value = {
+        ...columnPreferences.value,
+        [columnId]: {
+          ...columnPreferences.value[columnId],
+          aiButtonVisible: false,
         },
       };
     }),
@@ -71,6 +108,7 @@ export const useColumnsPreference = () => {
         [columnId]: {
           ...columnPreferences.value[columnId],
           aiPromptOpen: false,
+          aiButtonVisible: false,
         },
       };
     }),

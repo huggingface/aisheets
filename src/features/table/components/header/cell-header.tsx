@@ -20,7 +20,8 @@ import type { Column } from '~/state';
 
 export const TableCellHeader = component$<{ column: Column }>(({ column }) => {
   const { columnId } = useExecution();
-  const { columnPreferences } = useColumnsPreference();
+  const { columnPreferences, showAiButton, hideAiButton } =
+    useColumnsPreference();
 
   const visibleColumnType = useComputed$(() => {
     let columnType = column.type.toLowerCase();
@@ -50,6 +51,8 @@ export const TableCellHeader = component$<{ column: Column }>(({ column }) => {
         'shadow-[inset_2px_0_0_theme(colors.primary.400),inset_-2px_0_0_theme(colors.primary.400)]':
           columnPreferences.value[column.id]?.aiPromptOpen,
       })}
+      onMouseOver$={() => showAiButton(column.id)}
+      onMouseOut$={() => hideAiButton(column.id)}
     >
       <Popover.Root flip={false} gutter={8} floating="bottom">
         <Popover.Trigger class="flex items-center justify-between w-full h-[20px] py-[10px]">

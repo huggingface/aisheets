@@ -18,7 +18,7 @@ import {
   TableAddCellHeaderPlaceHolder,
   TableCellHeader,
 } from '~/features/table/components/header';
-import { type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
+import { type Column, useColumnsStore } from '~/state';
 
 export const TableHeader = component$(() => {
   const MAX_WIDTH = 1000;
@@ -295,9 +295,17 @@ export const TableIndexTableHeader = component$<{
   const popoverId = `ai-column-${column.id}-popover`;
   const anchorRef = useSignal<HTMLElement | undefined>();
   const { showPopover, hidePopover } = usePopover(popoverId);
-  const { columnPreferences, openAiColumn, closeAiColumn } =
-    useColumnsPreference();
+  const {
+    columnPreferences,
+    openAiColumn,
+    closeAiColumn,
+    showAiButton,
+    hideAiButton,
+  } = useColumnsPreference();
   const { columnId } = useExecution();
+  const aiButtonVisible = useComputed$(() => {
+    return columnPreferences.value[column.id]?.aiButtonVisible;
+  });
 
   const indexToAlphanumeric = $((index: number): string => {
     let result = '';
@@ -312,16 +320,19 @@ export const TableIndexTableHeader = component$<{
   const clickOutsideRef = useClickOutside(
     $(() => {
       nextTick(() => {
-        hidePopover();
+        hideAiButton(column.id);
       });
     }),
   );
 
-  const isAnyAiPromptOpen = useComputed$(() => {
-    return (
-      columnPreferences.value &&
-      Object.values(columnPreferences.value).some((pref) => !!pref.aiPromptOpen)
-    );
+  useVisibleTask$(({ track }) => {
+    track(aiButtonVisible);
+
+    if (aiButtonVisible.value) {
+      showPopover();
+    } else {
+      hidePopover();
+    }
   });
 
   return (
@@ -335,10 +346,8 @@ export const TableIndexTableHeader = component$<{
       bind:anchor={anchorRef}
       manual
       onMouseLeave$={() => {
-        if (isAnyAiPromptOpen.value) return;
-
         nextTick(() => {
-          hidePopover();
+          hideAiButton(column.id);
         });
       }}
     >
@@ -348,10 +357,8 @@ export const TableIndexTableHeader = component$<{
         class="h-[38px] w-full flex items-center justify-center"
         onMouseOver$={() => {
           if (draggedColId.value) return;
-          if (isAnyAiPromptOpen.value) return;
-          if (columnId.value === TEMPORAL_ID) return;
 
-          showPopover();
+          showAiButton(column.id);
         }}
       >
         {indexToAlphanumeric(index + 1)}

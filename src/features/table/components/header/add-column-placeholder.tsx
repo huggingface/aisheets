@@ -9,7 +9,7 @@ import {
   Textarea,
 } from '~/components';
 import { nextTick } from '~/components/hooks/tick';
-import { IAColumn } from '~/components/ui/logo/logo';
+import { SparkIcon } from '~/components/ui/logo/logo';
 import { useExecution } from '~/features/add-column/form';
 import { useColumnsPreference } from '~/features/table/components/context/colunm-preferences.context';
 
@@ -162,7 +162,7 @@ export const TableAddCellHeaderPlaceHolder = component$<{ column: Column }>(
           preventdefault:mousedown
           stoppropagation:mousedown
         >
-          <IAColumn class="text-sm text-white" />
+          <SparkIcon class="text-sm text-white" />
         </Popover.Trigger>
 
         <Popover.Panel

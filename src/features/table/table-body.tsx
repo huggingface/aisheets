@@ -35,7 +35,8 @@ export const TableBody = component$(() => {
   const rowSize = 108; // px
 
   const { columnId } = useExecution();
-  const { columnPreferences } = useColumnsPreference();
+  const { columnPreferences, showAiButton, hideAiButton } =
+    useColumnsPreference();
   const { activeDataset } = useDatasetsStore();
 
   const { columns, firstColumn, updateColumn, deleteCellByIdx } =
@@ -379,6 +380,8 @@ export const TableBody = component$(() => {
                     style={{
                       width: `${columnPreferences.value[cell.column!.id]?.width || 326}px`,
                     }}
+                    onMouseOver$={() => showAiButton(cell.column!.id)}
+                    onMouseOut$={() => hideAiButton(cell.column!.id)}
                   >
                     <div
                       onMouseUp$={handleMouseUp$}

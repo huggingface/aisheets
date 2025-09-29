@@ -169,6 +169,22 @@ class GroupedModels {
         id: 'black-forest-labs/FLUX.1-schnell',
         tags: [this.tags.LIGHT, this.tags.EXPERIMENTATION],
       },
+      {
+        id: 'black-forest-labs/FLUX.1-schnell',
+        tags: [this.tags.LIGHT, this.tags.EXPERIMENTATION],
+      },
+      {
+        id: 'Qwen/Qwen2.5-VL-7B-Instruct',
+        tags: [this.tags.LIGHT, this.tags.EXPERIMENTATION],
+      },
+      {
+        id: 'google/gemma-3-27b-it',
+        tags: [this.tags.EXPERIMENTATION],
+      },
+      {
+        id: 'Qwen/Qwen3-VL-235B-A22B-Thinking',
+        tags: [this.tags.REASONING],
+      },
     ];
   }
 

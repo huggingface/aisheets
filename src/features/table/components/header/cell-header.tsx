@@ -48,7 +48,7 @@ export const TableCellHeader = component$<{ column: Column }>(({ column }) => {
       class={cn('min-h-[50px] h-[50px] p-2 text-left border', {
         'bg-blue-50': column.id == columnId.value,
         'shadow-[inset_2px_0_0_theme(colors.primary.400),inset_-2px_0_0_theme(colors.primary.400)]':
-          columnPreferences.value[column.id]?.aiTooltipOpen,
+          columnPreferences.value[column.id]?.aiPromptOpen,
       })}
     >
       <Popover.Root flip={false} gutter={8} floating="bottom">

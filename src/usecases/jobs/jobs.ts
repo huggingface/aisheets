@@ -1,6 +1,6 @@
 import child_process from 'node:child_process';
 import { promisify } from 'node:util';
-import { appConfig } from '~/config';
+
 import type { DatasetConfig } from '../create-dataset-config';
 
 const exec = promisify(child_process.exec);
@@ -44,18 +44,10 @@ export const augmentDatasetJob = async ({
     --config-json '${configJson}'
   `.trim();
 
-  const {
-    authentication: { hfToken },
-    inference: { billTo },
-  } = appConfig;
-
   try {
     const secrets: Record<string, string> = {
       HF_TOKEN: accessToken,
     };
-
-    if (hfToken) secrets['HF_INFERENCE_TOKEN'] = hfToken;
-    if (billTo) secrets['ORG_BILLING'] = billTo;
 
     return runHfJobCommand(jobCommand, {
       flavor: 'cpu-basic',

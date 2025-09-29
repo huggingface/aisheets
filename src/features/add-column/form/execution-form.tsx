@@ -478,8 +478,8 @@ export const ExecutionForm = component$<SidebarProps>(
                   <div class="flex items-center gap-4">
                     {!column.process?.isExecuting &&
                       column.cells.some((c) => c.error) && (
-                        <div class="p-[2px] rounded-lg bg-red-500 w-16 h-8">
-                          <div class="rounded-md bg-white w-full h-full flex items-center justify-center text-red-500">
+                        <div class="p-[1.5px] rounded-[6px] bg-red-500 w-16 h-8">
+                          <div class="rounded-[4px] bg-white w-full h-full flex items-center justify-center text-red-500">
                             {column.cells.filter((c) => c.error).length}
                           </div>
                         </div>
@@ -487,8 +487,8 @@ export const ExecutionForm = component$<SidebarProps>(
 
                     {column.process?.isExecuting &&
                       column.process?.processedCells && (
-                        <div class="p-[2px] rounded-lg bg-gradient-to-b from-[#4057BF] to-[#6B86FF] w-16 h-8">
-                          <div class="rounded-md bg-white w-full h-full flex items-center justify-center">
+                        <div class="p-[2px] rounded-[6px] bg-gradient-to-b from-[#4057BF] to-[#6B86FF] w-16 h-8">
+                          <div class="rounded-[4px] bg-white w-full h-full flex items-center justify-center">
                             {activeDataset.value.size -
                               Math.min(
                                 column.process?.processedCells,

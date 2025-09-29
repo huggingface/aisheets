@@ -1,10 +1,8 @@
 import { component$, useComputed$ } from '@builder.io/qwik';
 import { cn } from '@qwik-ui/utils';
 import { buttonVariants, Popover } from '~/components';
-import { Tooltip } from '~/components/ui/tooltip/tooltip';
 import { useExecution } from '~/features/add-column';
 import { useColumnsPreference } from '~/features/table/components/context/colunm-preferences.context';
-import { CellGeneration } from '~/features/table/components/header/cell-generation';
 import { CellSettings } from '~/features/table/components/header/cell-settings';
 import { ColumnNameEdition } from '~/features/table/components/header/column-name-edition';
 import { DeleteColumn } from '~/features/table/components/header/delete-column';
@@ -66,13 +64,6 @@ export const TableCellHeader = component$<{ column: Column }>(({ column }) => {
             <p class="text-sm text-neutral-500 font-light">
               {visibleColumnType.value}
             </p>
-          </div>
-
-          <div class="flex items-center gap-1 w-fit h-fit pr-0">
-            <CellGeneration column={column} />
-            <Tooltip text="Edit configuration">
-              <CellSettings column={column} />
-            </Tooltip>
           </div>
         </Popover.Trigger>
         <Popover.Panel>

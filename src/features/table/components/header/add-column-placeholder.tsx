@@ -137,7 +137,7 @@ export const TableAddCellHeaderPlaceHolder = component$<{ column: Column }>(
               <Textarea
                 ref={textAreaRef}
                 look="ghost"
-                class="h-[52px] min-h-[52px] max-h-28 overflow-hidden resize-none"
+                class="p-3 h-9 min-h-9 max-h-28 overflow-hidden resize-none"
                 placeholder="Type your action (e.g. translate to French)"
                 bind:value={prompt}
                 onKeyDown$={(event) => {
@@ -152,6 +152,11 @@ export const TableAddCellHeaderPlaceHolder = component$<{ column: Column }>(
                 onInput$={(event) => {
                   const textarea = event.target as HTMLTextAreaElement;
 
+                  if (!textarea.value) {
+                    textarea.style.height = '2.25rem';
+
+                    return;
+                  }
                   textarea.style.height = 'auto';
 
                   const newHeight = Math.min(textarea.scrollHeight, 112);
@@ -160,7 +165,7 @@ export const TableAddCellHeaderPlaceHolder = component$<{ column: Column }>(
                 stoppropagation:mousedown
               />
 
-              <hr class="border-t border-[1px] border-neutral-300" />
+              <hr class="border-t border-[0.5px] border-neutral-300" />
 
               <div
                 class="flex items-center justify-between px-3 pb-2"

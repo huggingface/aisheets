@@ -11,12 +11,23 @@ const serverCache = new NodeCache({
 });
 
 const cacheKey = (key: any): string => {
-  if (typeof key === 'string') {
-    return key;
-  }
-  return JSON.stringify(key, (_, v) =>
-    typeof v === 'bigint' ? v.toString() : v,
-  );
+  if (typeof key === 'string') return key;
+
+  return JSON.stringify(key, (_, v) => {
+    if (typeof v === 'bigint') {
+      return v.toString();
+    }
+
+    if (
+      v instanceof Uint8Array ||
+      v instanceof Uint16Array ||
+      v instanceof Uint32Array
+    ) {
+      return Array.from(v).slice(0, 256).toString(); // Limit size for caching
+    }
+
+    return v;
+  });
 };
 
 export const cacheGet = (key: any): any | undefined => {

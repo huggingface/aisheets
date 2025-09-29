@@ -5,8 +5,6 @@ import {
   type RequestHandler,
   useLocation,
 } from '@builder.io/qwik-city';
-import { cn } from '@qwik-ui/utils';
-import { useModals } from '~/components';
 import { Login } from '~/components/ui/login/Login';
 import { MobileBanner } from '~/components/ui/mobile/banner';
 import { Tips } from '~/components/ui/tips/tips';
@@ -31,7 +29,6 @@ export const onGet: RequestHandler = async (event: RequestEvent) => {
 
 export default component$(() => {
   const session = useSession();
-  const { isOpenExecutionSidebar } = useModals('executionSidebar');
   const location = useLocation();
   const { close } = useExecution();
 
@@ -46,11 +43,7 @@ export default component$(() => {
       <MobileBanner />
       <ExecutionSidebar />
       <div class="flex flex-col h-full w-full">
-        <div
-          class={cn('flex flex-col flex-1 transition-all duration-200 mr-0', {
-            'mr-[700px]': isOpenExecutionSidebar.value,
-          })}
-        >
+        <div class="flex flex-col flex-1 transition-all duration-200">
           <div class="sticky">
             <div class="flex flex-col gap-2">
               <div class="flex justify-between items-center w-full gap-1">

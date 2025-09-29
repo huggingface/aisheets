@@ -13,13 +13,13 @@ export const augmentDatasetJob = async ({
 }: {
   source: {
     repoId: string;
-    split?: 'train';
-    config?: 'default';
+    split?: string;
+    config?: string;
   };
   target: {
     repoId: string;
-    split?: 'train';
-    config?: 'default';
+    split?: string;
+    config?: string;
   };
   config: DatasetConfig;
   accessToken: string;

@@ -138,7 +138,7 @@ export const TableAddCellHeaderPlaceHolder = component$<{ column: Column }>(
                 ref={textAreaRef}
                 look="ghost"
                 class="h-[52px] min-h-[52px] max-h-28 overflow-hidden resize-none"
-                placeholder="Prompt to generate (e.g Translate in French)"
+                placeholder="Type your action (e.g. translate to French)"
                 bind:value={prompt}
                 onKeyDown$={(event) => {
                   if (

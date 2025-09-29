@@ -435,7 +435,7 @@ export const ExecutionForm = component$(() => {
           shouldDisable.value,
       })}
     >
-      <span>Instructions to generate cells</span>
+      <span>Type your action</span>
 
       <div class="relative h-full w-full">
         <div class="absolute h-full w-full flex flex-col">

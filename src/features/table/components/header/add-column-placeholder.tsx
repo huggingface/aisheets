@@ -1,13 +1,13 @@
-import {
-  $,
-  component$,
-  type QRL,
-  useComputed$,
-  useSignal,
-} from '@builder.io/qwik';
+import { $, component$, useComputed$, useSignal } from '@builder.io/qwik';
 import { cn } from '@qwik-ui/utils';
-import { LuChevronDown, LuEgg, LuLoader2 } from '@qwikest/icons/lucide';
-import { Button, buttonVariants, Popover, Textarea } from '~/components';
+import { LuEgg, LuLoader2 } from '@qwikest/icons/lucide';
+import {
+  Button,
+  buttonVariants,
+  Popover,
+  Select,
+  Textarea,
+} from '~/components';
 import { nextTick } from '~/components/hooks/tick';
 import { IAColumn } from '~/components/ui/logo/logo';
 import { useExecution } from '~/features/add-column/form';
@@ -15,51 +15,97 @@ import { useColumnsPreference } from '~/features/table/components/context/colunm
 
 import { type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
 
-const COLUMN_PROMPTS = {
-  extractKeywords: `Identify and extract the most salient keywords or key phrases representing the core topics from the provided text.
+type PromptsType = {
+  label: string;
+  prompt: string;
+  hide?: boolean;
+};
+
+type PromptsTypeWithKey = { key: string } & PromptsType;
+
+const TEXT_COLUMN_PROMPTS: Record<string, PromptsType> = {
+  extractKeywords: {
+    label: 'Extract keywords',
+    prompt: `Identify and extract the most salient keywords or key phrases representing the core topics from the provided text.
 
 Return these as a single, comma-separated string. Prioritize relevance and conciseness, avoiding common stop words.
 
 Text for keyword extraction: {{REPLACE_ME}}
 `,
+  },
 
-  summarize: `Condense the provided text, capturing its essential meaning and key points accurately and coherently.
+  summarize: {
+    label: 'Summarize',
+    prompt: `Condense the provided text, capturing its essential meaning and key points accurately and coherently.
 
 If the text is already very short, return it as is. Use your own words where possible (abstractive summary).
 
 Text to summarize: {{REPLACE_ME}}
 `,
+  },
 
-  textToImage: `Generate a detailed and visually rich image based on the provided text description.
+  textToImage: {
+    label: 'Generate image',
+    prompt: `Generate a detailed and visually rich image based on the provided text description.
 
 Ensure the image captures the essence of the text, including key elements, colors, and overall mood. 
 
 Description: {{REPLACE_ME}}`,
+  },
 
-  custom: `
+  custom: {
+    hide: true,
+    label: 'Custom',
+    prompt: `
 
 {{REPLACE_ME}}`,
-} as const;
+  },
+};
 
-type ColumnPromptType = keyof typeof COLUMN_PROMPTS;
+const IMAGE_COLUMN_PROMPTS: Record<string, PromptsType> = {
+  generate_image: {
+    label: 'Describe the image',
+    prompt: `Describe image based on the provided text description.
+
+
+Text from: {{REPLACE_ME}}
+`,
+  },
+};
+
+const ALL_COLUMN_PROMPTS = {
+  ...TEXT_COLUMN_PROMPTS,
+  ...IMAGE_COLUMN_PROMPTS,
+};
 
 export const TableAddCellHeaderPlaceHolder = component$<{ column: Column }>(
   ({ column }) => {
     const { open, close } = useExecution();
     const { columns } = useColumnsStore();
-    const isUsingTemplate = useSignal<boolean>();
     const prompt = useSignal<string>('');
     const { openAiPrompt, closeAiPrompt, closeAiColumn } =
       useColumnsPreference();
     const isGenerating = useSignal(false);
     const textAreaRef = useSignal<HTMLTextAreaElement>();
 
+    const promptTemplate = useComputed$<PromptsTypeWithKey[]>(() => {
+      let prompt = Object.entries(TEXT_COLUMN_PROMPTS);
+
+      if (column.type === 'image') {
+        prompt = Object.entries(IMAGE_COLUMN_PROMPTS);
+      }
+
+      return prompt.map(([key, value]) => ({
+        key,
+        ...value,
+      }));
+    });
+
     const isAnyColumnTemporal = useComputed$(() =>
       columns.value.some((c) => c.id === TEMPORAL_ID),
     );
 
     const cleanUp = $(() => {
-      isUsingTemplate.value = false;
       prompt.value = '';
       isGenerating.value = false;
     });
@@ -80,22 +126,23 @@ export const TableAddCellHeaderPlaceHolder = component$<{ column: Column }>(
       }, 300);
     });
 
-    const handleTemplate = $(async (promptType: ColumnPromptType) => {
-      const initialPrompt = COLUMN_PROMPTS[promptType].replace(
-        '{{REPLACE_ME}}',
-        `{{${column.name}}}`,
-      );
+    const handleTemplate = $(
+      async (promptTemplateSelected: PromptsTypeWithKey) => {
+        const initialPrompt = ALL_COLUMN_PROMPTS[
+          promptTemplateSelected.key
+        ].prompt.replace('{{REPLACE_ME}}', `{{${column.name}}}`);
 
-      await onCreateColumn(
-        promptType === 'textToImage' ? 'image' : 'text',
-        initialPrompt,
-      );
-    });
+        await onCreateColumn(
+          promptTemplateSelected.key === 'textToImage' ? 'image' : 'text',
+          initialPrompt,
+        );
+      },
+    );
 
     const handleNewColumn = $(async () => {
       if (!prompt.value.trim()) return;
 
-      prompt.value += COLUMN_PROMPTS['custom'].replace(
+      prompt.value += TEXT_COLUMN_PROMPTS['custom'].prompt.replace(
         '{{REPLACE_ME}}',
         `{{${column.name}}}`,
       );
@@ -168,27 +215,35 @@ export const TableAddCellHeaderPlaceHolder = component$<{ column: Column }>(
               <hr class="border-t border-[0.5px] border-neutral-300" />
 
               <div
-                class="flex items-center justify-between px-3 pb-2"
+                class="flex items-center justify-between pb-2"
                 stoppropagation:mousedown
               >
-                <Button
-                  look="ghost"
-                  class="w-fit flex gap-1 items-center justify-between text-neutral-700"
-                  onClick$={() => {
-                    isUsingTemplate.value = !isUsingTemplate.value;
-                  }}
-                  aria-expanded={isUsingTemplate.value}
-                  aria-controls="template-options"
-                  preventdefault:mousedown
-                  stoppropagation:mousedown
-                >
-                  Use Template
-                  <LuChevronDown />
-                </Button>
+                <Select.Root class="w-44">
+                  <Select.Trigger
+                    look="ghost"
+                    class="w-fit text-neutral-700"
+                    preventdefault:mousedown
+                    stoppropagation:mousedown
+                  >
+                    Use Template
+                  </Select.Trigger>
+                  <Select.Popover gutter={10} floating="bottom-start">
+                    {promptTemplate.value
+                      .filter((p) => !p.hide)
+                      .map((prompt) => (
+                        <Select.Item
+                          key={prompt.label}
+                          onClick$={() => handleTemplate(prompt)}
+                        >
+                          <Select.ItemLabel>{prompt.label}</Select.ItemLabel>
+                        </Select.Item>
+                      ))}
+                  </Select.Popover>
+                </Select.Root>
 
                 <Button
                   look="primary"
-                  class="p-2 w-[30px] h-[30px] rounded-full flex items-center justify-center"
+                  class="mr-3 p-2 w-[30px] h-[30px] rounded-full flex items-center justify-center"
                   onClick$={handleNewColumn}
                   disabled={isGenerating.value || !prompt.value.trim()}
                 >
@@ -200,45 +255,9 @@ export const TableAddCellHeaderPlaceHolder = component$<{ column: Column }>(
                 </Button>
               </div>
             </div>
-
-            {isUsingTemplate.value && (
-              <div class="flex flex-col">
-                <hr class="border-t border-slate-200 dark:border-slate-700" />
-                <ActionButton
-                  label="Extract keywords"
-                  onClick$={() => handleTemplate('extractKeywords')}
-                />
-                <hr class="border-t border-slate-200 dark:border-slate-700" />
-                <ActionButton
-                  label="Summarize"
-                  onClick$={() => handleTemplate('summarize')}
-                />
-                <hr class="border-t border-slate-200 dark:border-slate-700" />
-                <ActionButton
-                  label="Generate image"
-                  onClick$={() => handleTemplate('textToImage')}
-                />
-              </div>
-            )}
           </div>
         </Popover.Panel>
       </Popover.Root>
     );
   },
 );
-
-export const ActionButton = component$<{
-  label: string;
-  onClick$: QRL<(event: PointerEvent, element: HTMLButtonElement) => any>;
-}>(({ label, onClick$ }) => {
-  return (
-    <Button
-      look="ghost"
-      class="flex items-center justify-start w-full gap-2.5 p-2 px-3 hover:bg-neutral-100 rounded-none last:rounded-bl-md last:rounded-br-md text-neutral-700"
-      onClick$={onClick$}
-      stoppropagation:mousedown
-    >
-      {label}
-    </Button>
-  );
-});

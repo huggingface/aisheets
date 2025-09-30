@@ -26,6 +26,7 @@ import yaml
 from PIL.Image import Image
 from datasets import load_dataset, Value, Features, Dataset, IterableDataset
 from huggingface_hub import InferenceClient
+from huggingface_hub.errors import HfHubHTTPError
 from rich import print as rprint
 from rich.console import Console
 from rich.panel import Panel
@@ -105,44 +106,61 @@ def _get_client_for_node(
     )
 
 
-@contextmanager
-def retries(max_retries: int = 10, delay: float = 1.0):
-    attempt = 0
-    delay = delay * (2 ** attempt) + random.uniform(0, delay)
+def retries(max_retries: int = 5, delay: float = 2.0):
+    def decorator(func):
+        def retrier(*args, **kwargs):
+            attempt = 0
+            while attempt < max_retries:
+                try:
+                    result = func(*args, **kwargs)
+                    rprint(f"[green]Request succeeded after {attempt} retries.[/]")
+                    return result
+                except HfHubHTTPError as http_error:
+                    response = http_error.response
 
-    while True:
-        try:
-            time.sleep(delay)
-            yield
-            rprint(f"[green]Request succeeded after {attempt} retries.[/]")
-            break
-        except BaseException as e:
-            attempt += 1
+                    if response is None or response.status_code  in {429, 503, 502, 504, 500}:
+                        attempt += 1
+                        delay_ = (delay ** attempt) + random.uniform(0, delay)
+                        rprint(
+                            f"[yellow]Retriable error occurred: {http_error}. "
+                            f"\nRetrying in {delay_:.1f} seconds...(attempt {attempt}/{max_retries})"
+                        )
+                        time.sleep(delay_)
+                    else:
+                        rprint(
+                            f"[red]HTTP error occurred: {http_error}. "
+                            "\nSkipping request[/]"
+                        )
+                        return None
 
-            if attempt > max_retries:
-                rprint(f"[red]Request failed after {attempt} retries.[/]")
-                return None
 
-            delay = delay * (2 ** attempt) + random.uniform(0, delay)
-            rprint(
-                f"[yellow]Error occurred: {e}. Retrying in {delay:.2f} seconds "
-                f"(attempt {attempt}/{max_retries})"
-            )
+
+                except BaseException as e:
+                    rprint(
+                        f"[yellow]Unexpected error occurred: {e}. "
+                        "\nSkipping this request.[/]"
+                    )
+                    return None
+
+            rprint(f"[red]Request failed after {attempt} retries.[/]")
+            return None
+
+        return retrier
+
+    return decorator
 
 
 def text_generation_task(
     client: InferenceClient,
     row: dict,
     prompt_template: str,
-    request_delay: float,
 ) -> str:
     """Generate completion using the specified model."""
     prompt = prepare_prompt(prompt_template, row)
     messages = [{"role": "user", "content": prompt}]
 
-    with retries(delay=request_delay):
-        completion = client.chat.completions.create(messages=messages)
-        return completion.choices[0].message.content
+    completion = client.chat.completions.create(messages=messages)
+    return completion.choices[0].message.content
 
 
 def image_data_to_data_uri(image: Image) -> str:
@@ -171,7 +189,6 @@ def image_text_generation_task(
     prompt_template: str,
     image_column: str,
     row: dict,
-    request_delay: float,
 ) -> str:
     """Generate completion using the specified model."""
     prompt = prepare_prompt(prompt_template, row)
@@ -189,24 +206,20 @@ def image_text_generation_task(
         }
     ]
 
-    with retries(delay=request_delay):
-        completion = client.chat.completions.create(messages=messages)
-        return completion.choices[0].message.content
+    completion = client.chat.completions.create(messages=messages)
+    return completion.choices[0].message.content
 
 
 def text_to_image_generation_task(
     client: InferenceClient,
     instruction: str,
     row: dict,
-    request_delay: float,
 ) -> Image:
     """Generate image using the specified model."""
     prompt = prepare_prompt(instruction, row)
 
-    with retries(delay=request_delay):
-        generation = client.text_to_image(prompt)
-
-        return generation
+    generation = client.text_to_image(prompt)
+    return generation
 
 
 def load_processor_config(
@@ -447,8 +460,8 @@ def map_function(
         )
 
     with concurrent.futures.ThreadPoolExecutor(
-        max_workers=processor_config.max_workers,
-        thread_name_prefix='batch-inference',
+            max_workers=processor_config.max_workers,
+            thread_name_prefix='batch-inference',
     ) as executor:
         rprint(f"[blue]Processing {len(rows)} rows for column '{column_name}' using task '{task}'...[/]")
 
@@ -456,10 +469,9 @@ def map_function(
         for row in rows:
             futures.append(
                 executor.submit(
-                    generation_task,
+                    retries(delay=processor_config.request_delay)(generation_task),
                     client=client,
                     row=row,
-                    request_delay=processor_config.request_delay,
                 )
             )
 

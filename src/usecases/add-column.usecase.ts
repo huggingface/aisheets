@@ -1,5 +1,5 @@
 import { type RequestEventBase, server$ } from '@builder.io/qwik-city';
-import { createColumn, updateCell } from '~/services';
+import { createColumn, updateCell, updateColumn } from '~/services';
 import {
   type Cell,
   type Column,
@@ -45,10 +45,11 @@ export const useAddColumnUseCase = () =>
       process: column.process!,
       session,
     })) {
-      this.signal.onabort = () => {
+      this.signal.onabort = async () => {
         cell.generating = false;
 
-        updateCell(cell);
+        await updateCell(cell);
+        await updateColumn(column);
       };
 
       yield { cell };

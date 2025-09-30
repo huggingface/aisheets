@@ -54,7 +54,7 @@ export const TableCellHeader = component$<{ column: Column }>(({ column }) => {
       onMouseLeave$={() => hideAiButton(column.id)}
     >
       <Popover.Root flip={false} gutter={8} floating="bottom">
-        <Popover.Trigger class="flex items-center justify-between w-full h-[20px] py-[10px]">
+        <Popover.Trigger class="flex items-center justify-between w-full h-[20px] py-[10px] group">
           <div class="flex flex-col items-start text-wrap w-full">
             <span
               class={cn(buttonVariants({ look: 'ghost' }), 'text-neutral-600')}
@@ -66,13 +66,17 @@ export const TableCellHeader = component$<{ column: Column }>(({ column }) => {
               {visibleColumnType.value}
             </p>
           </div>
+          <div
+            class={cn('flex items-center gap-1 w-fit h-fit pr-0 opacity-0', {
+              'group-hover:opacity-100': column.kind === 'dynamic',
+            })}
+          >
+            <CellSettings column={column} />
+          </div>
         </Popover.Trigger>
         <Popover.Panel>
           <div class="flex flex-col gap-0.5 font-normal">
             <ColumnNameEdition column={column} />
-            <div class="rounded-sm hover:bg-neutral-100 transition-colors mt-2">
-              <CellSettings column={column}>Edit configuration</CellSettings>
-            </div>
             <div class="rounded-sm hover:bg-neutral-100 transition-colors">
               <HideColumn column={column} />
             </div>

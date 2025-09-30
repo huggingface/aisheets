@@ -1,10 +1,10 @@
 import { $, component$, Slot } from '@builder.io/qwik';
-import { LuSettings2 } from '@qwikest/icons/lucide';
+import { LuPanelRight } from '@qwikest/icons/lucide';
 import { useExecution } from '~/features/add-column';
 import { type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
 
 export const CellSettings = component$<{ column: Column }>(({ column }) => {
-  const { columnId, open, close } = useExecution();
+  const { columnId, open } = useExecution();
   const { removeTemporalColumn } = useColumnsStore();
 
   const editCell = $(async () => {
@@ -32,7 +32,7 @@ export const CellSettings = component$<{ column: Column }>(({ column }) => {
       preventdefault:click
       stoppropagation:click
     >
-      <LuSettings2 class="text-sm text-neutral" />
+      <LuPanelRight class="text-sm text-neutral" />
       <Slot />
     </div>
   );

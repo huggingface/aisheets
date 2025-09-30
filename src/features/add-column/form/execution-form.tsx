@@ -43,7 +43,6 @@ import {
   type CreateColumn,
   TEMPORAL_ID,
   useColumnsStore,
-  useDatasetsStore,
 } from '~/state';
 
 interface SidebarProps {
@@ -202,9 +201,25 @@ export const ExecutionForm = component$<SidebarProps>(
     const { initialProcess, mode, close } = useExecution();
     const { firstColumn, columns, removeTemporalColumn, updateColumn } =
       useColumnsStore();
-    const { activeDataset } = useDatasetsStore();
-
     const allModels = useContext<Model[]>(modelsContext);
+    const datasetSize = useComputed$(() =>
+      Math.max(
+        ...columns.value
+          .filter((c) => !!c.numberOfCells)
+          .map((c) => c.numberOfCells!),
+      ),
+    );
+    const remainingCells = useComputed$(() => {
+      if (!column.process?.processedCells) return datasetSize.value;
+
+      const remaining =
+        datasetSize.value -
+        Math.min(column.process?.processedCells, datasetSize.value);
+
+      if (remaining <= 1) return 1;
+
+      return remaining;
+    });
 
     const {
       DEFAULT_MODEL,
@@ -215,7 +230,6 @@ export const ExecutionForm = component$<SidebarProps>(
     } = useContext(configContext);
 
     const models = useComputed$(() => {
-      console.log(allModels.filter((p) => !!p.picture));
       return new Models(allModels).getModelsByType(
         column.type as SupportedType,
       );
@@ -489,11 +503,7 @@ export const ExecutionForm = component$<SidebarProps>(
                       column.process?.processedCells && (
                         <div class="p-[2px] rounded-[6px] bg-gradient-to-b from-[#4057BF] to-[#6B86FF] w-16 h-8">
                           <div class="rounded-[4px] bg-white w-full h-full flex items-center justify-center">
-                            {activeDataset.value.size -
-                              Math.min(
-                                column.process?.processedCells,
-                                activeDataset.value.size,
-                              )}
+                            {remainingCells.value}
                           </div>
                         </div>
                       )}

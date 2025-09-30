@@ -50,7 +50,7 @@ export const TableCellHeader = component$<{ column: Column }>(({ column }) => {
           columnPreferences.value[column.id]?.aiPromptOpen,
       })}
       onMouseOver$={() => showAiButton(column.id)}
-      onMouseOut$={() => hideAiButton(column.id)}
+      onMouseLeave$={() => hideAiButton(column.id)}
     >
       <Popover.Root flip={false} gutter={8} floating="bottom">
         <Popover.Trigger class="flex items-center justify-between w-full h-[20px] py-[10px]">

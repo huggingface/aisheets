@@ -17,17 +17,27 @@ interface Pref {
   aiPromptOpen?: boolean;
 }
 
+interface ColumnPreferenceContext {
+  preferences: Signal<Record<Column['id'], Pref>>;
+  hideTimeouts: Signal<Record<string, number>>;
+}
+
 const columnPreferenceContext =
-  createContextId<Signal<Record<Column['id'], Pref>>>('column-ui.context');
+  createContextId<ColumnPreferenceContext>('column-ui.context');
 
 export const ColumnPreferencesProvider = component$(() => {
-  useContextProvider(columnPreferenceContext, useSignal({}));
+  useContextProvider(columnPreferenceContext, {
+    preferences: useSignal({}),
+    hideTimeouts: useSignal({}),
+  });
 
   return <Slot />;
 });
 
 export const useColumnsPreference = () => {
-  const columnPreferences = useContext(columnPreferenceContext);
+  const context = useContext(columnPreferenceContext);
+  const columnPreferences = context.preferences;
+  const hideTimeouts = context.hideTimeouts;
 
   return {
     columnPreferences,
@@ -50,6 +60,13 @@ export const useColumnsPreference = () => {
         return;
       }
 
+      if (hideTimeouts.value[columnId]) {
+        clearTimeout(hideTimeouts.value[columnId]);
+        const newTimeouts = { ...hideTimeouts.value };
+        delete newTimeouts[columnId];
+        hideTimeouts.value = newTimeouts;
+      }
+
       columnPreferences.value = {
         ...columnPreferences.value,
         [columnId]: {
@@ -67,12 +84,27 @@ export const useColumnsPreference = () => {
         return;
       }
 
-      columnPreferences.value = {
-        ...columnPreferences.value,
-        [columnId]: {
-          ...columnPreferences.value[columnId],
-          aiButtonVisible: false,
-        },
+      if (hideTimeouts.value[columnId]) {
+        clearTimeout(hideTimeouts.value[columnId]);
+      }
+
+      const timeoutId = window.setTimeout(() => {
+        columnPreferences.value = {
+          ...columnPreferences.value,
+          [columnId]: {
+            ...columnPreferences.value[columnId],
+            aiButtonVisible: false,
+          },
+        };
+
+        const newTimeouts = { ...hideTimeouts.value };
+        delete newTimeouts[columnId];
+        hideTimeouts.value = newTimeouts;
+      }, 100);
+
+      hideTimeouts.value = {
+        ...hideTimeouts.value,
+        [columnId]: timeoutId as unknown as number,
       };
     }),
     openAiColumn: $((columnId: string) => {

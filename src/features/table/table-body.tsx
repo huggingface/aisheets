@@ -381,7 +381,7 @@ export const TableBody = component$(() => {
                       width: `${columnPreferences.value[cell.column!.id]?.width || 326}px`,
                     }}
                     onMouseOver$={() => showAiButton(cell.column!.id)}
-                    onMouseOut$={() => hideAiButton(cell.column!.id)}
+                    onMouseLeave$={() => hideAiButton(cell.column!.id)}
                   >
                     <div
                       onMouseUp$={handleMouseUp$}

@@ -118,8 +118,10 @@ def retries(max_retries: int = 10, delay: float = 1.0):
             break
         except BaseException as e:
             attempt += 1
+
             if attempt > max_retries:
-                raise StopIteration("Max retries exceeded") from e
+                rprint(f"[red]Request failed after {attempt} retries.[/]")
+                return None
 
             delay = delay * (2 ** attempt) + random.uniform(0, delay)
             rprint(

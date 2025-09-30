@@ -80,7 +80,7 @@ export type Cell = {
 export interface Column {
   id: string;
   name: string;
-  type: 'text' | 'image' | 'unknown';
+  type: 'text' | 'image' | 'image[]' | 'unknown';
   kind: ColumnKind;
   visible: boolean;
   process?: Process | undefined;

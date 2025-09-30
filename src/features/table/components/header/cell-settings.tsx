@@ -24,7 +24,7 @@ export const CellSettings = component$<{ column: Column }>(({ column }) => {
 
   return (
     <div
-      class="p-2 cursor-pointer flex flex-row gap-1 items-center hover:bg-neutral-100 rounded-full"
+      class="px-2 py-1 cursor-pointer flex flex-row gap-1 items-center rounded-[3px] border border-[#E5E7EB] hover:bg-neutral-200 bg-white"
       onClick$={editCell}
       role="button"
       tabIndex={0}

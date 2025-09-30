@@ -48,6 +48,7 @@ export const TableCellHeader = component$<{ column: Column }>(({ column }) => {
         'bg-blue-50': column.id == columnId.value,
         'shadow-[inset_2px_0_0_theme(colors.primary.400),inset_-2px_0_0_theme(colors.primary.400)]':
           columnPreferences.value[column.id]?.aiPromptOpen,
+        'bg-primary-50': column.kind === 'dynamic',
       })}
       onMouseOver$={() => showAiButton(column.id)}
       onMouseLeave$={() => hideAiButton(column.id)}

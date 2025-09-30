@@ -292,6 +292,7 @@ export const TableIndexTableHeader = component$<{
   index: number;
   draggedColId: Signal<string | null>;
 }>(({ column, index, draggedColId }) => {
+  const { columnId } = useExecution();
   const popoverId = `ai-column-${column.id}-popover`;
   const anchorRef = useSignal<HTMLElement | undefined>();
   const { showPopover, hidePopover } = usePopover(popoverId);
@@ -328,8 +329,9 @@ export const TableIndexTableHeader = component$<{
 
   useVisibleTask$(({ track }) => {
     track(aiButtonVisible);
+    track(columnId);
 
-    if (aiButtonVisible.value) {
+    if (aiButtonVisible.value && !columnId.value) {
       showPopover();
     } else {
       hidePopover();

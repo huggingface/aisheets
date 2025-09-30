@@ -82,7 +82,7 @@ def _get_dataset_size(repo_id: str, split: str, subset: str | None = None) -> in
     info = builder.info
 
     # Get the number of examples in the specified split
-    if hasattr(info, 'splits') and split in info.splits:
+    if hasattr(info, 'splits') and info.splits and split in info.splits:
         return info.splits[split].num_examples
     else:
         # Fallback if split info is not available

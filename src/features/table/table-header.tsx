@@ -365,7 +365,7 @@ export const TableIndexTableHeader = component$<{
         {indexToAlphanumeric(index + 1)}
       </div>
       <Popover.Panel
-        class="p-0"
+        class="p-0 bg-transparent"
         preventdefault:mousedown
         stoppropagation:mousedown
         onToggle$={(e) => {

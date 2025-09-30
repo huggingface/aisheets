@@ -212,7 +212,7 @@ export const TableAddCellHeaderPlaceHolder = component$<{ column: Column }>(
                 stoppropagation:mousedown
               />
 
-              <hr class="border-t border-[0.5px] border-neutral-300" />
+              <hr />
 
               <div
                 class="flex items-center justify-between pb-2"

@@ -169,6 +169,22 @@ class GroupedModels {
         id: 'black-forest-labs/FLUX.1-schnell',
         tags: [this.tags.LIGHT, this.tags.EXPERIMENTATION],
       },
+      {
+        id: 'black-forest-labs/FLUX.1-schnell',
+        tags: [this.tags.LIGHT, this.tags.EXPERIMENTATION],
+      },
+      {
+        id: 'Qwen/Qwen2.5-VL-7B-Instruct',
+        tags: [this.tags.LIGHT, this.tags.EXPERIMENTATION],
+      },
+      {
+        id: 'google/gemma-3-27b-it',
+        tags: [this.tags.EXPERIMENTATION],
+      },
+      {
+        id: 'Qwen/Qwen3-VL-235B-A22B-Thinking',
+        tags: [this.tags.REASONING],
+      },
     ];
   }
 
@@ -503,11 +519,52 @@ export const ExecutionForm = component$<SidebarProps>(
           <div class="absolute h-full w-full flex flex-col">
             <div class="flex flex-col gap-2 px-8 bg-neutral-100 w-full">
               <div class="relative">
-                <div class="h-72 min-h-72 max-h-72 bg-white border border-secondary-foreground rounded-sm">
+                <div class="h-72 min-h-72 max-h-72 bg-white border border-secondary-foreground rounded-sm relative">
+                  {/* Image column dropdown positioned at top-left inside textarea */}
+                  {needsImageColumn.value && imageColumns.value.length > 0 && (
+                    <div class="absolute top-2 left-2 z-10 w-48">
+                      <Select.Root
+                        bind:value={selectedImageColumn}
+                        class="h-[30px]"
+                      >
+                        <Select.Trigger class="bg-white/90 backdrop-blur-sm rounded-base border-neutral-300-foreground h-[30px] flex items-center px-[10px] py-[8px] shadow-sm">
+                          <div class="flex text-xs items-center justify-between gap-2 font-mono w-full">
+                            <div class="flex items-center gap-2">
+                              <LuImage class="h-4 w-4 text-neutral-500" />
+                              <Select.DisplayValue />
+                            </div>
+                          </div>
+                        </Select.Trigger>
+                        <Select.Popover class="border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto mt-1 min-w-[200px]">
+                          {imageColumns.value.map((imageColumn) => (
+                            <Select.Item
+                              key={imageColumn.id}
+                              value={imageColumn.id}
+                              class="text-foreground hover:bg-accent"
+                            >
+                              <div class="flex text-xs items-center p-1 gap-2 font-mono">
+                                <Select.ItemLabel>
+                                  {imageColumn.name}
+                                </Select.ItemLabel>
+                                {imageColumn.id ===
+                                  selectedImageColumn.value && (
+                                  <LuCheck class="h-4 w4 text-primary-500 absolute right-2 top-1/2 -translate-y-1/2" />
+                                )}
+                              </div>
+                            </Select.Item>
+                          ))}
+                        </Select.Popover>
+                      </Select.Root>
+                    </div>
+                  )}
+
                   <TemplateTextArea
                     bind:value={prompt}
                     variables={variables}
                     onSelectedVariables={onSelectedVariables}
+                    hasImageDropdown={
+                      needsImageColumn.value && imageColumns.value.length > 0
+                    }
                   />
                 </div>
 
@@ -533,45 +590,6 @@ export const ExecutionForm = component$<SidebarProps>(
                     ) : (
                       <div class="flex items-center gap-2 text-neutral-500" />
                     )}
-
-                    {/* Image column dropdown moved here */}
-                    {needsImageColumn.value &&
-                      imageColumns.value.length > 0 && (
-                        <div class="w-48">
-                          <Select.Root
-                            bind:value={selectedImageColumn}
-                            class="h-[30px]"
-                          >
-                            <Select.Trigger class="bg-white rounded-base border-neutral-300-foreground h-[30px] flex items-center px-[10px] py-[8px]">
-                              <div class="flex text-xs items-center justify-between gap-2 font-mono w-full">
-                                <div class="flex items-center gap-2">
-                                  <LuImage class="h-4 w-4 text-neutral-500" />
-                                  <Select.DisplayValue />
-                                </div>
-                              </div>
-                            </Select.Trigger>
-                            <Select.Popover class="border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto mt-1 min-w-[200px]">
-                              {imageColumns.value.map((imageColumn) => (
-                                <Select.Item
-                                  key={imageColumn.id}
-                                  value={imageColumn.id}
-                                  class="text-foreground hover:bg-accent"
-                                >
-                                  <div class="flex text-xs items-center p-1 gap-2 font-mono">
-                                    <Select.ItemLabel>
-                                      {imageColumn.name}
-                                    </Select.ItemLabel>
-                                    {imageColumn.id ===
-                                      selectedImageColumn.value && (
-                                      <LuCheck class="h-4 w4 text-primary-500 absolute right-2 top-1/2 -translate-y-1/2" />
-                                    )}
-                                  </div>
-                                </Select.Item>
-                              ))}
-                            </Select.Popover>
-                          </Select.Root>
-                        </div>
-                      )}
                   </div>
 
                   {column.process?.isExecuting && (

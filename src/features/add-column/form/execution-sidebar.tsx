@@ -21,7 +21,7 @@ export const ExecutionSidebar = component$(() => {
     >
       <div class="flex flex-col h-full">
         <div class="flex items-center justify-between p-4">
-          <h2 class="text-lg font-semibold">Column {column.value?.name}</h2>
+          <h2 class="text-lg font-semibold">{column.value?.name}</h2>
 
           <Button
             look="ghost"

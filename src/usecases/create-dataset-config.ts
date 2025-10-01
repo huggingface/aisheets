@@ -44,7 +44,7 @@ export async function generateDatasetConfig(
 
     columnConfigs[column.name] = {
       ...columnData,
-
+      type: column.type,
       prompt: await promptTemplateForColumn(column),
       instruction: column.process.prompt,
 

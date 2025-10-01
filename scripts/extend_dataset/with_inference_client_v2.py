@@ -16,15 +16,15 @@ import os
 import random
 import time
 from collections import defaultdict
-from contextlib import contextmanager
 from functools import partial
-from typing import Tuple
+from typing import Tuple, Any
 
 import requests
 import typer
 import yaml
+import PIL
 from PIL.Image import Image
-from datasets import load_dataset, Value, Features, Dataset, IterableDataset
+from datasets import load_dataset, Value, Features, IterableDataset, Image as DatasetsImage
 from huggingface_hub import InferenceClient
 from huggingface_hub.errors import HfHubHTTPError
 from rich import print as rprint
@@ -106,7 +106,7 @@ def _get_client_for_node(
     )
 
 
-def retries(max_retries: int = 5, delay: float = 2.0):
+def retries(max_retries: int = 5, delay: float = 2.0, error_value: Any = None):
     def decorator(func):
         def retrier(*args, **kwargs):
             attempt = 0
@@ -118,7 +118,7 @@ def retries(max_retries: int = 5, delay: float = 2.0):
                 except HfHubHTTPError as http_error:
                     response = http_error.response
 
-                    if response is None or response.status_code  in {429, 503, 502, 504, 500}:
+                    if response is None or response.status_code in {429, 503, 502, 504, 500}:
                         attempt += 1
                         delay_ = (delay ** attempt) + random.uniform(0, delay)
                         rprint(
@@ -131,19 +131,17 @@ def retries(max_retries: int = 5, delay: float = 2.0):
                             f"[red]HTTP error occurred: {http_error}. "
                             "\nSkipping request[/]"
                         )
-                        return None
-
-
+                        return error_value
 
                 except BaseException as e:
                     rprint(
                         f"[yellow]Unexpected error occurred: {e}. "
                         "\nSkipping this request.[/]"
                     )
-                    return None
+                    return error_value
 
             rprint(f"[red]Request failed after {attempt} retries.[/]")
-            return None
+            return error_value
 
         return retrier
 
@@ -400,6 +398,24 @@ def process_column(
 ) -> IterableDataset:
     column_config = processor_config.columns[column_name]
 
+    column_task = column_config["task"]
+    column_type = column_config.get("type")
+
+    if column_type is None:
+        if column_task == "text-to-image":
+            column_type = "image"
+        else:
+            column_type = "string"
+
+    rprint(f"[blue]Processing column '{column_name}' with task '{column_task}' and type '{column_type}'...[/]")
+
+    if column_type == "image":
+        column_type = DatasetsImage()
+    else:
+        column_type = Value("string")
+
+    ds_features = Features({**dataset.features, column_name: column_type})
+
     return dataset.map(
         map_function,
         fn_kwargs={
@@ -409,10 +425,7 @@ def process_column(
         },
         batched=True,
         batch_size=processor_config.batch_size,  # Adjust batch size as needed
-        features=Features({
-            **dataset.features,
-            column_name: Value(column_config.get("dtype", "string")),  # Ensure the new column is of type string
-        }),
+        features=ds_features,
     )
 
 
@@ -443,10 +456,13 @@ def map_function(
     )
 
     generation_task = None
+    error_value = None
     if task == "text-generation":
         generation_task = partial(
             text_generation_task,
-            prompt_template=column_config["prompt"])
+            prompt_template=column_config["prompt"]
+        )
+
     elif task == "image-text-to-text":
         generation_task = partial(
             image_text_generation_task,
@@ -458,6 +474,12 @@ def map_function(
             text_to_image_generation_task,
             instruction=column_config["instruction"],
         )
+        error_value = PIL.Image.new('RGB', (64, 64), color = 'red')  # Placeholder image on error
+
+    generation_task = retries(
+        delay=processor_config.request_delay,
+        error_value=error_value,
+    )(generation_task)
 
     with concurrent.futures.ThreadPoolExecutor(
             max_workers=processor_config.max_workers,
@@ -467,13 +489,7 @@ def map_function(
 
         futures = []
         for row in rows:
-            futures.append(
-                executor.submit(
-                    retries(delay=processor_config.request_delay)(generation_task),
-                    client=client,
-                    row=row,
-                )
-            )
+            futures.append(executor.submit(generation_task, client=client,row=row))
 
         # Wait until all are finished
         concurrent.futures.wait(futures)

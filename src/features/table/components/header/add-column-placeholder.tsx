@@ -157,7 +157,7 @@ export const TableAddCellHeaderPlaceHolder = component$<{ column: Column }>(
         <Popover.Trigger
           class={cn(
             buttonVariants({ look: 'ghost' }),
-            'w-8 h-8 rounded-md bg-primary-300',
+            'w-6 h-6 rounded-[6px] bg-primary-300',
           )}
           preventdefault:mousedown
           stoppropagation:mousedown

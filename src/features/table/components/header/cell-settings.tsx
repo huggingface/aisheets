@@ -1,4 +1,4 @@
-import { $, component$, Slot } from '@builder.io/qwik';
+import { $, component$ } from '@builder.io/qwik';
 import { LuPanelRight } from '@qwikest/icons/lucide';
 import { useExecution } from '~/features/add-column';
 import { type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
@@ -24,7 +24,7 @@ export const CellSettings = component$<{ column: Column }>(({ column }) => {
 
   return (
     <div
-      class="px-2 py-1 cursor-pointer flex flex-row gap-1 items-center rounded-[3px] border border-[#E5E7EB] hover:bg-neutral-200 bg-white"
+      class="p-[3px] cursor-pointer rounded-[3px] border border-[#E5E7EB] bg-white"
       onClick$={editCell}
       role="button"
       tabIndex={0}
@@ -32,8 +32,9 @@ export const CellSettings = component$<{ column: Column }>(({ column }) => {
       preventdefault:click
       stoppropagation:click
     >
-      <LuPanelRight class="text-sm text-neutral" />
-      <Slot />
+      <div class="px-2 py-1 hover:bg-neutral-200 rounded-[1px]">
+        <LuPanelRight class="text-sm text-neutral" />
+      </div>
     </div>
   );
 });

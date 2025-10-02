@@ -15,7 +15,7 @@ import {
   LuEgg,
   LuGlobe,
   LuImage,
-  LuStopCircle,
+  LuSquare,
   LuX,
 } from '@qwikest/icons/lucide';
 
@@ -27,6 +27,7 @@ import {
   ModelImage,
   Provider,
 } from '~/components/ui/logo/logo';
+import { Tooltip } from '~/components/ui/tooltip/tooltip';
 
 import {
   TemplateTextArea,
@@ -238,6 +239,18 @@ export const ExecutionForm = component$<SidebarProps>(
       useColumnsStore();
 
     const allModels = useModelsContext();
+    const datasetSize = useComputed$(() =>
+      Math.max(
+        ...columns.value
+          .filter((c) => !!c.numberOfCells)
+          .map((c) => c.numberOfCells!),
+      ),
+    );
+    const remainingCells = useComputed$(() => {
+      if (!column.process?.processedCells) return datasetSize.value;
+
+      return datasetSize.value - column.process?.processedCells;
+    });
 
     const { DEFAULT_MODEL, DEFAULT_MODEL_PROVIDER } = useConfigContext();
 
@@ -569,62 +582,84 @@ export const ExecutionForm = component$<SidebarProps>(
                 </div>
 
                 <div class="w-full absolute bottom-0 p-4 flex flex-row items-center justify-between cursor-text">
-                  <div class="flex items-center gap-3">
-                    {isSearchOnWebAvailable.value ? (
-                      <Button
-                        look="secondary"
-                        class={cn(
-                          'flex px-[10px] py-[8px] gap-[10px] bg-white text-neutral-600 hover:bg-neutral-100 h-[30px] rounded-[8px]',
-                          {
-                            'border-primary-100 outline-primary-100 bg-primary-50 hover:bg-primary-50 text-primary-500 hover:text-primary-400':
-                              searchOnWeb.value,
-                          },
-                        )}
-                        onClick$={() => {
-                          searchOnWeb.value = !searchOnWeb.value;
-                        }}
-                      >
-                        <LuGlobe class="text-lg" />
-                        Search the web
-                      </Button>
-                    ) : (
-                      <div class="flex items-center gap-2 text-neutral-500" />
-                    )}
-                  </div>
-
-                  {column.process?.isExecuting && (
-                    <div class="h-4 w-4 animate-spin rounded-full border-2 border-primary-100 border-t-transparent" />
-                  )}
-                  {column.process?.isExecuting ? (
+                  {isSearchOnWebAvailable.value ? (
                     <Button
-                      look="primary"
-                      class="w-[30px] h-[30px] rounded-full flex items-center justify-center p-0"
-                      onClick$={onStop}
-                      disabled={
-                        (column.process?.isExecuting &&
-                          column.id === TEMPORAL_ID) ||
-                        !prompt.value.trim()
-                      }
+                      look="secondary"
+                      class={cn(
+                        'flex px-[10px] py-[8px] gap-[10px] bg-white text-neutral-600 hover:bg-neutral-100 h-[30px] rounded-[8px]',
+                        {
+                          'border-primary-100 outline-primary-100 bg-primary-50 hover:bg-primary-50 text-primary-500 hover:text-primary-400':
+                            searchOnWeb.value,
+                        },
+                      )}
+                      onClick$={() => {
+                        searchOnWeb.value = !searchOnWeb.value;
+                      }}
+                      disabled={column.process?.isExecuting}
                     >
-                      <LuStopCircle class="text-lg" />
+                      <LuGlobe class="text-lg" />
+                      Search the web
                     </Button>
                   ) : (
-                    <Button
-                      look="primary"
-                      class="w-[30px] h-[30px] rounded-full flex items-center justify-center p-0"
-                      onClick$={onGenerate}
-                      disabled={
-                        selectedModelId.value === '' ||
-                        selectedProvider.value === '' ||
-                        !prompt.value.trim()
-                      }
-                    >
-                      <LuEgg class="text-lg" />
-                    </Button>
+                    <div class="flex items-center gap-2 text-neutral-500" />
                   )}
+                  <div class="flex items-center gap-4">
+                    {!column.process?.isExecuting &&
+                      column.cells.some((c) => c.error) && (
+                        <div class="p-[1.5px] rounded-[6px] bg-red-500 w-16 h-8">
+                          <div class="rounded-[4px] bg-white w-full h-full flex items-center justify-center text-red-500">
+                            {column.cells.filter((c) => c.error).length}
+                          </div>
+                        </div>
+                      )}
+
+                    {column.process?.isExecuting &&
+                      column.process?.processedCells && (
+                        <div class="p-[2px] rounded-[6px] bg-gradient-to-b from-[#4057BF] to-[#6B86FF] w-16 h-8">
+                          <div class="rounded-[4px] bg-white w-full h-full flex items-center justify-center">
+                            {remainingCells.value}
+                          </div>
+                        </div>
+                      )}
+
+                    {column.process?.isExecuting && (
+                      <div class="h-4 w-4 animate-spin rounded-full border-2 border-primary-100 border-t-transparent" />
+                    )}
+
+                    {column.process?.isExecuting ? (
+                      <Tooltip text="Stop generating">
+                        <Button
+                          look="primary"
+                          class="w-[30px] h-[30px] rounded-full flex items-center justify-center p-0"
+                          onClick$={onStop}
+                          disabled={
+                            (column.process?.isExecuting &&
+                              column.id === TEMPORAL_ID) ||
+                            !prompt.value.trim()
+                          }
+                        >
+                          <LuSquare class="text-lg" />
+                        </Button>
+                      </Tooltip>
+                    ) : (
+                      <Tooltip text="Generate">
+                        <Button
+                          look="primary"
+                          class="w-[30px] h-[30px] rounded-full flex items-center justify-center p-0"
+                          onClick$={onGenerate}
+                          disabled={
+                            selectedModelId.value === '' ||
+                            selectedProvider.value === '' ||
+                            !prompt.value.trim()
+                          }
+                        >
+                          <LuEgg class="text-lg" />
+                        </Button>
+                      </Tooltip>
+                    )}
+                  </div>
                 </div>
               </div>
-
               <div class="px-3 pb-12 pt-2 bg-white border border-secondary-foreground rounded-sm">
                 <div class="flex flex-col gap-4">
                   <div class="flex gap-4">
@@ -804,6 +839,8 @@ export const ExecutionForm = component$<SidebarProps>(
                   </div>
                 </div>
               </div>
+
+              <ErrorInfo column={column} />
             </div>
           </div>
         </div>
@@ -832,3 +869,29 @@ export const ModelFlag = component$(
     );
   },
 );
+
+export const ErrorInfo = component$(({ column }: { column: Column }) => {
+  const hasErrors = column.cells.some((c) => c.error);
+  const errorCount = column.cells.filter((c) => c.error).length;
+
+  const errorMessages = column.cells
+    .filter((c) => c.error)
+    .map((c) => c.error)
+    .filter((msg, index, self) => msg && self.indexOf(msg) === index); // Unique messages
+
+  const errorMessage = useComputed$(() => {
+    if (errorMessages.length === 0) return '';
+    if (errorMessages.length === 1) return errorMessages[0];
+
+    return `${errorMessages[0]} (and ${errorMessages.length - 1} more)`;
+  });
+
+  if (!hasErrors) return null;
+
+  return (
+    <div class="text-sm text-red-500">
+      {errorCount} cell{errorCount > 1 ? 's' : ''} failed to generate:{' '}
+      {errorMessage.value}
+    </div>
+  );
+});

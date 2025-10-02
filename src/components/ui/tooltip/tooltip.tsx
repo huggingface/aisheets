@@ -1,4 +1,4 @@
-import { type PropsOf, Slot, component$ } from '@builder.io/qwik';
+import { component$, type PropsOf, Slot } from '@builder.io/qwik';
 import type { Popover } from '~/components/ui/popover/popover';
 import { HTooltipPanel } from '~/components/ui/tooltip/headless/tooltip-panel';
 import { HTooltipRoot } from '~/components/ui/tooltip/headless/tooltip-root';
@@ -14,18 +14,18 @@ type TooltipProps = {
 export const Tooltip = component$<TooltipProps>(
   ({ text, floating, gutter = 8, open = false, ...props }) => {
     return (
-      <HTooltipRoot
-        gutter={gutter}
-        flip
-        placement={floating}
-        open={open}
-        {...props}
-      >
+      <HTooltipRoot gutter={gutter} placement={floating} open={open} {...props}>
         <HTooltipTrigger>
           <Slot />
         </HTooltipTrigger>
         <HTooltipPanel
           class={`text-white font-light px-3 py-1 rounded-sm text-sm bg-gray-900 ${props.class}`}
+          style={{
+            maxWidth: '90vw',
+            maxHeight: '90vh',
+            overflow: 'auto',
+            wordBreak: 'break-word',
+          }}
         >
           {text}
         </HTooltipPanel>

@@ -462,6 +462,7 @@ def map_function(
             text_generation_task,
             prompt_template=column_config["prompt"]
         )
+        error_value = ""
 
     elif task == "image-text-to-text":
         generation_task = partial(
@@ -469,6 +470,7 @@ def map_function(
             prompt_template=column_config["prompt"],
             image_column=column_config["imageColumn"],
         )
+        error_value = ""
     elif task == "text-to-image":
         generation_task = partial(
             text_to_image_generation_task,
@@ -529,7 +531,7 @@ def main(
     dataset: IterableDataset = load_dataset(
         repo_id,
         split=split,
-        streaming=True,
+        streaming=False,
     )
 
     dataset_rows = _get_dataset_size(repo_id, split=split)
@@ -563,7 +565,7 @@ def main(
         destination,
         split=destination_split,
         create_pr=create_pr,
-        num_proc=min(2, processor_config.max_workers, dataset.num_shards),
+        num_proc=processor_config.max_workers,
     )
 
     total_time = time.time() - start_time

@@ -338,6 +338,8 @@ export const TableIndexTableHeader = component$<{
     }
   });
 
+  if (!column.visible) return null;
+
   return (
     <Popover.Root
       ref={clickOutsideRef}

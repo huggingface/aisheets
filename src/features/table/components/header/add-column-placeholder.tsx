@@ -13,7 +13,7 @@ import { SparkIcon } from '~/components/ui/logo/logo';
 import { useExecution } from '~/features/add-column/form';
 import { useColumnsPreference } from '~/features/table/components/context/colunm-preferences.context';
 
-import { type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
+import type { Column } from '~/state';
 
 type PromptsType = {
   label: string;
@@ -80,8 +80,7 @@ const ALL_COLUMN_PROMPTS = {
 
 export const TableAddCellHeaderPlaceHolder = component$<{ column: Column }>(
   ({ column }) => {
-    const { open, close } = useExecution();
-    const { columns } = useColumnsStore();
+    const { columnId, open, close } = useExecution();
     const prompt = useSignal<string>('');
     const { openAiPrompt, closeAiPrompt, closeAiColumn } =
       useColumnsPreference();
@@ -100,10 +99,6 @@ export const TableAddCellHeaderPlaceHolder = component$<{ column: Column }>(
         ...value,
       }));
     });
-
-    const isAnyColumnTemporal = useComputed$(() =>
-      columns.value.some((c) => c.id === TEMPORAL_ID),
-    );
 
     const cleanUp = $(() => {
       prompt.value = '';
@@ -150,7 +145,7 @@ export const TableAddCellHeaderPlaceHolder = component$<{ column: Column }>(
       await onCreateColumn('unknown', prompt.value.trim());
     });
 
-    if (isAnyColumnTemporal.value) return null;
+    if (columnId.value) return null;
 
     return (
       <Popover.Root gutter={8} floating="right-start">

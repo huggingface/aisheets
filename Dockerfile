@@ -53,6 +53,12 @@ ENV PLAYWRIGHT_BROWSERS_PATH=/home/node/ms-playwright
 RUN npm exec playwright install-deps \
     && npm exec playwright install chromium --only-shell
 
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 python3-pip \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN pip install --upgrade --break-system-packages huggingface_hub
+
 # Expose the application port
 EXPOSE 3000
 

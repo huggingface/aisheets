@@ -4,7 +4,7 @@ import {
   runPromptExecutionStream,
 } from './run-prompt-execution';
 
-const testModelName = 'google/gemma-2b-it';
+const testModelName = 'meta-llama/Llama-3.3-70B-Instruct';
 const testPrompt = 'Write a short greeting';
 const accessToken = process.env.HF_TOKEN;
 
@@ -15,7 +15,7 @@ describe.runIf(accessToken)(
       const result = await runPromptExecution({
         accessToken,
         modelName: testModelName,
-        modelProvider: 'hf-inference',
+        modelProvider: 'nebius',
         instruction: testPrompt,
         data: {},
       });

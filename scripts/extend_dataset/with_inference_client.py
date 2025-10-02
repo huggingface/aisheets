@@ -5,10 +5,11 @@
 #     "huggingface-hub",
 #     "rich",
 #     "typer",
+#     "pillow",
 # ]
 # ///
-
 import multiprocessing
+import os
 import random
 import time
 import traceback
@@ -18,12 +19,16 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import requests
 import typer
 import yaml
+import json
 from datasets import Dataset, load_dataset
 from huggingface_hub import InferenceClient
 from rich import print as rprint
 from rich.console import Console
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TaskProgressColumn
+
+hf_token = os.environ["HF_TOKEN"]
+inference_token = os.environ.get("HF_INFERENCE_TOKEN") or hf_token
 
 
 class Pipeline:
@@ -36,6 +41,7 @@ class Pipeline:
         subset: str | None = None,
         split: str = "train",
         config: str | None = None,
+        config_json: str | None = None,
         num_rows: int | None = None,
         bill_to: str | None = None,
         max_workers: int | None = None,
@@ -61,7 +67,22 @@ class Pipeline:
         self.bill_to = bill_to
 
         with self.console.status("[bold green]Loading configuration..."):
-            self.config = self._load_config(config)
+            if config is None and config_json is None:
+                raise ValueError("Either config file path or config JSON string must be provided.")
+
+            if config and config_json:
+                self.console.print("[yellow]Warning: Both config file and config JSON provided. Using config JSON.")
+
+            if config_json:
+                self.config = json.loads(config_json)
+            else:
+
+                if not config:
+                    self.console.print(
+                        "[bold red]Warning: No config file provided. Using config default './config.yml'.")
+                    config = './config.yml'
+
+                self.config = self._load_config(config)
 
             # Handle source dataset if specified
             self.source_dataset = self._load_source_dataset(repo_id=repo_id, subset=subset, split=split)
@@ -159,6 +180,7 @@ class Pipeline:
         return InferenceClient(
             provider=config['modelProvider'],
             bill_to=bill_to,
+            token=inference_token,
         )
 
     def _debug_log(self, message: str) -> None:
@@ -208,22 +230,20 @@ class Pipeline:
         """Generate completion using the specified model."""
         messages = [{"role": "user", "content": prompt}]
 
-        # Implement retry with exponential backoff for rate limiting
-        max_retries = 5
         retry_count = 0
-        base_delay = self.request_delay or 1.0  # Use request_delay if set, otherwise default to 1 second
+        # Implement retry with exponential backoff for rate limiting
+        max_retries = 10
+        base_delay = self.request_delay
 
         while retry_count < max_retries:
             try:
-                # Add delay if specified to avoid rate limiting
-                if retry_count > 0 or self.request_delay > 0:
-                    # Calculate exponential backoff with jitter
-                    if retry_count > 0:
-                        delay = base_delay * (2 ** retry_count) + random.uniform(0, 1)
-                        self._debug_log(
-                            f"[yellow]Rate limit hit. Retrying in {delay:.2f} seconds (attempt {retry_count + 1}/{max_retries})")
-                    else:
-                        delay = base_delay
+                delay = base_delay * (2 ** retry_count) + random.uniform(0, 1)
+
+                if delay > 0:
+                    self._debug_log(
+                        f"[yellow]Rate limit hit. Retrying in {delay:.2f} seconds "
+                        f"(attempt {retry_count + 1}/{max_retries})"
+                    )
                     time.sleep(delay)
 
                 completion = client.chat.completions.create(
@@ -233,15 +253,13 @@ class Pipeline:
                 return completion.choices[0].message.content
 
             except Exception as e:
-                # Check if it's a rate limit error
-                if "429" in str(e) or "rate_limit" in str(e).lower():
-                    retry_count += 1
-                    if retry_count >= max_retries:
-                        self._debug_log(f"[red]Max retries reached for rate limit. Giving up.")
-                        raise
-                else:
-                    # Not a rate limit error, re-raise
+                if retry_count >= max_retries:
+                    self._debug_log(f"[red]Max retries reached. Giving up...")
                     raise
+
+                retry_count += 1
+                self._debug_log(f"[red]Error generating completion: {str(e)}")
+                self._debug_log(f"[yellow]Retrying... (attempt {retry_count}/{max_retries})")
 
         # Should not reach here, but just in case
         raise Exception("Failed to generate completion after maximum retries")
@@ -304,17 +322,24 @@ class Pipeline:
 
     def run(self):
         start_time = time.time()
+        progress_columns = [
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            BarColumn(complete_style="green", finished_style="green"),
+            TaskProgressColumn(),
+        ]
+
+        rprint(Panel("[bold green]🚀 Starting dataset augmentation pipeline..."))
+
         with Progress(
-                SpinnerColumn(),
-                TextColumn("[progress.description]{task.description}"),
-                BarColumn(complete_style="green", finished_style="green"),
-                TaskProgressColumn(),
-                console=self.console,
-                expand=True
+                *progress_columns,
+                expand=True,
+                # console=self.console,
         ) as progress:
             task_rows = progress.add_task("[bold cyan]Generating dataset rows", total=self.num_rows)
             task_nodes = progress.add_task("[cyan]Processing nodes (per row)", total=len(self.config['columns']))
 
+            rprint(Panel("[bold cyan]Generating dataset rows..."))
             with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
 
                 # If num_rows is None, use the entire dataset
@@ -336,6 +361,7 @@ class Pipeline:
                     for i, source_row in dataset_iter
                 }
 
+                processed_rows = 0
                 for future in as_completed(futures):
                     i = futures[future]
                     row_num = i + 1
@@ -350,6 +376,9 @@ class Pipeline:
                         progress.update(task_rows, description=f"[bold red]✗ Row {row_num} failed")
                         rprint(f"\n[red]Error in row {row_num}: {str(e)}")
                         continue
+                    finally:
+                        processed_rows += 1
+                        rprint(f"[green]Processed {processed_rows} of {self.num_rows} rows.")
 
         total_time = time.time() - start_time
         minutes = int(total_time // 60)
@@ -397,7 +426,8 @@ class Pipeline:
             repo_id,
             subset,
             split=split,
-            streaming=True
+            streaming=True,
+            token=hf_token,
         )
 
     def _display_configuration_summary(self) -> None:
@@ -443,7 +473,8 @@ def main(
     *,
     repo_id: str,
     split: str = "train",
-    config: str = './config.yml',
+    config: str = None,
+    config_json: str | None = None,
     destination: str,
     destination_split: str = "train",
     create_pr: bool = False,
@@ -459,6 +490,7 @@ def main(
         repo_id: The dataset repository ID to augment (e.g., "fka/awesome-chatgpt-prompts").
         split: Dataset split to use (default: "train").
         config: Path to the YAML configuration file for the pipeline.
+        config_json: JSON string of the configuration (alternative to config file).
         destination: Destination repository ID for the augmented dataset.
         destination_split: Split name for the destination dataset (default: "train").
         create_pr: Whether to create a pull request for the destination dataset (default: False).
@@ -473,18 +505,31 @@ def main(
         subset=None,
         split=split,
         config=config,
+        config_json=config_json,
         num_rows=num_rows,
-        bill_to=bill_to,
+        bill_to=bill_to or os.environ.get("ORG_BILLING"),
         request_delay=0.5,
         max_workers=max_workers,
         debug=debug,
     )
 
-    augmented_dataset = pipeline.run()
-    augmented_dataset.push_to_hub(destination, split=destination_split, create_pr=create_pr)
+    start_time = time.time()
 
-    rprint(
-        f"\n[bold green]✓[/] Successfully pushed augmented dataset to [cyan] https://huggingface.co/datasets/{destination}[/].")
+    augmented_dataset = pipeline.run()
+    augmented_dataset.push_to_hub(
+        destination,
+        split=destination_split,
+        create_pr=create_pr,
+        token=hf_token
+    )
+
+    total_time = time.time() - start_time
+    minutes = int(total_time // 60)
+    seconds = int(total_time % 60)
+
+    rprint(Panel(
+        f"[bold green]Dataset successfully extended and pushed to https://huggingface.co/datasets/{destination}[/]\nTotal time: {minutes}m {seconds}s"
+    ))
 
 
 if __name__ == "__main__":

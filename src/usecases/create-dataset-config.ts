@@ -3,19 +3,23 @@ import { getColumnCellByIdx, getRowCells } from '~/services/repository';
 import type { Cell, Column, Dataset } from '~/state';
 import { collectValidatedExamples } from '~/usecases/collect-examples';
 
-export async function generateDatasetConfig(dataset: Dataset): Promise<{
+export interface DatasetConfig {
   columns: Record<
     string,
     {
-      modelName?: string;
-      modelProvider?: string;
-      userPrompt?: string;
-      prompt?: string;
+      modelName: string;
+      modelProvider: string;
+      userPrompt: string;
+      prompt: string;
       searchEnabled?: boolean;
       columnsReferences?: string[];
     }
   >;
-}> {
+}
+
+export async function generateDatasetConfig(
+  dataset: Dataset,
+): Promise<DatasetConfig> {
   const columnConfigs: Record<string, any> = {};
 
   for (const column of dataset.columns) {
@@ -40,7 +44,7 @@ export async function generateDatasetConfig(dataset: Dataset): Promise<{
 
     columnConfigs[column.name] = {
       ...columnData,
-
+      type: column.type,
       prompt: await promptTemplateForColumn(column),
       instruction: column.process.prompt,
 

@@ -1,17 +1,22 @@
-import { component$ } from '@builder.io/qwik';
+import { component$, useComputed$ } from '@builder.io/qwik';
 
 import { cn } from '@qwik-ui/utils';
 import { LuDownload } from '@qwikest/icons/lucide';
-import { Label, Popover, buttonVariants } from '~/components';
+import { buttonVariants, Label, Popover } from '~/components';
 import { Tooltip } from '~/components/ui/tooltip/tooltip';
 import { useSession } from '~/loaders';
 import { TEMPORAL_ID, useDatasetsStore } from '~/state';
+import { AugmentDataset } from './augment-dataset';
 import { ExportToHub } from './export-to-hub';
 import { FileDownload } from './file-download';
 
 export const SaveDataset = component$(() => {
   const { activeDataset } = useDatasetsStore();
   const session = useSession();
+
+  const isImportedFromHub = useComputed$(
+    () => activeDataset.value.fromRepoId !== undefined,
+  );
 
   return (
     <Popover.Root floating="bottom" gutter={14}>
@@ -36,6 +41,12 @@ export const SaveDataset = component$(() => {
           <>
             <ExportToHub />
             <hr class="border-t border-slate-200 dark:border-slate-700" />
+            {isImportedFromHub.value && (
+              <>
+                <AugmentDataset />
+                <hr class="border-t border-slate-200 dark:border-slate-700" />
+              </>
+            )}
           </>
         )}
         <FileDownload format="csv" />

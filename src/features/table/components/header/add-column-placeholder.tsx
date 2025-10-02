@@ -137,12 +137,14 @@ export const TableAddCellHeaderPlaceHolder = component$<{ column: Column }>(
     const handleNewColumn = $(async () => {
       if (!prompt.value.trim()) return;
 
-      prompt.value += TEXT_COLUMN_PROMPTS['custom'].prompt.replace(
+      const newReferencePrompt = TEXT_COLUMN_PROMPTS['custom'].prompt.replace(
         '{{REPLACE_ME}}',
         `{{${column.name}}}`,
       );
 
-      await onCreateColumn('unknown', prompt.value.trim());
+      const newPrompt = `${prompt.value.trim()} ${newReferencePrompt}`;
+
+      await onCreateColumn('unknown', newPrompt);
     });
 
     if (columnId.value) return null;

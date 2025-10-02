@@ -69,7 +69,7 @@ const runHfJobCommand = async (
     secrets?: Record<string, string>;
   },
 ) => {
-  const { accessToken, flavor = 'l4x1', timeout = '2h' } = options;
+  const { accessToken, flavor = 'l4x1', timeout = '12h' } = options;
 
   if (!accessToken) throw new Error('Access token is required to run the job');
 

@@ -1,19 +1,21 @@
+import { isDev } from '@builder.io/qwik';
 import {
+  chatCompletion,
+  chatCompletionStream,
   type FeatureExtractionArgs,
   type InferenceProvider,
   type Options,
-  chatCompletion,
-  chatCompletionStream,
 } from '@huggingface/inference';
-
-import { isDev } from '@builder.io/qwik';
 import { appConfig } from '~/config';
 import { cacheGet, cacheSet } from '~/services/cache';
+import type { TaskType } from '~/state/columns';
+import { bigIntStringify } from '~/usecases/utils/serializer';
 import { type Example, materializePrompt } from './materialize-prompt';
 
 export interface PromptExecutionParams {
   modelName: string;
-  modelProvider: string;
+  modelProvider?: string;
+  endpointUrl?: string;
   instruction: string;
   sourcesContext?: {
     source_uri: string;
@@ -26,7 +28,7 @@ export interface PromptExecutionParams {
 
   timeout?: number;
   accessToken?: string;
-  endpointUrl?: string;
+  task?: TaskType;
 }
 
 export interface PromptExecutionResponse {
@@ -37,7 +39,7 @@ export interface PromptExecutionResponse {
 
 export const handleError = (e: unknown): string => {
   if (e instanceof Error) return e.message;
-  return JSON.stringify(e);
+  return JSON.stringify(e, bigIntStringify, 2);
 };
 
 export const runPromptExecution = async ({
@@ -50,12 +52,14 @@ export const runPromptExecution = async ({
   examples,
   timeout,
   endpointUrl,
+  task,
 }: PromptExecutionParams): Promise<PromptExecutionResponse> => {
   const inputPrompt = materializePrompt({
     instruction,
     sourcesContext,
     data,
     examples,
+    task,
   });
   const args = normalizeChatCompletionArgs({
     messages: [{ role: 'user', content: inputPrompt }],
@@ -117,12 +121,14 @@ export const runPromptExecutionStream = async function* ({
   timeout,
   accessToken,
   endpointUrl,
+  task,
 }: PromptExecutionParams): AsyncGenerator<PromptExecutionResponse> {
   const inputPrompt = materializePrompt({
     instruction,
     sourcesContext,
     data,
     examples,
+    task,
   });
   const args = normalizeChatCompletionArgs({
     messages: [{ role: 'user', content: inputPrompt }],
@@ -221,9 +227,9 @@ export const normalizeChatCompletionArgs = ({
 }: {
   messages: any[];
   modelName: string;
-  modelProvider: string;
-  accessToken?: string;
+  modelProvider?: string;
   endpointUrl?: string;
+  accessToken?: string;
 }) => {
   const {
     authentication: { hfToken },
@@ -263,7 +269,7 @@ export const normalizeOptions = (timeout?: number | undefined): Options => {
 
 function showPromptInfo(
   modelName: string,
-  modelProvider: string,
+  modelProvider: string | undefined,
   endpointUrl: string | undefined,
   inputPrompt: string,
 ) {

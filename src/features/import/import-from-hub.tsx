@@ -20,9 +20,11 @@ import { nextTick } from '~/components/hooks/tick';
 import { useSession } from '~/loaders';
 import { useConfigContext } from '~/routes/home/layout';
 
-import { listHubDatasetDataFiles } from '~/services/repository/hub/list-hub-dataset-files';
 import { useImportFromHub } from '~/usecases/import-from-hub.usecase';
-import { useListHubDatasets } from '~/usecases/list-hub-datasets.usecase';
+import {
+  useListDatasetDataFiles,
+  useListHubDatasets,
+} from '~/usecases/list-hub-datasets.usecase';
 
 export const ImportFromHub = component$(() => {
   const session = useSession();
@@ -286,15 +288,13 @@ const FileSelection = component$(
     accessToken: string;
     onSelectedFile$: QRL<(file: string) => void>;
   }) => {
+    const listDatasetDataFiles = useListDatasetDataFiles();
     const selectedFile = useSignal<string>('');
 
     const listDatasetFiles = useResource$(async ({ track }) => {
       const newRepo = track(() => props.repoId);
 
-      const files = await listHubDatasetDataFiles({
-        repoId: newRepo,
-        accessToken: props.accessToken,
-      });
+      const files = await listDatasetDataFiles(newRepo);
 
       // Always select the first file when files change
       nextTick(() => {

@@ -1,5 +1,6 @@
-import { type InferenceProvider, textToImage } from '@huggingface/inference';
+import { chatCompletion, type InferenceProvider } from '@huggingface/inference';
 import { appConfig } from '~/config';
+import { detectMimeType } from '~/features/table/utils/mime-types';
 import { cacheGet, cacheSet } from '../cache';
 import { renderInstruction } from './materialize-prompt';
 import {
@@ -8,25 +9,46 @@ import {
   type PromptExecutionParams,
 } from './run-prompt-execution';
 
-const normalizeTextToImageArgs = ({
+const normalizeImageTextToTextArgs = ({
   inputs,
+  imageData,
   modelName,
   modelProvider,
   accessToken,
   endpointUrl,
 }: {
   inputs: string;
+  imageData: Uint8Array;
   modelName: string;
   modelProvider?: string;
-  endpointUrl?: string;
   accessToken?: string;
+  endpointUrl?: string;
 }) => {
   const {
     authentication: { hfToken },
   } = appConfig;
 
+  const mimeType = detectMimeType(imageData, '');
+  const dataUri = `data:${mimeType};base64,${Buffer.from(imageData).toString('base64')}`;
+
   const args: any = {
-    inputs,
+    messages: [
+      {
+        role: 'user',
+        content: [
+          {
+            type: 'text',
+            text: inputs,
+          },
+          {
+            type: 'image_url',
+            image_url: {
+              url: dataUri,
+            },
+          },
+        ],
+      },
+    ],
     accessToken: hfToken ?? accessToken,
   };
 
@@ -40,16 +62,19 @@ const normalizeTextToImageArgs = ({
   return args;
 };
 
-export const textToImageGeneration = async ({
+export const imageTextToTextGeneration = async ({
   accessToken,
   modelName,
   modelProvider,
   instruction,
   data,
+  imageData,
   timeout,
   endpointUrl,
-}: PromptExecutionParams): Promise<{
-  value?: ArrayBuffer;
+}: PromptExecutionParams & {
+  imageData: Uint8Array;
+}): Promise<{
+  value?: string;
   done: boolean;
   error?: string;
 }> => {
@@ -61,6 +86,7 @@ export const textToImageGeneration = async ({
     endpointUrl,
     instruction,
     data,
+    imageData: Array.from(imageData), // Convert to array for caching
   };
 
   const cachedResult = await cacheGet(cacheKey);
@@ -72,23 +98,22 @@ export const textToImageGeneration = async ({
   }
 
   try {
-    const response = await textToImage(
-      normalizeTextToImageArgs({
-        inputs: inputPrompt,
-        modelName,
-        modelProvider,
-        accessToken,
-        endpointUrl,
-      }),
-      normalizeOptions(timeout),
-    );
+    const args = normalizeImageTextToTextArgs({
+      inputs: inputPrompt,
+      imageData,
+      modelName,
+      modelProvider,
+      accessToken,
+      endpointUrl,
+    });
 
-    const buffer = await response.arrayBuffer();
-    const bytes = new Uint8Array(buffer);
-    cacheSet(cacheKey, bytes);
+    const response = await chatCompletion(args, normalizeOptions(timeout));
+
+    const textResponse = response.choices[0]?.message?.content || '';
+    cacheSet(cacheKey, textResponse);
 
     return {
-      value: bytes,
+      value: textResponse,
       done: true,
     };
   } catch (e) {

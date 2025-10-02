@@ -1,5 +1,6 @@
 import { component$, type PropsOf } from '@builder.io/qwik';
 import { cn } from '@qwik-ui/utils';
+import { LuLink2 } from '@qwikest/icons/lucide';
 
 interface LogoProps extends PropsOf<'svg'> {
   fillColor?: string;
@@ -157,40 +158,13 @@ export const GoogleDrive = component$<LogoProps>(({ ...props }) => {
 export const Provider = component$<{
   name: string;
 }>(({ name }) => {
-  switch (name) {
-    case 'novita':
-      return <NovitaIcon />;
-    case 'nebius':
-      return <NebiusIcon />;
-    case 'cerebras':
-      return <Cerebras />;
-    case 'fireworks-ai':
-      return <Fireworks />;
-    case 'together':
-      return <Together />;
-    case 'groq':
-      return <Groq />;
-    case 'hyperbolic':
-      return <Hyperbolic />;
-    case 'sambanova':
-      return <Sambanova />;
-    case 'nscale':
-      return <Nscale />;
-    case 'featherless-ai':
-      return <Featherless />;
-    case 'cohere':
-      return <Cohere />;
-    case 'fal-ai':
-      return <Fal />;
-    case 'replicate':
-      return <Replicate />;
-    case 'hf-inference':
-      return <HuggingFace />;
-    case 'black-forest':
-      return <BlackForest />;
-    default:
-      return null;
+  const Component = SUPPORT_PROVIDERS[name as keyof typeof SUPPORT_PROVIDERS];
+
+  if (!Component) {
+    return <LuLink2 class="text-indigo-500 w-4 h-4" />;
   }
+
+  return <Component />;
 });
 
 const NovitaIcon = component$(() => {
@@ -741,12 +715,24 @@ export const ExtraProviders = component$(
       return null;
     }
 
-    const VISIBLE_PROVIDERS = 2;
-    const visibleProviders = providers
+    const areProviderSupported = providers.every(
+      (provider) =>
+        SUPPORT_PROVIDERS[provider as keyof typeof SUPPORT_PROVIDERS],
+    );
+
+    const VISIBLE_PROVIDERS = 1;
+
+    let visibleProviders = providers
       .filter((provider) => provider !== selected)
       .slice(0, VISIBLE_PROVIDERS);
 
-    const extraCount = providers.length - VISIBLE_PROVIDERS;
+    let extraCount = providers.length - VISIBLE_PROVIDERS;
+
+    if (!areProviderSupported) {
+      visibleProviders = [];
+
+      extraCount = providers.length - 1;
+    }
 
     return (
       <div class="flex items-center">
@@ -780,3 +766,21 @@ export const ModelImage = component$(
     return <img src={model.picture} alt={model.id} class="w-4 h-4" />;
   },
 );
+
+const SUPPORT_PROVIDERS = {
+  novita: NovitaIcon,
+  nebius: NebiusIcon,
+  cerebras: Cerebras,
+  'fireworks-ai': Fireworks,
+  together: Together,
+  groq: Groq,
+  hyperbolic: Hyperbolic,
+  sambanova: Sambanova,
+  nscale: Nscale,
+  'featherless-ai': Featherless,
+  cohere: Cohere,
+  'fal-ai': Fal,
+  replicate: Replicate,
+  'hf-inference': HuggingFace,
+  'black-forest': BlackForest,
+};

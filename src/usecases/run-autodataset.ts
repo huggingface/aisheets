@@ -1,6 +1,7 @@
 import type { RequestEventBase } from '@builder.io/qwik-city';
 import { chatCompletion } from '@huggingface/inference';
 import { appConfig } from '~/config';
+import { cacheGet, cacheSet } from '~/services/cache';
 import {
   normalizeChatCompletionArgs,
   normalizeOptions,
@@ -8,8 +9,6 @@ import {
 import { createColumn, getDatasetColumns } from '~/services/repository/columns';
 import { createDataset } from '~/services/repository/datasets';
 import { createProcess } from '~/services/repository/processes';
-
-import { cacheGet, cacheSet } from '~/services/cache';
 import { indexDatasetSources } from '~/services/websearch/embed';
 import { scrapeUrlsBatch } from '~/services/websearch/scrape';
 import {
@@ -42,6 +41,10 @@ const {
     tasks: { textGeneration },
   },
 } = appConfig;
+
+const defaultCustomModel = textGeneration.customModels
+  ? textGeneration.customModels[0]
+  : undefined;
 
 /**
  * Template for the search-enabled prompt
@@ -211,12 +214,10 @@ async function extractDatasetConfig({
 
   const args = normalizeChatCompletionArgs({
     messages: [{ role: 'user', content: promptText }],
-    modelName: textGeneration.endpointUrl
-      ? textGeneration.endpointName
-      : modelName,
+    modelName: defaultCustomModel ? defaultCustomModel.id : modelName,
     modelProvider,
+    endpointUrl: defaultCustomModel?.endpointUrl,
     accessToken: session.token,
-    endpointUrl: textGeneration.endpointUrl,
   });
 
   const cacheValue = cacheGet(args);
@@ -388,8 +389,9 @@ async function createDatasetWithColumns(
         prompt: column.prompt,
         modelName: processModelName,
         modelProvider: processModelProvider,
-        endpointUrl: textGeneration.endpointUrl,
+        endpointUrl: isImage ? undefined : defaultCustomModel?.endpointUrl,
         searchEnabled,
+        task: isImage ? 'text-to-image' : 'text-generation',
         columnsReferences: columnReferences.map((ref) => {
           const refIndex = columnNames.indexOf(ref);
           return createdColumns[refIndex].id;
@@ -454,7 +456,9 @@ async function populateDataset(
           ...column.process,
           // Custom endpoint URL is only available for text columns
           endpointUrl:
-            column.type !== 'image' ? textGeneration.endpointUrl : undefined,
+            column.type !== 'image'
+              ? defaultCustomModel?.endpointUrl
+              : undefined,
         },
         stream: false,
         session,

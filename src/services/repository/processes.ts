@@ -1,13 +1,15 @@
 import { ProcessColumnModel, ProcessModel } from '~/services/db/models';
-import type { Process } from '~/state';
+import type { Process, TaskType } from '~/state';
 
 export interface CreateProcess {
   prompt: string;
   modelName: string;
-  modelProvider: string;
+  modelProvider?: string;
   endpointUrl?: string;
   searchEnabled: boolean;
   columnsReferences?: string[];
+  imageColumnId?: string; // For image processing workflows
+  task: TaskType;
 }
 
 export const createProcess = async ({
@@ -26,6 +28,8 @@ export const createProcess = async ({
     endpointUrl: process.endpointUrl ?? null,
     searchEnabled: process.searchEnabled,
     columnId: column.id,
+    imageColumnId: process.imageColumnId ?? null,
+    task: process.task,
   });
 
   // TODO: Try to create junction model when creating a process
@@ -41,10 +45,12 @@ export const createProcess = async ({
     id: model.id,
     prompt: model.prompt,
     modelName: model.modelName,
-    modelProvider: model.modelProvider,
+    modelProvider: model.modelProvider || undefined,
     endpointUrl: model.endpointUrl ?? undefined,
     searchEnabled: model.searchEnabled,
     columnsReferences: process?.columnsReferences || [],
+    imageColumnId: model.imageColumnId ?? undefined,
+    task: model.task as TaskType,
     updatedAt: model.updatedAt,
   };
 };
@@ -63,6 +69,8 @@ export const updateProcess = async (process: Process): Promise<Process> => {
     modelProvider: process.modelProvider,
     endpointUrl: process.endpointUrl ?? null,
     searchEnabled: process.searchEnabled,
+    imageColumnId: process.imageColumnId ?? null,
+    task: process.task,
   });
 
   await model.save();
@@ -80,10 +88,12 @@ export const updateProcess = async (process: Process): Promise<Process> => {
     id: model.id,
     prompt: model.prompt,
     modelName: model.modelName,
-    modelProvider: model.modelProvider,
+    modelProvider: model.modelProvider ?? undefined,
     endpointUrl: model.endpointUrl ?? undefined,
     searchEnabled: model.searchEnabled,
     columnsReferences: process.columnsReferences,
+    imageColumnId: model.imageColumnId ?? undefined,
+    task: model.task as TaskType,
     updatedAt: model.updatedAt,
   };
 };

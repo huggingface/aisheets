@@ -111,6 +111,13 @@ const MODEL_ENDPOINT_URL: string | undefined = process.env.MODEL_ENDPOINT_URL;
 const MODEL_ENDPOINT_NAME: string =
   process.env.MODEL_ENDPOINT_NAME ?? 'unknown';
 
+//FORMAT --> CUSTOM_MODELS=<MODEL_ID>:<ENDPOINT_URL>,<MODEL_ID>:<ENDPOINT_URL>
+const CUSTOM_MODELS: string | undefined =
+  process.env.CUSTOM_MODELS ??
+  (MODEL_ENDPOINT_URL !== undefined
+    ? `${MODEL_ENDPOINT_NAME}|${MODEL_ENDPOINT_URL}`
+    : undefined);
+
 /**
  * List of model IDs that should be excluded from the model list.
  * This value is retrieved from the environment variable `EXCLUDED_MODELS` as a comma-separated string.
@@ -275,8 +282,15 @@ export const appConfig = {
         defaultModel: DEFAULT_MODEL,
         defaultProvider: DEFAULT_MODEL_PROVIDER,
 
-        endpointUrl: MODEL_ENDPOINT_URL,
-        endpointName: MODEL_ENDPOINT_NAME,
+        customModels:
+          CUSTOM_MODELS?.trim()
+            .split(',')
+            .map((model) => {
+              const [id, endpointUrl] = model
+                .split('|')
+                .map((part) => part.trim());
+              return { id, endpointUrl, supportedType: 'text' };
+            }) || undefined,
       },
 
       featureExtraction: {

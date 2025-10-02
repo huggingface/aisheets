@@ -20,11 +20,13 @@ export class ProcessModel extends Model<
   declare prompt: string;
   declare modelName: string;
 
-  declare modelProvider: string;
+  declare modelProvider: CreationOptional<string | null>;
   declare endpointUrl: CreationOptional<string | null>;
 
   declare searchEnabled: boolean;
   declare columnId: ForeignKey<ColumnModel['id']>;
+  declare imageColumnId: CreationOptional<string | null>;
+  declare task: string;
 
   declare referredColumns: NonAttribute<ColumnModel[]>; // This is a virtual attribute
 
@@ -53,7 +55,8 @@ ProcessModel.init(
     },
     modelProvider: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
+      defaultValue: null,
     },
     endpointUrl: {
       type: DataTypes.STRING,
@@ -66,6 +69,15 @@ ProcessModel.init(
     },
     columnId: {
       type: DataTypes.UUID,
+      allowNull: false,
+    },
+    imageColumnId: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      defaultValue: null,
+    },
+    task: {
+      type: DataTypes.STRING,
       allowNull: false,
     },
   },

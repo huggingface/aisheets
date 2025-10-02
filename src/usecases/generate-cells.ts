@@ -3,15 +3,16 @@ import { appConfig } from '~/config';
 import { updateProcess } from '~/services';
 import { cacheGet, cacheSet } from '~/services/cache';
 import { MAX_SOURCE_SNIPPET_LENGTH } from '~/services/db/models/cell';
+import { imageTextToTextGeneration } from '~/services/inference/image-text-to-text';
 import {
   type Example,
   type MaterializePromptParams,
   renderInstruction,
 } from '~/services/inference/materialize-prompt';
 import {
-  type PromptExecutionParams,
   normalizeChatCompletionArgs,
   normalizeOptions,
+  type PromptExecutionParams,
   runPromptExecution,
   runPromptExecutionStream,
 } from '~/services/inference/run-prompt-execution';
@@ -25,7 +26,7 @@ import {
 import { countDatasetTableRows } from '~/services/repository/tables';
 import { queryDatasetSources } from '~/services/websearch/embed';
 import { createSourcesFromWebQueries } from '~/services/websearch/search-sources';
-import type { Cell, Column, Process, Session } from '~/state';
+import type { Cell, CellSource, Column, Process, Session } from '~/state';
 import { collectValidatedExamples } from './collect-examples';
 
 export interface GenerateCellsParams {
@@ -41,6 +42,28 @@ export interface GenerateCellsParams {
 }
 
 const MAX_CONCURRENCY = appConfig.inference.numConcurrentRequests;
+
+function convertToUint8Array(value: any): Uint8Array {
+  if (value instanceof Uint8Array) {
+    return value;
+  }
+  if (typeof value === 'string') {
+    const base64Data = value.replace(/^data:image\/[a-z]+;base64,/, '');
+    return new Uint8Array(Buffer.from(base64Data, 'base64'));
+  }
+  if (value instanceof ArrayBuffer) {
+    return new Uint8Array(value);
+  }
+  if (value && typeof value === 'object' && 'bytes' in value) {
+    if (value.bytes instanceof Uint8Array) {
+      return value.bytes;
+    }
+    if (value.bytes instanceof ArrayBuffer) {
+      return new Uint8Array(value.bytes);
+    }
+  }
+  throw new Error('Unsupported image data format');
+}
 
 /**
  * Generates cells for a given column based on the provided parameters.
@@ -76,19 +99,25 @@ export const generateCells = async function* ({
   limit,
   offset,
   validatedCells = [],
-  stream = true,
+  stream = false,
   updateOnly = false,
   timeout,
 }: GenerateCellsParams) {
   const { columnsReferences } = process;
 
   if (!limit) {
-    const columnIds = columnsReferences?.length
-      ? columnsReferences
-      : [column.id];
+    // Build list of input columns for size calculation
+    const inputColumnIds = [
+      ...(columnsReferences || []),
+      ...(process.imageColumnId ? [process.imageColumnId] : []),
+    ];
+
+    // If no input columns, fall back to output column (for first column in autodatasets)
+    const columnsToCheck =
+      inputColumnIds.length > 0 ? inputColumnIds : [column.id];
 
     const columnSizes = await Promise.all(
-      columnIds.map((colId) => {
+      columnsToCheck.map((colId) => {
         return countDatasetTableRows({
           dataset: column.dataset,
           column: { id: colId },
@@ -96,12 +125,30 @@ export const generateCells = async function* ({
       }),
     );
 
-    limit = Math.max(...columnSizes);
+    const minSize = Math.min(...columnSizes);
+
+    limit = minSize > 0 ? minSize : 5;
   }
   if (!offset) offset = 0;
 
   try {
-    if (!columnsReferences?.length) {
+    const hasColumnReferences =
+      columnsReferences && columnsReferences.length > 0;
+    const isImageTextToText =
+      process.task === 'image-text-to-text' && process.imageColumnId;
+
+    if (hasColumnReferences || isImageTextToText) {
+      yield* generateCellsFromColumnsReferences({
+        column,
+        process,
+        validatedCells,
+        offset,
+        limit,
+        updateOnly,
+        timeout,
+        session,
+      });
+    } else {
       yield* generateCellsFromScratch({
         column,
         process,
@@ -109,17 +156,6 @@ export const generateCells = async function* ({
         offset,
         limit,
         stream,
-        updateOnly,
-        timeout,
-        session,
-      });
-    } else {
-      yield* generateCellsFromColumnsReferences({
-        column,
-        process,
-        validatedCells,
-        offset,
-        limit,
         updateOnly,
         timeout,
         session,
@@ -223,12 +259,6 @@ async function* generateCellsFromScratch({
 
   const validatedIdxs = validatedCells?.map((cell) => cell.idx);
 
-  const {
-    inference: {
-      tasks: { textGeneration },
-    },
-  } = appConfig;
-
   for (let i = offset; i < limit + offset; i++) {
     if (validatedIdxs?.includes(i)) continue;
 
@@ -243,7 +273,7 @@ async function* generateCellsFromScratch({
 
     const args = {
       accessToken: session.token,
-      modelName: endpointUrl ? textGeneration.endpointName : modelName,
+      modelName,
       modelProvider,
       endpointUrl,
       examples: existingCellsExamples,
@@ -305,12 +335,6 @@ async function singleCellGeneration({
   cell: Cell;
 }> {
   const {
-    inference: {
-      tasks: { textGeneration },
-    },
-  } = appConfig;
-
-  const {
     columnsReferences,
     modelName,
     modelProvider,
@@ -321,10 +345,16 @@ async function singleCellGeneration({
 
   const rowCells = await getRowCells({
     rowIdx,
-    columns: columnsReferences,
+    columns: columnsReferences || [],
   });
 
-  if (rowCells?.filter((cell) => cell.value).length === 0) {
+  // Only check for empty data if we have column references
+  // For custom text generation without column references, this check should be skipped
+  if (
+    columnsReferences &&
+    columnsReferences.length > 0 &&
+    rowCells?.filter((cell) => cell.value).length === 0
+  ) {
     cell.generating = false;
     cell.error = 'No input data found';
 
@@ -333,13 +363,16 @@ async function singleCellGeneration({
     return { cell };
   }
 
-  const data = Object.fromEntries(
-    rowCells.map((cell) => [cell.column!.name, cell.value]),
-  );
+  const data =
+    rowCells && rowCells.length > 0
+      ? Object.fromEntries(
+          rowCells.map((cell) => [cell.column!.name, cell.value]),
+        )
+      : {};
 
   const args: PromptExecutionParams = {
     accessToken: session.token,
-    modelName: endpointUrl ? textGeneration.endpointName : modelName,
+    modelName,
     modelProvider,
     endpointUrl,
     examples,
@@ -347,10 +380,11 @@ async function singleCellGeneration({
     timeout,
     data,
     idx: rowIdx,
+    task: process.task,
   };
 
-  switch (column.type.toLowerCase().trim()) {
-    case 'image': {
+  switch (process.task) {
+    case 'text-to-image': {
       const response = await generateImage({
         prompt,
         args,
@@ -360,6 +394,21 @@ async function singleCellGeneration({
       cell.value = response.value;
       cell.error = response.error;
       cell.generating = false;
+
+      break;
+    }
+    case 'image-text-to-text': {
+      const response = await generateImageTextToText({
+        prompt,
+        args,
+        session,
+        process,
+      });
+
+      cell.value = response.value;
+      cell.error = response.error;
+      cell.generating = false;
+      if (cell.value && !cell.error) cell.sources = response.sources;
 
       break;
     }
@@ -460,7 +509,6 @@ async function* generateCellsFromColumnsReferences({
   session: Session;
 }) {
   // Set generating state for all cells upfront
-  const cellsToGenerate = [];
   const validatedIdxs = validatedCells?.map((cell) => cell.idx);
 
   // Get initial examples from validated cells
@@ -469,27 +517,25 @@ async function* generateCellsFromColumnsReferences({
     columnsReferences: process.columnsReferences,
   });
 
-  for (let i = offset; i < limit + offset; i++) {
-    if (validatedIdxs?.includes(i)) continue;
-
-    const cell = await (updateOnly
-      ? getColumnCellByIdx({ idx: i, columnId: column.id })
-      : getOrCreateCellInDB(column.id, i));
-
-    if (!cell) continue;
-
-    cellsToGenerate.push(cell);
-  }
-
-  for await (const { cell } of cellGenerationInBatch({
-    cells: cellsToGenerate,
-    column,
-    examples: currentExamples,
-    process,
-    session,
-    timeout,
-  })) {
-    yield { cell };
+  for (let i = offset; i < limit + offset; i += MAX_CONCURRENCY) {
+    const batch: Cell[] = [];
+    for (let j = i; j < Math.min(i + MAX_CONCURRENCY, limit + offset); j++) {
+      if (validatedIdxs?.includes(j)) continue;
+      const cell = await (updateOnly
+        ? getColumnCellByIdx({ idx: j, columnId: column.id })
+        : getOrCreateCellInDB(column.id, j));
+      if (cell) batch.push(cell);
+    }
+    for await (const { cell } of cellGenerationInBatch({
+      cells: batch,
+      column,
+      examples: currentExamples,
+      process,
+      session,
+      timeout,
+    })) {
+      yield { cell };
+    }
   }
 }
 
@@ -543,6 +589,8 @@ async function buildWebSearchQueries({
     },
   } = appConfig;
 
+  // TODO: Review custom config in case we want to use a specific model for
+  // this task
   const {
     modelName = textGeneration.defaultModel,
     modelProvider = textGeneration.defaultProvider,
@@ -664,7 +712,10 @@ const _generateText = async ({
     args.sourcesContext = sourcesContext;
   }
 
-  const response = await runPromptExecution(args);
+  const response = await runPromptExecution({
+    ...args,
+    task: args.task,
+  });
 
   // Extract sources (url + snippet) if available
   const sources = sourcesContext
@@ -700,5 +751,71 @@ const generateImage = async ({
   return {
     value: response.value ?? undefined,
     error: response.error,
+  };
+};
+
+const generateImageTextToText = async ({
+  prompt,
+  args,
+  session,
+  process,
+}: {
+  prompt: string;
+  args: PromptExecutionParams;
+  session: Session;
+  process: Process;
+}): Promise<{
+  value?: string;
+  error?: string;
+  sources?: CellSource[];
+}> => {
+  // Get the image column ID from the process
+  const imageColumnId = process.imageColumnId;
+
+  if (!imageColumnId) {
+    return {
+      error: 'No image column selected for image-text-to-text processing',
+    };
+  }
+
+  // Get the image data from the selected image column
+  const imageCell = await getColumnCellByIdx({
+    columnId: imageColumnId,
+    idx: args.idx || 0,
+  });
+
+  if (!imageCell || !imageCell.value) {
+    return {
+      error: 'No image data found in the selected image column',
+    };
+  }
+
+  // Convert image data to Uint8Array if it's not already
+  let imageData: Uint8Array;
+
+  try {
+    imageData = convertToUint8Array(imageCell.value);
+  } catch (_error) {
+    return {
+      error: 'Unsupported image data format',
+    };
+  }
+
+  // Generate text from image using the image-text-to-text service
+  const response = await imageTextToTextGeneration({
+    ...args,
+    instruction: prompt,
+    imageData,
+    accessToken: session.token,
+  });
+
+  // For now, we don't support web search for image-text-to-text
+  // but we could add it in the future if needed
+  const sources: CellSource[] = [];
+
+  return {
+    value: response.value,
+    error: response.error,
+    sources,
   };
 };

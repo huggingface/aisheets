@@ -14,7 +14,9 @@ export const CellSettings = component$<{ column: Column }>(({ column }) => {
     await removeTemporalColumn();
 
     nextTick(() => {
-      open(column.id, 'edit');
+      open(column.id, 'edit', {
+        task: column.process?.task,
+      });
     });
   });
 

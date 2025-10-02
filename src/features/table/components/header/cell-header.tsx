@@ -3,7 +3,7 @@ import { cn } from '@qwik-ui/utils';
 import { buttonVariants, Popover } from '~/components';
 import { Tooltip } from '~/components/ui/tooltip/tooltip';
 import { useExecution } from '~/features/add-column';
-import { CellGeneration } from '~/features/table/components/header/cell-generation';
+import { useColumnsPreference } from '~/features/table/components/context/colunm-preferences.context';
 import { CellSettings } from '~/features/table/components/header/cell-settings';
 import { ColumnNameEdition } from '~/features/table/components/header/column-name-edition';
 import { DeleteColumn } from '~/features/table/components/header/delete-column';
@@ -15,14 +15,12 @@ import {
   isObjectType,
   isTextType,
 } from '~/features/utils/columns';
-import { type Column, TEMPORAL_ID } from '~/state';
+import type { Column } from '~/state';
 
 export const TableCellHeader = component$<{ column: Column }>(({ column }) => {
   const { columnId } = useExecution();
-
-  const classes = useComputed$(() =>
-    cn({ 'bg-neutral-100': columnId.value === column.id }),
-  );
+  const { columnPreferences, showAiButton, hideAiButton } =
+    useColumnsPreference();
 
   const visibleColumnType = useComputed$(() => {
     let columnType = column.type.toLowerCase();
@@ -47,12 +45,18 @@ export const TableCellHeader = component$<{ column: Column }>(({ column }) => {
   return (
     <th
       id={column.id}
-      class={cn(`min-h-[50px] h-[50px] p-2 text-left border ${classes.value}`, {
-        'border-r-0': column.id === TEMPORAL_ID,
+      class={cn('min-h-[50px] h-[50px] p-2 text-left border', {
+        'bg-blue-50': column.id == columnId.value,
+        'shadow-[inset_2px_0_0_theme(colors.primary.400),inset_-2px_0_0_theme(colors.primary.400)]':
+          columnPreferences.value[column.id]?.aiPromptOpen,
+        'bg-[#E7F0FF]': column.kind === 'dynamic',
+        'hover:bg-[#F0F6FF]': column.kind === 'dynamic',
       })}
+      onMouseOver$={() => showAiButton(column.id)}
+      onMouseLeave$={() => hideAiButton(column.id)}
     >
       <Popover.Root flip={false} gutter={8} floating="bottom">
-        <Popover.Trigger class="flex items-center justify-between w-full h-[20px] py-[10px]">
+        <Popover.Trigger class="flex items-center justify-between w-full h-[20px] py-[10px] group">
           <div class="flex flex-col items-start text-wrap w-full">
             <span
               class={cn(buttonVariants({ look: 'ghost' }), 'text-neutral-600')}
@@ -64,10 +68,12 @@ export const TableCellHeader = component$<{ column: Column }>(({ column }) => {
               {visibleColumnType.value}
             </p>
           </div>
-
-          <div class="flex items-center gap-1 w-fit h-fit pr-0">
-            <CellGeneration column={column} />
-            <Tooltip text="Edit configuration">
+          <div
+            class={cn('flex items-center gap-1 w-fit h-fit pr-0 opacity-0', {
+              'group-hover:opacity-100': column.kind === 'dynamic',
+            })}
+          >
+            <Tooltip text="Open">
               <CellSettings column={column} />
             </Tooltip>
           </div>
@@ -75,9 +81,6 @@ export const TableCellHeader = component$<{ column: Column }>(({ column }) => {
         <Popover.Panel>
           <div class="flex flex-col gap-0.5 font-normal">
             <ColumnNameEdition column={column} />
-            <div class="rounded-sm hover:bg-neutral-100 transition-colors mt-2">
-              <CellSettings column={column}>Edit configuration</CellSettings>
-            </div>
             <div class="rounded-sm hover:bg-neutral-100 transition-colors">
               <HideColumn column={column} />
             </div>

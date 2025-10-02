@@ -9,6 +9,12 @@ import {
   useContextProvider,
   useSignal,
 } from '@builder.io/qwik';
+import { useModals } from '~/components';
+import {
+  type ColumnPrototypeWithId,
+  type ColumnPrototypeWithNextColumnId,
+  useColumnsStore,
+} from '~/state';
 
 import type { TaskType } from '~/state/columns';
 
@@ -32,50 +38,76 @@ export const ExecutionProvider = component$(() => {
   return <Slot />;
 });
 
+type ExecutionInfo<T extends Execution['mode']> = T extends 'add'
+  ? ColumnPrototypeWithNextColumnId
+  : ColumnPrototypeWithId;
+
 export const useExecution = () => {
   const context = useContext(executionContext);
+  const {
+    isOpenExecutionSidebar,
+    openExecutionSidebar,
+    closeExecutionSidebar,
+  } = useModals('executionSidebar');
+
+  const { columns, addTemporalColumn, removeTemporalColumn } =
+    useColumnsStore();
 
   const columnId = useComputed$(() => context.value.columnId);
   const mode = useComputed$(() => context.value.mode);
-  const task = useComputed$(() => context.value.task);
-  const initialProcess = useComputed$(() => {
-    return {
-      prompt: context.value.prompt,
-      modelName: context.value.modelName,
-      modelProvider: context.value.modelProvider,
-      endpointUrl: context.value.endpointUrl,
-    };
-  });
+  const column = useComputed$(() =>
+    columns.value.find((c) => c.id === columnId.value),
+  );
 
   return {
     columnId,
+    column,
     mode,
-    task,
-    initialProcess,
+    isOpenExecutionSidebar,
     open: $(
-      (
-        columnId: Execution['columnId'],
-        mode: Execution['mode'],
-        options?: {
-          prompt?: string;
-          modelName?: string;
-          modelProvider?: string;
-          endpointUrl?: string;
-          task?: TaskType;
-        },
-      ) => {
-        context.value = {
-          columnId,
-          mode,
-          prompt: options?.prompt,
-          modelName: options?.modelName,
-          modelProvider: options?.modelProvider,
-          endpointUrl: options?.endpointUrl,
-          task: options?.task,
-        };
+      async <T extends Execution['mode']>(
+        mode: T,
+        info: ExecutionInfo<T>,
+      ): Promise<void> => {
+        if (mode === 'edit') {
+          const casted = info as ColumnPrototypeWithId;
+
+          if (!casted.columnId) {
+            throw new Error('columnId is required when mode is "edit"');
+          }
+
+          context.value = {
+            columnId: casted.columnId,
+            mode,
+          };
+
+          openExecutionSidebar();
+
+          return;
+        }
+
+        if (mode === 'add') {
+          const casted = info as ColumnPrototypeWithNextColumnId;
+
+          const newbie = await addTemporalColumn(casted);
+          if (!newbie) return;
+
+          context.value = {
+            columnId: newbie.id,
+            mode,
+          };
+
+          openExecutionSidebar();
+        }
       },
     ),
-    close: $(() => {
+    close: $(async () => {
+      if (mode.value === 'add') {
+        await removeTemporalColumn();
+      }
+
+      closeExecutionSidebar();
+
       context.value = {};
     }),
   };

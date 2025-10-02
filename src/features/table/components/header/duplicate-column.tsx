@@ -8,15 +8,17 @@ export const DuplicateColumn = component$<{
   column: Column;
 }>(({ column }) => {
   const { open } = useExecution();
-  const { columns, addTemporalColumn } = useColumnsStore();
+  const { columns } = useColumnsStore();
 
   const onDuplicateColumn = $(async () => {
-    await addTemporalColumn(column.type, `${column.name} copy`);
-
-    open(TEMPORAL_ID, 'add', {
-      prompt: column.process?.prompt,
+    open('add', {
+      nextColumnId: column.id,
+      name: `${column.name}_copy`,
+      type: column.type,
       modelName: column.process?.modelName,
       modelProvider: column.process?.modelProvider,
+      endpointUrl: column.process?.endpointUrl,
+      prompt: column.process?.prompt,
       task: column.process?.task,
     });
   });

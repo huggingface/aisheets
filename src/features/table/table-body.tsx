@@ -6,8 +6,6 @@ import {
   noSerialize,
   useComputed$,
   useSignal,
-  useStore,
-  useTask$,
   useVisibleTask$,
 } from '@builder.io/qwik';
 import { server$ } from '@builder.io/qwik-city';
@@ -22,7 +20,8 @@ import { VirtualScrollContainer } from '~/components/ui/virtual-scroll/virtual-s
 import { useExecution } from '~/features/add-column';
 import { useGenerateColumn } from '~/features/execution';
 import { isOverlayOpen } from '~/features/table/components/body/renderer/components/utils';
-import { useColumnsSizeContext } from '~/features/table/components/context/colunm-preferences.context';
+
+import { useColumnsPreference } from '~/features/table/components/context/colunm-preferences.context';
 import { TableCell } from '~/features/table/table-cell';
 import { deleteRowsCells, getColumnCells } from '~/services';
 import {
@@ -36,7 +35,9 @@ import {
 export const TableBody = component$(() => {
   const rowSize = 108; // px
 
-  const { columnSize } = useColumnsSizeContext();
+  const { columnId } = useExecution();
+  const { columnPreferences, showAiButton, hideAiButton } =
+    useColumnsPreference();
   const { activeDataset } = useDatasetsStore();
 
   const { columns, firstColumn, updateColumn, deleteCellByIdx } =
@@ -394,17 +395,32 @@ export const TableBody = component$(() => {
             return (
               <Fragment key={`${cell.idx}-${cell.column!.id}`}>
                 {cell.column?.id === TEMPORAL_ID ? (
-                  <td class="relative min-w-[326px] w-[326px] max-w-[326px] h-[108px] border" />
+                  <td
+                    class={cn(
+                      'relative min-w-[326px] w-[326px] max-w-[326px] h-[108px] border',
+                      {
+                        'bg-blue-50': cell.column.id == columnId.value,
+                      },
+                    )}
+                  />
                 ) : (
                   <td
                     data-column-id={cell.column?.id}
                     class={cn(
-                      'relative transition-colors box-border min-w-[142px] w-[326px] h-[108px] break-words align-top border border-neutral-300 hover:bg-gray-50/50',
+                      'relative transition-colors min-w-[142px] w-[326px] h-[108px] break-words align-top border border-neutral-300 hover:bg-gray-50/50',
                       getBoundary(cell),
+                      {
+                        'bg-blue-50': cell.column!.id == columnId.value,
+                        'shadow-[inset_2px_0_0_theme(colors.primary.400),inset_-2px_0_0_theme(colors.primary.400)]':
+                          columnPreferences.value[cell.column!.id]
+                            ?.aiPromptOpen,
+                      },
                     )}
                     style={{
-                      width: `${columnSize.value[cell.column!.id] || 326}px`,
+                      width: `${columnPreferences.value[cell.column!.id]?.width || 326}px`,
                     }}
+                    onMouseOver$={() => showAiButton(cell.column!.id)}
+                    onMouseLeave$={() => hideAiButton(cell.column!.id)}
                   >
                     <div
                       onMouseUp$={handleMouseUp$}
@@ -447,8 +463,6 @@ export const TableBody = component$(() => {
                     </div>
                   </td>
                 )}
-
-                <ExecutionFormDebounced column={cell.column} />
               </Fragment>
             );
           })}
@@ -484,30 +498,3 @@ export const TableBody = component$(() => {
     </tbody>
   );
 });
-
-const ExecutionFormDebounced = component$<{ column?: { id: Column['id'] } }>(
-  ({ column }) => {
-    // td for execution form
-    const { columnId } = useExecution();
-
-    const state = useStore({
-      isVisible: columnId.value === column?.id,
-    });
-
-    useTask$(({ track }) => {
-      track(() => columnId.value);
-
-      const isVisible = columnId.value === column?.id;
-
-      nextTick(() => {
-        state.isVisible = isVisible;
-      }, 100);
-    });
-
-    if (!state.isVisible) return null;
-
-    return (
-      <td class="min-w-[660px] w-[660px] border bg-neutral-100 border-t-0 border-l-0 border-b-0" />
-    );
-  },
-);

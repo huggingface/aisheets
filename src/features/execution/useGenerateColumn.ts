@@ -49,27 +49,30 @@ export const useGenerateColumn = () => {
         column.process!.cancellable = newColumn.process!.cancellable;
         column.process!.isExecuting = newColumn.process!.isExecuting;
 
-        addColumn(column);
-        open(column.id, 'edit', {
+        await addColumn(column);
+
+        open('edit', {
+          columnId: column.id,
           task: column.process?.task,
         });
+
         newColumnId = column.id;
       }
+
       if (cell) {
-        replaceCell(cell);
+        await replaceCell(cell);
       }
     }
 
     const newbie = await getColumnById$(newColumnId!);
     if (newbie) {
-      updateColumn(newbie);
+      await updateColumn(newbie);
     }
   });
 
   const onRegenerateCells = $(async (column: Column) => {
     if (column.process?.isExecuting) return;
     column.process!.isExecuting = true;
-
     updateColumn(column);
 
     const response = await regenerateCells(column);

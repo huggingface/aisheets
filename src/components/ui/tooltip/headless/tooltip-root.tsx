@@ -1,10 +1,10 @@
 import {
   $,
+  component$,
   type PropsOf,
   type QRL,
   type Signal,
   Slot,
-  component$,
   useContextProvider,
   useId,
   useSignal,
@@ -107,7 +107,6 @@ export const HTooltipRoot = component$((props: TooltipProps) => {
   return (
     <Popover.Root
       manual
-      hover
       bind:anchor={triggerRef}
       floating={placement}
       id={localId}

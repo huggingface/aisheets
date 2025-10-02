@@ -1,6 +1,6 @@
 import { component$ } from '@builder.io/qwik';
-import { LuColumns } from '@qwikest/icons/lucide';
-import { Popover, buttonVariants } from '~/components';
+import { LuView } from '@qwikest/icons/lucide';
+import { buttonVariants, Popover } from '~/components';
 import { HideColumn } from '~/features/table/components/header';
 import { TEMPORAL_ID, useColumnsStore } from '~/state';
 
@@ -16,8 +16,8 @@ export const TableView = component$(() => {
           <Popover.Trigger
             class={`${buttonVariants({ look: 'ghost' })} flex gap-1 text-primary-foreground my-1`}
           >
-            <LuColumns class="text-sm text-neutral mr-1" />
-            View column
+            <LuView class="text-sm text-neutral mr-1" />
+            Hide columns
           </Popover.Trigger>
           <Popover.Panel class="rounded-md border bg-popover p-1 text-popover-foreground shadow-md">
             <div class="flex flex-col justify-start w-full gap-2">

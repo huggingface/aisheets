@@ -1,31 +1,148 @@
 import {
   $,
-  type Signal,
-  Slot,
   component$,
   createContextId,
+  type Signal,
+  Slot,
   useContext,
   useContextProvider,
   useSignal,
 } from '@builder.io/qwik';
-import type { Column } from '~/state';
+import { type Column, TEMPORAL_ID } from '~/state';
 
-const columnSizeContext =
-  createContextId<Signal<Record<Column['id'], number>>>('column-ui.context');
+interface Pref {
+  width?: number;
+  aiButtonVisible?: boolean;
+  aiTooltipOpen?: boolean;
+  aiPromptOpen?: boolean;
+}
 
-export const ColumnSizeProvider = component$(() => {
-  useContextProvider(columnSizeContext, useSignal({}));
+interface ColumnPreferenceContext {
+  preferences: Signal<Record<Column['id'], Pref>>;
+  hideTimeouts: Signal<Record<string, number>>;
+}
+
+const columnPreferenceContext =
+  createContextId<ColumnPreferenceContext>('column-ui.context');
+
+export const ColumnPreferencesProvider = component$(() => {
+  useContextProvider(columnPreferenceContext, {
+    preferences: useSignal({}),
+    hideTimeouts: useSignal({}),
+  });
 
   return <Slot />;
 });
 
-export const useColumnsSizeContext = () => {
-  const columnSize = useContext(columnSizeContext);
+export const useColumnsPreference = () => {
+  const context = useContext(columnPreferenceContext);
+  const columnPreferences = context.preferences;
+  const hideTimeouts = context.hideTimeouts;
 
   return {
-    columnSize,
-    update: $((columnId: string, width: number) => {
-      columnSize.value = { ...columnSize.value, [columnId]: width };
+    columnPreferences,
+    resize: $((columnId: string, width: number) => {
+      columnPreferences.value = {
+        ...columnPreferences.value,
+        [columnId]: {
+          ...columnPreferences.value[columnId],
+          width,
+        },
+      };
+    }),
+    showAiButton: $((columnId: string) => {
+      if (columnId === TEMPORAL_ID) return;
+      if (
+        Object.values(columnPreferences.value).some(
+          (pref) => !!pref.aiPromptOpen,
+        )
+      ) {
+        return;
+      }
+
+      if (hideTimeouts.value[columnId]) {
+        clearTimeout(hideTimeouts.value[columnId]);
+        const newTimeouts = { ...hideTimeouts.value };
+        delete newTimeouts[columnId];
+        hideTimeouts.value = newTimeouts;
+      }
+
+      columnPreferences.value = {
+        ...columnPreferences.value,
+        [columnId]: {
+          ...columnPreferences.value[columnId],
+          aiButtonVisible: true,
+        },
+      };
+    }),
+    hideAiButton: $((columnId: string) => {
+      if (
+        Object.values(columnPreferences.value).some(
+          (pref) => !!pref.aiPromptOpen,
+        )
+      ) {
+        return;
+      }
+
+      if (hideTimeouts.value[columnId]) {
+        clearTimeout(hideTimeouts.value[columnId]);
+      }
+
+      const timeoutId = window.setTimeout(() => {
+        columnPreferences.value = {
+          ...columnPreferences.value,
+          [columnId]: {
+            ...columnPreferences.value[columnId],
+            aiButtonVisible: false,
+          },
+        };
+
+        const newTimeouts = { ...hideTimeouts.value };
+        delete newTimeouts[columnId];
+        hideTimeouts.value = newTimeouts;
+      }, 100);
+
+      hideTimeouts.value = {
+        ...hideTimeouts.value,
+        [columnId]: timeoutId as unknown as number,
+      };
+    }),
+    openAiColumn: $((columnId: string) => {
+      columnPreferences.value = {
+        ...columnPreferences.value,
+        [columnId]: {
+          ...columnPreferences.value[columnId],
+          aiTooltipOpen: true,
+        },
+      };
+    }),
+    closeAiColumn: $((columnId: string) => {
+      columnPreferences.value = {
+        ...columnPreferences.value,
+        [columnId]: {
+          ...columnPreferences.value[columnId],
+          aiTooltipOpen: false,
+        },
+      };
+    }),
+    openAiPrompt: $((columnId: string) => {
+      columnPreferences.value = {
+        ...columnPreferences.value,
+        [columnId]: {
+          ...columnPreferences.value[columnId],
+          aiPromptOpen: true,
+        },
+      };
+    }),
+    closeAiPrompt: $((columnId: string) => {
+      columnPreferences.value = {
+        ...columnPreferences.value,
+        [columnId]: {
+          ...columnPreferences.value[columnId],
+          aiPromptOpen: false,
+          aiButtonVisible: false,
+        },
+      };
     }),
   };
 };

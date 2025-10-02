@@ -1,217 +1,279 @@
-import {
-  $,
-  component$,
-  type QRL,
-  useComputed$,
-  useSignal,
-} from '@builder.io/qwik';
+import { $, component$, useComputed$, useSignal } from '@builder.io/qwik';
 import { cn } from '@qwik-ui/utils';
-import { LuPlus } from '@qwikest/icons/lucide';
-import { Button, buttonVariants, Popover } from '~/components';
-import { Tooltip } from '~/components/ui/tooltip/tooltip';
+import { LuEgg, LuLoader2 } from '@qwikest/icons/lucide';
+import {
+  Button,
+  buttonVariants,
+  Popover,
+  Select,
+  Textarea,
+} from '~/components';
+import { nextTick } from '~/components/hooks/tick';
+import { SparkIcon } from '~/components/ui/logo/logo';
 import { useExecution } from '~/features/add-column/form';
-import { hasBlobContent, isImage } from '~/features/utils/columns';
+import { useColumnsPreference } from '~/features/table/components/context/colunm-preferences.context';
 
-import { type TaskType, TEMPORAL_ID, useColumnsStore } from '~/state';
+import type { Column, TaskType } from '~/state';
 
-const COLUMN_PROMPTS = {
-  translate: `Translate English to French, ensuring grammatical accuracy and natural, human-like phrasing.
+type PromptsType = {
+  label: string;
+  prompt: string;
+  hide?: boolean;
+};
 
-Maintain original meaning, context, and formatting. Adapt cultural references and review carefully.
+type PromptsTypeWithKey = { key: string } & PromptsType;
 
-Original text: {{REPLACE_ME}}
-`,
-
-  extractKeywords: `Identify and extract the most salient keywords or key phrases representing the core topics from the provided text.
+const TEXT_COLUMN_PROMPTS: Record<string, PromptsType> = {
+  extractKeywords: {
+    label: 'Extract keywords',
+    prompt: `Identify and extract the most salient keywords or key phrases representing the core topics from the provided text.
 
 Return these as a single, comma-separated string. Prioritize relevance and conciseness, avoiding common stop words.
 
 Text for keyword extraction: {{REPLACE_ME}}
 `,
+  },
 
-  summarize: `Condense the provided text, capturing its essential meaning and key points accurately and coherently.
+  summarize: {
+    label: 'Summarize',
+    prompt: `Condense the provided text, capturing its essential meaning and key points accurately and coherently.
 
 If the text is already very short, return it as is. Use your own words where possible (abstractive summary).
 
 Text to summarize: {{REPLACE_ME}}
 `,
+  },
 
-  textToImage: `Generate a detailed and visually rich image based on the provided text description.
+  textToImage: {
+    label: 'Generate image',
+    prompt: `Generate a detailed and visually rich image based on the provided text description.
 
 Ensure the image captures the essence of the text, including key elements, colors, and overall mood. 
 
 Description: {{REPLACE_ME}}`,
+  },
 
-  imageTextToText: `Describe what you see in the image.`,
+  custom: {
+    hide: true,
+    label: 'Custom',
+    prompt: `
 
-  custom: '',
-} as const;
+{{REPLACE_ME}}`,
+  },
+};
 
-type ColumnPromptType = keyof typeof COLUMN_PROMPTS;
+const IMAGE_COLUMN_PROMPTS: Record<string, PromptsType> = {
+  imageTextToText: {
+    label: 'Describe the image',
+    prompt: `Describe what you see in the image.`,
+  },
+};
 
-export const TableAddCellHeaderPlaceHolder = component$(() => {
-  const ref = useSignal<HTMLElement>();
-  const isOpen = useSignal(false);
-  const { open } = useExecution();
-  const { columns, addTemporalColumn } = useColumnsStore();
+const ALL_COLUMN_PROMPTS = {
+  ...TEXT_COLUMN_PROMPTS,
+  ...IMAGE_COLUMN_PROMPTS,
+};
 
-  const lastColumnId = useComputed$(
-    () => columns.value[columns.value.length - 1].id,
-  );
+export const TableAddCellHeaderPlaceHolder = component$<{ column: Column }>(
+  ({ column }) => {
+    const { columnId, open, close } = useExecution();
+    const prompt = useSignal<string>('');
+    const { openAiPrompt, closeAiPrompt, closeAiColumn } =
+      useColumnsPreference();
+    const isGenerating = useSignal(false);
+    const textAreaRef = useSignal<HTMLTextAreaElement>();
 
-  const hasImageColumns = useComputed$(() => {
-    return columns.value.some((column) => isImage(column));
-  });
+    const promptTemplate = useComputed$<PromptsTypeWithKey[]>(() => {
+      let prompt = Object.entries(TEXT_COLUMN_PROMPTS);
 
-  const handleNewColumn = $(async (promptType: ColumnPromptType) => {
-    if (lastColumnId.value === TEMPORAL_ID) return;
+      if (column.type === 'image') {
+        prompt = Object.entries(IMAGE_COLUMN_PROMPTS);
+      }
 
-    // Map prompt types to column types (based on output data type)
-    const typeMap = {
-      translate: 'text',
-      extractKeywords: 'text',
-      summarize: 'text',
-      textToImage: 'image',
-      imageTextToText: 'text',
-      custom: 'text',
-    };
+      return prompt.map(([key, value]) => ({
+        key,
+        ...value,
+      }));
+    });
 
-    // Map prompt types to task types (based on model pipeline)
-    const taskMap: Record<ColumnPromptType, TaskType> = {
-      translate: 'text-generation',
-      extractKeywords: 'text-generation',
-      summarize: 'text-generation',
-      textToImage: 'text-to-image',
-      imageTextToText: 'image-text-to-text',
-      custom: 'text-generation',
-    };
+    const cleanUp = $(() => {
+      prompt.value = '';
+      isGenerating.value = false;
+    });
 
-    const type = typeMap[promptType];
-    const task = taskMap[promptType];
+    const onCreateColumn = $(
+      async (type: Column['type'], task: TaskType, prompt: string) => {
+        isGenerating.value = true;
 
-    await addTemporalColumn(type);
+        nextTick(async () => {
+          await close();
+          await open('add', {
+            nextColumnId: column.id,
+            type,
+            task,
+            prompt,
+          });
 
-    const validColumns = columns.value.filter((c) => !hasBlobContent(c));
+          await closeAiColumn(column.id);
+          await closeAiPrompt(column.id);
+        }, 300);
+      },
+    );
 
-    const firstValidColumnToReference = validColumns[0];
+    const handleTemplate = $(
+      async (promptTemplateSelected: PromptsTypeWithKey) => {
+        const initialPrompt = ALL_COLUMN_PROMPTS[
+          promptTemplateSelected.key
+        ].prompt.replace('{{REPLACE_ME}}', `{{${column.name}}}`);
 
-    if (firstValidColumnToReference) {
-      const initialPrompt = COLUMN_PROMPTS[promptType].replace(
+        const typeMap: Record<string, Column['type']> = {
+          translate: 'text',
+          extractKeywords: 'text',
+          summarize: 'text',
+          textToImage: 'image',
+          imageTextToText: 'text',
+          custom: 'text',
+        };
+
+        const taskMap: Record<string, TaskType> = {
+          translate: 'text-generation',
+          extractKeywords: 'text-generation',
+          summarize: 'text-generation',
+          textToImage: 'text-to-image',
+          imageTextToText: 'image-text-to-text',
+          custom: 'text-generation',
+        };
+
+        await onCreateColumn(
+          typeMap[promptTemplateSelected.key],
+          taskMap[promptTemplateSelected.key],
+          initialPrompt,
+        );
+      },
+    );
+
+    const handleNewColumn = $(async () => {
+      if (!prompt.value.trim()) return;
+
+      const newReferencePrompt = TEXT_COLUMN_PROMPTS['custom'].prompt.replace(
         '{{REPLACE_ME}}',
-        `{{${firstValidColumnToReference.name}}}`,
+        `{{${column.name}}}`,
       );
 
-      open(TEMPORAL_ID, 'add', {
-        prompt: initialPrompt,
-        task,
-      });
-    } else {
-      open(TEMPORAL_ID, 'add', {
-        prompt: '',
-        task,
-      });
-    }
-  });
+      const newPrompt = `${prompt.value.trim()} ${newReferencePrompt}`;
 
-  const isVisible = () => {
-    const rect = ref.value?.getBoundingClientRect();
-    if (!rect) return false;
+      // TODO: @dvsrepo get dynamically the "task" type.
+      await onCreateColumn('unknown', 'text-generation', newPrompt);
+    });
 
-    return rect.left >= 0 && rect.right <= window.innerWidth;
-  };
+    if (columnId.value) return null;
 
-  return (
-    <th
-      id={TEMPORAL_ID}
-      class={cn('visible w-[62px] h-[38px] flex justify-center items-center', {
-        hidden: lastColumnId.value === TEMPORAL_ID,
-      })}
-    >
-      <Tooltip text="Add column">
-        <Popover.Root
-          gutter={8}
-          floating={isVisible() ? 'bottom-end' : 'bottom-start'}
+    return (
+      <Popover.Root gutter={8} floating="right-start">
+        <Popover.Trigger
+          class={cn(
+            buttonVariants({ look: 'ghost' }),
+            'w-6 h-6 rounded-[6px] bg-primary-300',
+          )}
+          preventdefault:mousedown
+          stoppropagation:mousedown
         >
-          <Popover.Trigger
-            ref={ref}
-            class={cn(
-              buttonVariants({ look: 'ghost' }),
-              'w-[30px] h-[30px] bg-transparent text-primary rounded-full hover:bg-primary-100 flex items-center justify-center p-0',
-              {
-                'bg-primary-100': isOpen.value,
-              },
-            )}
-          >
-            <LuPlus class="text-lg" />
-          </Popover.Trigger>
+          <SparkIcon class="text-sm text-white" />
+        </Popover.Trigger>
 
-          <Popover.Panel
-            class="shadow-lg w-86 text-sm p-2"
-            onToggle$={() => {
-              isOpen.value = !isOpen.value;
-            }}
-          >
-            <div class="flex flex-col gap-0.5">
-              <ActionButton
-                label="Translate"
-                column="column"
-                onClick$={() => handleNewColumn('translate')}
+        <Popover.Panel
+          class="shadow-lg w-96 text-sm p-0"
+          onToggle$={(e) => {
+            if (e.newState === 'open') {
+              nextTick(() => {
+                textAreaRef.value?.focus();
+              });
+              openAiPrompt(column.id);
+              cleanUp();
+            } else {
+              closeAiPrompt(column.id);
+            }
+          }}
+        >
+          <div class="flex flex-col">
+            <div class="flex flex-col gap-2">
+              <Textarea
+                ref={textAreaRef}
+                look="ghost"
+                class="p-3 h-9 min-h-9 max-h-28 overflow-hidden resize-none"
+                placeholder="Type your action (e.g. translate to French)"
+                bind:value={prompt}
+                onKeyDown$={(event) => {
+                  if (
+                    event.key === 'Enter' &&
+                    (event.metaKey || event.ctrlKey)
+                  ) {
+                    event.preventDefault();
+                    handleNewColumn();
+                  }
+                }}
+                onInput$={(event) => {
+                  const textarea = event.target as HTMLTextAreaElement;
+
+                  if (!textarea.value) {
+                    textarea.style.height = '2.25rem';
+
+                    return;
+                  }
+                  textarea.style.height = 'auto';
+
+                  const newHeight = Math.min(textarea.scrollHeight, 112);
+                  textarea.style.height = `${newHeight}px`;
+                }}
+                stoppropagation:mousedown
               />
-              <hr class="border-t border-slate-200 dark:border-slate-700" />
-              <ActionButton
-                label="Extract keywords from"
-                column="column"
-                onClick$={() => handleNewColumn('extractKeywords')}
-              />
-              <hr class="border-t border-slate-200 dark:border-slate-700" />
-              <ActionButton
-                label="Summarize"
-                column="column"
-                onClick$={() => handleNewColumn('summarize')}
-              />
-              <hr class="border-t border-slate-200 dark:border-slate-700" />
-              <ActionButton
-                label="Generate image from"
-                column="column"
-                onClick$={() => handleNewColumn('textToImage')}
-              />
-              {hasImageColumns.value && (
-                <>
-                  <hr class="border-t border-slate-200 dark:border-slate-700" />
-                  <ActionButton
-                    label="Ask the image in"
-                    column="column"
-                    onClick$={() => handleNewColumn('imageTextToText')}
-                  />
-                </>
-              )}
-              <hr class="border-t border-slate-200 dark:border-slate-700" />
-              <ActionButton
-                label="Do something with"
-                column="column"
-                onClick$={() => handleNewColumn('custom')}
-              />
+
+              <hr />
+
+              <div
+                class="flex items-center justify-between pb-2"
+                stoppropagation:mousedown
+              >
+                <Select.Root class="w-44">
+                  <Select.Trigger
+                    look="ghost"
+                    class="w-fit text-neutral-700"
+                    preventdefault:mousedown
+                    stoppropagation:mousedown
+                  >
+                    Use Template
+                  </Select.Trigger>
+                  <Select.Popover gutter={10} floating="bottom-start">
+                    {promptTemplate.value
+                      .filter((p) => !p.hide)
+                      .map((prompt) => (
+                        <Select.Item
+                          key={prompt.label}
+                          onClick$={() => handleTemplate(prompt)}
+                        >
+                          <Select.ItemLabel>{prompt.label}</Select.ItemLabel>
+                        </Select.Item>
+                      ))}
+                  </Select.Popover>
+                </Select.Root>
+
+                <Button
+                  look="primary"
+                  class="mr-3 p-2 w-[30px] h-[30px] rounded-full flex items-center justify-center"
+                  onClick$={handleNewColumn}
+                  disabled={isGenerating.value || !prompt.value.trim()}
+                >
+                  {isGenerating.value ? (
+                    <LuLoader2 class="text-sm text-white animate-spin" />
+                  ) : (
+                    <LuEgg class="text-sm text-white" />
+                  )}
+                </Button>
+              </div>
             </div>
-          </Popover.Panel>
-        </Popover.Root>
-      </Tooltip>
-    </th>
-  );
-});
-
-export const ActionButton = component$<{
-  label: string;
-  column: string;
-  onClick$: QRL<(event: PointerEvent, element: HTMLButtonElement) => any>;
-}>(({ label, column, onClick$ }) => {
-  return (
-    <Button
-      look="ghost"
-      class="flex items-center justify-start w-full gap-2.5 p-2 hover:bg-neutral-100 rounded-none first:rounded-tl-md first:rounded-tr-md last:rounded-bl-md last:rounded-br-md"
-      onClick$={onClick$}
-    >
-      <span>{label}</span>
-      <span class="text-neutral-500">{`{{${column}}}`}</span>
-    </Button>
-  );
-});
+          </div>
+        </Popover.Panel>
+      </Popover.Root>
+    );
+  },
+);

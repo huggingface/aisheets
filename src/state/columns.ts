@@ -52,6 +52,22 @@ export interface CreateColumn {
   };
 }
 
+export type ColumnPrototypeWithId = ColumnPrototype & {
+  columnId: Column['id'];
+};
+export type ColumnPrototypeWithNextColumnId = ColumnPrototype & {
+  nextColumnId: Column['id'];
+};
+
+export interface ColumnPrototype {
+  name?: string;
+  type?: Column['type'];
+  prompt?: string;
+  modelName?: string;
+  modelProvider?: string;
+  endpointUrl?: string;
+  task?: TaskType;
+}
 export interface CellSource {
   url: string;
   snippet: string;
@@ -75,7 +91,7 @@ export type Cell = {
 export interface Column {
   id: string;
   name: string;
-  type: string;
+  type: 'text' | 'image' | 'image[]' | 'unknown';
   kind: ColumnKind;
   visible: boolean;
   process?: Process | undefined;
@@ -92,144 +108,146 @@ export const TEMPORAL_ID = '-1';
 export const useColumnsStore = () => {
   const { activeDataset } = useDatasetsStore();
 
-  const createPlaceholderColumn = $(
-    ({ type, name }: { type?: string; name?: string }): Column => {
-      const getNextColumnName = (counter = 1): string => {
-        const manyColumnsWithName = activeDataset.value.columns.filter(
-          (c) => c.id !== TEMPORAL_ID,
-        );
-        const newPosibleColumnName = `column_${manyColumnsWithName.length + 1}`;
+  const createPlaceholderColumn = $((info?: ColumnPrototype): Column => {
+    const getNextColumnName = (counter = 1): string => {
+      const manyColumnsWithName = activeDataset.value.columns.filter(
+        (c) => c.id !== TEMPORAL_ID,
+      );
 
-        if (!manyColumnsWithName.find((c) => c.name === newPosibleColumnName)) {
-          return newPosibleColumnName;
-        }
+      const newPosibleColumnName = `column_${manyColumnsWithName.length + 1}`;
 
-        return getNextColumnName(counter + 1);
-      };
+      if (!manyColumnsWithName.find((c) => c.name === newPosibleColumnName)) {
+        return newPosibleColumnName;
+      }
 
-      return {
-        id: TEMPORAL_ID,
-        name: name ?? getNextColumnName(),
-        kind: 'dynamic',
-        type: type ?? 'text',
-        visible: true,
-        cells: [
-          {
-            id: TEMPORAL_ID,
-            idx: 0,
-            validated: false,
-            updatedAt: new Date(),
-            generating: false,
-            value: '',
-            column: {
-              id: TEMPORAL_ID,
-              type: type ?? 'text',
-            },
-          },
-          {
-            id: TEMPORAL_ID,
-            idx: 1,
-            validated: false,
-            updatedAt: new Date(),
-            generating: false,
-            value: '',
-            column: {
-              id: TEMPORAL_ID,
-              type: type ?? 'text',
-            },
-          },
-          {
-            id: TEMPORAL_ID,
-            idx: 2,
-            validated: false,
-            updatedAt: new Date(),
-            generating: false,
-            value: '',
-            column: {
-              id: TEMPORAL_ID,
-              type: type ?? 'text',
-            },
-          },
-          {
-            id: TEMPORAL_ID,
-            idx: 3,
-            validated: false,
-            updatedAt: new Date(),
-            generating: false,
-            value: '',
-            column: {
-              id: TEMPORAL_ID,
-              type: type ?? 'text',
-            },
-          },
-          {
-            id: TEMPORAL_ID,
-            idx: 4,
-            validated: false,
-            updatedAt: new Date(),
-            generating: false,
-            value: '',
-            column: {
-              id: TEMPORAL_ID,
-              type: type ?? 'text',
-            },
-          },
-          {
-            id: TEMPORAL_ID,
-            idx: 5,
-            validated: false,
-            updatedAt: new Date(),
-            generating: false,
-            value: '',
-            column: {
-              id: TEMPORAL_ID,
-              type: type ?? 'text',
-            },
-          },
-          {
-            id: TEMPORAL_ID,
-            idx: 6,
-            validated: false,
-            updatedAt: new Date(),
-            generating: false,
-            value: '',
-            column: {
-              id: TEMPORAL_ID,
-              type: type ?? 'text',
-            },
-          },
-          {
-            id: TEMPORAL_ID,
-            idx: 7,
-            validated: false,
-            updatedAt: new Date(),
-            generating: false,
-            value: '',
-            column: {
-              id: TEMPORAL_ID,
-              type: type ?? 'text',
-            },
-          },
-        ],
-        process: {
-          modelName: '',
-          modelProvider: '',
-          prompt: '',
-          searchEnabled: false,
-          columnsReferences: [],
-          task: 'text-generation',
+      return getNextColumnName(counter + 1);
+    };
+
+    const type = info?.type ?? 'text';
+
+    return {
+      id: TEMPORAL_ID,
+      name: info?.name ?? getNextColumnName(),
+      kind: 'dynamic',
+      type,
+      visible: true,
+      cells: [
+        {
+          id: TEMPORAL_ID,
+          idx: 0,
+          validated: false,
           updatedAt: new Date(),
+          generating: false,
+          value: '',
+          column: {
+            id: TEMPORAL_ID,
+            type,
+          },
         },
-        dataset: {
-          ...activeDataset.value,
+        {
+          id: TEMPORAL_ID,
+          idx: 1,
+          validated: false,
+          updatedAt: new Date(),
+          generating: false,
+          value: '',
+          column: {
+            id: TEMPORAL_ID,
+            type,
+          },
         },
-      };
-    },
-  );
+        {
+          id: TEMPORAL_ID,
+          idx: 2,
+          validated: false,
+          updatedAt: new Date(),
+          generating: false,
+          value: '',
+          column: {
+            id: TEMPORAL_ID,
+            type,
+          },
+        },
+        {
+          id: TEMPORAL_ID,
+          idx: 3,
+          validated: false,
+          updatedAt: new Date(),
+          generating: false,
+          value: '',
+          column: {
+            id: TEMPORAL_ID,
+            type,
+          },
+        },
+        {
+          id: TEMPORAL_ID,
+          idx: 4,
+          validated: false,
+          updatedAt: new Date(),
+          generating: false,
+          value: '',
+          column: {
+            id: TEMPORAL_ID,
+            type,
+          },
+        },
+        {
+          id: TEMPORAL_ID,
+          idx: 5,
+          validated: false,
+          updatedAt: new Date(),
+          generating: false,
+          value: '',
+          column: {
+            id: TEMPORAL_ID,
+            type,
+          },
+        },
+        {
+          id: TEMPORAL_ID,
+          idx: 6,
+          validated: false,
+          updatedAt: new Date(),
+          generating: false,
+          value: '',
+          column: {
+            id: TEMPORAL_ID,
+            type,
+          },
+        },
+        {
+          id: TEMPORAL_ID,
+          idx: 7,
+          validated: false,
+          updatedAt: new Date(),
+          generating: false,
+          value: '',
+          column: {
+            id: TEMPORAL_ID,
+            type,
+          },
+        },
+      ],
+      process: {
+        modelName: info?.modelName ?? '',
+        modelProvider: info?.modelProvider ?? '',
+        prompt: info?.prompt ?? '',
+        searchEnabled: false,
+        endpointUrl: info?.endpointUrl ?? '',
+        columnsReferences: [],
+        task: info?.task ?? 'text-generation',
+        updatedAt: new Date(),
+      },
+      dataset: {
+        ...activeDataset.value,
+      },
+    };
+  });
 
   const columns = useComputed$(async () => {
     if (activeDataset.value.columns.length === 0) {
-      activeDataset.value.columns = [await createPlaceholderColumn({})];
+      activeDataset.value.columns = [await createPlaceholderColumn()];
     }
     return activeDataset.value.columns;
   });
@@ -247,31 +265,63 @@ export const useColumnsStore = () => {
     columns,
     firstColumn,
     replaceColumns,
-    addTemporalColumn: $(async (type?: string, name?: string) => {
+    addTemporalColumn: $(async (info: ColumnPrototypeWithNextColumnId) => {
       if (activeDataset.value.columns.some((c) => c.id === TEMPORAL_ID)) return;
 
-      const newTemporalColumn = await createPlaceholderColumn({ type, name });
+      const newTemporalColumn = await createPlaceholderColumn(info);
 
-      replaceColumns([...columns.value, newTemporalColumn]);
+      const nextColumnIndex = activeDataset.value.columns.findIndex(
+        (c) => c.id === info.nextColumnId,
+      );
+
+      if (nextColumnIndex === -1) {
+        throw new Error('nextColumnId not found');
+      }
+
+      replaceColumns([
+        ...activeDataset.value.columns.slice(0, nextColumnIndex + 1),
+        newTemporalColumn,
+        ...activeDataset.value.columns.slice(nextColumnIndex + 1),
+      ]);
+
+      return newTemporalColumn;
     }),
     removeTemporalColumn: $(() => {
-      replaceColumns(columns.value.filter((c) => c.id !== TEMPORAL_ID));
+      replaceColumns(
+        activeDataset.value.columns.filter((c) => c.id !== TEMPORAL_ID),
+      );
     }),
     getColumn: $((id: string) => {
-      return columns.value.find((c) => c.id === id);
+      return activeDataset.value.columns.find((c) => c.id === id);
     }),
-    addColumn: $((newbie: Column) => {
-      replaceColumns([
-        ...columns.value.filter((c) => c.id !== TEMPORAL_ID),
+    addColumn: $(async (newbie: Column) => {
+      const temporalColumnIndex = activeDataset.value.columns.findIndex(
+        (c) => c.id === TEMPORAL_ID,
+      );
+
+      if (temporalColumnIndex !== -1) {
+        await replaceColumns([
+          ...activeDataset.value.columns.slice(0, temporalColumnIndex),
+          newbie,
+          ...activeDataset.value.columns.slice(temporalColumnIndex + 1),
+        ]);
+
+        return;
+      }
+
+      await replaceColumns([
+        ...activeDataset.value.columns.filter((c) => c.id !== TEMPORAL_ID),
         newbie,
       ]);
     }),
     removeColumn: $((removed: Column) => {
-      replaceColumns(columns.value.filter((c) => c.id !== removed.id));
+      replaceColumns(
+        activeDataset.value.columns.filter((c) => c.id !== removed.id),
+      );
     }),
     updateColumn: $((updated: Column) => {
       replaceColumns(
-        columns.value.map((c) =>
+        activeDataset.value.columns.map((c) =>
           c.id === updated.id
             ? {
                 ...updated,
@@ -282,10 +332,14 @@ export const useColumnsStore = () => {
       );
     }),
     deleteColumn: $((deleted: Column) => {
-      replaceColumns(columns.value.filter((c) => c.id !== deleted.id));
+      replaceColumns(
+        activeDataset.value.columns.filter((c) => c.id !== deleted.id),
+      );
     }),
     replaceCell: $((cell: Cell) => {
-      const column = columns.value.find((c) => c.id === cell.column?.id);
+      const column = activeDataset.value.columns.find(
+        (c) => c.id === cell.column?.id,
+      );
       if (!column) return;
 
       if (column.cells.some((c) => c.idx === cell.idx)) {
@@ -302,10 +356,10 @@ export const useColumnsStore = () => {
           (column.process.processedCells ?? 0) + 1;
       }
 
-      replaceColumns(columns.value);
+      replaceColumns(activeDataset.value.columns);
     }),
     deleteCellByIdx: $((...idxs: number[]) => {
-      for (const column of columns.value) {
+      for (const column of activeDataset.value.columns) {
         for (const idx of idxs) {
           column.cells = column.cells.filter((c) => c.idx !== idx);
         }
@@ -317,7 +371,7 @@ export const useColumnsStore = () => {
         }
       }
 
-      replaceColumns(columns.value);
+      replaceColumns(activeDataset.value.columns);
     }),
   };
 };

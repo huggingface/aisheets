@@ -1,22 +1,24 @@
 import {
   $,
-  Fragment,
   component$,
+  Fragment,
+  type Signal,
+  useComputed$,
   useSignal,
-  useStore,
-  useTask$,
   useVisibleTask$,
 } from '@builder.io/qwik';
+import { Popover, usePopover } from '@qwik-ui/headless';
 import { cn } from '@qwik-ui/utils';
+import { useClickOutside } from '~/components/hooks/click/outside';
 import { nextTick } from '~/components/hooks/tick';
-import { ExecutionForm, useExecution } from '~/features/add-column';
-import { useGenerateColumn } from '~/features/execution';
-import { useColumnsSizeContext } from '~/features/table/components/context/colunm-preferences.context';
+
+import { useExecution } from '~/features/add-column';
+import { useColumnsPreference } from '~/features/table/components/context/colunm-preferences.context';
 import {
   TableAddCellHeaderPlaceHolder,
   TableCellHeader,
 } from '~/features/table/components/header';
-import { type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
+import { type Column, useColumnsStore } from '~/state';
 
 export const TableHeader = component$(() => {
   const MAX_WIDTH = 1000;
@@ -27,7 +29,8 @@ export const TableHeader = component$(() => {
     startX: number;
     startWidth: number;
   } | null>(null);
-  const { columnSize, update } = useColumnsSizeContext();
+  const { columnId } = useExecution();
+  const { columnPreferences, resize } = useColumnsPreference();
   const draggedColId = useSignal<string | null>(null);
   const targetColId = useSignal<string | null>(null);
 
@@ -88,7 +91,7 @@ export const TableHeader = component$(() => {
           resizingColumn.value.startWidth + deltaX,
         );
 
-        update(resizingColumn.value.columnId, newWidth);
+        resize(resizingColumn.value.columnId, newWidth);
       }
     };
 
@@ -101,7 +104,7 @@ export const TableHeader = component$(() => {
     resizingColumn.value = {
       columnId,
       startX: event.clientX,
-      startWidth: columnSize.value[columnId] || 326,
+      startWidth: columnPreferences.value[columnId]?.width || 326,
     };
 
     document.addEventListener('mousemove', handleResize);
@@ -141,7 +144,7 @@ export const TableHeader = component$(() => {
     );
     const finalWidth = Math.min(maxContentWidth, MAX_WIDTH);
 
-    update(column.id, finalWidth);
+    resize(column.id, finalWidth);
   });
 
   useVisibleTask$(({ track }) => {
@@ -226,18 +229,8 @@ export const TableHeader = component$(() => {
     }
   });
 
-  const indexToAlphanumeric = $((index: number): string => {
-    let result = '';
-    while (index > 0) {
-      index--;
-      result = String.fromCharCode('A'.charCodeAt(0) + (index % 26)) + result;
-      index = Math.floor(index / 26);
-    }
-    return result;
-  });
-
   return (
-    <thead class="sticky top-0 bg-white z-50">
+    <thead class="box-border sticky top-0 bg-white z-50">
       <tr>
         <th
           class="sticky left-0 z-[10] min-w-10 w-10 min-h-[50px] h-[50px] p-2 border rounded-tl-sm bg-neutral-100"
@@ -249,85 +242,146 @@ export const TableHeader = component$(() => {
               <Fragment key={column.id}>
                 <th
                   id={`index-${column.id}`}
-                  data-column-id={column.id}
                   class={cn(
-                    'min-w-[142px] w-[326px] h-[38px] border bg-neutral-100 text-primary-600 font-normal relative select-none cursor-grab',
+                    'min-w-[142px] w-[326px] max-h-[38px] h-[38px] border bg-neutral-100 text-primary-600 font-normal relative select-none cursor-grab group',
                     {
-                      'border-r-0': column.id === TEMPORAL_ID,
                       'opacity-50 shadow-lg bg-primary-50':
                         draggedColId.value === column.id,
                       'cursor-grabbing':
                         draggedColId.value === column.id ||
                         targetColId.value === column.id,
+                      'bg-blue-50': column.id == columnId.value,
+                      'shadow-[inset_2px_0_0_theme(colors.primary.400),inset_-2px_0_0_theme(colors.primary.400),inset_0_2px_0_theme(colors.primary.400)] rounded-tl-[6px] rounded-tr-[6px]':
+                        columnPreferences.value[column.id]?.aiPromptOpen,
                     },
                   )}
-                  style={{ width: `${columnSize.value[column.id] || 326}px` }}
+                  style={{
+                    width: `${columnPreferences.value[column.id]?.width || 326}px`,
+                  }}
                   onMouseDown$={(e) => handleManualDragStart(e, column.id)}
                 >
-                  {indexToAlphanumeric(i + 1)}
+                  <TableIndexTableHeader
+                    column={column}
+                    index={i}
+                    draggedColId={draggedColId}
+                  />
+
                   <span
                     class="absolute top-0 -right-[3px] w-[4px] h-full cursor-col-resize bg-transparent hover:bg-primary-100 z-10"
                     onMouseDown$={(e) => handleResizeStart(e, column.id)}
                     onDblClick$={(e) => autoResize(e, column)}
                   />
                 </th>
-
-                <ExecutionFormDebounced column={column} />
               </Fragment>
             ),
-        )}
-        {columns.value.filter((c) => c.id !== TEMPORAL_ID).length >= 1 && (
-          <TableAddCellHeaderPlaceHolder />
         )}
       </tr>
       <tr>
         {columns.value
           .filter((c) => c.visible)
           .map((column) => (
-            <Fragment key={column.id}>
-              <TableCellHeader column={column} />
-              <ExecutionHeaderDebounced column={column} />
-            </Fragment>
+            <TableCellHeader key={column.id} column={column} />
           ))}
       </tr>
     </thead>
   );
 });
 
-const ExecutionFormDebounced = component$<{ column: Column }>(({ column }) => {
-  const { onGenerateColumn } = useGenerateColumn();
+export const TableIndexTableHeader = component$<{
+  column: Column;
+  index: number;
+  draggedColId: Signal<string | null>;
+}>(({ column, index, draggedColId }) => {
   const { columnId } = useExecution();
-
-  const state = useStore({ isVisible: columnId.value === column.id });
-
-  useTask$(({ track }) => {
-    track(() => columnId.value);
-    nextTick(() => {
-      state.isVisible = columnId.value === column.id;
-    }, 100);
+  const popoverId = `ai-column-${column.id}-popover`;
+  const anchorRef = useSignal<HTMLElement | undefined>();
+  const { showPopover, hidePopover } = usePopover(popoverId);
+  const {
+    columnPreferences,
+    openAiColumn,
+    closeAiColumn,
+    showAiButton,
+    hideAiButton,
+  } = useColumnsPreference();
+  const aiButtonVisible = useComputed$(() => {
+    return columnPreferences.value[column.id]?.aiButtonVisible;
   });
 
-  if (!state.isVisible) return null;
+  const indexToAlphanumeric = $((index: number): string => {
+    let result = '';
+    while (index > 0) {
+      index--;
+      result = String.fromCharCode('A'.charCodeAt(0) + (index % 26)) + result;
+      index = Math.floor(index / 26);
+    }
+    return result;
+  });
 
-  return <ExecutionForm column={column} onGenerateColumn={onGenerateColumn} />;
-});
+  const clickOutsideRef = useClickOutside(
+    $(() => {
+      if (!aiButtonVisible.value) return;
 
-const ExecutionHeaderDebounced = component$<{ column: Column }>(
-  ({ column }) => {
-    const { columnId } = useExecution();
-    const state = useStore({ isVisible: columnId.value === column.id });
-
-    useTask$(({ track }) => {
-      track(() => columnId.value);
       nextTick(() => {
-        state.isVisible = columnId.value === column.id;
-      }, 100);
-    });
+        hideAiButton(column.id);
+      });
+    }),
+  );
 
-    if (!state.isVisible) return null;
+  useVisibleTask$(({ track }) => {
+    track(aiButtonVisible);
+    track(columnId);
 
-    return (
-      <th class="min-w-[660px] w-[660px] h-[38px] bg-neutral-100 border" />
-    );
-  },
-);
+    if (aiButtonVisible.value && !columnId.value) {
+      showPopover();
+    } else {
+      hidePopover();
+    }
+  });
+
+  if (!column.visible) return null;
+
+  return (
+    <Popover.Root
+      ref={clickOutsideRef}
+      flip={false}
+      class="h-[38px]"
+      gutter={-11.5}
+      floating="top"
+      id={popoverId}
+      bind:anchor={anchorRef}
+      manual
+      onMouseLeave$={() => {
+        nextTick(() => {
+          hideAiButton(column.id);
+        });
+      }}
+    >
+      <div
+        data-column-id={column.id}
+        ref={anchorRef}
+        class="h-[38px] w-full flex items-center justify-center"
+        onMouseOver$={() => {
+          if (draggedColId.value) return;
+
+          showAiButton(column.id);
+        }}
+      >
+        {indexToAlphanumeric(index + 1)}
+      </div>
+      <Popover.Panel
+        class="p-0 bg-transparent"
+        preventdefault:mousedown
+        stoppropagation:mousedown
+        onToggle$={(e) => {
+          if (e.newState === 'open') {
+            openAiColumn(column.id);
+          } else {
+            closeAiColumn(column.id);
+          }
+        }}
+      >
+        <TableAddCellHeaderPlaceHolder column={column} />
+      </Popover.Panel>
+    </Popover.Root>
+  );
+});

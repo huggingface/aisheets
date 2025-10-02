@@ -2,23 +2,22 @@ import {
   $,
   component$,
   noSerialize,
-  type QRL,
   useComputed$,
   useSignal,
   useTask$,
   useVisibleTask$,
 } from '@builder.io/qwik';
+import { Collapsible } from '@qwik-ui/headless';
 
 import { cn } from '@qwik-ui/utils';
 import {
   LuCheck,
+  LuChevronDown,
   LuEgg,
   LuGlobe,
   LuImage,
   LuSquare,
-  LuX,
 } from '@qwikest/icons/lucide';
-
 import { Button, Select, triggerLooks } from '~/components';
 import { useClickOutside } from '~/components/hooks/click/outside';
 import { nextTick } from '~/components/hooks/tick';
@@ -28,41 +27,31 @@ import {
   Provider,
 } from '~/components/ui/logo/logo';
 import { Tooltip } from '~/components/ui/tooltip/tooltip';
-
 import {
   TemplateTextArea,
   type Variable,
 } from '~/features/add-column/components/template-textarea';
+
 import { useExecution } from '~/features/add-column/form/execution';
+import { useGenerateColumn } from '~/features/execution';
 import { hasBlobContent, isImage } from '~/features/utils/columns';
 import type { Model } from '~/loaders/hub-models';
 import { useConfigContext, useModelsContext } from '~/routes/home/layout';
 import {
   type Column,
-  type CreateColumn,
   type TaskType,
   TEMPORAL_ID,
   useColumnsStore,
+  useDatasetsStore,
 } from '~/state';
 
-interface SidebarProps {
-  column: Column;
-  onGenerateColumn: QRL<(column: CreateColumn) => Promise<void>>;
-}
+export class Models {
+  constructor(private readonly models: Model[]) {}
 
-type SupportedType = 'text' | 'image';
-
-class Models {
-  private models: Model[];
-
-  constructor(models: Model[]) {
-    this.models = models;
-  }
-
-  getModelsByType(type: SupportedType): Model[] {
-    if (type === 'image') return this.getImageModels();
-
-    return this.getTextModels();
+  get(value: string) {
+    return this.models.find(
+      (m: Model) => m.id.toLocaleLowerCase() === value.toLocaleLowerCase(),
+    );
   }
 
   getModelsByTask(task: TaskType): Model[] {
@@ -71,11 +60,11 @@ class Models {
     return this.getTextModels();
   }
 
-  private getTextModels(): Model[] {
+  getTextModels(): Model[] {
     return this.models.filter((model) => model.supportedType === 'text');
   }
 
-  private getImageModels(): Model[] {
+  getImageModels(): Model[] {
     return this.models.filter((model) => model.supportedType === 'image');
   }
 
@@ -90,8 +79,7 @@ type ModelWithExtraTags = Model & {
   extraTags?: { label: string; class: string }[];
 };
 class GroupedModels {
-  private models: Model[];
-  private tags = {
+  private readonly tags = {
     LIGHT: {
       label: 'lightweight',
       class: 'bg-[#FFF9C4]',
@@ -126,9 +114,10 @@ class GroupedModels {
     },
   };
 
-  constructor(models: Model[]) {
-    this.models = models;
-  }
+  constructor(
+    private readonly column: Column,
+    private readonly models: Model[],
+  ) {}
 
   private get recommendedModelIds(): {
     id: Model['id'];
@@ -189,12 +178,8 @@ class GroupedModels {
     ];
   }
 
-  byCategory(): {
-    label: string;
-    class: string;
-    models: ModelWithExtraTags[];
-  }[] {
-    const recommended: ModelWithExtraTags[] = this.recommendedModelIds
+  private getRecommendedModels(): ModelWithExtraTags[] {
+    return this.recommendedModelIds
       .map((recommendedModel) => {
         const model = this.models.find((m) => m.id === recommendedModel.id);
         return model
@@ -205,8 +190,14 @@ class GroupedModels {
           : null;
       })
       .filter((model): model is NonNullable<typeof model> => model !== null);
+  }
 
-    return [
+  byCategory(): {
+    label: string;
+    class: string;
+    models: ModelWithExtraTags[];
+  }[] {
+    const models = [
       {
         label: 'Custom Models',
         class: 'h-10 p-2 bg-primary-50 text-primary-400',
@@ -215,8 +206,28 @@ class GroupedModels {
       {
         label: 'Recommended Models',
         class: 'h-10 p-2 bg-primary-50 text-primary-400',
-        models: recommended,
+        models: this.getRecommendedModels(),
       },
+    ];
+
+    if (this.column.type === 'unknown') {
+      return [
+        ...models,
+        {
+          label: 'Text Models',
+          class: 'h-10 p-2 bg-amber-50 text-amber-400',
+          models: this.models.filter((m) => m.supportedType === 'text'),
+        },
+        {
+          label: 'Image Models',
+          class: 'h-10 p-2 bg-secondary-50 text-secondary-400',
+          models: this.models.filter((m) => m.supportedType === 'image'),
+        },
+      ].filter((g) => g.models.length > 0);
+    }
+
+    return [
+      ...models,
       {
         label: 'All models available on Hugging Face',
         class: 'h-10 p-2 bg-[#FFF0D9] text-[#FF9D00]',
@@ -227,194 +238,212 @@ class GroupedModels {
               !this.recommendedModelIds.map((r) => r.id).includes(model.id),
           ),
       },
-    ];
+    ].filter((g) => g.models.length > 0);
   }
 }
 
-export const ExecutionForm = component$<SidebarProps>(
-  ({ column, onGenerateColumn }) => {
-    const executionFormRef = useSignal<HTMLElement>();
-    const { initialProcess, mode, close, task } = useExecution();
-    const { firstColumn, columns, removeTemporalColumn, updateColumn } =
-      useColumnsStore();
+export const ExecutionForm = component$(() => {
+  const { activeDataset } = useDatasetsStore();
+  const { mode, columnId, column } = useExecution();
+  const { columns, updateColumn } = useColumnsStore();
+  const allModels = useModelsContext();
+  const { DEFAULT_MODEL, DEFAULT_MODEL_PROVIDER } = useConfigContext();
+  const { onGenerateColumn } = useGenerateColumn();
 
-    const allModels = useModelsContext();
-    const datasetSize = useComputed$(() =>
-      Math.max(
-        ...columns.value
-          .filter((c) => !!c.numberOfCells)
-          .map((c) => c.numberOfCells!),
-      ),
-    );
-    const remainingCells = useComputed$(() => {
-      if (!column.process?.processedCells) return datasetSize.value;
+  const models = useComputed$(() => {
+    if (!column.value) return [];
 
-      return datasetSize.value - column.process?.processedCells;
-    });
+    return new Models(allModels).getModelsByTask(column.value.process?.task!);
+  });
 
-    const { DEFAULT_MODEL, DEFAULT_MODEL_PROVIDER } = useConfigContext();
+  const filteredModels = useSignal<Model[]>(models.value);
+  const groupedModels = useComputed$(() => {
+    if (!column.value) return [];
 
-    const models = useComputed$(() => {
-      return new Models(allModels).getModelsByTask(
-        task.value || 'text-generation',
-      );
-    });
+    return new GroupedModels(column.value, filteredModels.value).byCategory();
+  });
 
-    const showEndpointUrl = useComputed$(() => {
-      return models.value.some((m) => !!m.endpointUrl);
-    });
+  const showEndpointUrl = useComputed$(() => {
+    return models.value.some((m) => !!m.endpointUrl);
+  });
 
-    const filteredModels = useSignal<Model[]>(models.value);
+  const prompt = useSignal<string>('');
+  const columnsReferences = useSignal<string[]>([]);
+  const variables = useSignal<Variable[]>([]);
+  const searchOnWeb = useSignal(false);
 
-    const prompt = useSignal<string>('');
-    const columnsReferences = useSignal<string[]>([]);
-    const variables = useSignal<Variable[]>([]);
-    const searchOnWeb = useSignal(false);
+  const isModelDropdownOpen = useSignal(false);
+  const modelSearchQuery = useSignal<string>('');
+  const selectedModelId = useSignal<string>('');
+  const selectedProvider = useSignal<string>('');
+  const modelProviders = useSignal<string[]>([]);
 
-    const isModelDropdownOpen = useSignal(false);
-    const modelSearchQuery = useSignal<string>('');
-    const selectedModelId = useSignal<string>('');
-    const selectedProvider = useSignal<string>('');
-    const modelProviders = useSignal<string[]>([]);
+  // Image column selector for image-text-to-text scenarios
+  const selectedImageColumn = useSignal<string>('');
+  const imageColumns = useSignal<Variable[]>([]);
 
-    // Image column selector for image-text-to-text scenarios
-    const selectedImageColumn = useSignal<string>('');
-    const imageColumns = useSignal<Variable[]>([]);
+  const needsImageColumn = useComputed$(() => {
+    console.log('Checking if image column is needed', column.value);
 
-    const needsImageColumn = useComputed$(() => {
-      return task.value === 'image-text-to-text';
-    });
+    return column.value?.process?.task === 'image-text-to-text';
+  });
 
-    const onSelectedVariables = $((variables: { id: string }[]) => {
-      columnsReferences.value = variables.map((v) => v.id);
-    });
+  const onSelectedVariables = $((variables: { id: string }[]) => {
+    columnsReferences.value = variables.map((v) => v.id);
+  });
 
-    const groupedModels = useComputed$(() => {
-      return new GroupedModels(filteredModels.value).byCategory();
-    });
+  const isImageColumn = useComputed$(() => {
+    return column.value?.type === 'image';
+  });
 
-    const isImageColumn = useComputed$(() => {
-      return column.type === 'image';
-    });
+  const isSearchOnWebAvailable = useComputed$(() => {
+    return !isImageColumn.value;
+  });
 
-    const isSearchOnWebAvailable = useComputed$(() => {
-      return !isImageColumn.value;
-    });
+  const modelSearchContainerRef = useClickOutside(
+    $(() => {
+      modelSearchQuery.value = selectedModelId.value || '';
+    }),
+  );
 
-    const modelSearchContainerRef = useClickOutside(
-      $(() => {
-        modelSearchQuery.value = selectedModelId.value || '';
-      }),
-    );
+  useTask$(async ({ track }) => {
+    track(columns);
 
-    useVisibleTask$(() => {
-      if (initialProcess.value.prompt) {
-        prompt.value = initialProcess.value.prompt;
-      }
-      if (initialProcess.value.modelName) {
-        selectedModelId.value = initialProcess.value.modelName;
-      }
-      if (initialProcess.value.modelProvider) {
-        selectedProvider.value = initialProcess.value.modelProvider;
-      }
-      if (initialProcess.value.endpointUrl && selectedProvider.value === '') {
-        selectedProvider.value = initialProcess.value.endpointUrl;
-      }
-    });
+    variables.value = columns.value
+      .filter((c) => c.id !== column.value?.id && !hasBlobContent(c))
+      .map((c) => ({
+        id: c.id,
+        name: c.name,
+      }));
 
-    useTask$(async ({ track }) => {
-      track(columns);
-
-      variables.value = columns.value
-        .filter((c) => c.id !== column.id && !hasBlobContent(c))
-        .map((c) => ({
-          id: c.id,
-          name: c.name,
-        }));
-
-      const updateImageColumns = async () => {
-        const imageCols = [];
-        for (const c of columns.value) {
-          if (c.id !== column.id && isImage(c)) {
-            imageCols.push({
-              id: c.id,
-              name: c.name,
-            });
-          }
+    const updateImageColumns = async () => {
+      const imageCols = [];
+      for (const c of columns.value) {
+        if (c.id !== column.value?.id && isImage(c)) {
+          imageCols.push({
+            id: c.id,
+            name: c.name,
+          });
         }
-        imageColumns.value = imageCols;
+      }
+      imageColumns.value = imageCols;
 
-        if (
-          needsImageColumn.value &&
-          !selectedImageColumn.value &&
-          imageColumns.value.length > 0 &&
-          mode.value === 'add'
-        ) {
-          selectedImageColumn.value = imageColumns.value[0].id;
-        }
-      };
+      if (
+        needsImageColumn.value &&
+        !selectedImageColumn.value &&
+        imageColumns.value.length > 0 &&
+        mode.value === 'add'
+      ) {
+        selectedImageColumn.value = imageColumns.value[0].id;
+      }
+    };
 
-      await updateImageColumns();
-    });
+    await updateImageColumns();
+  });
 
-    useTask$(() => {
-      const { process } = column;
-      if (!process) return;
+  useTask$(({ track }) => {
+    track(columnId);
+    track(() => column.value?.id);
 
-      prompt.value = process.prompt;
-      searchOnWeb.value = process.searchEnabled || false;
+    if (!column.value) return;
+    if (columnId.value != column.value.id) return;
 
-      if (process.modelName) {
-        // If there's a previously selected model, use that
-        selectedModelId.value = process.modelName;
+    const { process } = column.value;
+    if (!process) return;
 
-        if (showEndpointUrl.value) {
-          selectedProvider.value = process.endpointUrl || '';
-        } else {
-          selectedProvider.value = process.modelProvider || '';
-        }
+    prompt.value = process.prompt;
+    searchOnWeb.value = process.searchEnabled || false;
+
+    if (process.modelName) {
+      // If there's a previously selected model, use that
+      selectedModelId.value = process.modelName;
+
+      if (showEndpointUrl.value) {
+        selectedProvider.value = process.endpointUrl || '';
       } else {
-        const defaultModel =
-          models.value?.find(
-            (m: Model) =>
-              m.id.toLocaleLowerCase() === DEFAULT_MODEL.toLocaleLowerCase(),
-          ) || models.value[0];
-
-        if (!defaultModel) return;
-
-        selectedModelId.value = defaultModel.id;
+        selectedProvider.value = process.modelProvider || '';
       }
+    } else {
+      const defaultModel =
+        models.value?.find(
+          (m: Model) =>
+            m.id.toLocaleLowerCase() === DEFAULT_MODEL.toLocaleLowerCase(),
+        ) || models.value[0];
 
-      // Initialize image column selection if editing an existing column
-      if (process.imageColumnId) {
-        selectedImageColumn.value = process.imageColumnId;
-      }
-    });
+      if (!defaultModel) return;
 
-    useTask$(({ track }) => {
-      track(modelSearchQuery);
+      selectedModelId.value = defaultModel.id;
+    }
 
-      if (modelSearchQuery.value.length <= 1) return;
+    // Initialize image column selection if editing an existing column
+    if (process.imageColumnId) {
+      selectedImageColumn.value = process.imageColumnId;
+    }
+  });
 
-      if (modelSearchQuery.value === selectedModelId.value) {
-        filteredModels.value = models.value;
-        return;
-      }
+  useTask$(({ track }) => {
+    track(modelSearchQuery);
+    track(models);
 
-      filteredModels.value = models.value.filter((model: Model) =>
-        model.id.toLowerCase().includes(modelSearchQuery.value.toLowerCase()),
+    if (modelSearchQuery.value.length <= 1) return;
+
+    if (modelSearchQuery.value === selectedModelId.value) {
+      filteredModels.value = models.value;
+      return;
+    }
+
+    filteredModels.value = models.value.filter((model: Model) =>
+      model.id.toLowerCase().includes(modelSearchQuery.value.toLowerCase()),
+    );
+
+    nextTick(() => {
+      isModelDropdownOpen.value =
+        filteredModels.value.length > 0 &&
+        filteredModels.value.length !== models.value.length;
+    }, 300);
+  });
+
+  useTask$(({ track }) => {
+    track(selectedModelId);
+    track(models);
+
+    modelSearchQuery.value = selectedModelId.value || modelSearchQuery.value;
+
+    const model = models.value.find(
+      (m: Model) =>
+        m.id.toLocaleLowerCase() === selectedModelId.value.toLocaleLowerCase(),
+    );
+
+    if (!model) return;
+
+    modelProviders.value = model.endpointUrl
+      ? [model.endpointUrl]
+      : (model.providers ?? []);
+
+    if (
+      !selectedProvider.value ||
+      !modelProviders.value.includes(selectedProvider.value)
+    ) {
+      const defaultModel = modelProviders.value.find(
+        (provider) => provider === DEFAULT_MODEL_PROVIDER,
       );
+      selectedProvider.value = defaultModel || modelProviders.value[0];
+    }
+  });
 
-      nextTick(() => {
-        isModelDropdownOpen.value =
-          filteredModels.value.length > 0 &&
-          filteredModels.value.length !== models.value.length;
-      }, 300);
-    });
+  const onStop = $(async () => {
+    if (!column.value) return;
 
-    useTask$(({ track }) => {
-      track(selectedModelId);
-      modelSearchQuery.value = selectedModelId.value || modelSearchQuery.value;
+    column.value.process!.cancellable!.abort();
+    column.value.process!.isExecuting = false;
+
+    updateColumn(column.value);
+  });
+
+  const onGenerate = $(async () => {
+    try {
+      if (!column.value) return;
+      if (column.value.process?.isExecuting) return;
 
       const model = models.value.find(
         (m: Model) =>
@@ -424,430 +453,393 @@ export const ExecutionForm = component$<SidebarProps>(
 
       if (!model) return;
 
-      modelProviders.value = model.endpointUrl
-        ? [model.endpointUrl]
-        : (model.providers ?? []);
+      let modelProvider: string | undefined;
+      let endpointUrl: string | undefined;
 
-      nextTick(() => {
-        if (
-          !selectedProvider.value ||
-          !modelProviders.value.includes(selectedProvider.value)
-        ) {
-          const defaultModel = modelProviders.value.find(
-            (provider) => provider === DEFAULT_MODEL_PROVIDER,
-          );
-
-          selectedProvider.value = defaultModel || modelProviders.value[0];
-        }
-      });
-    });
-
-    useVisibleTask$(() => {
-      if (!executionFormRef.value) return;
-
-      executionFormRef.value.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center',
-      });
-    });
-
-    const onStop = $(async () => {
-      column.process!.cancellable!.abort();
-      column.process!.isExecuting = false;
-
-      updateColumn(column);
-    });
-
-    const onGenerate = $(async () => {
-      try {
-        const modelName = selectedModelId.value;
-
-        let modelProvider: string | undefined;
-        let endpointUrl: string | undefined;
-
-        if (showEndpointUrl.value) {
-          endpointUrl = selectedProvider.value!;
-        } else {
-          modelProvider = selectedProvider.value!;
-        }
-
-        column.process = {
-          ...column.process,
-          cancellable: noSerialize(new AbortController()),
-          isExecuting: true,
-          modelName,
-          modelProvider,
-          endpointUrl,
-          prompt: prompt.value,
-          columnsReferences: columnsReferences.value,
-          searchEnabled: searchOnWeb.value,
-          task: task.value || 'text-generation',
-          // Add selected image column for image processing workflows
-          ...(needsImageColumn.value && {
-            imageColumnId: selectedImageColumn.value || undefined,
-          }),
-        };
-
-        updateColumn(column);
-        await onGenerateColumn(column);
-      } catch {}
-    });
-
-    const handleCloseForm = $(async () => {
-      if (mode.value === 'add') {
-        await removeTemporalColumn();
+      if (showEndpointUrl.value) {
+        endpointUrl = selectedProvider.value!;
+      } else {
+        modelProvider = selectedProvider.value!;
       }
 
-      close();
-    });
+      if (column.value.type === 'unknown') {
+        column.value.type = model.supportedType as Column['type'];
+      }
 
-    return (
-      <th
-        class="z-20 min-w-[660px] w-[660px] bg-neutral-100 font-normal border text-left"
-        ref={executionFormRef}
-      >
-        <div class="flex justify-between items-center p-1 h-[38px]">
-          <span class="px-8">Instructions to generate cells</span>
-          <Button
-            look="ghost"
-            class={`${
-              columns.value.filter((c) => c.id !== TEMPORAL_ID).length >= 1
-                ? 'visible'
-                : 'invisible'
-            } rounded-full hover:bg-neutral-200 cursor-pointer transition-colors w-[30px] h-[30px]`}
-            onClick$={handleCloseForm}
-            tabIndex={0}
-            aria-label="Close"
-            style={{
-              opacity: firstColumn.value.id === TEMPORAL_ID ? '0.5' : '1',
-              pointerEvents:
-                firstColumn.value.id === TEMPORAL_ID ? 'none' : 'auto',
-            }}
-          >
-            <LuX class="text-sm text-neutral" />
-          </Button>
-        </div>
+      column.value.process = {
+        ...column.value.process!,
+        cancellable: noSerialize(new AbortController()),
+        isExecuting: true,
+        modelName: model.id,
+        modelProvider,
+        endpointUrl,
+        prompt: prompt.value,
+        columnsReferences: columnsReferences.value,
+        searchEnabled: searchOnWeb.value,
+        // Add selected image column for image processing workflows
+        ...(needsImageColumn.value && {
+          imageColumnId: selectedImageColumn.value || undefined,
+        }),
+      };
 
-        <div class="relative h-full w-full">
-          <div class="absolute h-full w-full flex flex-col">
-            <div class="flex flex-col gap-2 px-8 bg-neutral-100 w-full">
-              <div class="relative">
-                <div class="h-72 min-h-72 max-h-72 bg-white border border-secondary-foreground rounded-sm relative">
-                  {/* Image column dropdown positioned at top-left inside textarea */}
-                  {needsImageColumn.value && imageColumns.value.length > 0 && (
-                    <div class="absolute top-2 left-2 z-10 w-48">
-                      <Select.Root
-                        bind:value={selectedImageColumn}
-                        class="h-[30px]"
-                      >
-                        <Select.Trigger class="bg-white/90 backdrop-blur-sm rounded-base border-neutral-300-foreground h-[30px] flex items-center px-[10px] py-[8px] shadow-sm">
-                          <div class="flex text-xs items-center justify-between gap-2 font-mono w-full">
-                            <div class="flex items-center gap-2">
-                              <LuImage class="h-4 w-4 text-neutral-500" />
-                              <Select.DisplayValue />
-                            </div>
-                          </div>
-                        </Select.Trigger>
-                        <Select.Popover class="border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto mt-1 min-w-[200px]">
-                          {imageColumns.value.map((imageColumn) => (
-                            <Select.Item
-                              key={imageColumn.id}
-                              value={imageColumn.id}
-                              class="text-foreground hover:bg-accent"
-                            >
-                              <div class="flex text-xs items-center p-1 gap-2 font-mono">
-                                <Select.ItemLabel>
-                                  {imageColumn.name}
-                                </Select.ItemLabel>
-                                {imageColumn.id ===
-                                  selectedImageColumn.value && (
-                                  <LuCheck class="h-4 w4 text-primary-500 absolute right-2 top-1/2 -translate-y-1/2" />
-                                )}
-                              </div>
-                            </Select.Item>
-                          ))}
-                        </Select.Popover>
-                      </Select.Root>
-                    </div>
-                  )}
+      updateColumn(column.value);
+      await onGenerateColumn(column.value);
+    } catch {}
+  });
 
-                  <TemplateTextArea
-                    bind:value={prompt}
-                    variables={variables}
-                    onSelectedVariables={onSelectedVariables}
-                    hasImageDropdown={
-                      needsImageColumn.value && imageColumns.value.length > 0
-                    }
-                  />
-                </div>
+  const shouldDisable = useComputed$(() => {
+    return columnId.value === TEMPORAL_ID || column.value?.process?.isExecuting;
+  });
 
-                <div class="w-full absolute bottom-0 p-4 flex flex-row items-center justify-between cursor-text">
-                  {isSearchOnWebAvailable.value ? (
-                    <Button
-                      look="secondary"
-                      class={cn(
-                        'flex px-[10px] py-[8px] gap-[10px] bg-white text-neutral-600 hover:bg-neutral-100 h-[30px] rounded-[8px]',
-                        {
-                          'border-primary-100 outline-primary-100 bg-primary-50 hover:bg-primary-50 text-primary-500 hover:text-primary-400':
-                            searchOnWeb.value,
-                        },
-                      )}
-                      onClick$={() => {
-                        searchOnWeb.value = !searchOnWeb.value;
-                      }}
-                      disabled={column.process?.isExecuting}
+  useVisibleTask$(() => {
+    if (columnId.value === TEMPORAL_ID) {
+      nextTick(() => {
+        onGenerate();
+      });
+    }
+  });
+
+  if (!column.value) return null;
+
+  return (
+    <div class="min-w-[660px] w-[660px] font-normal text-left">
+      <span>Type your action</span>
+
+      <div class="relative h-full w-full">
+        <div class="absolute h-full w-full flex flex-col">
+          <div class="flex flex-col gap-2 w-full">
+            <div class="relative">
+              <div
+                class={cn(
+                  'h-72 min-h-72 max-h-72 bg-white border border-secondary-foreground rounded-sm relative mt-2',
+                  {
+                    'cursor-not-allowed pointer-events-none opacity-70':
+                      shouldDisable.value,
+                  },
+                )}
+              >
+                {/* Image column dropdown positioned at top-left inside textarea */}
+                {needsImageColumn.value && imageColumns.value.length > 0 && (
+                  <div class="absolute top-2 left-2 z-10 w-48">
+                    <Select.Root
+                      bind:value={selectedImageColumn}
+                      class="h-[30px]"
                     >
-                      <LuGlobe class="text-lg" />
-                      Search the web
-                    </Button>
-                  ) : (
-                    <div class="flex items-center gap-2 text-neutral-500" />
-                  )}
-                  <div class="flex items-center gap-4">
-                    {!column.process?.isExecuting &&
-                      column.cells.some((c) => c.error) && (
-                        <div class="p-[1.5px] rounded-[6px] bg-red-500 w-16 h-8">
-                          <div class="rounded-[4px] bg-white w-full h-full flex items-center justify-center text-red-500">
-                            {column.cells.filter((c) => c.error).length}
+                      <Select.Trigger class="bg-white/90 backdrop-blur-sm rounded-base border-neutral-300-foreground h-[30px] flex items-center px-[10px] py-[8px] shadow-sm">
+                        <div class="flex text-xs items-center justify-between gap-2 font-mono w-full">
+                          <div class="flex items-center gap-2">
+                            <LuImage class="h-4 w-4 text-neutral-500" />
+                            <Select.DisplayValue />
                           </div>
                         </div>
-                      )}
-
-                    {column.process?.isExecuting &&
-                      column.process?.processedCells && (
-                        <div class="p-[2px] rounded-[6px] bg-gradient-to-b from-[#4057BF] to-[#6B86FF] w-16 h-8">
-                          <div class="rounded-[4px] bg-white w-full h-full flex items-center justify-center">
-                            {remainingCells.value}
-                          </div>
-                        </div>
-                      )}
-
-                    {column.process?.isExecuting && (
-                      <div class="h-4 w-4 animate-spin rounded-full border-2 border-primary-100 border-t-transparent" />
-                    )}
-
-                    {column.process?.isExecuting ? (
-                      <Tooltip text="Stop generating">
-                        <Button
-                          look="primary"
-                          class="w-[30px] h-[30px] rounded-full flex items-center justify-center p-0"
-                          onClick$={onStop}
-                          disabled={
-                            (column.process?.isExecuting &&
-                              column.id === TEMPORAL_ID) ||
-                            !prompt.value.trim()
-                          }
-                        >
-                          <LuSquare class="text-lg" />
-                        </Button>
-                      </Tooltip>
-                    ) : (
-                      <Tooltip text="Generate">
-                        <Button
-                          look="primary"
-                          class="w-[30px] h-[30px] rounded-full flex items-center justify-center p-0"
-                          onClick$={onGenerate}
-                          disabled={
-                            selectedModelId.value === '' ||
-                            selectedProvider.value === '' ||
-                            !prompt.value.trim()
-                          }
-                        >
-                          <LuEgg class="text-lg" />
-                        </Button>
-                      </Tooltip>
-                    )}
+                      </Select.Trigger>
+                      <Select.Popover class="border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto mt-1 min-w-[200px]">
+                        {imageColumns.value.map((imageColumn) => (
+                          <Select.Item
+                            key={imageColumn.id}
+                            value={imageColumn.id}
+                            class="text-foreground hover:bg-accent"
+                          >
+                            <div class="flex text-xs items-center p-1 gap-2 font-mono">
+                              <Select.ItemLabel>
+                                {imageColumn.name}
+                              </Select.ItemLabel>
+                              {imageColumn.id === selectedImageColumn.value && (
+                                <LuCheck class="h-4 w4 text-primary-500 absolute right-2 top-1/2 -translate-y-1/2" />
+                              )}
+                            </div>
+                          </Select.Item>
+                        ))}
+                      </Select.Popover>
+                    </Select.Root>
                   </div>
+                )}
+
+                <TemplateTextArea
+                  bind:value={prompt}
+                  variables={variables}
+                  onSelectedVariables={onSelectedVariables}
+                  hasImageDropdown={
+                    needsImageColumn.value && imageColumns.value.length > 0
+                  }
+                />
+              </div>
+
+              <div class="w-full absolute bottom-0 p-4 flex flex-row items-center justify-between cursor-text">
+                {isSearchOnWebAvailable.value ? (
+                  <Button
+                    look="secondary"
+                    class={cn(
+                      'flex px-[10px] py-[8px] gap-[10px] bg-white text-neutral-600 hover:bg-neutral-100 h-[30px] rounded-[8px]',
+                      {
+                        'border-primary-100 outline-primary-100 bg-primary-50 hover:bg-primary-50 text-primary-500 hover:text-primary-400':
+                          searchOnWeb.value,
+                      },
+                    )}
+                    onClick$={() => {
+                      searchOnWeb.value = !searchOnWeb.value;
+                    }}
+                    disabled={shouldDisable.value}
+                  >
+                    <LuGlobe class="text-lg" />
+                    Search the web
+                  </Button>
+                ) : (
+                  <div class="flex items-center gap-2 text-neutral-500" />
+                )}
+
+                <div class="flex items-center gap-4">
+                  {!column.value.process?.isExecuting &&
+                    column.value.cells.some((c) => c.error) && (
+                      <div class="p-[2px] rounded-[6px] bg-red-500 w-16 h-8">
+                        <div class="rounded-[4px] bg-white w-full h-full flex items-center justify-center text-red-500">
+                          {column.value.cells.filter((c) => c.error).length}
+                        </div>
+                      </div>
+                    )}
+
+                  {column.value.process?.isExecuting &&
+                    column.value.process?.processedCells && (
+                      <div class="p-[2px] rounded-[6px] bg-gradient-to-b from-[#4057BF] to-[#6B86FF] w-16 h-8">
+                        <div class="rounded-[4px] bg-white w-full h-full flex items-center justify-center">
+                          {activeDataset.value.size -
+                            Math.min(
+                              column.value.process?.processedCells,
+                              activeDataset.value.size,
+                            )}
+                        </div>
+                      </div>
+                    )}
+
+                  {column.value.process?.isExecuting ? (
+                    <Tooltip text="Stop generating">
+                      <Button
+                        look="primary"
+                        class="w-[30px] h-[30px] rounded-full flex items-center justify-center p-0"
+                        onClick$={onStop}
+                      >
+                        <LuSquare class="text-lg" />
+                      </Button>
+                    </Tooltip>
+                  ) : (
+                    <Tooltip text="Generate">
+                      <Button
+                        look="primary"
+                        class="w-[30px] h-[30px] rounded-full flex items-center justify-center p-0"
+                        onClick$={onGenerate}
+                        disabled={
+                          selectedModelId.value === '' ||
+                          selectedProvider.value === '' ||
+                          !prompt.value.trim()
+                        }
+                      >
+                        <LuEgg class="text-lg" />
+                      </Button>
+                    </Tooltip>
+                  )}
                 </div>
               </div>
-              <div class="px-3 pb-12 pt-2 bg-white border border-secondary-foreground rounded-sm">
-                <div class="flex flex-col gap-4">
-                  <div class="flex gap-4">
-                    <div
-                      class={cn({
-                        'w-1/2': showEndpointUrl.value,
-                        'flex-[2] w-3/4': !showEndpointUrl.value,
-                      })}
+            </div>
+
+            <div class="px-3 pb-12 pt-2 bg-white border border-secondary-foreground rounded-sm">
+              <div class="flex flex-col gap-4">
+                <div class="flex gap-4">
+                  <div
+                    class={cn({
+                      'w-1/2': showEndpointUrl.value,
+                      'flex-[2] w-3/4': !showEndpointUrl.value,
+                    })}
+                  >
+                    <Select.Root
+                      ref={modelSearchContainerRef}
+                      key={modelSearchQuery.value}
+                      bind:open={isModelDropdownOpen}
+                      value={selectedModelId.value}
                     >
-                      <Select.Root
-                        ref={modelSearchContainerRef}
-                        key={modelSearchQuery.value}
-                        bind:open={isModelDropdownOpen}
-                        value={selectedModelId.value}
+                      <Select.Label>Model</Select.Label>
+                      <div
+                        class={cn(
+                          triggerLooks('default'),
+                          'flex text-xs items-center px-2 gap-2 font-mono',
+                        )}
                       >
-                        <Select.Label>Model</Select.Label>
-                        <div
-                          class={cn(
-                            triggerLooks('default'),
-                            'flex text-xs items-center px-2 gap-2 font-mono',
-                          )}
-                        >
-                          {modelSearchQuery.value == selectedModelId.value && (
-                            <ModelImage
-                              model={
-                                models.value.find(
-                                  (m) => m.id === selectedModelId.value,
-                                )!
-                              }
-                            />
-                          )}
-
-                          <input
-                            placeholder="Search models..."
-                            bind:value={modelSearchQuery}
-                            class="h-8 w-full outline-none font-mono text-xs"
-                            onFocusIn$={() => {
-                              if (
-                                selectedModelId.value === modelSearchQuery.value
-                              ) {
-                                modelSearchQuery.value = '';
-                              }
-                            }}
-                            onKeyDown$={() => {
-                              nextTick(() => {
-                                isModelDropdownOpen.value = false;
-                              });
-                            }}
-                            onClick$={() => {
-                              isModelDropdownOpen.value = false;
-                              nextTick(() => {
-                                isModelDropdownOpen.value = true;
-                              }, 100);
-                            }}
+                        {modelSearchQuery.value == selectedModelId.value && (
+                          <ModelImage
+                            model={
+                              models.value.find(
+                                (m) => m.id === selectedModelId.value,
+                              )!
+                            }
                           />
+                        )}
 
-                          <Select.Trigger look="headless" />
-                        </div>
-                        <Select.Popover
-                          key={modelSearchQuery.value}
-                          floating="bottom-end"
-                          gutter={8}
-                          class="border border-border max-h-[300px] overflow-y-auto overflow-x-hidden top-[100%] bottom-auto p-0 mt-2 ml-24 min-w-[450px]"
-                        >
-                          <div class="flex flex-col">
-                            {Object.entries(groupedModels.value).map(
-                              ([category, models]) => {
-                                if (models.models.length === 0) return null;
-                                return (
-                                  <div key={category}>
-                                    <div
-                                      class={cn(
-                                        'text-[13px] font-semibold rounded-sm rounded-b-none',
-                                        models.class,
-                                      )}
-                                    >
-                                      {models.label}
-                                    </div>
-                                    {models.models.map((model) => (
-                                      <Select.Item
-                                        key={model.id}
-                                        value={model.id}
-                                        class="text-foreground hover:bg-accent"
-                                        onClick$={() => {
-                                          isModelDropdownOpen.value = false;
+                        <input
+                          placeholder="Search models..."
+                          bind:value={modelSearchQuery}
+                          class="h-8 w-full outline-none font-mono text-xs"
+                          onFocusIn$={() => {
+                            if (
+                              selectedModelId.value === modelSearchQuery.value
+                            ) {
+                              modelSearchQuery.value = '';
+                            }
+                          }}
+                          onKeyDown$={() => {
+                            nextTick(() => {
+                              isModelDropdownOpen.value = false;
+                            });
+                          }}
+                          onClick$={() => {
+                            isModelDropdownOpen.value = false;
+                            nextTick(() => {
+                              isModelDropdownOpen.value = true;
+                            }, 100);
+                          }}
+                        />
 
-                                          selectedModelId.value = model.id;
-                                          modelSearchQuery.value = model.id;
-                                        }}
+                        <Select.Trigger look="headless" />
+                      </div>
+                      <Select.Popover
+                        key={modelSearchQuery.value}
+                        floating="bottom-end"
+                        gutter={8}
+                        class="border border-border max-h-[300px] overflow-y-auto overflow-x-hidden top-[100%] bottom-auto p-0 ml-9 mt-2 min-w-[450px]"
+                      >
+                        <div class="flex flex-col">
+                          {Object.entries(groupedModels.value).map(
+                            ([category, models], i) => {
+                              return (
+                                <div key={category}>
+                                  <Collapsible.Root
+                                    open={groupedModels.value.length <= 2}
+                                  >
+                                    <Collapsible.Trigger class="w-full">
+                                      <div
+                                        class={cn(
+                                          'text-[13px] w-full font-semibold flex items-center justify-between',
+                                          models.class,
+                                          {
+                                            'rounded-sm rounded-b-none':
+                                              i === 0,
+                                          },
+                                        )}
                                       >
-                                        <div class="flex text-xs items-center justify-between p-1 gap-2 font-mono w-full">
-                                          <div class="flex items-center gap-2">
-                                            <ModelImage model={model} />
-                                            <Select.ItemLabel>
-                                              {model.id}
-                                            </Select.ItemLabel>
+                                        {models.label}
+                                        <LuChevronDown />
+                                      </div>
+                                    </Collapsible.Trigger>
+                                    <Collapsible.Content>
+                                      {models.models.map((model) => (
+                                        <Select.Item
+                                          key={model.id}
+                                          value={model.id}
+                                          class="text-foreground hover:bg-accent"
+                                          onClick$={() => {
+                                            isModelDropdownOpen.value = false;
+
+                                            selectedModelId.value = model.id;
+                                            modelSearchQuery.value = model.id;
+                                          }}
+                                        >
+                                          <div class="flex text-xs items-center justify-between p-1 gap-2 font-mono w-full">
+                                            <div class="flex items-center gap-2">
+                                              <ModelImage model={model} />
+                                              <Select.ItemLabel>
+                                                {model.id}
+                                              </Select.ItemLabel>
+                                            </div>
+
+                                            <ModelFlag model={model} />
                                           </div>
 
-                                          <ModelFlag model={model} />
-                                        </div>
+                                          {model.id ===
+                                            selectedModelId.value && (
+                                            // We cannot use the Select.ItemIndicator here
+                                            // because it doesn't work when the model list changes
+                                            <LuCheck class="h-4 w4 text-primary-500 absolute right-2 top-1/2 -translate-y-1/2" />
+                                          )}
+                                        </Select.Item>
+                                      ))}
+                                    </Collapsible.Content>
+                                  </Collapsible.Root>
+                                </div>
+                              );
+                            },
+                          )}
+                        </div>
+                      </Select.Popover>
+                    </Select.Root>
+                  </div>
 
-                                        {model.id === selectedModelId.value && (
-                                          // We cannot use the Select.ItemIndicator here
-                                          // because it doesn't work when the model list changes
-                                          <LuCheck class="h-4 w4 text-primary-500 absolute right-2 top-1/2 -translate-y-1/2" />
-                                        )}
-                                      </Select.Item>
-                                    ))}
-                                  </div>
-                                );
-                              },
-                            )}
+                  <div
+                    class={cn({
+                      'w-1/2': showEndpointUrl.value,
+                      'flex-1 w-1/4': !showEndpointUrl.value,
+                    })}
+                  >
+                    <Select.Root bind:value={selectedProvider}>
+                      <Select.Label>
+                        {showEndpointUrl.value
+                          ? 'Endpoint url'
+                          : 'Inference Providers'}
+                      </Select.Label>
+                      <Select.Trigger class="bg-white rounded-base border-neutral-300-foreground">
+                        <div class="flex text-xs items-center justify-between gap-2 font-mono w-40">
+                          <div class="flex items-center gap-2">
+                            <Provider name={selectedProvider.value} />
+
+                            <Select.DisplayValue
+                              class={cn('truncate w-fit', {
+                                'max-w-16': modelProviders.value.length > 1,
+                                'max-w-52': modelProviders.value.length === 1,
+                              })}
+                            />
                           </div>
-                        </Select.Popover>
-                      </Select.Root>
-                    </div>
 
-                    <div
-                      class={cn({
-                        'w-1/2': showEndpointUrl.value,
-                        'flex-1 w-1/4': !showEndpointUrl.value,
-                      })}
-                    >
-                      <Select.Root bind:value={selectedProvider}>
-                        <Select.Label>
-                          {showEndpointUrl.value
-                            ? 'Endpoint url'
-                            : 'Inference Providers'}
-                        </Select.Label>
-                        <Select.Trigger class="bg-white rounded-base border-neutral-300-foreground">
-                          <div class="flex text-xs items-center justify-between gap-2 font-mono w-40">
-                            <div class="flex items-center gap-2">
-                              <Provider name={selectedProvider.value} />
+                          {modelProviders.value.length > 1 && (
+                            <ExtraProviders
+                              selected={selectedProvider.value}
+                              providers={modelProviders.value}
+                            />
+                          )}
+                        </div>
+                      </Select.Trigger>
 
-                              <Select.DisplayValue
-                                class={cn('truncate w-fit', {
-                                  'max-w-16': modelProviders.value.length > 1,
-                                  'max-w-52': modelProviders.value.length === 1,
-                                })}
-                              />
+                      <Select.Popover class="border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto mt-1 min-w-[200px]">
+                        {modelProviders.value.map((provider) => (
+                          <Select.Item
+                            key={provider}
+                            value={provider}
+                            class="text-foreground hover:bg-accent w-fit min-w-full"
+                            onClick$={() => {
+                              selectedProvider.value = provider; // Redundant but ensures the value is set sometimes does not work...
+                            }}
+                          >
+                            <div class="flex text-xs items-center p-1 gap-2 font-mono">
+                              <Provider name={provider} />
+
+                              <Select.ItemLabel>{provider}</Select.ItemLabel>
+                              {provider === selectedProvider.value && (
+                                // We cannot use the Select.ItemIndicator here
+                                // because it doesn't work when the model list changes
+                                <LuCheck class="h-4 w4 text-primary-500 absolute right-2 top-1/2 -translate-y-1/2" />
+                              )}
                             </div>
-
-                            {modelProviders.value.length > 1 && (
-                              <ExtraProviders
-                                selected={selectedProvider.value}
-                                providers={modelProviders.value}
-                              />
-                            )}
-                          </div>
-                        </Select.Trigger>
-
-                        <Select.Popover class="border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto mt-1 min-w-[200px]">
-                          {modelProviders.value.map((provider) => (
-                            <Select.Item
-                              key={provider}
-                              value={provider}
-                              class="text-foreground hover:bg-accent w-fit min-w-full"
-                              onClick$={() => {
-                                selectedProvider.value = provider; // Redundant but ensures the value is set sometimes does not work...
-                              }}
-                            >
-                              <div class="flex text-xs items-center p-1 gap-2 font-mono">
-                                <Provider name={provider} />
-
-                                <Select.ItemLabel>{provider}</Select.ItemLabel>
-                                {provider === selectedProvider.value && (
-                                  // We cannot use the Select.ItemIndicator here
-                                  // because it doesn't work when the model list changes
-                                  <LuCheck class="h-4 w4 text-primary-500 absolute right-2 top-1/2 -translate-y-1/2" />
-                                )}
-                              </div>
-                            </Select.Item>
-                          ))}
-                        </Select.Popover>
-                      </Select.Root>
-                    </div>
+                          </Select.Item>
+                        ))}
+                      </Select.Popover>
+                    </Select.Root>
                   </div>
                 </div>
               </div>
-
-              <ErrorInfo column={column} />
             </div>
+            <ErrorInfo column={column.value} />
           </div>
         </div>
-      </th>
-    );
-  },
-);
+      </div>
+    </div>
+  );
+});
 
 export const ModelFlag = component$(
   ({ model }: { model?: ModelWithExtraTags }) => {
@@ -877,7 +869,7 @@ export const ErrorInfo = component$(({ column }: { column: Column }) => {
   const errorMessages = column.cells
     .filter((c) => c.error)
     .map((c) => c.error)
-    .filter((msg, index, self) => msg && self.indexOf(msg) === index); // Unique messages
+    .filter((msg, index, self) => msg && self.indexOf(msg) === index);
 
   const errorMessage = useComputed$(() => {
     if (errorMessages.length === 0) return '';

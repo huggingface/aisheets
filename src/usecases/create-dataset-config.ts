@@ -30,18 +30,28 @@ export async function generateDatasetConfig(dataset: Dataset): Promise<{
       continue;
     }
 
-    const prompt = await promptTemplateForColumn(column);
+    const columnData = { ...column.process };
+
+    // Remove IDs and internal references
+    delete columnData.id;
+    delete columnData.imageColumnId;
+    delete columnData.columnsReferences;
+    delete columnData.updatedAt;
 
     columnConfigs[column.name] = {
-      modelName: column.process.modelName,
-      modelProvider: column.process.modelProvider,
-      userPrompt: column.process.prompt,
-      prompt,
-      searchEnabled: column.process.searchEnabled,
+      ...columnData,
+
+      prompt: await promptTemplateForColumn(column),
+      instruction: column.process.prompt,
+
       columnsReferences: column.process.columnsReferences?.map((colId) => {
         const refColumn = dataset.columns.find((c) => c.id === colId);
         return refColumn?.name || colId;
       }),
+
+      imageColumn: dataset.columns.find(
+        (c) => c.id === column.process?.imageColumnId,
+      )?.name,
     };
   }
 

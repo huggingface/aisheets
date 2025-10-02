@@ -36,20 +36,6 @@ export const useGenerateColumn = () => {
     }
   });
 
-  const onRegenerateCells = $(async (column: Column) => {
-    if (column.process?.isExecuting) return;
-
-    const response = await regenerateCells(column);
-
-    for await (const cell of response) {
-      console.log('regenerated cell', cell);
-      replaceCell(cell);
-    }
-
-    const updated = await getColumnById$(column.id);
-    updateColumn(updated!);
-  });
-
   const onCreateColumn = $(async (newColumn: CreateColumn) => {
     const response = await addNewColumn(
       newColumn.process!.cancellable!.signal,
@@ -67,6 +53,7 @@ export const useGenerateColumn = () => {
 
         open('edit', {
           columnId: column.id,
+          task: column.process?.task,
         });
 
         newColumnId = column.id;
@@ -81,6 +68,21 @@ export const useGenerateColumn = () => {
     if (newbie) {
       await updateColumn(newbie);
     }
+  });
+
+  const onRegenerateCells = $(async (column: Column) => {
+    if (column.process?.isExecuting) return;
+    column.process!.isExecuting = true;
+    updateColumn(column);
+
+    const response = await regenerateCells(column);
+
+    for await (const cell of response) {
+      replaceCell(cell);
+    }
+
+    const updated = await getColumnById$(column.id);
+    updateColumn(updated!);
   });
 
   const onEditColumn = $(async (persistedColumn: Column) => {

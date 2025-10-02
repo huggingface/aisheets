@@ -16,6 +16,8 @@ import {
   useColumnsStore,
 } from '~/state';
 
+import type { TaskType } from '~/state/columns';
+
 export type Execution = {
   columnId?: string;
   prompt?: string;
@@ -23,6 +25,7 @@ export type Execution = {
   modelProvider?: string;
   endpointUrl?: string;
   mode?: 'add' | 'edit';
+  task?: TaskType;
 };
 
 const executionContext =
@@ -46,6 +49,7 @@ export const useExecution = () => {
     openExecutionSidebar,
     closeExecutionSidebar,
   } = useModals('executionSidebar');
+
   const { columns, addTemporalColumn, removeTemporalColumn } =
     useColumnsStore();
 

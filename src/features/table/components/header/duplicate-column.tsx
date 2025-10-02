@@ -13,12 +13,13 @@ export const DuplicateColumn = component$<{
   const onDuplicateColumn = $(async () => {
     open('add', {
       nextColumnId: column.id,
-      name: `${column.name} copy`,
+      name: `${column.name}_copy`,
       type: column.type,
-      endpointUrl: column.process?.endpointUrl,
       modelName: column.process?.modelName,
       modelProvider: column.process?.modelProvider,
+      endpointUrl: column.process?.endpointUrl,
       prompt: column.process?.prompt,
+      task: column.process?.task,
     });
   });
 

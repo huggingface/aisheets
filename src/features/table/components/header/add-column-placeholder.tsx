@@ -13,7 +13,7 @@ import { SparkIcon } from '~/components/ui/logo/logo';
 import { useExecution } from '~/features/add-column/form';
 import { useColumnsPreference } from '~/features/table/components/context/colunm-preferences.context';
 
-import type { Column } from '~/state';
+import type { Column, TaskType } from '~/state';
 
 type PromptsType = {
   label: string;
@@ -63,13 +63,9 @@ Description: {{REPLACE_ME}}`,
 };
 
 const IMAGE_COLUMN_PROMPTS: Record<string, PromptsType> = {
-  generate_image: {
+  imageTextToText: {
     label: 'Describe the image',
-    prompt: `Describe image based on the provided text description.
-
-
-Text from: {{REPLACE_ME}}
-`,
+    prompt: `Describe what you see in the image.`,
   },
 };
 
@@ -105,21 +101,24 @@ export const TableAddCellHeaderPlaceHolder = component$<{ column: Column }>(
       isGenerating.value = false;
     });
 
-    const onCreateColumn = $(async (type: Column['type'], prompt: string) => {
-      isGenerating.value = true;
+    const onCreateColumn = $(
+      async (type: Column['type'], task: TaskType, prompt: string) => {
+        isGenerating.value = true;
 
-      nextTick(async () => {
-        await close();
-        await open('add', {
-          nextColumnId: column.id,
-          type,
-          prompt,
-        });
+        nextTick(async () => {
+          await close();
+          await open('add', {
+            nextColumnId: column.id,
+            type,
+            task,
+            prompt,
+          });
 
-        await closeAiColumn(column.id);
-        await closeAiPrompt(column.id);
-      }, 300);
-    });
+          await closeAiColumn(column.id);
+          await closeAiPrompt(column.id);
+        }, 300);
+      },
+    );
 
     const handleTemplate = $(
       async (promptTemplateSelected: PromptsTypeWithKey) => {
@@ -127,8 +126,27 @@ export const TableAddCellHeaderPlaceHolder = component$<{ column: Column }>(
           promptTemplateSelected.key
         ].prompt.replace('{{REPLACE_ME}}', `{{${column.name}}}`);
 
+        const typeMap: Record<string, Column['type']> = {
+          translate: 'text',
+          extractKeywords: 'text',
+          summarize: 'text',
+          textToImage: 'image',
+          imageTextToText: 'text',
+          custom: 'text',
+        };
+
+        const taskMap: Record<string, TaskType> = {
+          translate: 'text-generation',
+          extractKeywords: 'text-generation',
+          summarize: 'text-generation',
+          textToImage: 'text-to-image',
+          imageTextToText: 'image-text-to-text',
+          custom: 'text-generation',
+        };
+
         await onCreateColumn(
-          promptTemplateSelected.key === 'textToImage' ? 'image' : 'text',
+          typeMap[promptTemplateSelected.key],
+          taskMap[promptTemplateSelected.key],
           initialPrompt,
         );
       },
@@ -144,7 +162,8 @@ export const TableAddCellHeaderPlaceHolder = component$<{ column: Column }>(
 
       const newPrompt = `${prompt.value.trim()} ${newReferencePrompt}`;
 
-      await onCreateColumn('unknown', newPrompt);
+      // TODO: @dvsrepo get dynamically the "task" type.
+      await onCreateColumn('unknown', 'text-generation', newPrompt);
     });
 
     if (columnId.value) return null;

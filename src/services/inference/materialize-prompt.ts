@@ -3,6 +3,7 @@ import {
   EXAMPLES_PROMPT_MAX_CONTEXT_SIZE,
   SOURCES_PROMPT_MAX_CONTEXT_SIZE,
 } from '~/config';
+import type { TaskType } from '~/state/columns';
 import { bigIntStringify } from '~/usecases/utils/serializer';
 
 export interface Example {
@@ -20,6 +21,7 @@ export interface MaterializePromptParams {
   data?: object;
   examples?: Example[];
   renderInstruction?: boolean;
+  task?: TaskType;
 }
 
 export function materializePrompt({
@@ -27,9 +29,19 @@ export function materializePrompt({
   sourcesContext,
   data,
   examples,
+  task,
 }: MaterializePromptParams): string {
-  return data && Object.keys(data).length > 0
-    ? materializePromptFromData(instruction, data, sourcesContext, examples)
+  const hasData = data && Object.keys(data).length > 0;
+  const isImageTextToText = task === 'image-text-to-text';
+
+  return hasData || isImageTextToText
+    ? materializePromptFromData(
+        instruction,
+        data || {},
+        sourcesContext,
+        examples,
+        task,
+      )
     : materializePromptFromScratch(instruction, sourcesContext, examples);
 }
 
@@ -95,6 +107,7 @@ function materializePromptFromData(
     text: string;
   }[],
   examples?: Example[],
+  _task?: TaskType,
 ): string {
   const examplesTemplate = `# Examples
 The following are correct, accurate example outputs with respect to the user instruction:
@@ -107,6 +120,8 @@ The following are correct, accurate example outputs with respect to the user ins
 {{output}}
 {{/examples}}
 `;
+
+  const finalInstruction = renderInstruction(instruction, data);
 
   return mustache.render(
     `
@@ -122,7 +137,7 @@ You are a rigorous, intelligent data-processing engine. Generate only the reques
 # Your response
     `,
     {
-      instruction: renderInstruction(instruction, data),
+      instruction: finalInstruction,
       examplesSection: examplesSection(
         examples?.map((example) => ({
           ...example,

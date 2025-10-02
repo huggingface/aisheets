@@ -15,7 +15,8 @@ import {
   LuChevronDown,
   LuEgg,
   LuGlobe,
-  LuStopCircle,
+  LuImage,
+  LuSquare,
 } from '@qwikest/icons/lucide';
 import { Button, Select, triggerLooks } from '~/components';
 import { useClickOutside } from '~/components/hooks/click/outside';
@@ -25,17 +26,24 @@ import {
   ModelImage,
   Provider,
 } from '~/components/ui/logo/logo';
-
+import { Tooltip } from '~/components/ui/tooltip/tooltip';
 import {
   TemplateTextArea,
   type Variable,
 } from '~/features/add-column/components/template-textarea';
+
 import { useExecution } from '~/features/add-column/form/execution';
 import { useGenerateColumn } from '~/features/execution';
-import { hasBlobContent } from '~/features/utils/columns';
+import { hasBlobContent, isImage } from '~/features/utils/columns';
 import type { Model } from '~/loaders/hub-models';
 import { useConfigContext, useModelsContext } from '~/routes/home/layout';
-import { type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
+import {
+  type Column,
+  type TaskType,
+  TEMPORAL_ID,
+  useColumnsStore,
+  useDatasetsStore,
+} from '~/state';
 
 export class Models {
   constructor(private readonly models: Model[]) {}
@@ -46,12 +54,10 @@ export class Models {
     );
   }
 
-  getModelsByType(type: Column['type']): Model[] {
-    if (type === 'image') return this.getImageModels();
-
-    if (type === 'text') return this.getTextModels();
-
-    return this.models;
+  getModelsByTask(task: TaskType): Model[] {
+    if (task === 'text-to-image') return this.getImageModels();
+    if (task === 'image-text-to-text') return this.getImageTextToTextModels();
+    return this.getTextModels();
   }
 
   getTextModels(): Model[] {
@@ -60,6 +66,12 @@ export class Models {
 
   getImageModels(): Model[] {
     return this.models.filter((model) => model.supportedType === 'image');
+  }
+
+  private getImageTextToTextModels(): Model[] {
+    return this.models.filter(
+      (model) => model.supportedType === 'image-text-to-text',
+    );
   }
 }
 
@@ -147,6 +159,22 @@ class GroupedModels {
         id: 'black-forest-labs/FLUX.1-schnell',
         tags: [this.tags.LIGHT, this.tags.EXPERIMENTATION],
       },
+      {
+        id: 'black-forest-labs/FLUX.1-schnell',
+        tags: [this.tags.LIGHT, this.tags.EXPERIMENTATION],
+      },
+      {
+        id: 'Qwen/Qwen2.5-VL-7B-Instruct',
+        tags: [this.tags.LIGHT, this.tags.EXPERIMENTATION],
+      },
+      {
+        id: 'google/gemma-3-27b-it',
+        tags: [this.tags.EXPERIMENTATION],
+      },
+      {
+        id: 'Qwen/Qwen3-VL-235B-A22B-Thinking',
+        tags: [this.tags.REASONING],
+      },
     ];
   }
 
@@ -215,7 +243,8 @@ class GroupedModels {
 }
 
 export const ExecutionForm = component$(() => {
-  const { columnId, column } = useExecution();
+  const { activeDataset } = useDatasetsStore();
+  const { mode, columnId, column } = useExecution();
   const { columns, updateColumn } = useColumnsStore();
   const allModels = useModelsContext();
   const { DEFAULT_MODEL, DEFAULT_MODEL_PROVIDER } = useConfigContext();
@@ -224,8 +253,9 @@ export const ExecutionForm = component$(() => {
   const models = useComputed$(() => {
     if (!column.value) return [];
 
-    return new Models(allModels).getModelsByType(column.value.type);
+    return new Models(allModels).getModelsByTask(column.value.process?.task!);
   });
+
   const filteredModels = useSignal<Model[]>(models.value);
   const groupedModels = useComputed$(() => {
     if (!column.value) return [];
@@ -248,6 +278,16 @@ export const ExecutionForm = component$(() => {
   const selectedProvider = useSignal<string>('');
   const modelProviders = useSignal<string[]>([]);
 
+  // Image column selector for image-text-to-text scenarios
+  const selectedImageColumn = useSignal<string>('');
+  const imageColumns = useSignal<Variable[]>([]);
+
+  const needsImageColumn = useComputed$(() => {
+    console.log('Checking if image column is needed', column.value);
+
+    return column.value?.process?.task === 'image-text-to-text';
+  });
+
   const onSelectedVariables = $((variables: { id: string }[]) => {
     columnsReferences.value = variables.map((v) => v.id);
   });
@@ -266,7 +306,7 @@ export const ExecutionForm = component$(() => {
     }),
   );
 
-  useTask$(({ track }) => {
+  useTask$(async ({ track }) => {
     track(columns);
 
     variables.value = columns.value
@@ -275,6 +315,30 @@ export const ExecutionForm = component$(() => {
         id: c.id,
         name: c.name,
       }));
+
+    const updateImageColumns = async () => {
+      const imageCols = [];
+      for (const c of columns.value) {
+        if (c.id !== column.value?.id && isImage(c)) {
+          imageCols.push({
+            id: c.id,
+            name: c.name,
+          });
+        }
+      }
+      imageColumns.value = imageCols;
+
+      if (
+        needsImageColumn.value &&
+        !selectedImageColumn.value &&
+        imageColumns.value.length > 0 &&
+        mode.value === 'add'
+      ) {
+        selectedImageColumn.value = imageColumns.value[0].id;
+      }
+    };
+
+    await updateImageColumns();
   });
 
   useTask$(({ track }) => {
@@ -309,6 +373,11 @@ export const ExecutionForm = component$(() => {
       if (!defaultModel) return;
 
       selectedModelId.value = defaultModel.id;
+    }
+
+    // Initialize image column selection if editing an existing column
+    if (process.imageColumnId) {
+      selectedImageColumn.value = process.imageColumnId;
     }
   });
 
@@ -398,7 +467,7 @@ export const ExecutionForm = component$(() => {
       }
 
       column.value.process = {
-        ...column.value.process,
+        ...column.value.process!,
         cancellable: noSerialize(new AbortController()),
         isExecuting: true,
         modelName: model.id,
@@ -407,6 +476,10 @@ export const ExecutionForm = component$(() => {
         prompt: prompt.value,
         columnsReferences: columnsReferences.value,
         searchEnabled: searchOnWeb.value,
+        // Add selected image column for image processing workflows
+        ...(needsImageColumn.value && {
+          imageColumnId: selectedImageColumn.value || undefined,
+        }),
       };
 
       updateColumn(column.value);
@@ -438,17 +511,57 @@ export const ExecutionForm = component$(() => {
             <div class="relative">
               <div
                 class={cn(
-                  'h-72 min-h-72 max-h-72 bg-white border border-secondary-foreground rounded-sm mt-2',
+                  'h-72 min-h-72 max-h-72 bg-white border border-secondary-foreground rounded-sm relative mt-2',
                   {
                     'cursor-not-allowed pointer-events-none opacity-70':
                       shouldDisable.value,
                   },
                 )}
               >
+                {/* Image column dropdown positioned at top-left inside textarea */}
+                {needsImageColumn.value && imageColumns.value.length > 0 && (
+                  <div class="absolute top-2 left-2 z-10 w-48">
+                    <Select.Root
+                      bind:value={selectedImageColumn}
+                      class="h-[30px]"
+                    >
+                      <Select.Trigger class="bg-white/90 backdrop-blur-sm rounded-base border-neutral-300-foreground h-[30px] flex items-center px-[10px] py-[8px] shadow-sm">
+                        <div class="flex text-xs items-center justify-between gap-2 font-mono w-full">
+                          <div class="flex items-center gap-2">
+                            <LuImage class="h-4 w-4 text-neutral-500" />
+                            <Select.DisplayValue />
+                          </div>
+                        </div>
+                      </Select.Trigger>
+                      <Select.Popover class="border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto mt-1 min-w-[200px]">
+                        {imageColumns.value.map((imageColumn) => (
+                          <Select.Item
+                            key={imageColumn.id}
+                            value={imageColumn.id}
+                            class="text-foreground hover:bg-accent"
+                          >
+                            <div class="flex text-xs items-center p-1 gap-2 font-mono">
+                              <Select.ItemLabel>
+                                {imageColumn.name}
+                              </Select.ItemLabel>
+                              {imageColumn.id === selectedImageColumn.value && (
+                                <LuCheck class="h-4 w4 text-primary-500 absolute right-2 top-1/2 -translate-y-1/2" />
+                              )}
+                            </div>
+                          </Select.Item>
+                        ))}
+                      </Select.Popover>
+                    </Select.Root>
+                  </div>
+                )}
+
                 <TemplateTextArea
                   bind:value={prompt}
                   variables={variables}
                   onSelectedVariables={onSelectedVariables}
+                  hasImageDropdown={
+                    needsImageColumn.value && imageColumns.value.length > 0
+                  }
                 />
               </div>
 
@@ -475,31 +588,56 @@ export const ExecutionForm = component$(() => {
                   <div class="flex items-center gap-2 text-neutral-500" />
                 )}
 
-                {shouldDisable.value && (
-                  <div class="h-4 w-4 animate-spin rounded-full border-2 border-primary-100 border-t-transparent" />
-                )}
-                {shouldDisable.value ? (
-                  <Button
-                    look="primary"
-                    class="w-[30px] h-[30px] rounded-full flex items-center justify-center p-0"
-                    onClick$={onStop}
-                  >
-                    <LuStopCircle class="text-lg" />
-                  </Button>
-                ) : (
-                  <Button
-                    look="primary"
-                    class="w-[30px] h-[30px] rounded-full flex items-center justify-center p-0"
-                    onClick$={onGenerate}
-                    disabled={
-                      selectedModelId.value === '' ||
-                      selectedProvider.value === '' ||
-                      !prompt.value.trim()
-                    }
-                  >
-                    <LuEgg class="text-lg" />
-                  </Button>
-                )}
+                <div class="flex items-center gap-4">
+                  {!column.value.process?.isExecuting &&
+                    column.value.cells.some((c) => c.error) && (
+                      <div class="p-[2px] rounded-[6px] bg-red-500 w-16 h-8">
+                        <div class="rounded-[4px] bg-white w-full h-full flex items-center justify-center text-red-500">
+                          {column.value.cells.filter((c) => c.error).length}
+                        </div>
+                      </div>
+                    )}
+
+                  {column.value.process?.isExecuting &&
+                    column.value.process?.processedCells && (
+                      <div class="p-[2px] rounded-[6px] bg-gradient-to-b from-[#4057BF] to-[#6B86FF] w-16 h-8">
+                        <div class="rounded-[4px] bg-white w-full h-full flex items-center justify-center">
+                          {activeDataset.value.size -
+                            Math.min(
+                              column.value.process?.processedCells,
+                              activeDataset.value.size,
+                            )}
+                        </div>
+                      </div>
+                    )}
+
+                  {column.value.process?.isExecuting ? (
+                    <Tooltip text="Stop generating">
+                      <Button
+                        look="primary"
+                        class="w-[30px] h-[30px] rounded-full flex items-center justify-center p-0"
+                        onClick$={onStop}
+                      >
+                        <LuSquare class="text-lg" />
+                      </Button>
+                    </Tooltip>
+                  ) : (
+                    <Tooltip text="Generate">
+                      <Button
+                        look="primary"
+                        class="w-[30px] h-[30px] rounded-full flex items-center justify-center p-0"
+                        onClick$={onGenerate}
+                        disabled={
+                          selectedModelId.value === '' ||
+                          selectedProvider.value === '' ||
+                          !prompt.value.trim()
+                        }
+                      >
+                        <LuEgg class="text-lg" />
+                      </Button>
+                    </Tooltip>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -695,6 +833,7 @@ export const ExecutionForm = component$(() => {
                 </div>
               </div>
             </div>
+            <ErrorInfo column={column.value} />
           </div>
         </div>
       </div>
@@ -722,3 +861,29 @@ export const ModelFlag = component$(
     );
   },
 );
+
+export const ErrorInfo = component$(({ column }: { column: Column }) => {
+  const hasErrors = column.cells.some((c) => c.error);
+  const errorCount = column.cells.filter((c) => c.error).length;
+
+  const errorMessages = column.cells
+    .filter((c) => c.error)
+    .map((c) => c.error)
+    .filter((msg, index, self) => msg && self.indexOf(msg) === index);
+
+  const errorMessage = useComputed$(() => {
+    if (errorMessages.length === 0) return '';
+    if (errorMessages.length === 1) return errorMessages[0];
+
+    return `${errorMessages[0]} (and ${errorMessages.length - 1} more)`;
+  });
+
+  if (!hasErrors) return null;
+
+  return (
+    <div class="text-sm text-red-500">
+      {errorCount} cell{errorCount > 1 ? 's' : ''} failed to generate:{' '}
+      {errorMessage.value}
+    </div>
+  );
+});

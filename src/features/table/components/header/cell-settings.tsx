@@ -32,7 +32,7 @@ export const CellSettings = component$<{ column: Column }>(({ column }) => {
       preventdefault:click
       stoppropagation:click
     >
-      <div class="px-2 py-1 hover:bg-neutral-200 rounded-[1px]">
+      <div class="px-[8px] py-[4px] hover:bg-neutral-200 rounded-[1px]">
         <LuPanelRight class="text-sm text-neutral" />
       </div>
     </div>

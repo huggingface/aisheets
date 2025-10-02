@@ -91,7 +91,7 @@ export type Cell = {
 export interface Column {
   id: string;
   name: string;
-  type: 'text' | 'image' | 'image[]' | 'unknown';
+  type: string;
   kind: ColumnKind;
   visible: boolean;
   process?: Process | undefined;

@@ -53,7 +53,7 @@ class ProcessorConfig:
     num_rows: int | None = None
     bill_to: str | None = None
 
-    request_delay: float = 1.0  # Delay between requests to avoid rate limiting
+    request_delay: float = 2.0  # Delay between requests to avoid rate limiting
 
     @property
     def sorted_columns(self) -> list[str]:

@@ -429,19 +429,22 @@ export const ExecutionForm = component$(() => {
   if (!column.value) return null;
 
   return (
-    <div
-      class={cn('min-w-[660px] w-[660px] font-normal text-left', {
-        'cursor-not-allowed pointer-events-none opacity-70':
-          shouldDisable.value,
-      })}
-    >
+    <div class="min-w-[660px] w-[660px] font-normal text-left">
       <span>Type your action</span>
 
       <div class="relative h-full w-full">
         <div class="absolute h-full w-full flex flex-col">
           <div class="flex flex-col gap-2 w-full">
             <div class="relative">
-              <div class="h-72 min-h-72 max-h-72 bg-white border border-secondary-foreground rounded-sm mt-2">
+              <div
+                class={cn(
+                  'h-72 min-h-72 max-h-72 bg-white border border-secondary-foreground rounded-sm mt-2',
+                  {
+                    'cursor-not-allowed pointer-events-none opacity-70':
+                      shouldDisable.value,
+                  },
+                )}
+              >
                 <TemplateTextArea
                   bind:value={prompt}
                   variables={variables}
@@ -463,6 +466,7 @@ export const ExecutionForm = component$(() => {
                     onClick$={() => {
                       searchOnWeb.value = !searchOnWeb.value;
                     }}
+                    disabled={shouldDisable.value}
                   >
                     <LuGlobe class="text-lg" />
                     Search the web
@@ -479,7 +483,6 @@ export const ExecutionForm = component$(() => {
                     look="primary"
                     class="w-[30px] h-[30px] rounded-full flex items-center justify-center p-0"
                     onClick$={onStop}
-                    disabled={shouldDisable.value || !prompt.value.trim()}
                   >
                     <LuStopCircle class="text-lg" />
                   </Button>

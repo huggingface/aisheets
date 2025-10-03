@@ -139,6 +139,7 @@ export const useColumnsPreference = () => {
         ...columnPreferences.value,
         [columnId]: {
           ...columnPreferences.value[columnId],
+          aiTooltipOpen: false,
           aiPromptOpen: false,
           aiButtonVisible: false,
         },

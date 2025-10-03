@@ -302,6 +302,7 @@ export const TableIndexTableHeader = component$<{
     columnPreferences,
     openAiColumn,
     closeAiColumn,
+    closeAiPrompt,
     showAiButton,
     hideAiButton,
   } = useColumnsPreference();
@@ -328,6 +329,14 @@ export const TableIndexTableHeader = component$<{
       });
     }),
   );
+
+  useVisibleTask$(async ({ track }) => {
+    track(draggedColId);
+
+    if (draggedColId.value) {
+      await closeAiPrompt(column.id);
+    }
+  });
 
   useVisibleTask$(({ track }) => {
     track(aiButtonVisible);

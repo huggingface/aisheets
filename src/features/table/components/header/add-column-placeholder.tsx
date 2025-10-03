@@ -192,6 +192,7 @@ export const TableAddCellHeaderPlaceHolder = component$<{ column: Column }>(
             class={cn('text-lg fill-primary-300', {
               'fill-white': columnPreferences.value[column.id]?.aiPromptOpen,
             })}
+            stroke-width={1.7}
           />
         </Popover.Trigger>
 

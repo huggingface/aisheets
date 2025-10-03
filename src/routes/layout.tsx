@@ -3,7 +3,7 @@ import type {
   RequestEventBase,
   RequestHandler,
 } from '@builder.io/qwik-city';
-import { useServerSession } from '~/state/session';
+import { useServerSession } from '~/state';
 
 export const onGet: RequestHandler = async (event: RequestEvent) => {
   const { cacheControl } = event;

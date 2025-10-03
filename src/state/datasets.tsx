@@ -1,9 +1,9 @@
 import {
   $,
-  type Signal,
-  Slot,
   component$,
   createContextId,
+  type Signal,
+  Slot,
   useContext,
   useContextProvider,
 } from '@builder.io/qwik';

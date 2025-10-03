@@ -131,7 +131,7 @@ export const useColumnsStore = () => {
       kind: 'dynamic',
       type,
       visible: true,
-      size: 5,
+      size: 0,
       cells: [],
       process: {
         modelName: info?.modelName ?? '',

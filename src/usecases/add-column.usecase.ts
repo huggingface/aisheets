@@ -1,5 +1,5 @@
 import { type RequestEventBase, server$ } from '@builder.io/qwik-city';
-import { createColumn, updateCell } from '~/services';
+import { createColumn, updateCell, updateColumn } from '~/services';
 import {
   type Cell,
   type Column,
@@ -33,6 +33,7 @@ export const useAddColumnUseCase = () =>
         name: column.name,
         type: column.type,
         kind: column.kind,
+        size: 0,
         cells: [],
         dataset: column.dataset,
         process: column.process,
@@ -40,15 +41,20 @@ export const useAddColumnUseCase = () =>
       },
     };
 
+    const { limit, offset } = column.process!;
+
     for await (const { cell } of generateCells({
       column,
       process: column.process!,
       session,
+      limit,
+      offset,
     })) {
-      this.signal.onabort = () => {
+      this.signal.onabort = async () => {
         cell.generating = false;
 
-        updateCell(cell);
+        await updateCell(cell);
+        await updateColumn(column);
       };
 
       yield { cell };

@@ -26,13 +26,13 @@ export const useGenerateColumn = () => {
     const column = columns.value.find((c) => c.id === columnId.value);
 
     if (column) {
-      const updated = await getColumnById$(column.id);
-      await updateColumn(updated!);
-
       for (const c of column.cells.filter((c) => c.generating)) {
         const cell = await getColumnCellById$(c.id!);
-        await replaceCell(cell!);
+        if (cell) await replaceCell(cell);
       }
+
+      const updated = await getColumnById$(column.id);
+      if (updated) await updateColumn(updated);
     }
   });
 

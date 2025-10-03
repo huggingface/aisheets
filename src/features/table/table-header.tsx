@@ -251,7 +251,7 @@ export const TableHeader = component$(() => {
                         draggedColId.value === column.id ||
                         targetColId.value === column.id,
                       'bg-blue-50': column.id == columnId.value,
-                      'shadow-[inset_2px_0_0_theme(colors.primary.400),inset_-2px_0_0_theme(colors.primary.400),inset_0_2px_0_theme(colors.primary.400)] rounded-tl-[6px] rounded-tr-[6px]':
+                      'shadow-[inset_2px_0_0_theme(colors.primary.300),inset_-2px_0_0_theme(colors.primary.300),inset_0_2px_0_theme(colors.primary.300)]':
                         columnPreferences.value[column.id]?.aiPromptOpen,
                     },
                   )}

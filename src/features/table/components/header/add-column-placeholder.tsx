@@ -77,8 +77,13 @@ export const TableAddCellHeaderPlaceHolder = component$<{ column: Column }>(
   ({ column }) => {
     const { columnId, open, close } = useExecution();
     const prompt = useSignal<string>('');
-    const { columnPreferences, openAiPrompt, closeAiPrompt, closeAiColumn } =
-      useColumnsPreference();
+    const {
+      columnPreferences,
+      hoverAiButton,
+      openAiPrompt,
+      closeAiPrompt,
+      closeAiColumn,
+    } = useColumnsPreference();
     const isGenerating = useSignal(false);
     const textAreaRef = useSignal<HTMLTextAreaElement>();
 
@@ -178,6 +183,8 @@ export const TableAddCellHeaderPlaceHolder = component$<{ column: Column }>(
                 columnPreferences.value[column.id]?.aiPromptOpen,
             },
           )}
+          onMouseOver$={() => hoverAiButton(column.id, true)}
+          onMouseLeave$={() => hoverAiButton(column.id, false)}
           preventdefault:mousedown
           stoppropagation:mousedown
         >

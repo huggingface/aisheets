@@ -13,6 +13,7 @@ import { type Column, TEMPORAL_ID } from '~/state';
 interface Pref {
   width?: number;
   aiButtonVisible?: boolean;
+  aiButtonHover?: boolean;
   aiTooltipOpen?: boolean;
   aiPromptOpen?: boolean;
 }
@@ -47,6 +48,15 @@ export const useColumnsPreference = () => {
         [columnId]: {
           ...columnPreferences.value[columnId],
           width,
+        },
+      };
+    }),
+    hoverAiButton: $((columnId: string, hover: boolean) => {
+      columnPreferences.value = {
+        ...columnPreferences.value,
+        [columnId]: {
+          ...columnPreferences.value[columnId],
+          aiButtonHover: hover,
         },
       };
     }),
@@ -139,6 +149,8 @@ export const useColumnsPreference = () => {
         ...columnPreferences.value,
         [columnId]: {
           ...columnPreferences.value[columnId],
+          aiButtonHover: false,
+          aiTooltipOpen: false,
           aiPromptOpen: false,
           aiButtonVisible: false,
         },

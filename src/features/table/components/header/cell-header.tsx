@@ -47,10 +47,10 @@ export const TableCellHeader = component$<{ column: Column }>(({ column }) => {
       id={column.id}
       class={cn('min-h-[50px] h-[50px] p-2 text-left border', {
         'bg-blue-50': column.id == columnId.value,
-        'shadow-[inset_2px_0_0_theme(colors.primary.400),inset_-2px_0_0_theme(colors.primary.400)]':
+        'shadow-[inset_2px_0_0_theme(colors.primary.100),inset_-2px_0_0_theme(colors.primary.100)]':
+          columnPreferences.value[column.id]?.aiButtonHover,
+        'shadow-[inset_2px_0_0_theme(colors.primary.300),inset_-2px_0_0_theme(colors.primary.300)]':
           columnPreferences.value[column.id]?.aiPromptOpen,
-        'bg-[#E7F0FF]': column.kind === 'dynamic',
-        'hover:bg-[#F0F6FF]': column.kind === 'dynamic',
       })}
       onMouseOver$={() => showAiButton(column.id)}
       onMouseLeave$={() => hideAiButton(column.id)}

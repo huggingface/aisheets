@@ -251,7 +251,9 @@ export const TableHeader = component$(() => {
                         draggedColId.value === column.id ||
                         targetColId.value === column.id,
                       'bg-blue-50': column.id == columnId.value,
-                      'shadow-[inset_2px_0_0_theme(colors.primary.400),inset_-2px_0_0_theme(colors.primary.400),inset_0_2px_0_theme(colors.primary.400)] rounded-tl-[6px] rounded-tr-[6px]':
+                      'shadow-[inset_2px_0_0_theme(colors.primary.100),inset_-2px_0_0_theme(colors.primary.100),inset_0_2px_0_theme(colors.primary.100)]':
+                        columnPreferences.value[column.id]?.aiButtonHover,
+                      'shadow-[inset_2px_0_0_theme(colors.primary.300),inset_-2px_0_0_theme(colors.primary.300),inset_0_2px_0_theme(colors.primary.300)]':
                         columnPreferences.value[column.id]?.aiPromptOpen,
                     },
                   )}
@@ -300,6 +302,7 @@ export const TableIndexTableHeader = component$<{
     columnPreferences,
     openAiColumn,
     closeAiColumn,
+    closeAiPrompt,
     showAiButton,
     hideAiButton,
   } = useColumnsPreference();
@@ -327,6 +330,14 @@ export const TableIndexTableHeader = component$<{
     }),
   );
 
+  useVisibleTask$(async ({ track }) => {
+    track(draggedColId);
+
+    if (draggedColId.value) {
+      await closeAiPrompt(column.id);
+    }
+  });
+
   useVisibleTask$(({ track }) => {
     track(aiButtonVisible);
     track(columnId);
@@ -345,7 +356,7 @@ export const TableIndexTableHeader = component$<{
       ref={clickOutsideRef}
       flip={false}
       class="h-[38px]"
-      gutter={-11.5}
+      gutter={-28}
       floating="top"
       id={popoverId}
       bind:anchor={anchorRef}

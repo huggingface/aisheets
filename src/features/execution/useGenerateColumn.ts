@@ -27,11 +27,11 @@ export const useGenerateColumn = () => {
 
     if (column) {
       const updated = await getColumnById$(column.id);
-      updateColumn(updated!);
+      await updateColumn(updated!);
 
       for (const c of column.cells.filter((c) => c.generating)) {
         const cell = await getColumnCellById$(c.id!);
-        replaceCell(cell!);
+        await replaceCell(cell!);
       }
     }
   });
@@ -65,24 +65,22 @@ export const useGenerateColumn = () => {
     }
 
     const newbie = await getColumnById$(newColumnId!);
-    if (newbie) {
-      await updateColumn(newbie);
-    }
+    await updateColumn(newbie!);
   });
 
   const onRegenerateCells = $(async (column: Column) => {
     if (column.process?.isExecuting) return;
     column.process!.isExecuting = true;
-    updateColumn(column);
+    await updateColumn(column);
 
     const response = await regenerateCells(column);
 
     for await (const cell of response) {
-      replaceCell(cell);
+      await replaceCell(cell);
     }
 
     const updated = await getColumnById$(column.id);
-    updateColumn(updated!);
+    await updateColumn(updated!);
   });
 
   const onEditColumn = $(async (persistedColumn: Column) => {
@@ -91,19 +89,14 @@ export const useGenerateColumn = () => {
       persistedColumn,
     );
 
-    for await (const { column, cell } of response) {
-      if (column) {
-        updateColumn(column);
-      }
+    for await (const { cell } of response) {
       if (cell) {
-        replaceCell(cell);
+        await replaceCell(cell);
       }
     }
 
     const updated = await getColumnById$(persistedColumn.id);
-    if (updated) {
-      updateColumn(updated);
-    }
+    await updateColumn(updated!);
   });
 
   const onGenerateColumn = $(async (column: Column | CreateColumn) => {

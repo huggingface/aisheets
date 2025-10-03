@@ -412,6 +412,9 @@ export const TableBody = component$(() => {
                       {
                         'bg-blue-50 hover:bg-blue-100':
                           cell.column!.id == columnId.value,
+                        'shadow-[inset_1px_0_0_theme(colors.primary.100),inset_-1px_0_0_theme(colors.primary.100)]':
+                          columnPreferences.value[cell.column!.id]
+                            ?.aiButtonVisible,
                         'shadow-[inset_2px_0_0_theme(colors.primary.300),inset_-2px_0_0_theme(colors.primary.300)]':
                           columnPreferences.value[cell.column!.id]
                             ?.aiPromptOpen,

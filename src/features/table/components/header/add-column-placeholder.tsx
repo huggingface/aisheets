@@ -1,6 +1,6 @@
 import { $, component$, useComputed$, useSignal } from '@builder.io/qwik';
 import { cn } from '@qwik-ui/utils';
-import { LuEgg, LuLoader2 } from '@qwikest/icons/lucide';
+import { LuEgg, LuLoader2, LuSparkle } from '@qwikest/icons/lucide';
 import {
   Button,
   buttonVariants,
@@ -9,7 +9,6 @@ import {
   Textarea,
 } from '~/components';
 import { nextTick } from '~/components/hooks/tick';
-import { SparkIcon } from '~/components/ui/logo/logo';
 import { useExecution } from '~/features/add-column/form';
 import { useColumnsPreference } from '~/features/table/components/context/colunm-preferences.context';
 
@@ -78,7 +77,7 @@ export const TableAddCellHeaderPlaceHolder = component$<{ column: Column }>(
   ({ column }) => {
     const { columnId, open, close } = useExecution();
     const prompt = useSignal<string>('');
-    const { openAiPrompt, closeAiPrompt, closeAiColumn } =
+    const { columnPreferences, openAiPrompt, closeAiPrompt, closeAiColumn } =
       useColumnsPreference();
     const isGenerating = useSignal(false);
     const textAreaRef = useSignal<HTMLTextAreaElement>();
@@ -173,12 +172,20 @@ export const TableAddCellHeaderPlaceHolder = component$<{ column: Column }>(
         <Popover.Trigger
           class={cn(
             buttonVariants({ look: 'ghost' }),
-            'w-6 h-6 rounded-[6px] bg-primary-300',
+            'w-10 h-10 rounded-full bg-primary-50 fill-primary-300 text-primary-300 hover:bg-primary-300 hover:text-white',
+            {
+              'fill-white bg-primary-300 text-white':
+                columnPreferences.value[column.id]?.aiPromptOpen,
+            },
           )}
           preventdefault:mousedown
           stoppropagation:mousedown
         >
-          <SparkIcon class="text-sm text-white" />
+          <LuSparkle
+            class={cn('text-lg fill-primary-300', {
+              'fill-white': columnPreferences.value[column.id]?.aiPromptOpen,
+            })}
+          />
         </Popover.Trigger>
 
         <Popover.Panel

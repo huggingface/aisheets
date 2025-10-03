@@ -32,12 +32,12 @@ export class ColumnModel extends Model<
   declare createdAt: NonAttribute<Date>;
   declare updatedAt: NonAttribute<Date>;
 
-  get numberOfCells(): NonAttribute<number> {
-    return (this.dataValues as any).numberOfCells ?? 0;
+  get size(): NonAttribute<number> {
+    return (this.dataValues as any).size ?? 0;
   }
 
-  set numberOfCells(value: number) {
-    (this.dataValues as any).numberOfCells = value;
+  set size(value: number) {
+    (this.dataValues as any).size = value;
   }
 
   declare static associations: {
@@ -88,7 +88,7 @@ ColumnModel.init(
                                   FROM ${ColumnCellModel.tableName} AS cells
                                   WHERE cells.columnId = column.id
                               )`),
-            'numberOfCells',
+            'size',
           ],
         ],
       },

@@ -268,7 +268,9 @@ export const ExecutionForm = component$(() => {
   });
 
   const prompt = useSignal<string>('');
-  const columnsReferences = useSignal<string[]>([]);
+  const columnsReferences = useSignal<string[]>(
+    column.value?.process?.columnsReferences || [],
+  );
   const variables = useSignal<Variable[]>([]);
   const searchOnWeb = useSignal(false);
 
@@ -283,8 +285,6 @@ export const ExecutionForm = component$(() => {
   const imageColumns = useSignal<Variable[]>([]);
 
   const needsImageColumn = useComputed$(() => {
-    console.log('Checking if image column is needed', column.value);
-
     return column.value?.process?.task === 'image-text-to-text';
   });
 
@@ -298,6 +298,35 @@ export const ExecutionForm = component$(() => {
 
   const isSearchOnWebAvailable = useComputed$(() => {
     return !isImageColumn.value;
+  });
+
+  const referredColumns = useComputed$(() => {
+    return columns.value.filter((c) => columnsReferences.value.includes(c.id));
+  });
+
+  const maxSizeToGenerate = useComputed$(() => {
+    if (selectedImageColumn.value) {
+      const imageColumn = columns.value.find(
+        (c) => c.id === selectedImageColumn.value,
+      );
+      return imageColumn?.size || 0;
+    }
+
+    if (referredColumns.value.length > 0) {
+      return Math.max(...referredColumns.value.map((c) => c.size || 0));
+    }
+
+    return activeDataset.value.size;
+  });
+
+  const counterValue = useComputed$(() => {
+    const processedSize = column.value?.process?.processedCells ?? 0;
+
+    return maxSizeToGenerate.value - processedSize;
+  });
+
+  const shouldDisable = useComputed$(() => {
+    return columnId.value === TEMPORAL_ID || column.value?.process?.isExecuting;
   });
 
   const modelSearchContainerRef = useClickOutside(
@@ -474,6 +503,7 @@ export const ExecutionForm = component$(() => {
         modelProvider,
         endpointUrl,
         prompt: prompt.value,
+        limit: maxSizeToGenerate.value,
         columnsReferences: columnsReferences.value,
         searchEnabled: searchOnWeb.value,
         // Add selected image column for image processing workflows
@@ -485,10 +515,6 @@ export const ExecutionForm = component$(() => {
       updateColumn(column.value);
       await onGenerateColumn(column.value);
     } catch {}
-  });
-
-  const shouldDisable = useComputed$(() => {
-    return columnId.value === TEMPORAL_ID || column.value?.process?.isExecuting;
   });
 
   useVisibleTask$(() => {
@@ -602,11 +628,7 @@ export const ExecutionForm = component$(() => {
                     column.value.process?.processedCells && (
                       <div class="p-[2px] rounded-[6px] bg-gradient-to-b from-[#4057BF] to-[#6B86FF] w-16 h-8">
                         <div class="rounded-[4px] bg-white w-full h-full flex items-center justify-center">
-                          {activeDataset.value.size -
-                            Math.min(
-                              column.value.process?.processedCells,
-                              activeDataset.value.size,
-                            )}
+                          {counterValue.value}
                         </div>
                       </div>
                     )}

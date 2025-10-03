@@ -101,7 +101,7 @@ export interface Column {
     name: string;
     createdBy: string;
   };
-  numberOfCells?: number;
+  size: number;
 }
 
 export const TEMPORAL_ID = '-1';
@@ -131,104 +131,8 @@ export const useColumnsStore = () => {
       kind: 'dynamic',
       type,
       visible: true,
-      cells: [
-        {
-          id: TEMPORAL_ID,
-          idx: 0,
-          validated: false,
-          updatedAt: new Date(),
-          generating: false,
-          value: '',
-          column: {
-            id: TEMPORAL_ID,
-            type,
-          },
-        },
-        {
-          id: TEMPORAL_ID,
-          idx: 1,
-          validated: false,
-          updatedAt: new Date(),
-          generating: false,
-          value: '',
-          column: {
-            id: TEMPORAL_ID,
-            type,
-          },
-        },
-        {
-          id: TEMPORAL_ID,
-          idx: 2,
-          validated: false,
-          updatedAt: new Date(),
-          generating: false,
-          value: '',
-          column: {
-            id: TEMPORAL_ID,
-            type,
-          },
-        },
-        {
-          id: TEMPORAL_ID,
-          idx: 3,
-          validated: false,
-          updatedAt: new Date(),
-          generating: false,
-          value: '',
-          column: {
-            id: TEMPORAL_ID,
-            type,
-          },
-        },
-        {
-          id: TEMPORAL_ID,
-          idx: 4,
-          validated: false,
-          updatedAt: new Date(),
-          generating: false,
-          value: '',
-          column: {
-            id: TEMPORAL_ID,
-            type,
-          },
-        },
-        {
-          id: TEMPORAL_ID,
-          idx: 5,
-          validated: false,
-          updatedAt: new Date(),
-          generating: false,
-          value: '',
-          column: {
-            id: TEMPORAL_ID,
-            type,
-          },
-        },
-        {
-          id: TEMPORAL_ID,
-          idx: 6,
-          validated: false,
-          updatedAt: new Date(),
-          generating: false,
-          value: '',
-          column: {
-            id: TEMPORAL_ID,
-            type,
-          },
-        },
-        {
-          id: TEMPORAL_ID,
-          idx: 7,
-          validated: false,
-          updatedAt: new Date(),
-          generating: false,
-          value: '',
-          column: {
-            id: TEMPORAL_ID,
-            type,
-          },
-        },
-      ],
+      size: 5,
+      cells: [],
       process: {
         modelName: info?.modelName ?? '',
         modelProvider: info?.modelProvider ?? '',
@@ -351,7 +255,7 @@ export const useColumnsStore = () => {
         column.cells.sort((a, b) => a.idx - b.idx);
       }
 
-      if (column.process) {
+      if (column.process && !cell.generating) {
         column.process.processedCells =
           (column.process.processedCells ?? 0) + 1;
       }

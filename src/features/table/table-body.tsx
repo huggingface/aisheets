@@ -410,7 +410,8 @@ export const TableBody = component$(() => {
                       'relative transition-colors min-w-[142px] w-[326px] h-[108px] break-words align-top border border-neutral-300 hover:bg-gray-50/50',
                       getBoundary(cell),
                       {
-                        'bg-blue-50': cell.column!.id == columnId.value,
+                        'bg-blue-50 hover:bg-blue-100':
+                          cell.column!.id == columnId.value,
                         'shadow-[inset_2px_0_0_theme(colors.primary.400),inset_-2px_0_0_theme(colors.primary.400)]':
                           columnPreferences.value[cell.column!.id]
                             ?.aiPromptOpen,

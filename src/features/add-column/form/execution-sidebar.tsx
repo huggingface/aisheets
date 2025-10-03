@@ -13,7 +13,7 @@ export const ExecutionSidebar = component$(() => {
   return (
     <aside
       class={cn(
-        'fixed top-16 right-6 z-[52] bottom-16 w-[700px] bg-gradient-to-r from-white to-gray-50 shadow-lg transition-transform duration-200 translate-x-full border border-neutral-200 rounded-sm',
+        'fixed top-16 right-6 z-[52] bottom-16 w-[700px] bg-gradient-to-r from-white to-gray-50 shadow-lg transition-transform duration-200 translate-x-full border border-neutral-200 rounded-[16px]',
         {
           'translate-x-0': isOpenExecutionSidebar.value,
         },

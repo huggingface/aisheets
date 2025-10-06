@@ -57,6 +57,7 @@ export class Models {
   getModelsByTask(task: TaskType): Model[] {
     if (task === 'text-to-image') return this.getImageModels();
     if (task === 'image-text-to-text') return this.getImageTextToTextModels();
+    if (task === 'image-to-image') return this.getImageToImageModels();
     return this.getTextModels();
   }
 
@@ -71,6 +72,12 @@ export class Models {
   private getImageTextToTextModels(): Model[] {
     return this.models.filter(
       (model) => model.supportedType === 'image-text-to-text',
+    );
+  }
+
+  private getImageToImageModels(): Model[] {
+    return this.models.filter(
+      (model) => model.supportedType === 'image-to-image',
     );
   }
 }
@@ -285,7 +292,10 @@ export const ExecutionForm = component$(() => {
   const imageColumns = useSignal<Variable[]>([]);
 
   const needsImageColumn = useComputed$(() => {
-    return column.value?.process?.task === 'image-text-to-text';
+    return (
+      column.value?.process?.task === 'image-text-to-text' ||
+      column.value?.process?.task === 'image-to-image'
+    );
   });
 
   const onSelectedVariables = $((variables: { id: string }[]) => {

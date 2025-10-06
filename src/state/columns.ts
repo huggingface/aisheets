@@ -7,7 +7,8 @@ export type ColumnKind = 'static' | 'dynamic';
 export type TaskType =
   | 'text-generation'
   | 'image-text-to-text'
-  | 'text-to-image';
+  | 'text-to-image'
+  | 'image-to-image';
 
 export interface Process {
   // Persisted data

@@ -66,6 +66,26 @@ const IMAGE_COLUMN_PROMPTS: Record<string, PromptsType> = {
     label: 'Describe the image',
     prompt: `Describe what you see in the image.`,
   },
+  detectObjects: {
+    label: 'Detect objects',
+    prompt: `Identify and list all the objects, people, animals, or items visible in the image.`,
+  },
+  extractTextFromImage: {
+    label: 'Extract text',
+    prompt: `Extract and transcribe all visible text from the image, including signs, labels, documents, or any written content.`,
+  },
+  makeBlackAndWhite: {
+    label: 'Transform to B&W',
+    prompt: `Convert the image to black and white while preserving the original composition and details.`,
+  },
+  colorizeImage: {
+    label: 'Colorize',
+    prompt: `Add realistic colors to the black and white image, maintaining the original composition and style.`,
+  },
+  addTextToImage: {
+    label: 'Add text',
+    prompt: `Add text to the image at an appropriate location with good readability and visual appeal. Text: TEXT`,
+  },
 };
 
 const ALL_COLUMN_PROMPTS = {
@@ -136,7 +156,15 @@ export const TableAddCellHeaderPlaceHolder = component$<{ column: Column }>(
           summarize: 'text',
           textToImage: 'image',
           imageTextToText: 'text',
-          custom: 'text',
+          askImage: 'text',
+          detectObjects: 'text',
+          extractTextFromImage: 'text',
+          imageToImage: 'image',
+          makeBlackAndWhite: 'image',
+          colorizeImage: 'image',
+          removeObjects: 'image',
+          addTextToImage: 'image',
+          custom: column.type === 'image' ? 'text' : 'text',
         };
 
         const taskMap: Record<string, TaskType> = {
@@ -145,7 +173,16 @@ export const TableAddCellHeaderPlaceHolder = component$<{ column: Column }>(
           summarize: 'text-generation',
           textToImage: 'text-to-image',
           imageTextToText: 'image-text-to-text',
-          custom: 'text-generation',
+          askImage: 'image-text-to-text',
+          detectObjects: 'image-text-to-text',
+          extractTextFromImage: 'image-text-to-text',
+          imageToImage: 'image-to-image',
+          makeBlackAndWhite: 'image-to-image',
+          colorizeImage: 'image-to-image',
+          removeObjects: 'image-to-image',
+          addTextToImage: 'image-to-image',
+          custom:
+            column.type === 'image' ? 'image-text-to-text' : 'text-generation',
         };
 
         await onCreateColumn(
@@ -159,15 +196,15 @@ export const TableAddCellHeaderPlaceHolder = component$<{ column: Column }>(
     const handleNewColumn = $(async () => {
       if (!prompt.value.trim()) return;
 
-      const newReferencePrompt = TEXT_COLUMN_PROMPTS['custom'].prompt.replace(
-        '{{REPLACE_ME}}',
-        `{{${column.name}}}`,
-      );
+      const isImageColumn = column.type === 'image';
+      const taskType = isImageColumn ? 'image-text-to-text' : 'text-generation';
+      const outputType = isImageColumn ? 'text' : 'unknown';
 
-      const newPrompt = `${prompt.value.trim()} ${newReferencePrompt}`;
+      const newPrompt = isImageColumn
+        ? prompt.value.trim()
+        : `${prompt.value.trim()} ${TEXT_COLUMN_PROMPTS['custom'].prompt.replace('{{REPLACE_ME}}', `{{${column.name}}}`)}`;
 
-      // TODO: @dvsrepo get dynamically the "task" type.
-      await onCreateColumn('unknown', 'text-generation', newPrompt);
+      await onCreateColumn(outputType, taskType, newPrompt);
     });
 
     if (columnId.value) return null;

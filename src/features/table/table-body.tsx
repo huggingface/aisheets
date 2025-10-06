@@ -313,10 +313,21 @@ export const TableBody = component$(() => {
         );
 
         return cn({
-          'border-t-2 border-t-primary-300': isRowSelected,
-          'border-b-2 border-b-primary-300': isRowMaxSelected,
-          'border-l-2 border-l-primary-300': isColumnSelected,
-          'border-r-2 border-r-primary-300': isColumnSelected,
+          'shadow-[inset_0_3px_0_0_theme(colors.primary.300)]':
+            isRowSelected && !isRowMaxSelected && !isColumnSelected,
+          'shadow-[inset_0_-3px_0_0_theme(colors.primary.300)]':
+            isRowMaxSelected && !isRowSelected && !isColumnSelected,
+          'shadow-[inset_3px_0_0_0_theme(colors.primary.300),inset_-3px_0_0_0_theme(colors.primary.300)]':
+            isColumnSelected && !isRowSelected && !isRowMaxSelected,
+          'shadow-[inset_0_3px_0_0_theme(colors.primary.300),inset_3px_0_0_0_theme(colors.primary.300),inset_-3px_0_0_0_theme(colors.primary.300)]':
+            isRowSelected && isColumnSelected && !isRowMaxSelected,
+          'shadow-[inset_0_-3px_0_0_theme(colors.primary.300),inset_3px_0_0_0_theme(colors.primary.300),inset_-3px_0_0_0_theme(colors.primary.300)]':
+            isRowMaxSelected && isColumnSelected && !isRowSelected,
+          'shadow-[inset_0_3px_0_0_theme(colors.primary.300),inset_0_-3px_0_0_theme(colors.primary.300)]':
+            isRowSelected && isRowMaxSelected && !isColumnSelected,
+          'shadow-[inset_0_3px_0_0_theme(colors.primary.300),inset_0_-3px_0_0_theme(colors.primary.300),inset_3px_0_0_0_theme(colors.primary.300),inset_-3px_0_0_0_theme(colors.primary.300)]':
+            isRowSelected && isRowMaxSelected && isColumnSelected,
+
           'bg-primary-100/50 hover:bg-primary-100/50':
             !dragStartCell.value &&
             selectedCellToDrag.value.length > 1 &&
@@ -408,13 +419,17 @@ export const TableBody = component$(() => {
                     data-column-id={cell.column?.id}
                     class={cn(
                       'relative transition-colors min-w-[142px] w-[326px] h-[108px] break-words align-top border border-neutral-300 hover:bg-gray-50/50',
-                      getBoundary(cell),
                       {
-                        'bg-blue-50': cell.column!.id == columnId.value,
-                        'shadow-[inset_2px_0_0_theme(colors.primary.400),inset_-2px_0_0_theme(colors.primary.400)]':
+                        'bg-blue-50 hover:bg-blue-100':
+                          cell.column!.id == columnId.value,
+                        'shadow-[inset_2px_0_0_theme(colors.primary.100),inset_-2px_0_0_theme(colors.primary.100)]':
+                          columnPreferences.value[cell.column!.id]
+                            ?.aiButtonHover,
+                        'shadow-[inset_2px_0_0_theme(colors.primary.300),inset_-2px_0_0_theme(colors.primary.300)]':
                           columnPreferences.value[cell.column!.id]
                             ?.aiPromptOpen,
                       },
+                      getBoundary(cell),
                     )}
                     style={{
                       width: `${columnPreferences.value[cell.column!.id]?.width || 326}px`,
@@ -434,7 +449,7 @@ export const TableBody = component$(() => {
                         cell.column?.id &&
                         latestCellSelected.value &&
                         latestCellSelected.value?.idx === cell.idx && (
-                          <div class="absolute bottom-1 right-4 w-3 h-3 z-10">
+                          <div class="absolute bottom-1 right-7 w-3 h-3 z-10">
                             {columns.value.find((c) => c.id === cell.column?.id)
                               ?.kind !== 'static' && (
                               <Button
@@ -451,10 +466,9 @@ export const TableBody = component$(() => {
                                     item.index === 4
                                   }
                                   text="Drag down to generate cells"
-                                  gutter={1}
-                                  floating="right-start"
+                                  floating="right"
                                 >
-                                  <LuDot class="text-5xl text-primary-300" />
+                                  <LuDot class="text-7xl text-primary-300" />
                                 </Tooltip>
                               </Button>
                             )}

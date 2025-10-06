@@ -848,7 +848,7 @@ const generateImageToImage = async ({
   session: Session;
   process: Process;
 }): Promise<{
-  value?: ArrayBuffer;
+  value?: Uint8Array;
   error?: string;
 }> => {
   const imageColumnId = process.imageColumnId;
@@ -888,7 +888,7 @@ const generateImageToImage = async ({
   });
 
   return {
-    value: response.value ?? undefined,
+    value: response.value ? new Uint8Array(response.value) : undefined,
     error: response.error,
   };
 };

@@ -3,7 +3,6 @@ import {
   component$,
   Fragment,
   type HTMLAttributes,
-  noSerialize,
   useComputed$,
   useSignal,
   useVisibleTask$,
@@ -50,7 +49,7 @@ export const TableBody = component$(() => {
 
   const data = useSignal<Cell[][]>([]);
   const loadedDataCount = useComputed$(() => {
-    return firstColumn.value.cells.length;
+    return firstColumn.value?.cells.length || 0;
   });
 
   const scrollElement = useSignal<HTMLElement>();
@@ -74,7 +73,7 @@ export const TableBody = component$(() => {
       ?.hidePopover();
 
     const ok = await server$(deleteRowsCells)(
-      firstColumn.value.dataset.id,
+      firstColumn.value?.dataset.id,
       selectedRows.value,
     );
 
@@ -86,7 +85,7 @@ export const TableBody = component$(() => {
   });
 
   useVisibleTask$(({ track }) => {
-    track(() => firstColumn.value.cells);
+    track(() => firstColumn.value?.cells);
 
     const getCell = (column: Column, rowIndex: number): Cell => {
       const cell = column.cells[rowIndex];
@@ -159,7 +158,7 @@ export const TableBody = component$(() => {
   });
 
   const firstColumnsWithValue = useComputed$(() => {
-    return firstColumn.value.cells.filter((c) => !!c.value || !!c.error);
+    return firstColumn.value?.cells.filter((c) => !!c.value || !!c.error);
   });
 
   useVisibleTask$(() => {
@@ -180,7 +179,7 @@ export const TableBody = component$(() => {
     if (!dragStartCell.value) return;
     if (dragStartCell.value.column?.id !== cell.column?.id) return;
 
-    const isDraggingTheFirstColumn = cell.column?.id === firstColumn.value.id;
+    const isDraggingTheFirstColumn = cell.column?.id === firstColumn.value?.id;
 
     const startRowIndex = dragStartCell.value.idx;
     const endRowIndex = cell.idx;
@@ -213,11 +212,6 @@ export const TableBody = component$(() => {
 
     const offset = selectedCellToDrag.value[0].idx;
     const limit = latestCellSelected.value?.idx - offset + 1;
-
-    column.process!.cancellable = noSerialize(new AbortController());
-    column.process!.isExecuting = true;
-
-    updateColumn(column);
 
     await onGenerateColumn({
       ...column,
@@ -462,7 +456,7 @@ export const TableBody = component$(() => {
                               >
                                 <Tooltip
                                   open={
-                                    firstColumn.value.id === cell.column?.id &&
+                                    firstColumn.value?.id === cell.column?.id &&
                                     item.index === 4
                                   }
                                   text="Drag down to generate cells"

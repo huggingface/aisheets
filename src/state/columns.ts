@@ -67,6 +67,8 @@ export interface ColumnPrototype {
   modelProvider?: string;
   endpointUrl?: string;
   task?: TaskType;
+  columnsReferences?: string[];
+  imageColumnId?: string;
 }
 export interface CellSource {
   url: string;
@@ -105,56 +107,11 @@ export interface Column {
 }
 
 export const TEMPORAL_ID = '-1';
+
 export const useColumnsStore = () => {
   const { activeDataset } = useDatasetsStore();
 
-  const createPlaceholderColumn = $((info?: ColumnPrototype): Column => {
-    const getNextColumnName = (counter = 1): string => {
-      const manyColumnsWithName = activeDataset.value.columns.filter(
-        (c) => c.id !== TEMPORAL_ID,
-      );
-
-      const newPosibleColumnName = `column_${manyColumnsWithName.length + 1}`;
-
-      if (!manyColumnsWithName.find((c) => c.name === newPosibleColumnName)) {
-        return newPosibleColumnName;
-      }
-
-      return getNextColumnName(counter + 1);
-    };
-
-    const type = info?.type ?? 'text';
-
-    return {
-      id: TEMPORAL_ID,
-      name: info?.name ?? getNextColumnName(),
-      kind: 'dynamic',
-      type,
-      visible: true,
-      size: 0,
-      cells: [],
-      process: {
-        modelName: info?.modelName ?? '',
-        modelProvider: info?.modelProvider ?? '',
-        prompt: info?.prompt ?? '',
-        searchEnabled: false,
-        endpointUrl: info?.endpointUrl ?? '',
-        columnsReferences: [],
-        task: info?.task ?? 'text-generation',
-        updatedAt: new Date(),
-      },
-      dataset: {
-        ...activeDataset.value,
-      },
-    };
-  });
-
-  const columns = useComputed$(async () => {
-    if (activeDataset.value.columns.length === 0) {
-      activeDataset.value.columns = [await createPlaceholderColumn()];
-    }
-    return activeDataset.value.columns;
-  });
+  const columns = useComputed$(() => activeDataset.value.columns);
 
   const replaceColumns = $((replaced: Column[]) => {
     activeDataset.value = {
@@ -169,27 +126,7 @@ export const useColumnsStore = () => {
     columns,
     firstColumn,
     replaceColumns,
-    addTemporalColumn: $(async (info: ColumnPrototypeWithNextColumnId) => {
-      if (activeDataset.value.columns.some((c) => c.id === TEMPORAL_ID)) return;
 
-      const newTemporalColumn = await createPlaceholderColumn(info);
-
-      const nextColumnIndex = activeDataset.value.columns.findIndex(
-        (c) => c.id === info.nextColumnId,
-      );
-
-      if (nextColumnIndex === -1) {
-        throw new Error('nextColumnId not found');
-      }
-
-      replaceColumns([
-        ...activeDataset.value.columns.slice(0, nextColumnIndex + 1),
-        newTemporalColumn,
-        ...activeDataset.value.columns.slice(nextColumnIndex + 1),
-      ]);
-
-      return newTemporalColumn;
-    }),
     removeTemporalColumn: $(() => {
       replaceColumns(
         activeDataset.value.columns.filter((c) => c.id !== TEMPORAL_ID),

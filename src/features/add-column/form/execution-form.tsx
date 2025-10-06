@@ -1,14 +1,12 @@
 import {
   $,
   component$,
-  noSerialize,
   useComputed$,
   useSignal,
   useTask$,
   useVisibleTask$,
 } from '@builder.io/qwik';
 import { Collapsible } from '@qwik-ui/headless';
-
 import { cn } from '@qwik-ui/utils';
 import {
   LuCheck,
@@ -244,7 +242,7 @@ class GroupedModels {
 
 export const ExecutionForm = component$(() => {
   const { activeDataset } = useDatasetsStore();
-  const { mode, columnId, column } = useExecution();
+  const { columnId, column } = useExecution();
   const { columns, updateColumn } = useColumnsStore();
   const allModels = useModelsContext();
   const { DEFAULT_MODEL, DEFAULT_MODEL_PROVIDER } = useConfigContext();
@@ -360,8 +358,7 @@ export const ExecutionForm = component$(() => {
       if (
         needsImageColumn.value &&
         !selectedImageColumn.value &&
-        imageColumns.value.length > 0 &&
-        mode.value === 'add'
+        imageColumns.value.length > 0
       ) {
         selectedImageColumn.value = imageColumns.value[0].id;
       }
@@ -497,8 +494,6 @@ export const ExecutionForm = component$(() => {
 
       column.value.process = {
         ...column.value.process!,
-        cancellable: noSerialize(new AbortController()),
-        isExecuting: true,
         modelName: model.id,
         modelProvider,
         endpointUrl,
@@ -518,7 +513,7 @@ export const ExecutionForm = component$(() => {
   });
 
   useVisibleTask$(() => {
-    if (columnId.value === TEMPORAL_ID) {
+    if (column.value?.cells.length === 0) {
       nextTick(() => {
         onGenerate();
       });

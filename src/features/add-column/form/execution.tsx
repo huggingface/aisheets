@@ -13,10 +13,13 @@ import { useModals } from '~/components';
 import {
   type ColumnPrototypeWithId,
   type ColumnPrototypeWithNextColumnId,
+  type Dataset,
   useColumnsStore,
+  useDatasetsStore,
 } from '~/state';
 
-import type { TaskType } from '~/state/columns';
+import type { ColumnPrototype, CreateColumn, TaskType } from '~/state/columns';
+import { useAddColumnUseCase } from '~/usecases/add-column.usecase';
 
 export type Execution = {
   columnId?: string;
@@ -42,16 +45,54 @@ type ExecutionInfo<T extends Execution['mode']> = T extends 'add'
   ? ColumnPrototypeWithNextColumnId
   : ColumnPrototypeWithId;
 
+const createColumnPlaceholder = (
+  dataset: Dataset,
+  info?: ColumnPrototype,
+): CreateColumn => {
+  const getNextColumnName = (counter = 1): string => {
+    const manyColumnsWithName = dataset.columns;
+    const newPosibleColumnName = `column_${manyColumnsWithName.length + 1}`;
+
+    if (!manyColumnsWithName.find((c) => c.name === newPosibleColumnName)) {
+      return newPosibleColumnName;
+    }
+
+    return getNextColumnName(counter + 1);
+  };
+
+  const type = info?.type ?? 'text';
+
+  return {
+    name: info?.name ?? getNextColumnName(),
+    kind: 'dynamic',
+    type,
+    process: {
+      modelName: info?.modelName ?? '',
+      modelProvider: info?.modelProvider ?? '',
+      prompt: info?.prompt ?? '',
+      searchEnabled: false,
+      endpointUrl: info?.endpointUrl ?? '',
+      columnsReferences: info?.columnsReferences ?? [],
+      imageColumnId: info?.imageColumnId ?? undefined,
+      task: info?.task ?? 'text-generation',
+    },
+    dataset,
+  };
+};
+
 export const useExecution = () => {
   const context = useContext(executionContext);
+  const { activeDataset } = useDatasetsStore();
+  const { addColumn } = useColumnsStore();
   const {
     isOpenExecutionSidebar,
     openExecutionSidebar,
     closeExecutionSidebar,
   } = useModals('executionSidebar');
 
-  const { columns, addTemporalColumn, removeTemporalColumn } =
-    useColumnsStore();
+  const addNewColumn = useAddColumnUseCase();
+
+  const { columns } = useColumnsStore();
 
   const columnId = useComputed$(() => context.value.columnId);
   const mode = useComputed$(() => context.value.mode);
@@ -70,42 +111,34 @@ export const useExecution = () => {
         info: ExecutionInfo<T>,
       ): Promise<void> => {
         if (mode === 'edit') {
-          const casted = info as ColumnPrototypeWithId;
+          const column = info as ColumnPrototypeWithId;
 
-          if (!casted.columnId) {
+          if (!column.columnId) {
             throw new Error('columnId is required when mode is "edit"');
           }
 
           context.value = {
-            columnId: casted.columnId,
-            mode,
+            columnId: column.columnId,
           };
+        } else if (mode === 'add') {
+          const columnCreate = createColumnPlaceholder(
+            activeDataset.value,
+            info,
+          );
 
-          openExecutionSidebar();
-
-          return;
-        }
-
-        if (mode === 'add') {
-          const casted = info as ColumnPrototypeWithNextColumnId;
-
-          const newbie = await addTemporalColumn(casted);
-          if (!newbie) return;
+          const newColumn = await addNewColumn(columnCreate);
+          await addColumn(newColumn);
 
           context.value = {
-            columnId: newbie.id,
-            mode,
+            columnId: newColumn.id,
           };
-
-          openExecutionSidebar();
         }
+
+        openExecutionSidebar();
+        return;
       },
     ),
-    close: $(async () => {
-      if (mode.value === 'add') {
-        await removeTemporalColumn();
-      }
-
+    close: $(() => {
       closeExecutionSidebar();
 
       context.value = {};

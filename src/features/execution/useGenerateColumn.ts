@@ -33,8 +33,10 @@ export const useGenerateColumn = () => {
       for (const cellId in generatedCells) {
         const cell = generatedCells[cellId];
 
-        const latest = await getCellById$(cell.id!);
-        if (!latest) continue;
+        if (!cell.generating) continue;
+
+        let latest = await getCellById$(cell.id!);
+        if (!latest) latest = cell;
 
         latest.generating = false;
         await replaceCell(latest);

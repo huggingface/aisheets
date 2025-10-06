@@ -339,6 +339,7 @@ async function singleCellGeneration({
     modelName,
     modelProvider,
     prompt,
+
     searchEnabled,
     endpointUrl,
   } = process;

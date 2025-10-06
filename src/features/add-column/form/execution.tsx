@@ -8,6 +8,7 @@ import {
   useContext,
   useContextProvider,
   useSignal,
+  useVisibleTask$,
 } from '@builder.io/qwik';
 import { useModals } from '~/components';
 import {
@@ -94,6 +95,45 @@ export const useExecution = () => {
 
   const { columns } = useColumnsStore();
 
+  const pendingScrollColumnId = useSignal<string | null>(null);
+
+  const scrollToColumn = $(async (columnId: string) => {
+    const scrollContainer = document.querySelector(
+      '.scrollable',
+    ) as HTMLElement;
+    const columnHeader = document.getElementById(`index-${columnId}`);
+
+    if (scrollContainer && columnHeader) {
+      const containerRect = scrollContainer.getBoundingClientRect();
+      const columnRect = columnHeader.getBoundingClientRect();
+
+      const availableWidth = containerRect.width - 700;
+      const scrollLeft =
+        columnRect.left -
+        containerRect.left +
+        scrollContainer.scrollLeft -
+        availableWidth / 2 +
+        columnRect.width / 2;
+
+      scrollContainer.scrollTo({
+        left: Math.max(0, scrollLeft),
+        behavior: 'smooth',
+      });
+    }
+  });
+
+  useVisibleTask$(({ track }) => {
+    track(isOpenExecutionSidebar);
+    track(pendingScrollColumnId);
+
+    if (isOpenExecutionSidebar.value && pendingScrollColumnId.value) {
+      setTimeout(() => {
+        scrollToColumn(pendingScrollColumnId.value!);
+        pendingScrollColumnId.value = null;
+      }, 250);
+    }
+  });
+
   const columnId = useComputed$(() => context.value.columnId);
   const mode = useComputed$(() => context.value.mode);
   const column = useComputed$(() =>
@@ -132,6 +172,8 @@ export const useExecution = () => {
           context.value = {
             columnId: newColumn.id,
           };
+
+          pendingScrollColumnId.value = newColumn.id;
         }
 
         openExecutionSidebar();

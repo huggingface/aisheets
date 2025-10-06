@@ -253,7 +253,11 @@ export const TableAddCellHeaderPlaceHolder = component$<{ column: Column }>(
                 ref={textAreaRef}
                 look="ghost"
                 class="p-3 h-9 min-h-9 max-h-28 overflow-hidden resize-none"
-                placeholder="Type your action (e.g. translate to French)"
+                placeholder={
+                  column.type === 'image'
+                    ? 'Type your action (e.g. detect objects in the image)'
+                    : 'Type your action (e.g. translate to French)'
+                }
                 bind:value={prompt}
                 onKeyDown$={(event) => {
                   if (

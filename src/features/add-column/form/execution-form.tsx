@@ -38,7 +38,6 @@ import { useConfigContext, useModelsContext } from '~/routes/home/layout';
 import {
   type Column,
   type TaskType,
-  TEMPORAL_ID,
   useColumnsStore,
   useDatasetsStore,
 } from '~/state';
@@ -324,7 +323,7 @@ export const ExecutionForm = component$(() => {
   });
 
   const shouldDisable = useComputed$(() => {
-    return columnId.value === TEMPORAL_ID || column.value?.process?.isExecuting;
+    return column.value?.process?.isExecuting;
   });
 
   const modelSearchContainerRef = useClickOutside(

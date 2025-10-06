@@ -26,7 +26,6 @@ import { deleteRowsCells, getColumnCells } from '~/services';
 import {
   type Cell,
   type Column,
-  TEMPORAL_ID,
   useColumnsStore,
   useDatasetsStore,
 } from '~/state';
@@ -399,78 +398,64 @@ export const TableBody = component$(() => {
           {loadedData?.map((cell) => {
             return (
               <Fragment key={`${cell.idx}-${cell.column!.id}`}>
-                {cell.column?.id === TEMPORAL_ID ? (
-                  <td
-                    class={cn(
-                      'relative min-w-[326px] w-[326px] max-w-[326px] h-[108px] border',
-                      {
-                        'bg-blue-50': cell.column.id == columnId.value,
-                      },
-                    )}
-                  />
-                ) : (
-                  <td
-                    data-column-id={cell.column?.id}
-                    class={cn(
-                      'relative transition-colors min-w-[142px] w-[326px] h-[108px] break-words align-top border border-neutral-300 hover:bg-gray-50/50',
-                      {
-                        'bg-blue-50 hover:bg-blue-100':
-                          cell.column!.id == columnId.value,
-                        'shadow-[inset_2px_0_0_theme(colors.primary.100),inset_-2px_0_0_theme(colors.primary.100)]':
-                          columnPreferences.value[cell.column!.id]
-                            ?.aiButtonHover,
-                        'shadow-[inset_2px_0_0_theme(colors.primary.300),inset_-2px_0_0_theme(colors.primary.300)]':
-                          columnPreferences.value[cell.column!.id]
-                            ?.aiPromptOpen,
-                      },
-                      getBoundary(cell),
-                    )}
-                    style={{
-                      width: `${columnPreferences.value[cell.column!.id]?.width || 326}px`,
-                    }}
-                    onMouseOver$={() => showAiButton(cell.column!.id)}
-                    onMouseLeave$={() => hideAiButton(cell.column!.id)}
+                <td
+                  data-column-id={cell.column?.id}
+                  class={cn(
+                    'relative transition-colors min-w-[142px] w-[326px] h-[108px] break-words align-top border border-neutral-300 hover:bg-gray-50/50',
+                    {
+                      'bg-blue-50 hover:bg-blue-100':
+                        cell.column!.id == columnId.value,
+                      'shadow-[inset_2px_0_0_theme(colors.primary.100),inset_-2px_0_0_theme(colors.primary.100)]':
+                        columnPreferences.value[cell.column!.id]?.aiButtonHover,
+                      'shadow-[inset_2px_0_0_theme(colors.primary.300),inset_-2px_0_0_theme(colors.primary.300)]':
+                        columnPreferences.value[cell.column!.id]?.aiPromptOpen,
+                    },
+                    getBoundary(cell),
+                  )}
+                  style={{
+                    width: `${columnPreferences.value[cell.column!.id]?.width || 326}px`,
+                  }}
+                  onMouseOver$={() => showAiButton(cell.column!.id)}
+                  onMouseLeave$={() => hideAiButton(cell.column!.id)}
+                >
+                  <div
+                    onMouseUp$={handleMouseUp$}
+                    onMouseDown$={(e) => handleMouseDown$(cell, e)}
+                    onMouseOver$={(e) => handleMouseOver$(cell, e)}
+                    onMouseMove$={handleMouseMove$}
                   >
-                    <div
-                      onMouseUp$={handleMouseUp$}
-                      onMouseDown$={(e) => handleMouseDown$(cell, e)}
-                      onMouseOver$={(e) => handleMouseOver$(cell, e)}
-                      onMouseMove$={handleMouseMove$}
-                    >
-                      <TableCell cell={cell} />
+                    <TableCell cell={cell} />
 
-                      {latestCellSelected.value?.column?.id ===
-                        cell.column?.id &&
-                        latestCellSelected.value &&
-                        latestCellSelected.value?.idx === cell.idx && (
-                          <div class="absolute bottom-1 right-7 w-3 h-3 z-10">
-                            {columns.value.find((c) => c.id === cell.column?.id)
-                              ?.kind !== 'static' && (
-                              <Button
-                                size="sm"
-                                look="ghost"
-                                class="cursor-crosshair p-1 z-50"
-                                onMouseDown$={(e) =>
-                                  handleMouseDragging$(cell, e)
+                    {latestCellSelected.value?.column?.id === cell.column?.id &&
+                      latestCellSelected.value &&
+                      latestCellSelected.value?.idx === cell.idx && (
+                        <div class="absolute bottom-1 right-7 w-3 h-3 z-10">
+                          {columns.value.find((c) => c.id === cell.column?.id)
+                            ?.kind !== 'static' && (
+                            <Button
+                              size="sm"
+                              look="ghost"
+                              class="cursor-crosshair p-1 z-50"
+                              onMouseDown$={(e) =>
+                                handleMouseDragging$(cell, e)
+                              }
+                            >
+                              <Tooltip
+                                open={
+                                  firstColumn.value?.id === cell.column?.id &&
+                                  item.index === 4
                                 }
+                                text="Drag down to generate cells"
+                                floating="right"
                               >
-                                <Tooltip
-                                  open={
-                                    firstColumn.value?.id === cell.column?.id &&
-                                    item.index === 4
-                                  }
-                                  text="Drag down to generate cells"
-                                  floating="right"
-                                >
-                                  <LuDot class="text-7xl text-primary-300" />
-                                </Tooltip>
-                              </Button>
-                            )}
-                          </div>
-                        )}
-                    </div>
-                  </td>
-                )}
+                                <LuDot class="text-7xl text-primary-300" />
+                              </Tooltip>
+                            </Button>
+                          )}
+                        </div>
+                      )}
+                  </div>
+                </td>
               </Fragment>
             );
           })}

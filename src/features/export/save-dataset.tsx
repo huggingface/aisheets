@@ -2,10 +2,10 @@ import { component$ } from '@builder.io/qwik';
 
 import { cn } from '@qwik-ui/utils';
 import { LuDownload } from '@qwikest/icons/lucide';
-import { Label, Popover, buttonVariants } from '~/components';
+import { buttonVariants, Label, Popover } from '~/components';
 import { Tooltip } from '~/components/ui/tooltip/tooltip';
 import { useSession } from '~/loaders';
-import { TEMPORAL_ID, useDatasetsStore } from '~/state';
+import { useDatasetsStore } from '~/state';
 import { ExportToHub } from './export-to-hub';
 import { FileDownload } from './file-download';
 
@@ -20,10 +20,7 @@ export const SaveDataset = component$(() => {
           buttonVariants({ look: 'secondary', size: 'sm' }),
           'disabled:cursor-not-allowed bg-white text-neutral-500 hover:text-neutral-600 dark:bg-slate-800 dark:text-slate-400 dark:hover:text-slate-300',
         )}
-        disabled={
-          activeDataset.value.columns.filter((c) => c.id !== TEMPORAL_ID)
-            .length === 0
-        }
+        disabled={activeDataset.value.columns.length === 0}
       >
         <Label class="flex items-center cursor-pointer">
           <Tooltip text="Download">

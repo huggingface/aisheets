@@ -618,14 +618,13 @@ export const ExecutionForm = component$(() => {
                       </div>
                     )}
 
-                  {column.value.process?.isExecuting &&
-                    column.value.process?.processedCells && (
-                      <div class="p-[2px] rounded-[6px] bg-gradient-to-b from-[#4057BF] to-[#6B86FF] w-16 h-8">
-                        <div class="rounded-[4px] bg-white w-full h-full flex items-center justify-center">
-                          {counterValue.value}
-                        </div>
+                  {column.value.process?.isExecuting && (
+                    <div class="p-[2px] rounded-[6px] bg-gradient-to-b from-[#4057BF] to-[#6B86FF] w-16 h-8">
+                      <div class="rounded-[4px] bg-white w-full h-full flex items-center justify-center">
+                        {counterValue.value}
                       </div>
-                    )}
+                    </div>
+                  )}
 
                   {column.value.process?.isExecuting ? (
                     <Tooltip text="Stop generating">

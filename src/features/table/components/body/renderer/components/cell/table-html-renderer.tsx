@@ -5,8 +5,6 @@ import { TableSandbox } from '~/features/table/components/body/renderer/componen
 import { removeThinking } from '~/features/utils/columns';
 
 export const TableHTMLRenderer = component$<TableProps>(({ cell }) => {
-  const maxPreviewLength = 256;
-
   const content = removeThinking(cell.value || '')
     .replace('```html', '')
     .replace(/```/g, '');
@@ -15,7 +13,7 @@ export const TableHTMLRenderer = component$<TableProps>(({ cell }) => {
     <div class="h-full flex flex-col justify-between">
       <CellActions cell={cell} />
 
-      <TableSandbox content={content.slice(0, maxPreviewLength)} />
+      <TableSandbox content={content} />
     </div>
   );
 });

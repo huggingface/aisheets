@@ -38,7 +38,7 @@ export const TableBody = component$(() => {
     useColumnsPreference();
   const { activeDataset } = useDatasetsStore();
 
-  const { columns, firstColumn, updateColumn, deleteCellByIdx } =
+  const { columns, firstColumn, replaceColumns, deleteCellByIdx } =
     useColumnsStore();
   const { onGenerateColumn } = useGenerateColumn();
   const selectedRows = useSignal<number[]>([]);
@@ -238,7 +238,7 @@ export const TableBody = component$(() => {
 
       if (limit <= 0) return;
 
-      await Promise.all(
+      const updatedColumns = await Promise.all(
         dataset.columns.map(async (column) => {
           const newCells = await server$(getColumnCells)({
             column,
@@ -247,11 +247,12 @@ export const TableBody = component$(() => {
           });
 
           column.cells = column.cells.concat(newCells);
-          updateColumn(column);
 
           return column;
         }),
       );
+
+      replaceColumns(updatedColumns);
     },
   );
 
@@ -335,7 +336,6 @@ export const TableBody = component$(() => {
               item.index,
             ),
           })}
-          data-index={item.index}
           {...props}
         >
           <td

@@ -456,7 +456,7 @@ export const ExecutionForm = component$(() => {
     }
   });
 
-  const onStop = $(async () => {
+  const onStop = $(() => {
     if (!column.value) return;
 
     column.value.process!.cancellable!.abort();

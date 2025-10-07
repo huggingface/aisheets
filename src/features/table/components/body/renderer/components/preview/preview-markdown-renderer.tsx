@@ -1,4 +1,4 @@
-import { component$, useSignal, useVisibleTask$ } from '@builder.io/qwik';
+import { component$ } from '@builder.io/qwik';
 
 import DOMPurify from 'dompurify';
 import hljs from 'highlight.js';
@@ -38,29 +38,22 @@ marked.use(
 
 export const PreviewMarkDownRenderer = component$<PreviewProps>((props) => {
   const { value } = props;
-  const htmlContent = useSignal<string | null>(null);
 
-  useVisibleTask$(async ({ track }) => {
-    track(() => value);
-
-    DOMPurify.addHook('beforeSanitizeAttributes', (node) => {
-      if (node instanceof SVGElement) {
-        const width = node.getAttribute('width');
-        const height = node.getAttribute('height');
-        const viewBox = node.getAttribute('viewBox');
-        if (!viewBox && width && height) {
-          node.setAttribute('viewBox', `0 0 ${width} ${height}`);
-        }
+  DOMPurify.addHook('beforeSanitizeAttributes', (node) => {
+    if (node instanceof SVGElement) {
+      const width = node.getAttribute('width');
+      const height = node.getAttribute('height');
+      const viewBox = node.getAttribute('viewBox');
+      if (!viewBox && width && height) {
+        node.setAttribute('viewBox', `0 0 ${width} ${height}`);
       }
-      if (node instanceof HTMLAnchorElement) {
-        node.setAttribute('target', '_blank');
-      }
-    });
-
-    const html = await marked.parse(value);
-
-    htmlContent.value = html;
+    }
+    if (node instanceof HTMLAnchorElement) {
+      node.setAttribute('target', '_blank');
+    }
   });
 
-  return <Sandbox content={htmlContent.value || ''} />;
+  const htmlContent = marked.parse(value, { async: false });
+
+  return <Sandbox content={htmlContent || ''} />;
 });

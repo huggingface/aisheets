@@ -26,7 +26,7 @@ export const useGenerateColumn = () => {
 
     await updateColumn(column);
 
-    const updatedColumn = await editColumn(column);
+    let updatedColumn = await editColumn(column);
     const generatedCells: Record<string, Cell> = {};
 
     column.process!.cancellable!.signal.onabort = async () => {
@@ -62,6 +62,9 @@ export const useGenerateColumn = () => {
         generatedCells[cell.idx] = cell;
       }
     } finally {
+      const col = await getColumnById$(column.id);
+      if (col) updatedColumn = col;
+
       updatedColumn.process!.isExecuting = false;
       updatedColumn.process!.cancellable = undefined;
       await updateColumn(updatedColumn);
@@ -69,7 +72,7 @@ export const useGenerateColumn = () => {
   });
 
   const onGenerateColumn = $(async (column: Column) => {
-    return onEditColumn(column);
+    await onEditColumn(column);
   });
 
   return { onGenerateColumn };

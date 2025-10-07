@@ -5,10 +5,7 @@ const {
   data: { duckDb },
 } = appConfig;
 
-const duckDB = await DuckDBInstance.create(duckDb, {
-  threads: '2',
-  enable_object_cache: 'true',
-});
+const duckDB = await DuckDBInstance.create(duckDb);
 
 export const dbConnect = async () => {
   return await duckDB.connect();
@@ -28,6 +25,7 @@ export const connectAndClose = async <T>(
     throw error;
   } finally {
     db.disconnectSync();
+    db.closeSync();
   }
 };
 
@@ -40,5 +38,12 @@ await connectAndClose(async (db) => {
 
     LOAD gsheets;
     LOAD nanoarrow;
+
+    
+    SET threads=4;
+    SET temp_directory = '${duckDB}_duckdb_swap';
+    SET memory_limit='128GB';
+    SET max_temp_directory_size = '256GB';
+
   `);
 });

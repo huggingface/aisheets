@@ -7,7 +7,6 @@ const {
 
 const duckDB = await DuckDBInstance.create(duckDb, {
   threads: '2',
-  preserve_insertion_order: 'false',
   enable_object_cache: 'true',
 });
 

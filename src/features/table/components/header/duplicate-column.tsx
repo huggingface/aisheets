@@ -2,7 +2,7 @@ import { $, component$ } from '@builder.io/qwik';
 import { LuLayers2 } from '@qwikest/icons/lucide';
 import { Button } from '~/components';
 import { useExecution } from '~/features/add-column';
-import { type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
+import { type Column, useColumnsStore } from '~/state';
 
 export const DuplicateColumn = component$<{
   column: Column;
@@ -23,11 +23,7 @@ export const DuplicateColumn = component$<{
     });
   });
 
-  if (
-    column.id === TEMPORAL_ID ||
-    columns.value.length <= 1 ||
-    column.kind === 'static'
-  ) {
+  if (columns.value.length <= 1 || column.kind === 'static') {
     return null;
   }
 

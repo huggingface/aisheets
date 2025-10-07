@@ -3,7 +3,7 @@ import { server$ } from '@builder.io/qwik-city';
 import { LuEye, LuEyeOff } from '@qwikest/icons/lucide';
 import { Button } from '~/components';
 import { updateColumnPartially } from '~/services';
-import { type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
+import { type Column, useColumnsStore } from '~/state';
 
 export const HideColumn = component$<{
   column: Column;
@@ -11,25 +11,19 @@ export const HideColumn = component$<{
 }>(({ column, label }) => {
   const { columns, updateColumn } = useColumnsStore();
   const isDisabled = useComputed$(
-    () =>
-      columns.value.filter((c) => c.id !== TEMPORAL_ID).filter((c) => c.visible)
-        .length === 1 && column.visible,
+    () => columns.value.filter((c) => c.visible).length === 1 && column.visible,
   );
 
   const hideColumn = $(async () => {
     column.visible = !column.visible;
     updateColumn({ ...column });
 
-    if (column.id === TEMPORAL_ID) {
-      return;
-    }
-
     server$(async (id: string, visible: boolean) => {
       await updateColumnPartially({ id, visible });
     })(column.id, column.visible);
   });
 
-  if (column.id === TEMPORAL_ID || columns.value.length <= 1) {
+  if (columns.value.length <= 1) {
     return null;
   }
 

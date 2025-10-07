@@ -109,10 +109,15 @@ export const TableAddCellHeaderPlaceHolder = component$<{ column: Column }>(
       async (type: Column['type'], task: TaskType, prompt: string) => {
         isGenerating.value = true;
 
+        const columnsReferences = column.type === 'image' ? [] : [column.id];
+        const imageColumnId = column.type === 'image' ? column.id : undefined;
+
         nextTick(async () => {
           await close();
           await open('add', {
             nextColumnId: column.id,
+            columnsReferences,
+            imageColumnId,
             type,
             task,
             prompt,

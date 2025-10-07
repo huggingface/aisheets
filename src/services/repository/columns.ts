@@ -19,7 +19,7 @@ export const modelToColumn = (model: ColumnModel): Column => {
       createdBy: model.dataset.createdBy,
     },
 
-    numberOfCells: model.numberOfCells,
+    size: model.size,
 
     process: {
       id: model.process?.id,
@@ -60,8 +60,9 @@ export const getDatasetColumns = async (dataset: {
     models.map(async (model) => {
       if (model.process) return model;
 
-      model.numberOfCells = await countDatasetTableRows({
+      model.size = await countDatasetTableRows({
         dataset: model.dataset,
+        column: model,
       });
 
       return model;
@@ -89,8 +90,9 @@ export const listColumnsByIds = async (ids: string[]): Promise<Column[]> => {
     models.map(async (model) => {
       if (model.process) return model;
 
-      model.numberOfCells = await countDatasetTableRows({
+      model.size = await countDatasetTableRows({
         dataset: model.dataset,
+        column: model,
       });
 
       return model;
@@ -138,7 +140,7 @@ export const createRawColumn = async (column: {
     kind: model.kind as ColumnKind,
     dataset: column.dataset,
     visible: model.visible,
-    numberOfCells: 0,
+    size: 0,
     cells: [],
   };
 };
@@ -172,7 +174,7 @@ export const createColumn = async (column: CreateColumn): Promise<Column> => {
     visible: model.visible,
     process,
     cells: [],
-    numberOfCells: 0,
+    size: 0,
   };
 
   return newbie;

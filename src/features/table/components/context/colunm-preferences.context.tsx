@@ -8,7 +8,7 @@ import {
   useContextProvider,
   useSignal,
 } from '@builder.io/qwik';
-import { type Column, TEMPORAL_ID } from '~/state';
+import type { Column } from '~/state';
 
 interface Pref {
   width?: number;
@@ -61,7 +61,6 @@ export const useColumnsPreference = () => {
       };
     }),
     showAiButton: $((columnId: string) => {
-      if (columnId === TEMPORAL_ID) return;
       if (
         Object.values(columnPreferences.value).some(
           (pref) => !!pref.aiPromptOpen,

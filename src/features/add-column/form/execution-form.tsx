@@ -1,14 +1,12 @@
 import {
   $,
   component$,
-  noSerialize,
   useComputed$,
   useSignal,
   useTask$,
   useVisibleTask$,
 } from '@builder.io/qwik';
 import { Collapsible } from '@qwik-ui/headless';
-
 import { cn } from '@qwik-ui/utils';
 import {
   LuCheck,
@@ -40,7 +38,6 @@ import { useConfigContext, useModelsContext } from '~/routes/home/layout';
 import {
   type Column,
   type TaskType,
-  TEMPORAL_ID,
   useColumnsStore,
   useDatasetsStore,
 } from '~/state';
@@ -244,7 +241,7 @@ class GroupedModels {
 
 export const ExecutionForm = component$(() => {
   const { activeDataset } = useDatasetsStore();
-  const { mode, columnId, column } = useExecution();
+  const { columnId, column } = useExecution();
   const { columns, updateColumn } = useColumnsStore();
   const allModels = useModelsContext();
   const { DEFAULT_MODEL, DEFAULT_MODEL_PROVIDER } = useConfigContext();
@@ -268,7 +265,9 @@ export const ExecutionForm = component$(() => {
   });
 
   const prompt = useSignal<string>('');
-  const columnsReferences = useSignal<string[]>([]);
+  const columnsReferences = useSignal<string[]>(
+    column.value?.process?.columnsReferences || [],
+  );
   const variables = useSignal<Variable[]>([]);
   const searchOnWeb = useSignal(false);
 
@@ -283,8 +282,6 @@ export const ExecutionForm = component$(() => {
   const imageColumns = useSignal<Variable[]>([]);
 
   const needsImageColumn = useComputed$(() => {
-    console.log('Checking if image column is needed', column.value);
-
     return column.value?.process?.task === 'image-text-to-text';
   });
 
@@ -298,6 +295,35 @@ export const ExecutionForm = component$(() => {
 
   const isSearchOnWebAvailable = useComputed$(() => {
     return !isImageColumn.value;
+  });
+
+  const referredColumns = useComputed$(() => {
+    return columns.value.filter((c) => columnsReferences.value.includes(c.id));
+  });
+
+  const maxSizeToGenerate = useComputed$(() => {
+    if (selectedImageColumn.value) {
+      const imageColumn = columns.value.find(
+        (c) => c.id === selectedImageColumn.value,
+      );
+      return imageColumn?.size || 0;
+    }
+
+    if (referredColumns.value.length > 0) {
+      return Math.max(...referredColumns.value.map((c) => c.size || 0));
+    }
+
+    return activeDataset.value.size;
+  });
+
+  const counterValue = useComputed$(() => {
+    const processedSize = column.value?.process?.processedCells ?? 0;
+
+    return maxSizeToGenerate.value - processedSize;
+  });
+
+  const shouldDisable = useComputed$(() => {
+    return column.value?.process?.isExecuting;
   });
 
   const modelSearchContainerRef = useClickOutside(
@@ -331,8 +357,7 @@ export const ExecutionForm = component$(() => {
       if (
         needsImageColumn.value &&
         !selectedImageColumn.value &&
-        imageColumns.value.length > 0 &&
-        mode.value === 'add'
+        imageColumns.value.length > 0
       ) {
         selectedImageColumn.value = imageColumns.value[0].id;
       }
@@ -431,7 +456,7 @@ export const ExecutionForm = component$(() => {
     }
   });
 
-  const onStop = $(async () => {
+  const onStop = $(() => {
     if (!column.value) return;
 
     column.value.process!.cancellable!.abort();
@@ -468,12 +493,11 @@ export const ExecutionForm = component$(() => {
 
       column.value.process = {
         ...column.value.process!,
-        cancellable: noSerialize(new AbortController()),
-        isExecuting: true,
         modelName: model.id,
         modelProvider,
         endpointUrl,
         prompt: prompt.value,
+        limit: maxSizeToGenerate.value,
         columnsReferences: columnsReferences.value,
         searchEnabled: searchOnWeb.value,
         // Add selected image column for image processing workflows
@@ -487,12 +511,8 @@ export const ExecutionForm = component$(() => {
     } catch {}
   });
 
-  const shouldDisable = useComputed$(() => {
-    return columnId.value === TEMPORAL_ID || column.value?.process?.isExecuting;
-  });
-
   useVisibleTask$(() => {
-    if (columnId.value === TEMPORAL_ID) {
+    if (column.value?.cells.length === 0) {
       nextTick(() => {
         onGenerate();
       });
@@ -598,18 +618,13 @@ export const ExecutionForm = component$(() => {
                       </div>
                     )}
 
-                  {column.value.process?.isExecuting &&
-                    column.value.process?.processedCells && (
-                      <div class="p-[2px] rounded-[6px] bg-gradient-to-b from-[#4057BF] to-[#6B86FF] w-16 h-8">
-                        <div class="rounded-[4px] bg-white w-full h-full flex items-center justify-center">
-                          {activeDataset.value.size -
-                            Math.min(
-                              column.value.process?.processedCells,
-                              activeDataset.value.size,
-                            )}
-                        </div>
+                  {column.value.process?.isExecuting && (
+                    <div class="p-[2px] rounded-[6px] bg-gradient-to-b from-[#4057BF] to-[#6B86FF] w-16 h-8">
+                      <div class="rounded-[4px] bg-white w-full h-full flex items-center justify-center">
+                        {counterValue.value}
                       </div>
-                    )}
+                    </div>
+                  )}
 
                   {column.value.process?.isExecuting ? (
                     <Tooltip text="Stop generating">

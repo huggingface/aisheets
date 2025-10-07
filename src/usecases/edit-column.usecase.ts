@@ -1,46 +1,19 @@
 import { type RequestEventBase, server$ } from '@builder.io/qwik-city';
-import { getValidatedColumnCells, updateCell, updateColumn } from '~/services';
-import { type Cell, type Column, useServerSession } from '~/state';
-import { generateCells } from './generate-cells';
+import { updateColumn } from '~/services';
+import { type Column, useServerSession } from '~/state';
 
 export const useEditColumnUseCase = () =>
-  server$(async function* (
+  server$(async function (
     this: RequestEventBase<QwikCityPlatform>,
     column: Column,
-  ): AsyncGenerator<{ column?: Column; cell?: Cell }> {
+  ): Promise<Column> {
     if (!column.process) {
       throw new Error('Process is required to create a column');
     }
 
-    const session = useServerSession(this);
-
-    const validatedCells = await getValidatedColumnCells({
-      column,
-    });
-
-    const { limit, offset } = column.process;
-
-    for await (const { cell } of generateCells({
-      column,
-      session,
-      process: column.process,
-      limit,
-      offset,
-      validatedCells,
-    })) {
-      this.signal.onabort = async () => {
-        cell.generating = false;
-
-        await updateCell(cell);
-        await updateColumn(column);
-      };
-
-      yield { cell };
-    }
+    if (!useServerSession(this)) throw new Error('No session found');
 
     const updated = await updateColumn(column);
 
-    yield {
-      column: updated,
-    };
+    return updated;
   });

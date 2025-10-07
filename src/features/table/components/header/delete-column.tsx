@@ -5,7 +5,7 @@ import { Button } from '~/components';
 import { Tooltip } from '~/components/ui/tooltip/tooltip';
 import { useExecution } from '~/features/add-column';
 import { deleteColumn } from '~/services';
-import { type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
+import { type Column, useColumnsStore } from '~/state';
 
 export const DeleteColumn = component$<{
   column: Column;
@@ -31,7 +31,7 @@ export const DeleteColumn = component$<{
     await removeColumn(column);
   });
 
-  if (column.id === TEMPORAL_ID || columns.value.length <= 1) {
+  if (columns.value.length <= 1) {
     return null;
   }
 

@@ -145,7 +145,7 @@ const fetchModelsForPipeline = async (
   kind: TaskType,
   limit?: number,
 ): Promise<Model[]> => {
-  const cachedValue = cacheGet({ kind, limit });
+  const cachedValue = cacheGet({ kind, limit, session });
   if (cachedValue) return cachedValue as Model[];
 
   const url = 'https://huggingface.co/api/models';

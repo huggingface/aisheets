@@ -1,4 +1,4 @@
-import { component$, useSignal, useVisibleTask$ } from '@builder.io/qwik';
+import { component$ } from '@builder.io/qwik';
 import DOMPurify from 'dompurify';
 import hljs from 'highlight.js';
 import { marked } from 'marked';
@@ -40,36 +40,30 @@ marked.use(
 export const TableMarkDownRenderer = component$<CellProps>((props) => {
   const { cell } = props;
   const maxPreviewLength = 256;
-  const htmlContent = useSignal<string | null>(null);
 
-  useVisibleTask$(async ({ track }) => {
-    track(() => cell.value);
-
-    DOMPurify.addHook('beforeSanitizeAttributes', (node) => {
-      if (node instanceof SVGElement) {
-        const width = node.getAttribute('width');
-        const height = node.getAttribute('height');
-        const viewBox = node.getAttribute('viewBox');
-        if (!viewBox && width && height) {
-          node.setAttribute('viewBox', `0 0 ${width} ${height}`);
-        }
+  DOMPurify.addHook('beforeSanitizeAttributes', (node) => {
+    if (node instanceof SVGElement) {
+      const width = node.getAttribute('width');
+      const height = node.getAttribute('height');
+      const viewBox = node.getAttribute('viewBox');
+      if (!viewBox && width && height) {
+        node.setAttribute('viewBox', `0 0 ${width} ${height}`);
       }
-      if (node instanceof HTMLAnchorElement) {
-        node.setAttribute('target', '_blank');
-      }
-    });
-
-    const html = await marked.parse(
-      removeThinking(cell.value).slice(0, maxPreviewLength),
-    );
-
-    htmlContent.value = html;
+    }
+    if (node instanceof HTMLAnchorElement) {
+      node.setAttribute('target', '_blank');
+    }
   });
+
+  const htmlContent = marked.parse(
+    removeThinking(cell.value).slice(0, maxPreviewLength),
+    { async: false },
+  );
 
   return (
     <div class="h-full flex flex-col justify-between">
       <CellActions cell={cell} />
-      <TableSandbox content={htmlContent.value || ''} />
+      <TableSandbox content={htmlContent || ''} />
     </div>
   );
 });

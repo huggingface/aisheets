@@ -9,7 +9,7 @@ import {
   useTask$,
   useVisibleTask$,
 } from '@builder.io/qwik';
-import { isBrowser } from '@builder.io/qwik/build';
+
 import {
   elementScroll,
   observeElementOffset,
@@ -49,12 +49,9 @@ const { getSerializable: getVirtual, useSerializable: useVirtualScroll } =
           onChange: (ev) => {
             ev._willUpdate();
             // On first render, if we don't have this check, it will update state twice in one cycle, causing an error.
-            if (
-              state.range?.startIndex !== ev.range?.startIndex ||
-              state.range?.endIndex !== ev.range?.endIndex
-            ) {
-              state.range = ev.range!;
-            }
+            if (ev.isScrolling) return;
+
+            state.range = ev.range!;
             state.scrollOffset = ev.scrollOffset!;
           },
         });
@@ -127,7 +124,6 @@ export const VirtualScrollContainer = component$(
 
       if (!loadNextPage) return;
       if (loadingData.value) return;
-      if (!isBrowser) return;
 
       const indexToFetch = (virtualState.state.range?.endIndex ?? 0) + buffer;
 

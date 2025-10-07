@@ -401,7 +401,7 @@ export const TableBody = component$(() => {
                 <td
                   data-column-id={cell.column?.id}
                   class={cn(
-                    'relative transition-colors min-w-[142px] w-[326px] h-[108px] break-words align-top border border-neutral-300 hover:bg-gray-50/50',
+                    `relative transition-colors min-w-[142px] w-[326px] h-[${rowSize}px] break-words align-top border border-neutral-300 hover:bg-gray-50/50`,
                     {
                       'bg-blue-50 hover:bg-blue-100':
                         cell.column!.id == columnId.value,
@@ -482,11 +482,14 @@ export const TableBody = component$(() => {
         totalCount={datasetSize.value}
         loadedCount={loadedDataCount}
         estimateSize={rowSize}
-        buffer={40}
+        buffer={50}
+        pageSize={10}
+        overscan={10}
         data={data}
         itemRenderer={itemRenderer}
         scrollElement={scrollElement}
         loadNextPage={fetchMoreData$}
+        debug={false}
       />
     </tbody>
   );

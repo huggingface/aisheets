@@ -20,7 +20,7 @@ export const SaveDataset = component$(() => {
           buttonVariants({ look: 'secondary', size: 'sm' }),
           'disabled:cursor-not-allowed bg-white text-neutral-500 hover:text-neutral-600 dark:bg-slate-800 dark:text-slate-400 dark:hover:text-slate-300',
         )}
-        disabled={activeDataset.value.columns.length === 0}
+        disabled={activeDataset.value?.columns?.length === 0}
       >
         <Label class="flex items-center cursor-pointer">
           <Tooltip text="Download">

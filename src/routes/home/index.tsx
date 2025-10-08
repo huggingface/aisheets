@@ -3,6 +3,7 @@ import {
   component$,
   useSignal,
   useStore,
+  useTask$,
   useVisibleTask$,
 } from '@builder.io/qwik';
 import { server$, useNavigate } from '@builder.io/qwik-city';
@@ -18,7 +19,7 @@ import { DragAndDrop } from '~/features/import/drag-n-drop';
 import { MainSidebarButton } from '~/features/main-sidebar';
 import { Username } from '~/features/user/username';
 import { useSession } from '~/loaders';
-import { ActiveDatasetProvider } from '~/state';
+import { ActiveDatasetProvider, useDatasetsStore } from '~/state';
 import { runAutoDataset } from '~/usecases/run-autodataset';
 import { useTrendingModelsContext } from './layout';
 
@@ -46,6 +47,12 @@ export default component$(() => {
   const currentStep = useSignal('');
   const trendingModels = useTrendingModelsContext();
   const textAreaElement = useSignal<HTMLTextAreaElement>();
+  const { clearActiveDataset } = useDatasetsStore();
+
+  useTask$(() => {
+    console.log('Clearing active dataset on home');
+    clearActiveDataset();
+  });
 
   const creationFlow = useStore({
     datasetName: {

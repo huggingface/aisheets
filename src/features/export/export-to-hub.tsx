@@ -9,7 +9,7 @@ import { Popover } from '@qwik-ui/headless';
 import { cn } from '@qwik-ui/utils';
 import { LuArrowRightFromLine, LuChevronRight } from '@qwikest/icons/lucide';
 
-import { Button, Checkbox, Input, Label, buttonVariants } from '~/components';
+import { Button, buttonVariants, Checkbox, Input, Label } from '~/components';
 import { HFLogo } from '~/components/ui/logo/logo';
 import { useSession } from '~/loaders';
 import { useDatasetsStore } from '~/state';
@@ -21,7 +21,7 @@ export const ExportToHub = component$(() => {
 
   const { activeDataset } = useDatasetsStore();
   const defaultExportName = useComputed$(() =>
-    activeDataset.value.name.replace(/[\W_]+/g, '_'),
+    activeDataset.value?.name?.replace(/[\W_]+/g, '_'),
   );
 
   const isSubmitting = useSignal(false);

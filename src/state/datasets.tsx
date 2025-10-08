@@ -7,6 +7,7 @@ import {
   useContext,
   useContextProvider,
 } from '@builder.io/qwik';
+
 import { useActiveDatasetLoader } from '~/loaders';
 import type { Column } from '~/state/columns';
 
@@ -36,6 +37,10 @@ export const useDatasetsStore = () => {
     activeDataset,
     updateOnActiveDataset: $((dataset: Partial<Dataset>) => {
       activeDataset.value = { ...activeDataset.value, ...dataset };
+    }),
+
+    clearActiveDataset: $(() => {
+      activeDataset.value = {} as Dataset;
     }),
   };
 };

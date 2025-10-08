@@ -130,8 +130,13 @@ export const VirtualScrollContainer = component$(
       if (indexToFetch < totalCount && indexToFetch > loadedCount.value) {
         const rangeStart = loadedCount.value;
         loadingData.value = true;
+
+        const loadedPages = Math.ceil(loadedCount.value / pageSize);
         // Do this in a hanging promise rather than await so that we don't block the state from updating further
-        loadNextPage({ rangeStart, pageSize }).then(() => {
+        loadNextPage({
+          rangeStart,
+          pageSize: loadedPages * pageSize + Math.max(buffer, overscan || 0),
+        }).then(() => {
           loadingData.value = false;
         });
       }

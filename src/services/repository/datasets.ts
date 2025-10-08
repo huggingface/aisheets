@@ -1,7 +1,7 @@
 import { ColumnModel, DatasetModel } from '~/services/db/models';
 import type { Column, Dataset } from '~/state';
 import { detectMimeTypeFromBytes } from '~/usecases/utils/mime-types';
-import { getColumnCells } from './cells';
+
 import { getDatasetColumns } from './columns';
 import { sendTelemetry } from './hub/telemetry';
 import {
@@ -171,18 +171,6 @@ export const getDatasetById = async (id: string): Promise<Dataset | null> => {
     updatedAt: model.updatedAt,
     size: datasetSize,
   };
-
-  // Ideally, this should be done by the table-body component. But, if we remove this
-  // line, the table-body rendering get weird the first time. Need to investigate.
-  // cc @damianpumar
-  await Promise.all(
-    dataset.columns.map(async (column) => {
-      column.cells = await getColumnCells({
-        column,
-        limit: 50,
-      });
-    }),
-  );
 
   return dataset;
 };

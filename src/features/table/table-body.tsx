@@ -31,14 +31,14 @@ import {
 } from '~/state';
 
 export const TableBody = component$(() => {
-  const rowSize = 108; // px
+  const rowSize = 105; // px
 
   const { columnId } = useExecution();
   const { columnPreferences, showAiButton, hideAiButton } =
     useColumnsPreference();
   const { activeDataset } = useDatasetsStore();
 
-  const { columns, firstColumn, replaceColumns, deleteCellByIdx } =
+  const { columns, firstColumn, updateColumn, deleteCellByIdx } =
     useColumnsStore();
   const { onGenerateColumn } = useGenerateColumn();
   const selectedRows = useSignal<number[]>([]);
@@ -238,21 +238,16 @@ export const TableBody = component$(() => {
 
       if (limit <= 0) return;
 
-      const updatedColumns = await Promise.all(
-        dataset.columns.map(async (column) => {
-          const newCells = await server$(getColumnCells)({
-            column,
-            limit,
-            offset,
-          });
+      for (const column of dataset.columns) {
+        const newCells = await server$(getColumnCells)({
+          column,
+          limit,
+          offset,
+        });
 
-          column.cells = column.cells.concat(newCells);
-
-          return column;
-        }),
-      );
-
-      replaceColumns(updatedColumns);
+        column.cells = column.cells.concat(newCells);
+        updateColumn(column);
+      }
     },
   );
 
@@ -484,11 +479,11 @@ export const TableBody = component$(() => {
         estimateSize={rowSize}
         buffer={50}
         pageSize={10}
-        overscan={10}
+        overscan={30}
         data={data}
         itemRenderer={itemRenderer}
-        scrollElement={scrollElement}
         loadNextPage={fetchMoreData$}
+        scrollElement={scrollElement}
         debug={false}
       />
     </tbody>

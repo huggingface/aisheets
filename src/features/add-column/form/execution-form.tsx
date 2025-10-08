@@ -1,14 +1,12 @@
 import {
   $,
   component$,
-  noSerialize,
   useComputed$,
   useSignal,
   useTask$,
   useVisibleTask$,
 } from '@builder.io/qwik';
 import { Collapsible } from '@qwik-ui/headless';
-
 import { cn } from '@qwik-ui/utils';
 import {
   LuCheck,
@@ -40,7 +38,6 @@ import { useConfigContext, useModelsContext } from '~/routes/home/layout';
 import {
   type Column,
   type TaskType,
-  TEMPORAL_ID,
   useColumnsStore,
   useDatasetsStore,
 } from '~/state';
@@ -251,7 +248,7 @@ class GroupedModels {
 
 export const ExecutionForm = component$(() => {
   const { activeDataset } = useDatasetsStore();
-  const { mode, columnId, column } = useExecution();
+  const { columnId, column } = useExecution();
   const { columns, updateColumn } = useColumnsStore();
   const allModels = useModelsContext();
   const { DEFAULT_MODEL, DEFAULT_MODEL_PROVIDER } = useConfigContext();
@@ -336,7 +333,7 @@ export const ExecutionForm = component$(() => {
   });
 
   const shouldDisable = useComputed$(() => {
-    return columnId.value === TEMPORAL_ID || column.value?.process?.isExecuting;
+    return column.value?.process?.isExecuting;
   });
 
   const modelSearchContainerRef = useClickOutside(
@@ -370,8 +367,7 @@ export const ExecutionForm = component$(() => {
       if (
         needsImageColumn.value &&
         !selectedImageColumn.value &&
-        imageColumns.value.length > 0 &&
-        mode.value === 'add'
+        imageColumns.value.length > 0
       ) {
         selectedImageColumn.value = imageColumns.value[0].id;
       }
@@ -470,7 +466,7 @@ export const ExecutionForm = component$(() => {
     }
   });
 
-  const onStop = $(async () => {
+  const onStop = $(() => {
     if (!column.value) return;
 
     column.value.process!.cancellable!.abort();
@@ -507,8 +503,6 @@ export const ExecutionForm = component$(() => {
 
       column.value.process = {
         ...column.value.process!,
-        cancellable: noSerialize(new AbortController()),
-        isExecuting: true,
         modelName: model.id,
         modelProvider,
         endpointUrl,
@@ -528,7 +522,7 @@ export const ExecutionForm = component$(() => {
   });
 
   useVisibleTask$(() => {
-    if (columnId.value === TEMPORAL_ID) {
+    if (column.value?.cells.length === 0) {
       nextTick(() => {
         onGenerate();
       });
@@ -634,14 +628,13 @@ export const ExecutionForm = component$(() => {
                       </div>
                     )}
 
-                  {column.value.process?.isExecuting &&
-                    column.value.process?.processedCells && (
-                      <div class="p-[2px] rounded-[6px] bg-gradient-to-b from-[#4057BF] to-[#6B86FF] w-16 h-8">
-                        <div class="rounded-[4px] bg-white w-full h-full flex items-center justify-center">
-                          {counterValue.value}
-                        </div>
+                  {column.value.process?.isExecuting && (
+                    <div class="p-[2px] rounded-[6px] bg-gradient-to-b from-[#4057BF] to-[#6B86FF] w-16 h-8">
+                      <div class="rounded-[4px] bg-white w-full h-full flex items-center justify-center">
+                        {counterValue.value}
                       </div>
-                    )}
+                    </div>
+                  )}
 
                   {column.value.process?.isExecuting ? (
                     <Tooltip text="Stop generating">

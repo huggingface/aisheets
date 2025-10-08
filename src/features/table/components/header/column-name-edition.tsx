@@ -3,7 +3,7 @@ import { server$ } from '@builder.io/qwik-city';
 import { Input } from '~/components';
 import { useClickOutside } from '~/components/hooks/click/outside';
 import { updateColumnPartially } from '~/services';
-import { type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
+import { type Column, useColumnsStore } from '~/state';
 
 export const ColumnNameEdition = component$<{ column: Column }>(
   ({ column }) => {
@@ -24,10 +24,6 @@ export const ColumnNameEdition = component$<{ column: Column }>(
       column.name = newName.value;
 
       updateColumn({ ...column });
-
-      if (column.id === TEMPORAL_ID) {
-        return;
-      }
 
       server$(async (id: string, name: string) => {
         await updateColumnPartially({ id, name });

@@ -1,23 +1,13 @@
 import { type RequestEventBase, server$ } from '@builder.io/qwik-city';
-import { createColumn, updateCell, updateColumn } from '~/services';
-import {
-  type Cell,
-  type Column,
-  type CreateColumn,
-  useServerSession,
-} from '~/state';
-import { generateCells } from './generate-cells';
+import { createColumn } from '~/services';
+import { type Column, type CreateColumn, useServerSession } from '~/state';
 
 export const useAddColumnUseCase = () =>
-  server$(async function* (
+  server$(async function (
     this: RequestEventBase<QwikCityPlatform>,
     newColum: CreateColumn,
-  ): AsyncGenerator<{ column?: Column; cell?: Cell }> {
-    if (!newColum.process) {
-      throw new Error('Process is required to create a column');
-    }
-
-    const session = useServerSession(this);
+  ): Promise<Column> {
+    if (!useServerSession(this)) throw new Error('No session found');
 
     const column = await createColumn({
       name: newColum.name,
@@ -27,36 +17,15 @@ export const useAddColumnUseCase = () =>
       process: newColum.process,
     });
 
-    yield {
-      column: {
-        id: column.id,
-        name: column.name,
-        type: column.type,
-        kind: column.kind,
-        size: 0,
-        cells: [],
-        dataset: column.dataset,
-        process: column.process,
-        visible: column.visible,
-      },
+    return {
+      id: column.id,
+      name: column.name,
+      type: column.type,
+      kind: column.kind,
+      size: 0,
+      cells: [],
+      dataset: column.dataset,
+      process: column.process,
+      visible: column.visible,
     };
-
-    const { limit, offset } = column.process!;
-
-    for await (const { cell } of generateCells({
-      column,
-      process: column.process!,
-      session,
-      limit,
-      offset,
-    })) {
-      this.signal.onabort = async () => {
-        cell.generating = false;
-
-        await updateCell(cell);
-        await updateColumn(column);
-      };
-
-      yield { cell };
-    }
   });

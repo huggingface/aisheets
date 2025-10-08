@@ -1,14 +1,13 @@
 import { $, component$ } from '@builder.io/qwik';
 import { LuPanelRight } from '@qwikest/icons/lucide';
 import { useExecution } from '~/features/add-column';
-import { type Column, TEMPORAL_ID, useColumnsStore } from '~/state';
+import { type Column, useColumnsStore } from '~/state';
 
 export const CellSettings = component$<{ column: Column }>(({ column }) => {
   const { columnId, open } = useExecution();
   const { removeTemporalColumn } = useColumnsStore();
 
   const editCell = $(async () => {
-    if (column.id === TEMPORAL_ID) return;
     if (column.id === columnId.value) return;
 
     await removeTemporalColumn();
@@ -18,7 +17,7 @@ export const CellSettings = component$<{ column: Column }>(({ column }) => {
     });
   });
 
-  if (column.id === TEMPORAL_ID || column.kind !== 'dynamic') {
+  if (column.kind !== 'dynamic') {
     return null;
   }
 

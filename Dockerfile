@@ -56,5 +56,7 @@ RUN npm exec playwright install-deps \
 # Expose the application port
 EXPOSE 3000
 
+ENV NODE_ENV=production
+
 # Start the application
 CMD [ "node", "server/entry.express" ]

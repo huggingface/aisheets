@@ -2,12 +2,11 @@ import { component$ } from '@builder.io/qwik';
 import { LuView } from '@qwikest/icons/lucide';
 import { buttonVariants, Popover } from '~/components';
 import { HideColumn } from '~/features/table/components/header';
-import { TEMPORAL_ID, useColumnsStore } from '~/state';
+import { useColumnsStore } from '~/state';
 
 export const TableView = component$(() => {
   const { columns } = useColumnsStore();
-  const hasMultipleColumns =
-    columns.value.filter((c) => c.id !== TEMPORAL_ID).length > 1;
+  const hasMultipleColumns = columns.value.length > 1;
 
   return (
     <div class="h-10">

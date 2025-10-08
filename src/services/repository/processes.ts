@@ -76,10 +76,10 @@ export const updateProcess = async (process: Process): Promise<Process> => {
   await model.save();
 
   if ((process.columnsReferences ?? []).length > 0) {
-    await ProcessColumnModel.destroy({ where: { processId: process.id } });
+    await ProcessColumnModel.destroy({ where: { processId: model.id } });
     await ProcessColumnModel.bulkCreate(
       process.columnsReferences!.map((columnId) => {
-        return { processId: process.id, columnId };
+        return { processId: model.id, columnId };
       }),
     );
   }

@@ -3,7 +3,6 @@ import {
   component$,
   Fragment,
   type HTMLAttributes,
-  noSerialize,
   useComputed$,
   useSignal,
   useVisibleTask$,
@@ -27,7 +26,6 @@ import { deleteRowsCells, getColumnCells } from '~/services';
 import {
   type Cell,
   type Column,
-  TEMPORAL_ID,
   useColumnsStore,
   useDatasetsStore,
 } from '~/state';
@@ -40,7 +38,7 @@ export const TableBody = component$(() => {
     useColumnsPreference();
   const { activeDataset } = useDatasetsStore();
 
-  const { columns, firstColumn, updateColumn, deleteCellByIdx } =
+  const { columns, firstColumn, replaceColumns, deleteCellByIdx } =
     useColumnsStore();
   const { onGenerateColumn } = useGenerateColumn();
   const selectedRows = useSignal<number[]>([]);
@@ -50,7 +48,7 @@ export const TableBody = component$(() => {
 
   const data = useSignal<Cell[][]>([]);
   const loadedDataCount = useComputed$(() => {
-    return firstColumn.value.cells.length;
+    return firstColumn.value?.cells.length || 0;
   });
 
   const scrollElement = useSignal<HTMLElement>();
@@ -74,7 +72,7 @@ export const TableBody = component$(() => {
       ?.hidePopover();
 
     const ok = await server$(deleteRowsCells)(
-      firstColumn.value.dataset.id,
+      firstColumn.value?.dataset.id,
       selectedRows.value,
     );
 
@@ -86,7 +84,7 @@ export const TableBody = component$(() => {
   });
 
   useVisibleTask$(({ track }) => {
-    track(() => firstColumn.value.cells);
+    track(() => firstColumn.value?.cells);
 
     const getCell = (column: Column, rowIndex: number): Cell => {
       const cell = column.cells[rowIndex];
@@ -159,7 +157,7 @@ export const TableBody = component$(() => {
   });
 
   const firstColumnsWithValue = useComputed$(() => {
-    return firstColumn.value.cells.filter((c) => !!c.value || !!c.error);
+    return firstColumn.value?.cells.filter((c) => !!c.value || !!c.error);
   });
 
   useVisibleTask$(() => {
@@ -180,7 +178,7 @@ export const TableBody = component$(() => {
     if (!dragStartCell.value) return;
     if (dragStartCell.value.column?.id !== cell.column?.id) return;
 
-    const isDraggingTheFirstColumn = cell.column?.id === firstColumn.value.id;
+    const isDraggingTheFirstColumn = cell.column?.id === firstColumn.value?.id;
 
     const startRowIndex = dragStartCell.value.idx;
     const endRowIndex = cell.idx;
@@ -214,11 +212,6 @@ export const TableBody = component$(() => {
     const offset = selectedCellToDrag.value[0].idx;
     const limit = latestCellSelected.value?.idx - offset + 1;
 
-    column.process!.cancellable = noSerialize(new AbortController());
-    column.process!.isExecuting = true;
-
-    updateColumn(column);
-
     await onGenerateColumn({
       ...column,
       process: {
@@ -245,7 +238,7 @@ export const TableBody = component$(() => {
 
       if (limit <= 0) return;
 
-      await Promise.all(
+      const updatedColumns = await Promise.all(
         dataset.columns.map(async (column) => {
           const newCells = await server$(getColumnCells)({
             column,
@@ -254,11 +247,12 @@ export const TableBody = component$(() => {
           });
 
           column.cells = column.cells.concat(newCells);
-          updateColumn(column);
 
           return column;
         }),
       );
+
+      replaceColumns(updatedColumns);
     },
   );
 
@@ -342,7 +336,6 @@ export const TableBody = component$(() => {
               item.index,
             ),
           })}
-          data-index={item.index}
           {...props}
         >
           <td
@@ -405,78 +398,64 @@ export const TableBody = component$(() => {
           {loadedData?.map((cell) => {
             return (
               <Fragment key={`${cell.idx}-${cell.column!.id}`}>
-                {cell.column?.id === TEMPORAL_ID ? (
-                  <td
-                    class={cn(
-                      'relative min-w-[326px] w-[326px] max-w-[326px] h-[108px] border',
-                      {
-                        'bg-blue-50': cell.column.id == columnId.value,
-                      },
-                    )}
-                  />
-                ) : (
-                  <td
-                    data-column-id={cell.column?.id}
-                    class={cn(
-                      'relative transition-colors min-w-[142px] w-[326px] h-[108px] break-words align-top border border-neutral-300 hover:bg-gray-50/50',
-                      {
-                        'bg-blue-50 hover:bg-blue-100':
-                          cell.column!.id == columnId.value,
-                        'shadow-[inset_2px_0_0_theme(colors.primary.100),inset_-2px_0_0_theme(colors.primary.100)]':
-                          columnPreferences.value[cell.column!.id]
-                            ?.aiButtonHover,
-                        'shadow-[inset_2px_0_0_theme(colors.primary.300),inset_-2px_0_0_theme(colors.primary.300)]':
-                          columnPreferences.value[cell.column!.id]
-                            ?.aiPromptOpen,
-                      },
-                      getBoundary(cell),
-                    )}
-                    style={{
-                      width: `${columnPreferences.value[cell.column!.id]?.width || 326}px`,
-                    }}
-                    onMouseOver$={() => showAiButton(cell.column!.id)}
-                    onMouseLeave$={() => hideAiButton(cell.column!.id)}
+                <td
+                  data-column-id={cell.column?.id}
+                  class={cn(
+                    `relative transition-colors min-w-[142px] w-[326px] h-[${rowSize}px] break-words align-top border border-neutral-300 hover:bg-gray-50/50`,
+                    {
+                      'bg-blue-50 hover:bg-blue-100':
+                        cell.column!.id == columnId.value,
+                      'shadow-[inset_2px_0_0_theme(colors.primary.100),inset_-2px_0_0_theme(colors.primary.100)]':
+                        columnPreferences.value[cell.column!.id]?.aiButtonHover,
+                      'shadow-[inset_2px_0_0_theme(colors.primary.300),inset_-2px_0_0_theme(colors.primary.300)]':
+                        columnPreferences.value[cell.column!.id]?.aiPromptOpen,
+                    },
+                    getBoundary(cell),
+                  )}
+                  style={{
+                    width: `${columnPreferences.value[cell.column!.id]?.width || 326}px`,
+                  }}
+                  onMouseOver$={() => showAiButton(cell.column!.id)}
+                  onMouseLeave$={() => hideAiButton(cell.column!.id)}
+                >
+                  <div
+                    onMouseUp$={handleMouseUp$}
+                    onMouseDown$={(e) => handleMouseDown$(cell, e)}
+                    onMouseOver$={(e) => handleMouseOver$(cell, e)}
+                    onMouseMove$={handleMouseMove$}
                   >
-                    <div
-                      onMouseUp$={handleMouseUp$}
-                      onMouseDown$={(e) => handleMouseDown$(cell, e)}
-                      onMouseOver$={(e) => handleMouseOver$(cell, e)}
-                      onMouseMove$={handleMouseMove$}
-                    >
-                      <TableCell cell={cell} />
+                    <TableCell cell={cell} />
 
-                      {latestCellSelected.value?.column?.id ===
-                        cell.column?.id &&
-                        latestCellSelected.value &&
-                        latestCellSelected.value?.idx === cell.idx && (
-                          <div class="absolute bottom-1 right-7 w-3 h-3 z-10">
-                            {columns.value.find((c) => c.id === cell.column?.id)
-                              ?.kind !== 'static' && (
-                              <Button
-                                size="sm"
-                                look="ghost"
-                                class="cursor-crosshair p-1 z-50"
-                                onMouseDown$={(e) =>
-                                  handleMouseDragging$(cell, e)
+                    {latestCellSelected.value?.column?.id === cell.column?.id &&
+                      latestCellSelected.value &&
+                      latestCellSelected.value?.idx === cell.idx && (
+                        <div class="absolute bottom-1 right-7 w-3 h-3 z-10">
+                          {columns.value.find((c) => c.id === cell.column?.id)
+                            ?.kind !== 'static' && (
+                            <Button
+                              size="sm"
+                              look="ghost"
+                              class="cursor-crosshair p-1 z-50"
+                              onMouseDown$={(e) =>
+                                handleMouseDragging$(cell, e)
+                              }
+                            >
+                              <Tooltip
+                                open={
+                                  firstColumn.value?.id === cell.column?.id &&
+                                  item.index === 4
                                 }
+                                text="Drag down to generate cells"
+                                floating="right"
                               >
-                                <Tooltip
-                                  open={
-                                    firstColumn.value.id === cell.column?.id &&
-                                    item.index === 4
-                                  }
-                                  text="Drag down to generate cells"
-                                  floating="right"
-                                >
-                                  <LuDot class="text-7xl text-primary-300" />
-                                </Tooltip>
-                              </Button>
-                            )}
-                          </div>
-                        )}
-                    </div>
-                  </td>
-                )}
+                                <LuDot class="text-7xl text-primary-300" />
+                              </Tooltip>
+                            </Button>
+                          )}
+                        </div>
+                      )}
+                  </div>
+                </td>
               </Fragment>
             );
           })}
@@ -503,11 +482,14 @@ export const TableBody = component$(() => {
         totalCount={datasetSize.value}
         loadedCount={loadedDataCount}
         estimateSize={rowSize}
-        buffer={40}
+        buffer={50}
+        pageSize={10}
+        overscan={10}
         data={data}
         itemRenderer={itemRenderer}
         scrollElement={scrollElement}
         loadNextPage={fetchMoreData$}
+        debug={false}
       />
     </tbody>
   );

@@ -1,7 +1,7 @@
 import {
   $,
-  type NoSerialize,
   component$,
+  type NoSerialize,
   noSerialize,
   sync$,
   useContext,
@@ -13,7 +13,7 @@ import { Link, useNavigate } from '@builder.io/qwik-city';
 import { usePopover } from '@qwik-ui/headless';
 import { cn } from '@qwik-ui/utils';
 import { LuFilePlus2, LuUpload } from '@qwikest/icons/lucide';
-import { Button, Popover, buttonVariants } from '~/components';
+import { Button, buttonVariants, Popover } from '~/components';
 import { useClickOutside } from '~/components/hooks/click/outside';
 import { GoogleDrive, HFLogo } from '~/components/ui/logo/logo';
 import { configContext } from '~/routes/home/layout';
@@ -27,21 +27,87 @@ export const DragAndDrop = component$(() => {
   const { isGoogleAuthEnabled } = useContext(configContext);
 
   const file = useSignal<NoSerialize<File>>();
+  const files = useSignal<NoSerialize<File[]>>();
   const isDragging = useSignal(false);
   const navigate = useNavigate();
 
   const allowedExtensions = ['csv', 'tsv', 'xlsx', 'xls', 'parquet', 'arrow'];
+  const imageExtensions = ['jpg', 'jpeg', 'png', 'bmp', 'webp', 'tiff'];
 
   const uploadErrorMessage = useSignal<string | null>(null);
 
+  const traverseFileTreeAsync = (
+    item: any,
+    path: string,
+    fileList: File[],
+  ): Promise<void> => {
+    return new Promise((resolve) => {
+      if (item.isFile) {
+        item.file((file: File) => {
+          fileList.push(file);
+          resolve();
+        });
+      } else if (item.isDirectory) {
+        const dirReader = item.createReader();
+        dirReader.readEntries(async (entries: any[]) => {
+          for (const entry of entries) {
+            await traverseFileTreeAsync(
+              entry,
+              path + item.name + '/',
+              fileList,
+            );
+          }
+          resolve();
+        });
+      } else {
+        resolve();
+      }
+    });
+  };
+
   const handleUploadFile$ = $(async () => {
     hidePopover();
-
     uploadErrorMessage.value = null;
 
-    if (!file.value) return;
+    if (files.value) {
+      const maxFileSizeMB = 10;
+      const maxFileSizeBytes = maxFileSizeMB * 1024 * 1024;
 
-    try {
+      const imageFiles = files.value.filter((file) => {
+        const ext = file.name.split('.').pop()?.toLowerCase();
+        return (
+          ext && imageExtensions.includes(ext) && file.size <= maxFileSizeBytes
+        );
+      });
+
+      if (imageFiles.length === 0) {
+        uploadErrorMessage.value = 'No valid image files found in folder';
+        return;
+      }
+
+      const formData = new FormData();
+      imageFiles.forEach((file, index) => {
+        formData.append(`file_${index}`, file);
+      });
+      formData.append(
+        'folderName',
+        imageFiles[0].webkitRelativePath?.split('/')[0] || 'images',
+      );
+      formData.append('fileCount', imageFiles.length.toString());
+
+      const response = await fetch('/api/upload/folder', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        uploadErrorMessage.value = 'Failed to upload folder';
+        return;
+      }
+
+      const { id } = await response.json();
+      navigate('/home/dataset/' + id);
+    } else if (file.value) {
       const fileName = file.value.name;
       const fileExtension = file.value.name.split('.').pop();
 
@@ -77,10 +143,11 @@ export const DragAndDrop = component$(() => {
 
       const { id } = await response.json();
       navigate('/home/dataset/' + id);
-    } finally {
-      file.value = undefined;
-      isDragging.value = false;
     }
+
+    file.value = undefined;
+    files.value = undefined;
+    isDragging.value = false;
   });
 
   const container = useClickOutside(
@@ -143,10 +210,58 @@ export const DragAndDrop = component$(() => {
           onDrop$={sync$((e: DragEvent) => {
             isDragging.value = false;
 
-            if (e.dataTransfer?.files?.length) {
-              file.value = noSerialize(e.dataTransfer.files[0]);
+            if (e.dataTransfer?.items?.length) {
+              const items = Array.from(e.dataTransfer.items);
+              const folderItems: File[] = [];
 
-              handleUploadFile$();
+              let hasFolders = false;
+              for (const item of items) {
+                if (item.kind === 'file') {
+                  const entry = item.webkitGetAsEntry();
+                  if (entry?.isDirectory) {
+                    hasFolders = true;
+                    break;
+                  }
+                }
+              }
+
+              if (hasFolders) {
+                const processFolders = async () => {
+                  for (const item of items) {
+                    if (item.kind === 'file') {
+                      const entry = item.webkitGetAsEntry();
+                      if (entry?.isDirectory) {
+                        await traverseFileTreeAsync(entry, '', folderItems);
+                      }
+                    }
+                  }
+
+                  if (folderItems.length > 0) {
+                    files.value = noSerialize(folderItems);
+                    handleUploadFile$();
+                  } else {
+                    uploadErrorMessage.value = 'No files found in folder';
+                  }
+                };
+
+                processFolders();
+              } else if (e.dataTransfer?.files?.length) {
+                file.value = noSerialize(e.dataTransfer.files[0]);
+                handleUploadFile$();
+              }
+            } else if (e.dataTransfer?.files?.length) {
+              const droppedFiles = Array.from(e.dataTransfer.files);
+              const hasRelativePaths = droppedFiles.some(
+                (file) => file.webkitRelativePath,
+              );
+
+              if (hasRelativePaths) {
+                files.value = noSerialize(droppedFiles);
+                handleUploadFile$();
+              } else {
+                file.value = noSerialize(e.dataTransfer.files[0]);
+                handleUploadFile$();
+              }
             }
           })}
         >
@@ -160,6 +275,21 @@ export const DragAndDrop = component$(() => {
 
               if (input.files?.length) {
                 file.value = noSerialize(input.files[0]);
+
+                handleUploadFile$();
+              }
+            }}
+          />
+          <input
+            type="file"
+            id="folder-select"
+            webkitdirectory={true}
+            class="hidden"
+            onChange$={(e: Event) => {
+              const input = e.target as HTMLInputElement;
+
+              if (input.files?.length) {
+                files.value = noSerialize(Array.from(input.files));
 
                 handleUploadFile$();
               }
@@ -228,20 +358,41 @@ export const DragAndDrop = component$(() => {
 
                 <Button
                   look="ghost"
-                  class="w-full flex items-center justify-start hover:bg-neutral-100 gap-2.5 p-2 rounded-none rounded-bl-md rounded-br-md"
+                  class="w-full flex items-center justify-start hover:bg-neutral-100 gap-2.5 p-2 rounded-none"
                   onClick$={() =>
                     document.getElementById('file-select')?.click()
                   }
                 >
                   <LuUpload class="w-4 h-4 flex-shrink-0" />
-                  Upload from computer ({allowedExtensions.join(', ')})
+                  Upload file ({allowedExtensions.join(', ')})
+                </Button>
+
+                <Button
+                  look="ghost"
+                  class="w-full flex items-center justify-start hover:bg-neutral-100 gap-2.5 p-2 rounded-none rounded-bl-md rounded-br-md"
+                  onClick$={() =>
+                    document.getElementById('folder-select')?.click()
+                  }
+                >
+                  <LuUpload class="w-4 h-4 flex-shrink-0" />
+                  Upload folder (images)
                 </Button>
               </Popover.Panel>
             </Popover.Root>
 
-            {file.value && !uploadErrorMessage.value && (
+            {(file.value || files.value) && !uploadErrorMessage.value && (
               <div class="w-fit text-sm text-neutral-50 bg-black opacity-30 rounded-sm p-2 flex items-center justify-between gap-3">
-                {file.value.name}
+                {file.value?.name ||
+                  `${
+                    files.value?.filter((f) => {
+                      const ext = f.name.split('.').pop()?.toLowerCase();
+                      return (
+                        ext &&
+                        imageExtensions.includes(ext) &&
+                        f.size <= 10 * 1024 * 1024
+                      );
+                    }).length || 0
+                  } images`}
                 <div class="w-5 h-5 border-2 border-gray-300 border-t-transparent rounded-full animate-spin" />
               </div>
             )}

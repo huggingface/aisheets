@@ -4,7 +4,6 @@ import {
   type NoSerialize,
   noSerialize,
   sync$,
-  useContext,
   useOnWindow,
   useSignal,
   useStylesScoped$,
@@ -12,19 +11,23 @@ import {
 import { Link, useNavigate } from '@builder.io/qwik-city';
 import { usePopover } from '@qwik-ui/headless';
 import { cn } from '@qwik-ui/utils';
-import { LuFilePlus2, LuUpload } from '@qwikest/icons/lucide';
+import {
+  LuFilePlus2,
+  LuFileSpreadsheet,
+  LuFileType,
+  LuFileUp,
+  LuFolderUp,
+  LuImage,
+} from '@qwikest/icons/lucide';
 import { Button, buttonVariants, Popover } from '~/components';
 import { useClickOutside } from '~/components/hooks/click/outside';
-import { GoogleDrive, HFLogo } from '~/components/ui/logo/logo';
-import { configContext } from '~/routes/home/layout';
+import { HFLogo } from '~/components/ui/logo/logo';
 
 export const DragAndDrop = component$(() => {
   const popoverId = 'uploadFilePopover';
   const anchorRef = useSignal<HTMLElement | undefined>();
   const { hidePopover } = usePopover(popoverId);
   const isPopOverOpen = useSignal(false);
-
-  const { isGoogleAuthEnabled } = useContext(configContext);
 
   const file = useSignal<NoSerialize<File>>();
   const files = useSignal<NoSerialize<File[]>>();
@@ -182,6 +185,25 @@ export const DragAndDrop = component$(() => {
   background-size: 400% 400%;
   animation: border-animation 4s linear infinite;
 }
+.import-container {
+  background: linear-gradient(135deg, #ffd21e 0%, #6b86ff 100%);
+  border-radius: 12px;
+  padding: 2px;
+}
+.import-content {
+  background: white;
+  border-radius: 10px;
+  padding: 48px 32px;
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+}
+.thin-stroke svg {
+  stroke-width: 1;
+}
 `);
 
   return (
@@ -296,10 +318,25 @@ export const DragAndDrop = component$(() => {
             }}
           />
 
-          <div class="flex flex-col items-center justify-center gap-6 h-full">
-            <h2 class="text-primary-600 font-semibold text-xl">
-              Analyze, enrich, expand your data
+          <div class="flex flex-col items-center justify-center gap-2 h-full">
+            <div class="flex items-center justify-center mb-0">
+              <div class="w-[100px] h-[100px] flex items-center justify-center -mr-8 thin-stroke">
+                <LuImage class="w-[50px] h-[50px] text-yellow-400" />
+              </div>
+              <div class="w-[100px] h-[100px] flex items-center justify-center -mt-12 -mx-4 thin-stroke">
+                <LuFileType class="w-[50px] h-[50px] text-yellow-400" />
+              </div>
+              <div class="w-[100px] h-[100px] flex items-center justify-center -ml-8 thin-stroke">
+                <LuFileSpreadsheet class="w-[50px] h-[50px] text-yellow-400" />
+              </div>
+            </div>
+
+            <h2 class="text-primary-600 font-semibold text-xl -mt-6 mb-1">
+              Analyze and enrich your data with AI
             </h2>
+            <p class="text-gray-600 text-center mb-4">
+              Drop your files or folder
+            </p>
 
             <Popover.Root
               key={isMobile.value ? 'mobile' : 'desktop'}
@@ -320,7 +357,7 @@ export const DragAndDrop = component$(() => {
                 )}
               >
                 <LuFilePlus2 class="text-md" />
-                Drop or click to import a file
+                Import
               </Popover.Trigger>
               <Popover.Panel
                 class="w-86 text-sm shadow-lg p-2"
@@ -328,33 +365,16 @@ export const DragAndDrop = component$(() => {
                   isPopOverOpen.value = e.newState == 'open';
                 }}
               >
-                <Link
-                  href="/home/dataset/create/from-hub"
-                  class={cn(
-                    'w-full flex items-center justify-start hover:bg-neutral-100 gap-2.5 p-2 rounded-none rounded-tl-md rounded-tr-md',
-                  )}
+                <Button
+                  look="ghost"
+                  class="w-full flex items-center justify-start hover:bg-neutral-100 gap-2.5 p-2 rounded-none rounded-tl-md rounded-tr-md"
+                  onClick$={() =>
+                    document.getElementById('folder-select')?.click()
+                  }
                 >
-                  <HFLogo class="items-left w-4 h-4 flex-shrink-0" />
-                  Add from Hugging Face Hub
-                </Link>
-
-                {isGoogleAuthEnabled && (
-                  <>
-                    <hr class="border-t border-slate-200 dark:border-slate-700" />
-                    <Button
-                      look="ghost"
-                      class="w-full flex items-center justify-start hover:bg-neutral-100 gap-2.5 p-2 rounded-none"
-                      onClick$={() => {
-                        navigate('/home/dataset/create/from-google-drive');
-                      }}
-                    >
-                      <GoogleDrive class="w-4 h-4 flex-shrink-0" />
-                      Add from Google Drive
-                    </Button>
-                  </>
-                )}
-
-                <hr class="border-t border-slate-200 dark:border-slate-700" />
+                  <LuFolderUp class="w-4 h-4 flex-shrink-0" />
+                  Upload folder with images
+                </Button>
 
                 <Button
                   look="ghost"
@@ -363,20 +383,21 @@ export const DragAndDrop = component$(() => {
                     document.getElementById('file-select')?.click()
                   }
                 >
-                  <LuUpload class="w-4 h-4 flex-shrink-0" />
+                  <LuFileUp class="w-4 h-4 flex-shrink-0" />
                   Upload file ({allowedExtensions.join(', ')})
                 </Button>
 
-                <Button
-                  look="ghost"
-                  class="w-full flex items-center justify-start hover:bg-neutral-100 gap-2.5 p-2 rounded-none rounded-bl-md rounded-br-md"
-                  onClick$={() =>
-                    document.getElementById('folder-select')?.click()
-                  }
+                <hr class="border-t border-slate-200 dark:border-slate-700" />
+
+                <Link
+                  href="/home/dataset/create/from-hub"
+                  class={cn(
+                    'w-full flex items-center justify-start hover:bg-neutral-100 gap-2.5 p-2 rounded-none rounded-bl-md rounded-br-md',
+                  )}
                 >
-                  <LuUpload class="w-4 h-4 flex-shrink-0" />
-                  Upload folder (images)
-                </Button>
+                  <HFLogo class="items-left w-4 h-4 flex-shrink-0" />
+                  Import from Hub
+                </Link>
               </Popover.Panel>
             </Popover.Root>
 

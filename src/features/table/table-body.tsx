@@ -5,6 +5,7 @@ import {
   type HTMLAttributes,
   useComputed$,
   useSignal,
+  useTask$,
   useVisibleTask$,
 } from '@builder.io/qwik';
 import { server$ } from '@builder.io/qwik-city';
@@ -83,30 +84,11 @@ export const TableBody = component$(() => {
     }
   });
 
-  useVisibleTask$(({ track }) => {
+  useTask$(({ track }) => {
     track(() => firstColumn.value?.cells);
 
     const getCell = (column: Column, rowIndex: number): Cell => {
-      const cell = column.cells[rowIndex];
-
-      if (!cell) {
-        // Temporal cell for skeleton
-        return {
-          id: undefined,
-          value: '',
-          error: '',
-          validated: false,
-          column: {
-            id: column.id,
-            type: column.type,
-          },
-          updatedAt: new Date(),
-          generating: false,
-          idx: rowIndex,
-        };
-      }
-
-      return cell;
+      return column.cells[rowIndex];
     };
 
     const visibleColumns = columns.value.filter((column) => column.visible);
@@ -274,10 +256,10 @@ export const TableBody = component$(() => {
     lastMove.value = currentY;
   });
 
-  const itemRenderer = $(
+  const rowRenderer = $(
     (
       item: VirtualItem,
-      loadedData: Cell[],
+      rowData: Cell[],
       props: HTMLAttributes<HTMLElement>,
     ) => {
       const getBoundary = (cell: Cell) => {
@@ -390,7 +372,15 @@ export const TableBody = component$(() => {
             </Popover.Root>
           </td>
 
-          {loadedData?.map((cell) => {
+          {rowData?.map((cell) => {
+            if (!cell) {
+              return (
+                <td class="relative transition-colors min-w-[142px] w-[326px] h-[105px] break-words align-top border border-neutral-300 bg-white/50 animate-pulse">
+                  <div class="w-full h-full" />
+                </td>
+              );
+            }
+
             return (
               <Fragment key={`${cell.idx}-${cell.column!.id}`}>
                 <td
@@ -419,7 +409,7 @@ export const TableBody = component$(() => {
                     onMouseOver$={(e) => handleMouseOver$(cell, e)}
                     onMouseMove$={handleMouseMove$}
                   >
-                    <TableCell cell={cell} />
+                    <TableCell key={`${item.index}-${columnId}`} cell={cell} />
 
                     {latestCellSelected.value?.column?.id === cell.column?.id &&
                       latestCellSelected.value &&
@@ -460,7 +450,22 @@ export const TableBody = component$(() => {
   );
 
   useVisibleTask$(() => {
+    return () => {
+      data.value = [];
+      dragStartCell.value = undefined;
+      selectedCellToDrag.value = [];
+      lastMove.value = 0;
+      selectedRows.value = [];
+      scrollElement.value = undefined;
+    };
+  });
+
+  useVisibleTask$(() => {
     scrollElement.value = document.querySelector('.scrollable') as HTMLElement;
+
+    return () => {
+      scrollElement.value = undefined;
+    };
   });
 
   if (!scrollElement.value) return null;
@@ -477,11 +482,11 @@ export const TableBody = component$(() => {
         totalCount={datasetSize.value}
         loadedCount={loadedDataCount}
         estimateSize={rowSize}
-        buffer={50}
-        pageSize={10}
-        overscan={30}
+        buffer={10}
+        pageSize={20}
+        overscan={10}
         data={data}
-        itemRenderer={itemRenderer}
+        itemRenderer={rowRenderer}
         loadNextPage={fetchMoreData$}
         scrollElement={scrollElement}
         debug={false}

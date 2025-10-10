@@ -171,6 +171,7 @@ export const useExecution = () => {
 
           context.value = {
             columnId: newColumn.id,
+            mode: 'add',
           };
 
           pendingScrollColumnId.value = newColumn.id;

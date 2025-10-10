@@ -117,7 +117,7 @@ export const useColumnsStore = () => {
   const replaceColumns = $((replaced: Column[]) => {
     activeDataset.value = {
       ...activeDataset.value,
-      columns: [...replaced],
+      columns: [...(replaced || [])],
     };
   });
 

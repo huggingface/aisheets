@@ -5,7 +5,6 @@ import {
   type HTMLAttributes,
   useComputed$,
   useSignal,
-  useTask$,
   useVisibleTask$,
 } from '@builder.io/qwik';
 import { server$ } from '@builder.io/qwik-city';
@@ -31,6 +30,20 @@ import {
   useDatasetsStore,
 } from '~/state';
 
+function getRowData(rowIndex: number, columns: Column[]): (Cell | undefined)[] {
+  const rowData: (Cell | undefined)[] = Array.from(
+    { length: columns.length },
+    () => undefined,
+  );
+
+  columns.forEach((column, colIdx) => {
+    const cell = column.cells.find((cell) => cell.idx === rowIndex);
+    rowData[colIdx] = cell;
+  });
+
+  return rowData;
+}
+
 export const TableBody = component$(() => {
   const rowSize = 105; // px
 
@@ -47,7 +60,6 @@ export const TableBody = component$(() => {
   const datasetSize = useComputed$(() => activeDataset.value!.size);
   const datasetId = useComputed$(() => activeDataset.value!.id);
 
-  const data = useSignal<Cell[][]>([]);
   const loadedDataCount = useComputed$(() => {
     return firstColumn.value?.cells.length || 0;
   });
@@ -83,21 +95,8 @@ export const TableBody = component$(() => {
       selectedRows.value = [];
     }
   });
-
-  useTask$(({ track }) => {
-    track(() => firstColumn.value?.cells);
-
-    const getCell = (column: Column, rowIndex: number): Cell => {
-      return column.cells[rowIndex];
-    };
-
-    const visibleColumns = columns.value.filter((column) => column.visible);
-
-    data.value = Array.from({ length: datasetSize.value }, (_, rowIndex) =>
-      Array.from({ length: visibleColumns.length }, (_, colIndex) =>
-        getCell(visibleColumns[colIndex], rowIndex),
-      ),
-    );
+  const visibleColumns = useComputed$(() => {
+    return columns.value.filter((column) => column.visible);
   });
 
   const handleSelectRow$ = $((idx: number) => {
@@ -174,8 +173,9 @@ export const TableBody = component$(() => {
     const selectedCells = [];
 
     for (let i = start; i <= end; i++) {
+      const rowData = getRowData(i, visibleColumns.value);
       selectedCells.push(
-        data.value[i].find((c) => c.column?.id === cell.column?.id),
+        rowData?.find((c) => c?.column?.id === cell.column?.id),
       );
     }
 
@@ -257,11 +257,7 @@ export const TableBody = component$(() => {
   });
 
   const rowRenderer = $(
-    (
-      item: VirtualItem,
-      rowData: Cell[],
-      props: HTMLAttributes<HTMLElement>,
-    ) => {
+    (item: VirtualItem, props: HTMLAttributes<HTMLElement>) => {
       const getBoundary = (cell: Cell) => {
         if (
           selectedCellToDrag.value.length === 0 ||
@@ -305,6 +301,8 @@ export const TableBody = component$(() => {
             isColumnSelected,
         });
       };
+
+      const rowData = getRowData(item.index, visibleColumns.value);
 
       return (
         <tr
@@ -409,7 +407,10 @@ export const TableBody = component$(() => {
                     onMouseOver$={(e) => handleMouseOver$(cell, e)}
                     onMouseMove$={handleMouseMove$}
                   >
-                    <TableCell key={`${item.index}-${columnId}`} cell={cell} />
+                    <TableCell
+                      key={`${item.index}-${columnId.value}`}
+                      cell={cell}
+                    />
 
                     {latestCellSelected.value?.column?.id === cell.column?.id &&
                       latestCellSelected.value &&
@@ -451,7 +452,6 @@ export const TableBody = component$(() => {
 
   useVisibleTask$(() => {
     return () => {
-      data.value = [];
       dragStartCell.value = undefined;
       selectedCellToDrag.value = [];
       lastMove.value = 0;
@@ -478,14 +478,13 @@ export const TableBody = component$(() => {
       }}
     >
       <VirtualScrollContainer
-        key={datasetId.value}
+        key={`${datasetId.value} - ${visibleColumns.value.length}`}
         totalCount={datasetSize.value}
         loadedCount={loadedDataCount}
         estimateSize={rowSize}
         buffer={10}
         pageSize={20}
-        overscan={10}
-        data={data}
+        overscan={20}
         itemRenderer={rowRenderer}
         loadNextPage={fetchMoreData$}
         scrollElement={scrollElement}

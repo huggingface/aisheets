@@ -33,6 +33,7 @@ const { getSerializable: getVirtual, useSerializable: useVirtualScroll } =
         debug?: boolean;
       }) => {
         const virtualizer = new Virtualizer({
+          initialRect: state.scrollElement.value!.getBoundingClientRect(),
           debug: state.debug,
           count: state.totalCount,
           estimateSize: () => state.estimateSize,
@@ -55,6 +56,7 @@ const { getSerializable: getVirtual, useSerializable: useVirtualScroll } =
             state.scrollOffset = ev.scrollOffset!;
           },
         });
+
         virtualizer._didMount();
         virtualizer._willUpdate();
         return virtualizer;
@@ -66,7 +68,6 @@ export const VirtualScrollContainer = component$(
   ({
     totalCount,
     loadedCount,
-    data,
     loadNextPage,
     itemRenderer,
     scrollElement,
@@ -78,7 +79,6 @@ export const VirtualScrollContainer = component$(
   }: {
     totalCount: number;
     loadedCount: Signal<number>;
-    data: Signal<unknown[]>;
 
     loadNextPage?: QRL<
       ({
@@ -90,11 +90,7 @@ export const VirtualScrollContainer = component$(
       }) => Promise<void>
     >;
     itemRenderer: QRL<
-      (
-        item: VirtualItem,
-        itemData: any,
-        props: HTMLAttributes<HTMLElement>,
-      ) => any
+      (item: VirtualItem, props: HTMLAttributes<HTMLElement>) => any
     >;
     estimateSize: number;
     overscan?: number;
@@ -141,6 +137,13 @@ export const VirtualScrollContainer = component$(
         });
       }
     });
+    // cleanup
+    useVisibleTask$(() => {
+      return () => {
+        virtualState.value = undefined;
+        measuredIndices.value.clear();
+      };
+    });
 
     useVisibleTask$(({ track }) => {
       track(scrollElement);
@@ -161,7 +164,7 @@ export const VirtualScrollContainer = component$(
     return (
       <Fragment>
         {visibleRows.value.map((item: VirtualItem) => {
-          return itemRenderer(item, data.value[item.index], {
+          return itemRenderer(item, {
             key: item.key.toString(),
             ref: (node) => {
               if (node?.isConnected && !measuredIndices.value.has(item.index)) {
@@ -182,6 +185,7 @@ export const VirtualScrollContainer = component$(
         })}
         {debug ? (
           <div class="fixed z-30 right-0 px-10 bg-white">
+            <p> Number of visible rows {visibleRows.value.length}</p>
             <p>Total count: {totalCount}</p>
             <p>Loading?: {loadingData.value ? 'yes' : 'no'}</p>
             <p>

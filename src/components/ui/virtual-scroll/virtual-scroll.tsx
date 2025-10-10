@@ -49,10 +49,14 @@ const { getSerializable: getVirtual, useSerializable: useVirtualScroll } =
               : undefined,
           onChange: (ev) => {
             ev._willUpdate();
-            // On first render, if we don't have this check, it will update state twice in one cycle, causing an error.
-            if (ev.isScrolling) return;
-
-            state.range = ev.range!;
+            const eventRange = ev.range!;
+            if (
+              state.range?.startIndex !== eventRange?.startIndex ||
+              state.range?.endIndex !== eventRange?.endIndex
+            ) {
+              // On first render, if we don't have this check, it will update state twice in one cycle, causing an error.
+              state.range = eventRange;
+            }
             state.scrollOffset = ev.scrollOffset!;
           },
         });
@@ -114,9 +118,16 @@ export const VirtualScrollContainer = component$(
       overscan,
     });
 
+    const visibleRows = useSignal<VirtualItem[]>([]);
+    useVisibleTask$(({ track }) => {
+      track(() => virtualState.state.range);
+      if (!virtualState.value) return;
+
+      visibleRows.value = virtualState.value.getVirtualItems();
+    });
+
     useTask$(({ track }) => {
       track(() => virtualState.state.range);
-      track(loadedCount);
 
       if (!loadNextPage) return;
       if (loadingData.value) return;
@@ -127,11 +138,10 @@ export const VirtualScrollContainer = component$(
         const rangeStart = loadedCount.value;
         loadingData.value = true;
 
-        const loadedPages = Math.ceil(loadedCount.value / pageSize);
         // Do this in a hanging promise rather than await so that we don't block the state from updating further
         loadNextPage({
           rangeStart,
-          pageSize: loadedPages * pageSize + Math.max(buffer, overscan || 0),
+          pageSize: pageSize + Math.max(buffer, overscan ?? 0),
         }).then(() => {
           loadingData.value = false;
         });
@@ -151,14 +161,6 @@ export const VirtualScrollContainer = component$(
       if (!virtualState.value) {
         getVirtual(virtualState);
       }
-    });
-
-    const visibleRows = useSignal<VirtualItem[]>([]);
-    useVisibleTask$(({ track }) => {
-      track(() => virtualState.state.range);
-      if (!virtualState.value) return;
-
-      visibleRows.value = virtualState.value.getVirtualItems();
     });
 
     return (
@@ -192,6 +194,7 @@ export const VirtualScrollContainer = component$(
               visible range: {virtualState.state.range?.startIndex}-
               {virtualState.state.range?.endIndex}
             </p>
+            <p>Loaded count {loadedCount.value}</p>
             <p>{virtualState.value?.getTotalSize()}</p>
           </div>
         ) : null}

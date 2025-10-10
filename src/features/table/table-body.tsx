@@ -22,7 +22,7 @@ import { isOverlayOpen } from '~/features/table/components/body/renderer/compone
 
 import { useColumnsPreference } from '~/features/table/components/context/colunm-preferences.context';
 import { TableCell } from '~/features/table/table-cell';
-import { deleteRowsCells, getColumnCells } from '~/services';
+import { deleteRowsCells, getColumnsCells } from '~/services';
 import {
   type Cell,
   type Column,
@@ -61,7 +61,9 @@ export const TableBody = component$(() => {
   const datasetId = useComputed$(() => activeDataset.value!.id);
 
   const loadedDataCount = useComputed$(() => {
-    return firstColumn.value?.cells.length || 0;
+    return columns.value.reduce((max, column) => {
+      return Math.max(max, column.cells.length);
+    }, 0);
   });
 
   const scrollElement = useSignal<HTMLElement>();
@@ -85,7 +87,7 @@ export const TableBody = component$(() => {
       ?.hidePopover();
 
     const ok = await server$(deleteRowsCells)(
-      firstColumn.value?.dataset.id,
+      activeDataset.value!.id,
       selectedRows.value,
     );
 
@@ -220,16 +222,25 @@ export const TableBody = component$(() => {
 
       if (limit <= 0) return;
 
-      for (const column of dataset.columns) {
-        const newCells = await server$(getColumnCells)({
-          column,
-          limit,
-          offset,
-        });
+      await server$(getColumnsCells)({
+        columns: visibleColumns.value,
+        offset,
+        limit,
+      }).then((columnsWithCells) => {
+        columnsWithCells.forEach(({ id, cells }) => {
+          const column = columns.value.find((c) => c.id === id);
+          if (!column) return;
 
-        column.cells = column.cells.concat(newCells);
-        updateColumn(column);
-      }
+          // merge cells by removing duplicates
+          column.cells = column.cells.filter(
+            (existingCell) =>
+              !cells.find((newCell) => newCell.idx === existingCell.idx),
+          );
+
+          column.cells = column.cells.concat(cells);
+          updateColumn(column);
+        });
+      });
     },
   );
 
@@ -407,10 +418,7 @@ export const TableBody = component$(() => {
                     onMouseOver$={(e) => handleMouseOver$(cell, e)}
                     onMouseMove$={handleMouseMove$}
                   >
-                    <TableCell
-                      key={`${item.index}-${columnId.value}`}
-                      cell={cell}
-                    />
+                    <TableCell key={`${item.index}_${cell.idx}`} cell={cell} />
 
                     {latestCellSelected.value?.column?.id === cell.column?.id &&
                       latestCellSelected.value &&

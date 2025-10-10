@@ -1,11 +1,10 @@
 import { Op } from 'sequelize';
-import { ColumnCellModel } from '~/services/db/models/cell';
-import type { Cell, Column } from '~/state';
-
 import {
   type CellSource,
+  ColumnCellModel,
   MAX_SOURCE_SNIPPET_LENGTH,
 } from '~/services/db/models/cell';
+import type { Cell, Column } from '~/state';
 import { ColumnModel } from '../db/models';
 import { getColumnById, listColumnsByIds } from './columns';
 import { listDatasetTableRows, upsertColumnValues } from './tables';
@@ -218,6 +217,29 @@ export const getValidatedColumnCells = async ({
   }));
 
   return cells;
+};
+
+export const getColumnsCells = async ({
+  columns,
+  offset,
+  limit,
+}: {
+  columns: {
+    id: string;
+  }[];
+  offset?: number;
+  limit?: number;
+}): Promise<{ cells: Cell[]; id: string }[]> => {
+  return Promise.all(
+    columns.map(async (column) => {
+      const cells = await getColumnCells({
+        column,
+        offset,
+        limit,
+      });
+      return { cells, id: column.id };
+    }),
+  );
 };
 
 export const getColumnCells = async ({

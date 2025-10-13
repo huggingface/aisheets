@@ -8,6 +8,10 @@ export const getDatasetRowSequenceName = (dataset: { id: string }) => {
   return `"${dataset.id}_rowIdx_seq"`;
 };
 
+export const getRowIndexName = (dataset: { id: string }) => {
+  return `"${dataset.id}_rowIdx_idx"`;
+};
+
 export const getColumnName = (column: { id: string }) => {
   return `"${column.id}"`;
 };

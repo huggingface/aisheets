@@ -524,7 +524,7 @@ export const ExecutionForm = component$(() => {
     if (mode.value === 'add') {
       nextTick(() => {
         onGenerate();
-      });
+      }, 500);
     }
   });
 

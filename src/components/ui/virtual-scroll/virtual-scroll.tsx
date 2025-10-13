@@ -152,8 +152,10 @@ export const VirtualScrollContainer = component$(
       const newStart = Math.max(0, middle - pageSize);
       const newEnd = Math.min(totalCount - 1, middle + pageSize);
 
-      if (start >= newStart && end <= newEnd) {
-        // We already have the data we need
+      if (
+        Math.max(0, visibleRows.value?.[0]?.index - buffer) >= start &&
+        end > visibleRows.value?.slice(-1)[0]?.index + buffer
+      ) {
         return;
       }
 

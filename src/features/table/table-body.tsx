@@ -61,7 +61,7 @@ export const TableBody = component$(() => {
   const datasetId = useComputed$(() => activeDataset.value!.id);
 
   const pageSize = 30;
-  const buffer = 10;
+  const buffer = 5;
   const currentRange = useSignal<{ start: number; end: number }>({
     start: -1,
     end: -1,
@@ -213,6 +213,7 @@ export const TableBody = component$(() => {
       if (!dataset) return;
 
       if (start >= dataset.size) return;
+
       currentRange.value = { start, end };
 
       const offset = start;
@@ -362,75 +363,80 @@ export const TableBody = component$(() => {
             </Popover.Root>
           </td>
 
-          {rowData?.map((cell) => {
-            if (!cell) {
-              return (
-                <td class="relative transition-colors min-w-[142px] w-[326px] h-[105px] break-words align-top border border-neutral-300 bg-white/50 animate-pulse">
-                  <div class="w-full h-full" />
-                </td>
-              );
-            }
-
+          {rowData?.map((cell, idx) => {
             return (
-              <Fragment key={`${cell.idx}-${cell.column!.id}`}>
-                <td
-                  data-column-id={cell.column?.id}
-                  class={cn(
-                    `relative transition-colors min-w-[142px] w-[326px] h-[${rowSize}px] break-words align-top border border-neutral-300 hover:bg-gray-50/50`,
-                    {
-                      'bg-blue-50 hover:bg-blue-100':
-                        cell.column!.id == columnId.value,
-                      'shadow-[inset_2px_0_0_theme(colors.primary.100),inset_-2px_0_0_theme(colors.primary.100)]':
-                        columnPreferences.value[cell.column!.id]?.aiButtonHover,
-                      'shadow-[inset_2px_0_0_theme(colors.primary.300),inset_-2px_0_0_theme(colors.primary.300)]':
-                        columnPreferences.value[cell.column!.id]?.aiPromptOpen,
-                    },
-                    getBoundary(cell),
-                  )}
-                  style={{
-                    width: `${columnPreferences.value[cell.column!.id]?.width || 326}px`,
-                  }}
-                  onMouseOver$={() => showAiButton(cell.column!.id)}
-                  onMouseLeave$={() => hideAiButton(cell.column!.id)}
-                >
-                  <div
-                    onMouseUp$={handleMouseUp$}
-                    onMouseDown$={(e) => handleMouseDown$(cell, e)}
-                    onMouseOver$={(e) => handleMouseOver$(cell, e)}
-                    onMouseMove$={handleMouseMove$}
+              <Fragment key={`${item.index}-${idx}`}>
+                {!cell && (
+                  <td class="relative transition-colors min-w-[142px] w-[326px] h-[105px] break-words align-top border border-neutral-300 bg-white/50 animate-pulse">
+                    <div class="w-full h-full" />
+                  </td>
+                )}
+                {cell && (
+                  <td
+                    data-column-id={cell.column?.id}
+                    class={cn(
+                      `relative transition-colors min-w-[142px] w-[326px] h-[${rowSize}px] break-words align-top border border-neutral-300 hover:bg-gray-50/50`,
+                      {
+                        'bg-blue-50 hover:bg-blue-100':
+                          cell.column!.id == columnId.value,
+                        'shadow-[inset_2px_0_0_theme(colors.primary.100),inset_-2px_0_0_theme(colors.primary.100)]':
+                          columnPreferences.value[cell.column!.id]
+                            ?.aiButtonHover,
+                        'shadow-[inset_2px_0_0_theme(colors.primary.300),inset_-2px_0_0_theme(colors.primary.300)]':
+                          columnPreferences.value[cell.column!.id]
+                            ?.aiPromptOpen,
+                      },
+                      getBoundary(cell),
+                    )}
+                    style={{
+                      width: `${columnPreferences.value[cell.column!.id]?.width || 326}px`,
+                    }}
+                    onMouseOver$={() => showAiButton(cell.column!.id)}
+                    onMouseLeave$={() => hideAiButton(cell.column!.id)}
                   >
-                    <TableCell key={`${item.index}_${cell.idx}`} cell={cell} />
+                    <div
+                      onMouseUp$={handleMouseUp$}
+                      onMouseDown$={(e) => handleMouseDown$(cell, e)}
+                      onMouseOver$={(e) => handleMouseOver$(cell, e)}
+                      onMouseMove$={handleMouseMove$}
+                    >
+                      <TableCell
+                        key={`${item.index}_${cell.idx}`}
+                        cell={cell}
+                      />
 
-                    {latestCellSelected.value?.column?.id === cell.column?.id &&
-                      latestCellSelected.value &&
-                      latestCellSelected.value?.idx === cell.idx && (
-                        <div class="absolute bottom-1 right-7 w-3 h-3 z-10">
-                          {columns.value.find((c) => c.id === cell.column?.id)
-                            ?.kind !== 'static' && (
-                            <Button
-                              size="sm"
-                              look="ghost"
-                              class="cursor-crosshair p-1 z-50"
-                              onMouseDown$={(e) =>
-                                handleMouseDragging$(cell, e)
-                              }
-                            >
-                              <Tooltip
-                                open={
-                                  firstColumn.value?.id === cell.column?.id &&
-                                  item.index === 4
+                      {latestCellSelected.value?.column?.id ===
+                        cell.column?.id &&
+                        latestCellSelected.value &&
+                        latestCellSelected.value?.idx === cell.idx && (
+                          <div class="absolute bottom-1 right-7 w-3 h-3 z-10">
+                            {columns.value.find((c) => c.id === cell.column?.id)
+                              ?.kind !== 'static' && (
+                              <Button
+                                size="sm"
+                                look="ghost"
+                                class="cursor-crosshair p-1 z-50"
+                                onMouseDown$={(e) =>
+                                  handleMouseDragging$(cell, e)
                                 }
-                                text="Drag down to generate cells"
-                                floating="right"
                               >
-                                <LuDot class="text-7xl text-primary-300" />
-                              </Tooltip>
-                            </Button>
-                          )}
-                        </div>
-                      )}
-                  </div>
-                </td>
+                                <Tooltip
+                                  open={
+                                    firstColumn.value?.id === cell.column?.id &&
+                                    item.index === 4
+                                  }
+                                  text="Drag down to generate cells"
+                                  floating="right"
+                                >
+                                  <LuDot class="text-7xl text-primary-300" />
+                                </Tooltip>
+                              </Button>
+                            )}
+                          </div>
+                        )}
+                    </div>
+                  </td>
+                )}
               </Fragment>
             );
           })}
@@ -438,13 +444,6 @@ export const TableBody = component$(() => {
       );
     },
   );
-
-  useVisibleTask$(({ track }) => {
-    track(() => datasetId.value);
-
-    // reset the current range when the dataset changes
-    currentRange.value = { start: -1, end: -1 };
-  });
 
   useVisibleTask$(() => {
     return () => {
@@ -475,13 +474,13 @@ export const TableBody = component$(() => {
       }}
     >
       <VirtualScrollContainer
-        key={`${datasetId.value} - ${visibleColumns.value.length}`}
+        key={datasetId.value}
         totalCount={datasetSize.value}
         currentRange={currentRange}
         estimateSize={rowSize}
         buffer={buffer}
         pageSize={pageSize}
-        overscan={buffer}
+        overscan={1}
         itemRenderer={rowRenderer}
         loadNextPage={fetchMoreData$}
         scrollElement={scrollElement}

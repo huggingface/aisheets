@@ -52,7 +52,7 @@ const createColumnPlaceholder = (
 ): CreateColumn => {
   const getNextColumnName = (counter = 1): string => {
     const manyColumnsWithName = dataset.columns;
-    const newPosibleColumnName = `column_${manyColumnsWithName.length + 1}`;
+    const newPosibleColumnName = `column_${manyColumnsWithName.length + counter}`;
 
     if (!manyColumnsWithName.find((c) => c.name === newPosibleColumnName)) {
       return newPosibleColumnName;

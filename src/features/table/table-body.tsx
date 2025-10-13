@@ -60,10 +60,11 @@ export const TableBody = component$(() => {
   const datasetSize = useComputed$(() => activeDataset.value!.size);
   const datasetId = useComputed$(() => activeDataset.value!.id);
 
-  const loadedDataCount = useComputed$(() => {
-    return columns.value.reduce((max, column) => {
-      return Math.max(max, column.cells.length);
-    }, 0);
+  const pageSize = 30;
+  const buffer = 10;
+  const currentRange = useSignal<{ start: number; end: number }>({
+    start: -1,
+    end: -1,
   });
 
   const scrollElement = useSignal<HTMLElement>();
@@ -207,19 +208,17 @@ export const TableBody = component$(() => {
   });
 
   const fetchMoreData$ = $(
-    async ({
-      rangeStart,
-      pageSize,
-    }: {
-      rangeStart: number;
-      pageSize: number;
-    }) => {
+    async ({ start, end }: { start: number; end: number }) => {
       const dataset = activeDataset.value;
       if (!dataset) return;
 
-      const offset = rangeStart;
-      const limit = Math.min(pageSize, dataset.size - rangeStart);
+      if (start >= dataset.size) return;
+      currentRange.value = { start, end };
 
+      const offset = start;
+      const limit = end - start + 1;
+
+      if (offset < 0) return;
       if (limit <= 0) return;
 
       await server$(getColumnsCells)({
@@ -237,7 +236,8 @@ export const TableBody = component$(() => {
               !cells.find((newCell) => newCell.idx === existingCell.idx),
           );
 
-          column.cells = column.cells.concat(cells);
+          column.cells = cells;
+
           updateColumn(column);
         });
       });
@@ -246,25 +246,6 @@ export const TableBody = component$(() => {
 
   const handleMouseMove$ = $(async (e: MouseEvent) => {
     if (e.buttons !== 1 /* Primary button not pressed */) return;
-    if (await isOverlayOpen()) return;
-
-    if (!dragStartCell.value) return;
-
-    const tableBeginning = window.innerHeight * 0.25;
-    const tableEnding = window.innerHeight * 0.9;
-
-    const currentY = e.clientY;
-
-    const endingScroll = currentY - tableEnding;
-    const beginningScroll = tableBeginning - currentY;
-
-    if (endingScroll > 0 && currentY > lastMove.value) {
-      scrollElement.value?.scrollBy(0, 20);
-    } else if (beginningScroll > 0 && currentY < lastMove.value) {
-      scrollElement.value?.scrollBy(0, -20);
-    }
-
-    lastMove.value = currentY;
   });
 
   const rowRenderer = $(
@@ -488,11 +469,11 @@ export const TableBody = component$(() => {
       <VirtualScrollContainer
         key={`${datasetId.value} - ${visibleColumns.value.length}`}
         totalCount={datasetSize.value}
-        loadedCount={loadedDataCount}
+        currentRange={currentRange}
         estimateSize={rowSize}
-        buffer={10}
-        pageSize={20}
-        overscan={20}
+        buffer={buffer}
+        pageSize={pageSize}
+        overscan={buffer}
         itemRenderer={rowRenderer}
         loadNextPage={fetchMoreData$}
         scrollElement={scrollElement}

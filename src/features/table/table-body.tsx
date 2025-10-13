@@ -439,6 +439,13 @@ export const TableBody = component$(() => {
     },
   );
 
+  useVisibleTask$(({ track }) => {
+    track(() => datasetId.value);
+
+    // reset the current range when the dataset changes
+    currentRange.value = { start: -1, end: -1 };
+  });
+
   useVisibleTask$(() => {
     return () => {
       dragStartCell.value = undefined;
@@ -446,6 +453,7 @@ export const TableBody = component$(() => {
       lastMove.value = 0;
       selectedRows.value = [];
       scrollElement.value = undefined;
+      currentRange.value = { start: -1, end: -1 };
     };
   });
 

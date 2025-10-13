@@ -170,6 +170,7 @@ export const VirtualScrollContainer = component$(
       return () => {
         virtualState.value = undefined;
         measuredIndices.value.clear();
+        loadingData.value = false;
       };
     });
 

@@ -5,9 +5,11 @@ import { ColumnPreferencesProvider } from '~/features/table/components/context/c
 import { TableBody } from '~/features/table/table-body';
 import { TableHeader } from '~/features/table/table-header';
 import { TableView } from '~/features/table/table-view';
+import { useDatasetsStore } from '~/state';
 
 export const Table = component$(() => {
   const { isOpenExecutionSidebar } = useModals('executionSidebar');
+  const { activeDataset } = useDatasetsStore();
 
   return (
     <div
@@ -23,7 +25,7 @@ export const Table = component$(() => {
         <table class="text-sm min-w-max grid border-separate border-spacing-0">
           <ColumnPreferencesProvider>
             <TableHeader />
-            <TableBody />
+            <TableBody key={activeDataset.value.id} />
           </ColumnPreferencesProvider>
         </table>
       </div>

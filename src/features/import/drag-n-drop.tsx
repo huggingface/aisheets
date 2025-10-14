@@ -22,12 +22,14 @@ import {
 import { Button, buttonVariants, Popover } from '~/components';
 import { useClickOutside } from '~/components/hooks/click/outside';
 import { HFLogo } from '~/components/ui/logo/logo';
+import { useConfigContext } from '~/routes/home/layout';
 
 export const DragAndDrop = component$(() => {
   const popoverId = 'uploadFilePopover';
   const anchorRef = useSignal<HTMLElement | undefined>();
   const { hidePopover } = usePopover(popoverId);
   const isPopOverOpen = useSignal(false);
+  const { MAX_ROWS_IMPORT } = useConfigContext();
 
   const file = useSignal<NoSerialize<File>>();
   const files = useSignal<NoSerialize<File[]>>();
@@ -88,15 +90,24 @@ export const DragAndDrop = component$(() => {
         return;
       }
 
+      // Limit to maxRowsImport to save resources
+      const limitedImageFiles = imageFiles.slice(0, MAX_ROWS_IMPORT);
+
+      if (imageFiles.length > MAX_ROWS_IMPORT) {
+        console.warn(
+          `Found ${imageFiles.length} images, limiting to ${MAX_ROWS_IMPORT} to save resources`,
+        );
+      }
+
       const formData = new FormData();
-      imageFiles.forEach((file, index) => {
+      limitedImageFiles.forEach((file, index) => {
         formData.append(`file_${index}`, file);
       });
       formData.append(
         'folderName',
-        imageFiles[0].webkitRelativePath?.split('/')[0] || 'images',
+        limitedImageFiles[0].webkitRelativePath?.split('/')[0] || 'images',
       );
-      formData.append('fileCount', imageFiles.length.toString());
+      formData.append('fileCount', limitedImageFiles.length.toString());
 
       const response = await fetch('/api/upload/folder', {
         method: 'POST',

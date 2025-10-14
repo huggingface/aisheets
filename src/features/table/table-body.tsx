@@ -250,7 +250,11 @@ export const TableBody = component$(() => {
   });
 
   const rowRenderer = $(
-    (item: VirtualItem, props: HTMLAttributes<HTMLElement>) => {
+    (
+      item: VirtualItem,
+      props: HTMLAttributes<HTMLElement>,
+      _isLoading: boolean,
+    ) => {
       const getBoundary = (i: number, j: number) => {
         const column = visibleColumns.value[j];
 

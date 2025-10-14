@@ -95,7 +95,11 @@ export const VirtualScrollContainer = component$(
       ({ start, end }: { start: number; end: number }) => Promise<void>
     >;
     itemRenderer: QRL<
-      (item: VirtualItem, props: HTMLAttributes<HTMLElement>) => any
+      (
+        item: VirtualItem,
+        props: HTMLAttributes<HTMLElement>,
+        isLoading: boolean,
+      ) => any
     >;
     estimateSize: number;
     overscan?: number;
@@ -148,14 +152,14 @@ export const VirtualScrollContainer = component$(
 
       const { start, end } = currentRange.value;
 
-      // Keep a window of pageSize around the middle of the visible range
+      // Keep a window of 2*pageSize around the middle of the visible range
       const middle = Math.floor((startIndex + endIndex) / 2);
-      const newStart = Math.max(0, middle - pageSize / 2);
-      const newEnd = Math.min(totalCount, middle + pageSize / 2);
+      const newStart = Math.max(0, middle - pageSize);
+      const newEnd = Math.min(totalCount, middle + pageSize);
 
       if (
-        Math.max(0, visibleRows.value?.[0]?.index - buffer) >= start &&
-        end > visibleRows.value?.slice(-1)[0]?.index + buffer
+        Math.max(0, visibleRows.value?.[0]?.index) >= start &&
+        end > visibleRows.value?.slice(-1)[0]?.index
       ) {
         return;
       }
@@ -188,24 +192,31 @@ export const VirtualScrollContainer = component$(
     return (
       <Fragment>
         {visibleRows.value.map((item: VirtualItem) => {
-          return itemRenderer(item, {
-            key: item.key.toString(),
-            ref: (node) => {
-              if (node?.isConnected && !measuredIndices.value.has(item.index)) {
-                measuredIndices.value.add(item.index);
-                node.setAttribute('data-index', item.index.toString());
-                nextTick(() => {
-                  virtualState.value?.measureElement?.(node);
-                });
-              }
+          return itemRenderer(
+            item,
+            {
+              key: item.key.toString(),
+              ref: (node) => {
+                if (
+                  node?.isConnected &&
+                  !measuredIndices.value.has(item.index)
+                ) {
+                  measuredIndices.value.add(item.index);
+                  node.setAttribute('data-index', item.index.toString());
+                  nextTick(() => {
+                    virtualState.value?.measureElement?.(node);
+                  });
+                }
+              },
+              style: {
+                display: 'flex',
+                position: 'absolute',
+                top: `${item.start}px`,
+                width: '100%',
+              },
             },
-            style: {
-              display: 'flex',
-              position: 'absolute',
-              top: `${item.start}px`,
-              width: '100%',
-            },
-          });
+            loadingData.value,
+          );
         })}
         {debug ? (
           <div class="fixed z-30 right-0 px-10 bg-white">

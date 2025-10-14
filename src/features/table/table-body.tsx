@@ -19,7 +19,6 @@ import { VirtualScrollContainer } from '~/components/ui/virtual-scroll/virtual-s
 import { useExecution } from '~/features/add-column';
 import { useGenerateColumn } from '~/features/execution';
 import { isOverlayOpen } from '~/features/table/components/body/renderer/components/utils';
-
 import { useColumnsPreference } from '~/features/table/components/context/colunm-preferences.context';
 import { TableCell } from '~/features/table/table-cell';
 import { deleteRowsCells, getColumnsCells } from '~/services';
@@ -30,15 +29,23 @@ import {
   useDatasetsStore,
 } from '~/state';
 
-function getRowData(rowIndex: number, columns: Column[]): (Cell | undefined)[] {
-  const rowData: (Cell | undefined)[] = Array.from(
-    { length: columns.length },
-    () => undefined,
-  );
+function getRowData(rowIndex: number, columns: Column[]): Cell[] {
+  const rowData: Cell[] = columns.map((column) => {
+    return {
+      id: undefined,
+      idx: rowIndex,
+      value: undefined,
+      error: undefined,
+      column: column,
+      generating: false,
+      updatedAt: new Date(),
+      validated: false,
+    };
+  });
 
   columns.forEach((column, colIdx) => {
     const cell = column.cells.find((cell) => cell.idx === rowIndex);
-    rowData[colIdx] = cell;
+    if (cell) rowData[colIdx] = cell;
   });
 
   return rowData;
@@ -162,19 +169,12 @@ export const TableBody = component$(() => {
     if (!dragStartCell.value) return;
     if (dragStartCell.value.column?.id !== cell.column?.id) return;
 
-    const isDraggingTheFirstColumn = cell.column?.id === firstColumn.value?.id;
-
     const startRowIndex = dragStartCell.value.idx;
     const endRowIndex = cell.idx;
     const start = Math.min(startRowIndex, endRowIndex);
     const end = Math.max(startRowIndex, endRowIndex);
 
-    if (end > firstColumnsWithValue.value.length && !isDraggingTheFirstColumn) {
-      return;
-    }
-
     const selectedCells = [];
-
     for (let i = start; i <= end; i++) {
       const rowData = getRowData(i, visibleColumns.value);
       selectedCells.push(
@@ -251,10 +251,12 @@ export const TableBody = component$(() => {
 
   const rowRenderer = $(
     (item: VirtualItem, props: HTMLAttributes<HTMLElement>) => {
-      const getBoundary = (cell: Cell) => {
+      const getBoundary = (i: number, j: number) => {
+        const column = visibleColumns.value[j];
+
         if (
           selectedCellToDrag.value.length === 0 ||
-          columns.value.find((c) => c.id === cell.column?.id)?.kind === 'static'
+          columns.value.find((c) => c.id === column?.id)?.kind === 'static'
         )
           return;
 
@@ -263,13 +265,13 @@ export const TableBody = component$(() => {
         const rowMax = Math.max(...rows);
 
         const isColumnSelected = selectedCellToDrag.value.some(
-          (c) => c.column?.id === cell.column?.id && c.idx === cell.idx,
+          (c) => c.column?.id === column?.id && c.idx === i,
         );
         const isRowSelected = selectedCellToDrag.value.some(
-          (c) => c.column?.id === cell.column?.id && cell.idx === rowMin,
+          (c) => c.column?.id === column?.id && i === rowMin,
         );
         const isRowMaxSelected = selectedCellToDrag.value.some(
-          (c) => c.column?.id === cell.column?.id && cell.idx === rowMax,
+          (c) => c.column?.id === column?.id && i === rowMax,
         );
 
         return cn({
@@ -363,80 +365,82 @@ export const TableBody = component$(() => {
             </Popover.Root>
           </td>
 
-          {rowData?.map((cell, idx) => {
+          {rowData?.map((cell, columnIndex) => {
             return (
-              <Fragment key={`${item.index}-${idx}`}>
-                {!cell && (
-                  <td class="relative transition-colors min-w-[142px] w-[326px] h-[105px] break-words align-top border border-neutral-300 bg-white/50 animate-pulse">
-                    <div class="w-full h-full" />
-                  </td>
-                )}
-                {cell && (
-                  <td
-                    data-column-id={cell.column?.id}
-                    class={cn(
-                      `relative transition-colors min-w-[142px] w-[326px] h-[${rowSize}px] break-words align-top border border-neutral-300 hover:bg-gray-50/50`,
-                      {
-                        'bg-blue-50 hover:bg-blue-100':
-                          cell.column!.id == columnId.value,
-                        'shadow-[inset_2px_0_0_theme(colors.primary.100),inset_-2px_0_0_theme(colors.primary.100)]':
-                          columnPreferences.value[cell.column!.id]
-                            ?.aiButtonHover,
-                        'shadow-[inset_2px_0_0_theme(colors.primary.300),inset_-2px_0_0_theme(colors.primary.300)]':
-                          columnPreferences.value[cell.column!.id]
-                            ?.aiPromptOpen,
-                      },
-                      getBoundary(cell),
-                    )}
-                    style={{
-                      width: `${columnPreferences.value[cell.column!.id]?.width || 326}px`,
-                    }}
-                    onMouseOver$={() => showAiButton(cell.column!.id)}
-                    onMouseLeave$={() => hideAiButton(cell.column!.id)}
+              <Fragment key={`${item.index}-${columnIndex}`}>
+                <td
+                  data-column-id={visibleColumns.value[columnIndex]?.id}
+                  class={cn(
+                    `relative transition-colors min-w-[142px] w-[326px] h-[${rowSize}px] break-words align-top border border-neutral-300 hover:bg-gray-50/50`,
+                    {
+                      'bg-blue-50 hover:bg-blue-100':
+                        visibleColumns.value[columnIndex]!.id == columnId.value,
+                      'shadow-[inset_2px_0_0_theme(colors.primary.100),inset_-2px_0_0_theme(colors.primary.100)]':
+                        columnPreferences.value[
+                          visibleColumns.value[columnIndex]!.id
+                        ]?.aiButtonHover,
+                      'shadow-[inset_2px_0_0_theme(colors.primary.300),inset_-2px_0_0_theme(colors.primary.300)]':
+                        columnPreferences.value[
+                          visibleColumns.value[columnIndex]!.id
+                        ]?.aiPromptOpen,
+                    },
+                    getBoundary(item.index, columnIndex),
+                  )}
+                  style={{
+                    width: `${columnPreferences.value[visibleColumns.value[columnIndex]!.id]?.width || 326}px`,
+                  }}
+                  onMouseOver$={() =>
+                    showAiButton(visibleColumns.value[columnIndex]!.id)
+                  }
+                  onMouseLeave$={() =>
+                    hideAiButton(visibleColumns.value[columnIndex]!.id)
+                  }
+                >
+                  <div
+                    onMouseUp$={handleMouseUp$}
+                    onMouseDown$={(e) => handleMouseDown$(cell, e)}
+                    onMouseOver$={(e) => handleMouseOver$(cell, e)}
+                    onMouseMove$={handleMouseMove$}
                   >
-                    <div
-                      onMouseUp$={handleMouseUp$}
-                      onMouseDown$={(e) => handleMouseDown$(cell, e)}
-                      onMouseOver$={(e) => handleMouseOver$(cell, e)}
-                      onMouseMove$={handleMouseMove$}
-                    >
-                      <TableCell
-                        key={`${item.index}_${cell.idx}`}
-                        cell={cell}
-                      />
+                    <TableCell
+                      key={`${item.index}_${columnIndex}`}
+                      cell={cell}
+                    />
 
-                      {latestCellSelected.value?.column?.id ===
-                        cell.column?.id &&
-                        latestCellSelected.value &&
-                        latestCellSelected.value?.idx === cell.idx && (
-                          <div class="absolute bottom-1 right-7 w-3 h-3 z-10">
-                            {columns.value.find((c) => c.id === cell.column?.id)
-                              ?.kind !== 'static' && (
-                              <Button
-                                size="sm"
-                                look="ghost"
-                                class="cursor-crosshair p-1 z-50"
-                                onMouseDown$={(e) =>
-                                  handleMouseDragging$(cell, e)
+                    {latestCellSelected.value?.column?.id ===
+                      visibleColumns.value[columnIndex]?.id &&
+                      latestCellSelected.value &&
+                      latestCellSelected.value?.idx === cell.idx && (
+                        <div class="absolute bottom-1 right-7 w-3 h-3 z-10">
+                          {visibleColumns.value.find(
+                            (c) =>
+                              c.id === visibleColumns.value[columnIndex]?.id,
+                          )?.kind !== 'static' && (
+                            <Button
+                              size="sm"
+                              look="ghost"
+                              class="cursor-crosshair p-1 z-50"
+                              onMouseDown$={(e) =>
+                                handleMouseDragging$(cell, e)
+                              }
+                            >
+                              <Tooltip
+                                open={
+                                  firstColumn.value?.id ===
+                                    visibleColumns.value[columnIndex]?.id &&
+                                  item.index === 4
                                 }
+                                text="Drag down to generate cells"
+                                floating="right"
                               >
-                                <Tooltip
-                                  open={
-                                    firstColumn.value?.id === cell.column?.id &&
-                                    item.index === 4
-                                  }
-                                  text="Drag down to generate cells"
-                                  floating="right"
-                                >
-                                  <LuDot class="text-7xl text-primary-300" />
-                                </Tooltip>
-                              </Button>
-                            )}
-                          </div>
-                        )}
-                    </div>
-                  </td>
-                )}
+                                <LuDot class="text-7xl text-primary-300" />
+                              </Tooltip>
+                            </Button>
+                          )}
+                        </div>
+                      )}
+                  </div>
+                </td>
               </Fragment>
             );
           })}

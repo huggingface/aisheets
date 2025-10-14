@@ -4,7 +4,6 @@ import {
   useComputed$,
   useSignal,
   useTask$,
-  useVisibleTask$,
 } from '@builder.io/qwik';
 import { Collapsible } from '@qwik-ui/headless';
 import { cn } from '@qwik-ui/utils';
@@ -248,7 +247,7 @@ class GroupedModels {
 
 export const ExecutionForm = component$(() => {
   const { activeDataset } = useDatasetsStore();
-  const { columnId, column } = useExecution();
+  const { columnId, column, mode } = useExecution();
   const { columns, updateColumn } = useColumnsStore();
   const allModels = useModelsContext();
   const { DEFAULT_MODEL, DEFAULT_MODEL_PROVIDER } = useConfigContext();
@@ -542,11 +541,11 @@ export const ExecutionForm = component$(() => {
     } catch {}
   });
 
-  useVisibleTask$(() => {
-    if (column.value?.cells.length === 0) {
+  useTask$(() => {
+    if (mode.value === 'add') {
       nextTick(() => {
         onGenerate();
-      });
+      }, 500);
     }
   });
 

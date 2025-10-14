@@ -473,6 +473,7 @@ async function* cellGenerationInBatch({
 
     for (const cell of batch) {
       cell.generating = true;
+      await updateCell(cell);
       yield { cell };
     }
 

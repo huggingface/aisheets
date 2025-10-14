@@ -30,13 +30,13 @@ export const useGenerateColumn = () => {
     const generatedCells: Record<string, Cell> = {};
 
     column.process!.cancellable!.signal.onabort = async () => {
-      for (const cellId in generatedCells) {
-        const cell = generatedCells[cellId];
+      for (const idx in generatedCells) {
+        const cell = generatedCells[idx];
 
         if (!cell.generating) continue;
 
-        let latest = await getCellById$(cell.id!);
-        if (!latest) latest = cell;
+        const latest = await getCellById$(cell.id!);
+        if (!latest) continue;
 
         latest.generating = false;
         await replaceCell(latest);
@@ -51,15 +51,19 @@ export const useGenerateColumn = () => {
     updatedColumn.process!.limit = column.process?.limit;
     updatedColumn.process!.offset = column.process?.offset;
 
-    const response = await generateCells(
-      updatedColumn.process!.cancellable!.signal,
-      updatedColumn,
-    );
-
     try {
+      const response = await generateCells(
+        updatedColumn.process!.cancellable!.signal,
+        updatedColumn,
+      );
+
       for await (const cell of response) {
         await replaceCell(cell);
-        generatedCells[cell.idx] = cell;
+        generatedCells[cell.idx] = {
+          // Keep only necessary properties to avoid memory problems (see signal.onabort)
+          id: cell.id,
+          generating: cell.generating,
+        } as Cell;
       }
     } finally {
       const col = await getColumnById$(column.id);

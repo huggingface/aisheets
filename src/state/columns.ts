@@ -117,7 +117,7 @@ export const useColumnsStore = () => {
   const replaceColumns = $((replaced: Column[]) => {
     activeDataset.value = {
       ...activeDataset.value,
-      columns: [...replaced],
+      columns: [...(replaced || [])],
     };
   });
 
@@ -128,11 +128,6 @@ export const useColumnsStore = () => {
     firstColumn,
     replaceColumns,
 
-    removeTemporalColumn: $(() => {
-      replaceColumns(
-        activeDataset.value.columns?.filter((c) => c.id !== TEMPORAL_ID),
-      );
-    }),
     getColumn: $((id: string) => {
       return activeDataset.value.columns?.find((c) => c.id === id);
     }),

@@ -1,6 +1,6 @@
 import { appConfig } from '~/config';
 import { connectAndClose } from '~/services/db/duckdb';
-import { getColumnName, getDatasetTableName } from './utils';
+import { getColumnName, getDatasetTableName, getRowIndexName } from './utils';
 
 const colums2tableDefinition = (
   columns: { id: string; name: string; type: string }[],
@@ -27,6 +27,7 @@ export const createDatasetTable = async ({
   }
 
   const tableName = getDatasetTableName(dataset);
+  const rowIndexName = getRowIndexName(dataset);
 
   const numberOfRows = appConfig.data.maxRowsImport;
 
@@ -40,6 +41,8 @@ export const createDatasetTable = async ({
         rowIdx BIGINT,
         ${colums2tableDefinition(columns)}
       );
+
+      CREATE INDEX ${rowIndexName} ON ${tableName} (rowIdx);
 
       INSERT INTO ${tableName} (rowIdx)
       VALUES ${insertValues};

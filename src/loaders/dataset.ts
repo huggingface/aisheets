@@ -13,7 +13,6 @@ const EMPTY_DATASET = {
 export const useActiveDatasetLoader = routeLoader$<Dataset>(
   async ({ params, redirect }) => {
     const id = params.id;
-    console.log('Loading dataset with id:', id);
     if (!id) {
       return EMPTY_DATASET;
     }

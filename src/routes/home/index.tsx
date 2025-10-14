@@ -50,7 +50,6 @@ export default component$(() => {
   const { clearActiveDataset } = useDatasetsStore();
 
   useTask$(() => {
-    console.log('Clearing active dataset on home');
     clearActiveDataset();
   });
 

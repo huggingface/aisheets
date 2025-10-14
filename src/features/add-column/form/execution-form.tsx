@@ -123,7 +123,7 @@ class GroupedModels {
     private readonly models: Model[],
   ) {}
 
-  private get recommendedModelIds(): {
+  get recommendedModelIds(): {
     id: Model['id'];
     tags: {
       label: string;
@@ -399,11 +399,29 @@ export const ExecutionForm = component$(() => {
         selectedProvider.value = process.modelProvider || '';
       }
     } else {
-      const defaultModel =
-        models.value?.find(
-          (m: Model) =>
-            m.id.toLocaleLowerCase() === DEFAULT_MODEL.toLocaleLowerCase(),
-        ) || models.value[0];
+      let defaultModel: Model | undefined;
+
+      // For text generation, use DEFAULT_MODEL as primary choice
+      if (process.task === 'text-generation') {
+        defaultModel =
+          models.value?.find(
+            (m: Model) =>
+              m.id.toLocaleLowerCase() === DEFAULT_MODEL.toLocaleLowerCase(),
+          ) || models.value[0];
+      } else {
+        // For other task types, use the first recommended model
+        const groupedModels = new GroupedModels(column.value, models.value);
+
+        // Get the first recommended model ID that's available in the current task's models
+        const firstRecommendedModelId = groupedModels.recommendedModelIds.find(
+          (recommendedModel) =>
+            models.value.some((m) => m.id === recommendedModel.id),
+        )?.id;
+
+        defaultModel = firstRecommendedModelId
+          ? models.value.find((m) => m.id === firstRecommendedModelId)
+          : models.value[0];
+      }
 
       if (!defaultModel) return;
 

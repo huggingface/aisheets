@@ -139,6 +139,7 @@ export const VirtualScrollContainer = component$(
 
     useTask$(({ track }) => {
       track(() => virtualState.state.range);
+      track(visibleRows);
 
       if (!loadNextPage) return;
 

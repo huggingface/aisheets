@@ -382,7 +382,7 @@ async function createDatasetWithColumns(
     const processModelName = isImage
       ? 'black-forest-labs/FLUX.1-dev'
       : modelName;
-    const processModelProvider = isImage ? 'fal-ai' : modelProvider;
+    const processModelProvider = isImage ? '' : modelProvider;
 
     const process = await createProcess({
       process: {

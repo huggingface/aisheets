@@ -76,14 +76,11 @@ const NUM_CONCURRENT_REQUESTS = Math.min(
  * Default value: 'meta-llama/Llama-3.3-70B-Instruct'
  */
 const DEFAULT_MODEL: string =
-  process.env.DEFAULT_MODEL ?? 'meta-llama/Llama-3.3-70B-Instruct';
-
-/**
+  process.env.DEFAULT_MODEL ?? 'meta-llama/Llama-3.3-70B-Instruct'; /**
  * The default model provider for inference operations.
- * Default value: 'nebius'
+ * Default value: '' (auto)
  */
-const DEFAULT_MODEL_PROVIDER: string =
-  process.env.DEFAULT_MODEL_PROVIDER ?? 'nebius';
+const DEFAULT_MODEL_PROVIDER: string = process.env.DEFAULT_MODEL_PROVIDER ?? '';
 
 /**
  * If defined, the inference endpoint bill with by applied to the organization billing.

@@ -473,16 +473,16 @@ export const ExecutionForm = component$(() => {
 
     modelProviders.value = model.endpointUrl
       ? [model.endpointUrl]
-      : (model.providers ?? []);
+      : ['auto'].concat(model.providers ?? []);
 
     if (
       !selectedProvider.value ||
       !modelProviders.value.includes(selectedProvider.value)
     ) {
-      const defaultModel = modelProviders.value.find(
+      const defaulProvider = modelProviders.value.find(
         (provider) => provider === DEFAULT_MODEL_PROVIDER,
       );
-      selectedProvider.value = defaultModel || modelProviders.value[0];
+      selectedProvider.value = defaulProvider || 'auto';
     }
   });
 
@@ -524,7 +524,7 @@ export const ExecutionForm = component$(() => {
       column.value.process = {
         ...column.value.process!,
         modelName: model.id,
-        modelProvider,
+        modelProvider: modelProvider === 'auto' ? '' : modelProvider,
         endpointUrl,
         prompt: prompt.value,
         limit: maxSizeToGenerate.value,
@@ -673,9 +673,7 @@ export const ExecutionForm = component$(() => {
                         class="w-[30px] h-[30px] rounded-full flex items-center justify-center p-0"
                         onClick$={onGenerate}
                         disabled={
-                          selectedModelId.value === '' ||
-                          selectedProvider.value === '' ||
-                          !prompt.value.trim()
+                          selectedModelId.value === '' || !prompt.value.trim()
                         }
                       >
                         <LuEgg class="text-lg" />

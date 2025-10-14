@@ -49,19 +49,14 @@ const { getSerializable: getVirtual, useSerializable: useVirtualScroll } =
               : undefined,
           onChange: (ev) => {
             ev._willUpdate();
-            const ignoreMovementRange = 20;
-
             const eventRange = ev.range!;
 
             if (
-              ev.isScrolling &&
-              (Math.abs(
-                eventRange.startIndex - (state.range?.startIndex ?? 0),
-              ) < ignoreMovementRange ||
-                Math.abs(eventRange.endIndex - (state.range?.endIndex ?? 0)) <
-                  ignoreMovementRange)
-            )
-              return;
+              state.range?.startIndex !== eventRange.startIndex ||
+              state.range?.endIndex !== eventRange.endIndex
+            ) {
+              state.range = eventRange;
+            }
 
             state.range = eventRange;
             state.scrollOffset = ev.scrollOffset!;

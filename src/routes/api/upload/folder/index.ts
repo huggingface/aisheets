@@ -33,7 +33,15 @@ export const onPost: RequestHandler = async (event) => {
       dataset,
     });
 
+    const filenameColumn = await createColumn({
+      name: 'filename',
+      type: 'text',
+      kind: 'static',
+      dataset,
+    });
+
     const imageData: [number, Uint8Array][] = [];
+    const filenameData: [number, string][] = [];
 
     for (let i = 0; i < Math.min(fileCount, numberOfRows); i++) {
       const file = formData.get(`file_${i}`) as File;
@@ -43,6 +51,7 @@ export const onPost: RequestHandler = async (event) => {
       const binaryData = new Uint8Array(arrayBuffer);
 
       imageData.push([i, binaryData]);
+      filenameData.push([i, file.name]);
     }
 
     await upsertColumnValues({
@@ -55,11 +64,21 @@ export const onPost: RequestHandler = async (event) => {
       values: imageData,
     });
 
+    await upsertColumnValues({
+      dataset,
+      column: {
+        id: filenameColumn.id,
+        name: filenameColumn.name,
+        type: filenameColumn.type,
+      },
+      values: filenameData,
+    });
+
     json(201, {
       id: dataset.id,
       name: dataset.name,
       createdBy: dataset.createdBy,
-      columns: [imageColumn],
+      columns: [imageColumn, filenameColumn],
       createdAt: dataset.createdAt,
       updatedAt: dataset.updatedAt,
       size: imageData.length,

@@ -152,6 +152,8 @@ export const TableBody = component$(() => {
   });
 
   useVisibleTask$(() => {
+    if (!firstColumnsWithValue.value?.length) return;
+
     if (firstColumnsWithValue.value.length > 5) return;
 
     const cell =

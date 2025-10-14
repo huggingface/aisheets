@@ -147,10 +147,10 @@ export const VirtualScrollContainer = component$(
 
       const { start, end } = currentRange.value;
 
-      // Keep a window of 2*pageSize around the middle of the visible range
+      // Keep a window of pageSize around the middle of the visible range
       const middle = Math.floor((startIndex + endIndex) / 2);
-      const newStart = Math.max(0, middle - pageSize);
-      const newEnd = Math.min(totalCount - 1, middle + pageSize);
+      const newStart = Math.max(0, middle - pageSize / 2);
+      const newEnd = Math.min(totalCount, middle + pageSize / 2);
 
       if (
         Math.max(0, visibleRows.value?.[0]?.index - buffer) >= start &&

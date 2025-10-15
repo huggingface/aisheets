@@ -73,17 +73,16 @@ const NUM_CONCURRENT_REQUESTS = Math.min(
 
 /**
  * The default model for inference.
- * Default value: 'meta-llama/Llama-3.3-70B-Instruct'
+ * Default value: 'moonshotai/Kimi-K2-Instruct-0905'
  */
 const DEFAULT_MODEL: string =
-  process.env.DEFAULT_MODEL ?? 'meta-llama/Llama-3.3-70B-Instruct';
+  process.env.DEFAULT_MODEL ?? 'moonshotai/Kimi-K2-Instruct-0905';
 
 /**
  * The default model provider for inference operations.
- * Default value: 'nebius'
+ * Default value: '' (auto)
  */
-const DEFAULT_MODEL_PROVIDER: string =
-  process.env.DEFAULT_MODEL_PROVIDER ?? 'nebius';
+const DEFAULT_MODEL_PROVIDER: string = process.env.DEFAULT_MODEL_PROVIDER ?? '';
 
 /**
  * If defined, the inference endpoint bill with by applied to the organization billing.

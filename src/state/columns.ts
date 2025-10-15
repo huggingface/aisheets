@@ -121,7 +121,10 @@ export const useColumnsStore = () => {
     };
   });
 
-  const firstColumn = useComputed$(() => columns.value[0]);
+  const firstColumn = useComputed$(() => {
+    if (!columns.value?.length) return null;
+    return columns.value[0];
+  });
 
   return {
     columns,

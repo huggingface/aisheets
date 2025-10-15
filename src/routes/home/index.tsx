@@ -89,11 +89,10 @@ export default component$(() => {
       title: 'Webapp development',
       prompt:
         'dataset with two columns:\n # description\nIdentify one useful but implementable single-file web app, visualization, or UI feature\n #implementation\nCreate a complete, runnable HTML+JS file implementing {{description}}',
-      banner: 'Ideal for vibe testing',
     },
     {
       title: 'Isometric images of cities',
-      prompt: 'Isometric images of european capitals',
+      prompt: 'Isometric images of European capitals',
     },
   ];
 

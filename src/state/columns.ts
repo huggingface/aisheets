@@ -7,7 +7,8 @@ export type ColumnKind = 'static' | 'dynamic';
 export type TaskType =
   | 'text-generation'
   | 'image-text-to-text'
-  | 'text-to-image';
+  | 'text-to-image'
+  | 'image-to-image';
 
 export interface Process {
   // Persisted data
@@ -116,27 +117,25 @@ export const useColumnsStore = () => {
   const replaceColumns = $((replaced: Column[]) => {
     activeDataset.value = {
       ...activeDataset.value,
-      columns: [...replaced],
+      columns: [...(replaced || [])],
     };
   });
 
-  const firstColumn = useComputed$(() => columns.value[0]);
+  const firstColumn = useComputed$(() => {
+    if (!columns.value?.length) return null;
+    return columns.value[0];
+  });
 
   return {
     columns,
     firstColumn,
     replaceColumns,
 
-    removeTemporalColumn: $(() => {
-      replaceColumns(
-        activeDataset.value.columns.filter((c) => c.id !== TEMPORAL_ID),
-      );
-    }),
     getColumn: $((id: string) => {
-      return activeDataset.value.columns.find((c) => c.id === id);
+      return activeDataset.value.columns?.find((c) => c.id === id);
     }),
     addColumn: $(async (newbie: Column) => {
-      const temporalColumnIndex = activeDataset.value.columns.findIndex(
+      const temporalColumnIndex = activeDataset.value.columns?.findIndex(
         (c) => c.id === TEMPORAL_ID,
       );
 
@@ -157,12 +156,12 @@ export const useColumnsStore = () => {
     }),
     removeColumn: $((removed: Column) => {
       replaceColumns(
-        activeDataset.value.columns.filter((c) => c.id !== removed.id),
+        activeDataset.value.columns?.filter((c) => c.id !== removed.id),
       );
     }),
     updateColumn: $((updated: Column) => {
       replaceColumns(
-        activeDataset.value.columns.map((c) =>
+        activeDataset.value.columns?.map((c) =>
           c.id === updated.id
             ? {
                 ...updated,
@@ -174,11 +173,11 @@ export const useColumnsStore = () => {
     }),
     deleteColumn: $((deleted: Column) => {
       replaceColumns(
-        activeDataset.value.columns.filter((c) => c.id !== deleted.id),
+        activeDataset.value.columns?.filter((c) => c.id !== deleted.id),
       );
     }),
     replaceCell: $((cell: Cell) => {
-      const column = activeDataset.value.columns.find(
+      const column = activeDataset.value.columns?.find(
         (c) => c.id === cell.column?.id,
       );
       if (!column) return;

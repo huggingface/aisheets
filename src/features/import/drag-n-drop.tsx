@@ -1,10 +1,9 @@
 import {
   $,
-  type NoSerialize,
   component$,
+  type NoSerialize,
   noSerialize,
   sync$,
-  useContext,
   useOnWindow,
   useSignal,
   useStylesScoped$,
@@ -12,36 +11,117 @@ import {
 import { Link, useNavigate } from '@builder.io/qwik-city';
 import { usePopover } from '@qwik-ui/headless';
 import { cn } from '@qwik-ui/utils';
-import { LuFilePlus2, LuUpload } from '@qwikest/icons/lucide';
-import { Button, Popover, buttonVariants } from '~/components';
+import {
+  LuFilePlus2,
+  LuFileSpreadsheet,
+  LuFileType,
+  LuFileUp,
+  LuFolderUp,
+  LuImage,
+} from '@qwikest/icons/lucide';
+import { Button, buttonVariants, Popover } from '~/components';
 import { useClickOutside } from '~/components/hooks/click/outside';
-import { GoogleDrive, HFLogo } from '~/components/ui/logo/logo';
-import { configContext } from '~/routes/home/layout';
+import { HFLogo } from '~/components/ui/logo/logo';
+import { useConfigContext } from '~/routes/home/layout';
 
 export const DragAndDrop = component$(() => {
   const popoverId = 'uploadFilePopover';
   const anchorRef = useSignal<HTMLElement | undefined>();
   const { hidePopover } = usePopover(popoverId);
   const isPopOverOpen = useSignal(false);
-
-  const { isGoogleAuthEnabled } = useContext(configContext);
+  const { MAX_ROWS_IMPORT } = useConfigContext();
 
   const file = useSignal<NoSerialize<File>>();
+  const files = useSignal<NoSerialize<File[]>>();
   const isDragging = useSignal(false);
   const navigate = useNavigate();
 
   const allowedExtensions = ['csv', 'tsv', 'xlsx', 'xls', 'parquet', 'arrow'];
+  const imageExtensions = ['jpg', 'jpeg', 'png', 'bmp', 'webp', 'tiff'];
 
   const uploadErrorMessage = useSignal<string | null>(null);
 
+  const traverseFileTreeAsync = (
+    item: any,
+    path: string,
+    fileList: File[],
+  ): Promise<void> => {
+    return new Promise((resolve) => {
+      if (item.isFile) {
+        item.file((file: File) => {
+          fileList.push(file);
+          resolve();
+        });
+      } else if (item.isDirectory) {
+        const dirReader = item.createReader();
+        dirReader.readEntries(async (entries: any[]) => {
+          for (const entry of entries) {
+            await traverseFileTreeAsync(
+              entry,
+              path + item.name + '/',
+              fileList,
+            );
+          }
+          resolve();
+        });
+      } else {
+        resolve();
+      }
+    });
+  };
+
   const handleUploadFile$ = $(async () => {
     hidePopover();
-
     uploadErrorMessage.value = null;
 
-    if (!file.value) return;
+    if (files.value) {
+      const maxFileSizeMB = 10;
+      const maxFileSizeBytes = maxFileSizeMB * 1024 * 1024;
 
-    try {
+      const imageFiles = files.value.filter((file) => {
+        const ext = file.name.split('.').pop()?.toLowerCase();
+        return (
+          ext && imageExtensions.includes(ext) && file.size <= maxFileSizeBytes
+        );
+      });
+
+      if (imageFiles.length === 0) {
+        uploadErrorMessage.value = 'No valid image files found in folder';
+        return;
+      }
+
+      // Limit to maxRowsImport to save resources
+      const limitedImageFiles = imageFiles.slice(0, MAX_ROWS_IMPORT);
+
+      if (imageFiles.length > MAX_ROWS_IMPORT) {
+        console.warn(
+          `Found ${imageFiles.length} images, limiting to ${MAX_ROWS_IMPORT} to save resources`,
+        );
+      }
+
+      const formData = new FormData();
+      limitedImageFiles.forEach((file, index) => {
+        formData.append(`file_${index}`, file);
+      });
+      formData.append(
+        'folderName',
+        limitedImageFiles[0].webkitRelativePath?.split('/')[0] || 'images',
+      );
+      formData.append('fileCount', limitedImageFiles.length.toString());
+
+      const response = await fetch('/api/upload/folder', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        uploadErrorMessage.value = 'Failed to upload folder';
+        return;
+      }
+
+      const { id } = await response.json();
+      navigate('/home/dataset/' + id);
+    } else if (file.value) {
       const fileName = file.value.name;
       const fileExtension = file.value.name.split('.').pop();
 
@@ -77,10 +157,11 @@ export const DragAndDrop = component$(() => {
 
       const { id } = await response.json();
       navigate('/home/dataset/' + id);
-    } finally {
-      file.value = undefined;
-      isDragging.value = false;
     }
+
+    file.value = undefined;
+    files.value = undefined;
+    isDragging.value = false;
   });
 
   const container = useClickOutside(
@@ -115,6 +196,25 @@ export const DragAndDrop = component$(() => {
   background-size: 400% 400%;
   animation: border-animation 4s linear infinite;
 }
+.import-container {
+  background: linear-gradient(135deg, #ffd21e 0%, #6b86ff 100%);
+  border-radius: 12px;
+  padding: 2px;
+}
+.import-content {
+  background: white;
+  border-radius: 10px;
+  padding: 48px 32px;
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+}
+.thin-stroke svg {
+  stroke-width: 1;
+}
 `);
 
   return (
@@ -143,10 +243,58 @@ export const DragAndDrop = component$(() => {
           onDrop$={sync$((e: DragEvent) => {
             isDragging.value = false;
 
-            if (e.dataTransfer?.files?.length) {
-              file.value = noSerialize(e.dataTransfer.files[0]);
+            if (e.dataTransfer?.items?.length) {
+              const items = Array.from(e.dataTransfer.items);
+              const folderItems: File[] = [];
 
-              handleUploadFile$();
+              let hasFolders = false;
+              for (const item of items) {
+                if (item.kind === 'file') {
+                  const entry = item.webkitGetAsEntry();
+                  if (entry?.isDirectory) {
+                    hasFolders = true;
+                    break;
+                  }
+                }
+              }
+
+              if (hasFolders) {
+                const processFolders = async () => {
+                  for (const item of items) {
+                    if (item.kind === 'file') {
+                      const entry = item.webkitGetAsEntry();
+                      if (entry?.isDirectory) {
+                        await traverseFileTreeAsync(entry, '', folderItems);
+                      }
+                    }
+                  }
+
+                  if (folderItems.length > 0) {
+                    files.value = noSerialize(folderItems);
+                    handleUploadFile$();
+                  } else {
+                    uploadErrorMessage.value = 'No files found in folder';
+                  }
+                };
+
+                processFolders();
+              } else if (e.dataTransfer?.files?.length) {
+                file.value = noSerialize(e.dataTransfer.files[0]);
+                handleUploadFile$();
+              }
+            } else if (e.dataTransfer?.files?.length) {
+              const droppedFiles = Array.from(e.dataTransfer.files);
+              const hasRelativePaths = droppedFiles.some(
+                (file) => file.webkitRelativePath,
+              );
+
+              if (hasRelativePaths) {
+                files.value = noSerialize(droppedFiles);
+                handleUploadFile$();
+              } else {
+                file.value = noSerialize(e.dataTransfer.files[0]);
+                handleUploadFile$();
+              }
             }
           })}
         >
@@ -165,11 +313,41 @@ export const DragAndDrop = component$(() => {
               }
             }}
           />
+          <input
+            type="file"
+            id="folder-select"
+            webkitdirectory={true}
+            class="hidden"
+            onChange$={(e: Event) => {
+              const input = e.target as HTMLInputElement;
 
-          <div class="flex flex-col items-center justify-center gap-6 h-full">
-            <h2 class="text-primary-600 font-semibold text-xl">
-              Analyze, enrich, expand your data
+              if (input.files?.length) {
+                files.value = noSerialize(Array.from(input.files));
+
+                handleUploadFile$();
+              }
+            }}
+          />
+
+          <div class="flex flex-col items-center justify-center gap-2 h-full">
+            <div class="flex items-center justify-center mb-0">
+              <div class="w-[100px] h-[100px] flex items-center justify-center -mr-8 thin-stroke">
+                <LuImage class="w-[50px] h-[50px] text-yellow-400" />
+              </div>
+              <div class="w-[100px] h-[100px] flex items-center justify-center -mt-12 -mx-4 thin-stroke">
+                <LuFileType class="w-[50px] h-[50px] text-yellow-400" />
+              </div>
+              <div class="w-[100px] h-[100px] flex items-center justify-center -ml-8 thin-stroke">
+                <LuFileSpreadsheet class="w-[50px] h-[50px] text-yellow-400" />
+              </div>
+            </div>
+
+            <h2 class="text-primary-600 font-semibold text-xl -mt-6 mb-1">
+              Analyze and enrich your data with AI
             </h2>
+            <p class="text-gray-600 text-center mb-4">
+              Drop your files or folder
+            </p>
 
             <Popover.Root
               key={isMobile.value ? 'mobile' : 'desktop'}
@@ -190,7 +368,7 @@ export const DragAndDrop = component$(() => {
                 )}
               >
                 <LuFilePlus2 class="text-md" />
-                Drop or click to import a file
+                Import
               </Popover.Trigger>
               <Popover.Panel
                 class="w-86 text-sm shadow-lg p-2"
@@ -198,50 +376,55 @@ export const DragAndDrop = component$(() => {
                   isPopOverOpen.value = e.newState == 'open';
                 }}
               >
-                <Link
-                  href="/home/dataset/create/from-hub"
-                  class={cn(
-                    'w-full flex items-center justify-start hover:bg-neutral-100 gap-2.5 p-2 rounded-none rounded-tl-md rounded-tr-md',
-                  )}
+                <Button
+                  look="ghost"
+                  class="w-full flex items-center justify-start hover:bg-neutral-100 gap-2.5 p-2 rounded-none rounded-tl-md rounded-tr-md"
+                  onClick$={() =>
+                    document.getElementById('folder-select')?.click()
+                  }
                 >
-                  <HFLogo class="items-left w-4 h-4 flex-shrink-0" />
-                  Add from Hugging Face Hub
-                </Link>
-
-                {isGoogleAuthEnabled && (
-                  <>
-                    <hr class="border-t border-slate-200 dark:border-slate-700" />
-                    <Button
-                      look="ghost"
-                      class="w-full flex items-center justify-start hover:bg-neutral-100 gap-2.5 p-2 rounded-none"
-                      onClick$={() => {
-                        navigate('/home/dataset/create/from-google-drive');
-                      }}
-                    >
-                      <GoogleDrive class="w-4 h-4 flex-shrink-0" />
-                      Add from Google Drive
-                    </Button>
-                  </>
-                )}
-
-                <hr class="border-t border-slate-200 dark:border-slate-700" />
+                  <LuFolderUp class="w-4 h-4 flex-shrink-0" />
+                  Upload folder with images
+                </Button>
 
                 <Button
                   look="ghost"
-                  class="w-full flex items-center justify-start hover:bg-neutral-100 gap-2.5 p-2 rounded-none rounded-bl-md rounded-br-md"
+                  class="w-full flex items-center justify-start hover:bg-neutral-100 gap-2.5 p-2 rounded-none"
                   onClick$={() =>
                     document.getElementById('file-select')?.click()
                   }
                 >
-                  <LuUpload class="w-4 h-4 flex-shrink-0" />
-                  Upload from computer ({allowedExtensions.join(', ')})
+                  <LuFileUp class="w-4 h-4 flex-shrink-0" />
+                  Upload file ({allowedExtensions.join(', ')})
                 </Button>
+
+                <hr class="border-t border-slate-200 dark:border-slate-700" />
+
+                <Link
+                  href="/home/dataset/create/from-hub"
+                  class={cn(
+                    'w-full flex items-center justify-start hover:bg-neutral-100 gap-2.5 p-2 rounded-none rounded-bl-md rounded-br-md',
+                  )}
+                >
+                  <HFLogo class="items-left w-4 h-4 flex-shrink-0" />
+                  Import from Hub
+                </Link>
               </Popover.Panel>
             </Popover.Root>
 
-            {file.value && !uploadErrorMessage.value && (
+            {(file.value || files.value) && !uploadErrorMessage.value && (
               <div class="w-fit text-sm text-neutral-50 bg-black opacity-30 rounded-sm p-2 flex items-center justify-between gap-3">
-                {file.value.name}
+                {file.value?.name ||
+                  `${
+                    files.value?.filter((f) => {
+                      const ext = f.name.split('.').pop()?.toLowerCase();
+                      return (
+                        ext &&
+                        imageExtensions.includes(ext) &&
+                        f.size <= 10 * 1024 * 1024
+                      );
+                    }).length || 0
+                  } images`}
                 <div class="w-5 h-5 border-2 border-gray-300 border-t-transparent rounded-full animate-spin" />
               </div>
             )}

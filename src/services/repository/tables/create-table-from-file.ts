@@ -5,6 +5,7 @@ import {
   getColumnName,
   getDatasetRowSequenceName,
   getDatasetTableName,
+  getRowIndexName,
 } from './utils';
 
 export const createDatasetTableFromFile = async (
@@ -29,6 +30,7 @@ export const createDatasetTableFromFile = async (
   return await connectAndClose(async (db) => {
     const tableName = getDatasetTableName(dataset);
     const sequenceName = getDatasetRowSequenceName(dataset);
+    const rowIndexName = getRowIndexName(dataset);
 
     let secretDropStatement = '';
 
@@ -75,6 +77,8 @@ export const createDatasetTableFromFile = async (
       CREATE OR REPLACE SEQUENCE ${sequenceName} START 0 INCREMENT 1 MINVALUE 0;
 
       CREATE TABLE ${tableName} AS (${selectStatement});
+
+      CREATE INDEX ${rowIndexName} ON ${tableName} (rowIdx);
 
       SHOW ${tableName};
 

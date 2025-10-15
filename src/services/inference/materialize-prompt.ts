@@ -33,8 +33,9 @@ export function materializePrompt({
 }: MaterializePromptParams): string {
   const hasData = data && Object.keys(data).length > 0;
   const isImageTextToText = task === 'image-text-to-text';
+  const isImageToImage = task === 'image-to-image';
 
-  return hasData || isImageTextToText
+  return hasData || isImageTextToText || isImageToImage
     ? materializePromptFromData(
         instruction,
         data || {},

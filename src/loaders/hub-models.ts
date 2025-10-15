@@ -126,6 +126,13 @@ const listAllModels = server$(async function (
         supportedType: 'image-text-to-text',
       })),
     ),
+    // All image-to-image models
+    fetchModelsForPipeline(session, 'image-to-image').then((models) =>
+      models.map((model) => ({
+        ...model,
+        supportedType: 'image-to-image',
+      })),
+    ),
     // All image generation models
     // TODO: Add pagination support since image generation models can be large
     // and we might want to fetch more than just the first 1000 models.
@@ -302,6 +309,7 @@ export const useTrendingHubModels = routeLoader$(async function (
     fetchModelsForPipeline(session, 'text-generation', 1),
     fetchModelsForPipeline(session, 'text-to-image', 1),
     fetchModelsForPipeline(session, 'image-text-to-text', 1),
+    fetchModelsForPipeline(session, 'image-to-image', 1),
   ]);
 
   return await Promise.all(

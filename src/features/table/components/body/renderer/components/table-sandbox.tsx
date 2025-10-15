@@ -3,38 +3,38 @@ import { component$ } from '@builder.io/qwik';
 export const TableSandbox = component$<{ content: string }>(({ content }) => {
   const escapedContent = content.replace(/<\/script>/g, '<\\/script>');
 
-  return (
-    <iframe
-      title="HTML"
-      class="pointer-events-none"
-      srcdoc={`<html>
-        <head>
-          <style>
-            html {
-                font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-                font-size: 14px;
-            }
-            body { margin:0; padding: 0; padding: 0; overflow: hidden; }
-          </style>
-        </head>
-        <body>
-          ${escapedContent}
-          <script>
-            (() => {
-              const muteAll = () => {
-                document.querySelectorAll('audio, video').forEach(el => {
-                  el.muted = true;
-                  el.volume = 0;
-                });
-              };
-              muteAll();
+  const html = `
+  <head>
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        width: 100%;
+        font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+      }
 
-              const observer = new MutationObserver(muteAll);
-              observer.observe(document.body, { childList: true, subtree: true });
-            })();
-          </script>
-        </body>
-      </html>`}
-    />
-  );
+      * {
+        max-width: 100%;
+        box-sizing: border-box;
+      }
+
+      svg, img {
+        max-width: 100%;
+        max-height: 100%;
+        display: block;
+      }
+
+      pre, code {
+        margin: 0;
+        padding: 0;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+    </style>
+  </head>
+  <body>${escapedContent}</body>
+</html>`;
+
+  return <div class="table-sandbox-content" dangerouslySetInnerHTML={html} />;
 });

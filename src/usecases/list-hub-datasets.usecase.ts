@@ -10,8 +10,6 @@ export const useListHubDatasets = () =>
     searchQuery: string,
   ): Promise<string[]> {
     const session = useServerSession(this);
-    if (!session.token) return [];
-
     const query = searchQuery.trim();
 
     const datasets = await listDatasets({
@@ -29,7 +27,6 @@ export const useListDatasetDataFiles = () =>
     repoId: string,
   ): Promise<string[]> {
     const session = useServerSession(this);
-    if (!session.token) return [];
 
     const files = await listHubDatasetDataFiles({
       repoId,

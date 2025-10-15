@@ -1,16 +1,13 @@
 import { $, component$ } from '@builder.io/qwik';
 import { LuPanelRight } from '@qwikest/icons/lucide';
 import { useExecution } from '~/features/add-column';
-import { type Column, useColumnsStore } from '~/state';
+import type { Column } from '~/state';
 
 export const CellSettings = component$<{ column: Column }>(({ column }) => {
   const { columnId, open } = useExecution();
-  const { removeTemporalColumn } = useColumnsStore();
 
   const editCell = $(async () => {
     if (column.id === columnId.value) return;
-
-    await removeTemporalColumn();
 
     open('edit', {
       columnId: column.id,

@@ -4,7 +4,6 @@ import {
   useComputed$,
   useSignal,
   useTask$,
-  useVisibleTask$,
 } from '@builder.io/qwik';
 import { Collapsible } from '@qwik-ui/headless';
 import { cn } from '@qwik-ui/utils';
@@ -54,6 +53,7 @@ export class Models {
   getModelsByTask(task: TaskType): Model[] {
     if (task === 'text-to-image') return this.getImageModels();
     if (task === 'image-text-to-text') return this.getImageTextToTextModels();
+    if (task === 'image-to-image') return this.getImageToImageModels();
     return this.getTextModels();
   }
 
@@ -68,6 +68,12 @@ export class Models {
   private getImageTextToTextModels(): Model[] {
     return this.models.filter(
       (model) => model.supportedType === 'image-text-to-text',
+    );
+  }
+
+  private getImageToImageModels(): Model[] {
+    return this.models.filter(
+      (model) => model.supportedType === 'image-to-image',
     );
   }
 }
@@ -116,7 +122,7 @@ class GroupedModels {
     private readonly models: Model[],
   ) {}
 
-  private get recommendedModelIds(): {
+  get recommendedModelIds(): {
     id: Model['id'];
     tags: {
       label: string;
@@ -241,7 +247,7 @@ class GroupedModels {
 
 export const ExecutionForm = component$(() => {
   const { activeDataset } = useDatasetsStore();
-  const { columnId, column } = useExecution();
+  const { columnId, column, mode } = useExecution();
   const { columns, updateColumn } = useColumnsStore();
   const allModels = useModelsContext();
   const { DEFAULT_MODEL, DEFAULT_MODEL_PROVIDER } = useConfigContext();
@@ -282,7 +288,10 @@ export const ExecutionForm = component$(() => {
   const imageColumns = useSignal<Variable[]>([]);
 
   const needsImageColumn = useComputed$(() => {
-    return column.value?.process?.task === 'image-text-to-text';
+    return (
+      column.value?.process?.task === 'image-text-to-text' ||
+      column.value?.process?.task === 'image-to-image'
+    );
   });
 
   const onSelectedVariables = $((variables: { id: string }[]) => {
@@ -389,11 +398,32 @@ export const ExecutionForm = component$(() => {
         selectedProvider.value = process.modelProvider || '';
       }
     } else {
-      const defaultModel =
-        models.value?.find(
-          (m: Model) =>
-            m.id.toLocaleLowerCase() === DEFAULT_MODEL.toLocaleLowerCase(),
-        ) || models.value[0];
+      let defaultModel: Model | undefined;
+
+      // Try to find the first recommended model for any task type
+      const groupedModels = new GroupedModels(column.value, models.value);
+      const firstRecommendedModelId = groupedModels.recommendedModelIds.find(
+        (recommendedModel) =>
+          models.value.some((m) => m.id === recommendedModel.id),
+      )?.id;
+
+      const firstRecommendedModel = firstRecommendedModelId
+        ? models.value.find((m) => m.id === firstRecommendedModelId)
+        : null;
+
+      // For text generation, prioritize DEFAULT_MODEL, then first recommended, then first model
+      if (process.task === 'text-generation') {
+        defaultModel =
+          models.value?.find(
+            (m: Model) =>
+              m.id.toLocaleLowerCase() === DEFAULT_MODEL.toLocaleLowerCase(),
+          ) ||
+          firstRecommendedModel ||
+          models.value[0];
+      } else {
+        // For other task types, use first recommended model, then first model
+        defaultModel = firstRecommendedModel || models.value[0];
+      }
 
       if (!defaultModel) return;
 
@@ -443,16 +473,16 @@ export const ExecutionForm = component$(() => {
 
     modelProviders.value = model.endpointUrl
       ? [model.endpointUrl]
-      : (model.providers ?? []);
+      : ['auto'].concat(model.providers ?? []);
 
     if (
       !selectedProvider.value ||
       !modelProviders.value.includes(selectedProvider.value)
     ) {
-      const defaultModel = modelProviders.value.find(
+      const defaulProvider = modelProviders.value.find(
         (provider) => provider === DEFAULT_MODEL_PROVIDER,
       );
-      selectedProvider.value = defaultModel || modelProviders.value[0];
+      selectedProvider.value = defaulProvider || 'auto';
     }
   });
 
@@ -494,7 +524,7 @@ export const ExecutionForm = component$(() => {
       column.value.process = {
         ...column.value.process!,
         modelName: model.id,
-        modelProvider,
+        modelProvider: modelProvider === 'auto' ? '' : modelProvider,
         endpointUrl,
         prompt: prompt.value,
         limit: maxSizeToGenerate.value,
@@ -511,11 +541,11 @@ export const ExecutionForm = component$(() => {
     } catch {}
   });
 
-  useVisibleTask$(() => {
-    if (column.value?.cells.length === 0) {
+  useTask$(() => {
+    if (mode.value === 'add') {
       nextTick(() => {
         onGenerate();
-      });
+      }, 500);
     }
   });
 
@@ -643,9 +673,7 @@ export const ExecutionForm = component$(() => {
                         class="w-[30px] h-[30px] rounded-full flex items-center justify-center p-0"
                         onClick$={onGenerate}
                         disabled={
-                          selectedModelId.value === '' ||
-                          selectedProvider.value === '' ||
-                          !prompt.value.trim()
+                          selectedModelId.value === '' || !prompt.value.trim()
                         }
                       >
                         <LuEgg class="text-lg" />

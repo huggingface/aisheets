@@ -19,10 +19,9 @@ import { VirtualScrollContainer } from '~/components/ui/virtual-scroll/virtual-s
 import { useExecution } from '~/features/add-column';
 import { useGenerateColumn } from '~/features/execution';
 import { isOverlayOpen } from '~/features/table/components/body/renderer/components/utils';
-
 import { useColumnsPreference } from '~/features/table/components/context/colunm-preferences.context';
 import { TableCell } from '~/features/table/table-cell';
-import { deleteRowsCells, getColumnCells } from '~/services';
+import { deleteRowsCells, getColumnsCells } from '~/services';
 import {
   type Cell,
   type Column,
@@ -30,15 +29,37 @@ import {
   useDatasetsStore,
 } from '~/state';
 
+function getRowData(rowIndex: number, columns: Column[]): Cell[] {
+  const rowData: Cell[] = columns.map((column) => {
+    return {
+      id: undefined,
+      idx: rowIndex,
+      value: undefined,
+      error: undefined,
+      column: column,
+      generating: false,
+      updatedAt: new Date(),
+      validated: false,
+    };
+  });
+
+  columns.forEach((column, colIdx) => {
+    const cell = column.cells.find((cell) => cell.idx === rowIndex);
+    if (cell) rowData[colIdx] = cell;
+  });
+
+  return rowData;
+}
+
 export const TableBody = component$(() => {
-  const rowSize = 108; // px
+  const rowSize = 105; // px
 
   const { columnId } = useExecution();
   const { columnPreferences, showAiButton, hideAiButton } =
     useColumnsPreference();
   const { activeDataset } = useDatasetsStore();
 
-  const { columns, firstColumn, replaceColumns, deleteCellByIdx } =
+  const { columns, firstColumn, updateColumn, deleteCellByIdx } =
     useColumnsStore();
   const { onGenerateColumn } = useGenerateColumn();
   const selectedRows = useSignal<number[]>([]);
@@ -46,9 +67,11 @@ export const TableBody = component$(() => {
   const datasetSize = useComputed$(() => activeDataset.value!.size);
   const datasetId = useComputed$(() => activeDataset.value!.id);
 
-  const data = useSignal<Cell[][]>([]);
-  const loadedDataCount = useComputed$(() => {
-    return firstColumn.value?.cells.length || 0;
+  const pageSize = 30;
+  const buffer = 5;
+  const currentRange = useSignal<{ start: number; end: number }>({
+    start: -1,
+    end: -1,
   });
 
   const scrollElement = useSignal<HTMLElement>();
@@ -72,7 +95,7 @@ export const TableBody = component$(() => {
       ?.hidePopover();
 
     const ok = await server$(deleteRowsCells)(
-      firstColumn.value?.dataset.id,
+      activeDataset.value!.id,
       selectedRows.value,
     );
 
@@ -82,40 +105,8 @@ export const TableBody = component$(() => {
       selectedRows.value = [];
     }
   });
-
-  useVisibleTask$(({ track }) => {
-    track(() => firstColumn.value?.cells);
-
-    const getCell = (column: Column, rowIndex: number): Cell => {
-      const cell = column.cells[rowIndex];
-
-      if (!cell) {
-        // Temporal cell for skeleton
-        return {
-          id: undefined,
-          value: '',
-          error: '',
-          validated: false,
-          column: {
-            id: column.id,
-            type: column.type,
-          },
-          updatedAt: new Date(),
-          generating: false,
-          idx: rowIndex,
-        };
-      }
-
-      return cell;
-    };
-
-    const visibleColumns = columns.value.filter((column) => column.visible);
-
-    data.value = Array.from({ length: datasetSize.value }, (_, rowIndex) =>
-      Array.from({ length: visibleColumns.length }, (_, colIndex) =>
-        getCell(visibleColumns[colIndex], rowIndex),
-      ),
-    );
+  const visibleColumns = useComputed$(() => {
+    return columns.value.filter((column) => column.visible);
   });
 
   const handleSelectRow$ = $((idx: number) => {
@@ -161,6 +152,8 @@ export const TableBody = component$(() => {
   });
 
   useVisibleTask$(() => {
+    if (!firstColumnsWithValue.value?.length) return;
+
     if (firstColumnsWithValue.value.length > 5) return;
 
     const cell =
@@ -178,22 +171,16 @@ export const TableBody = component$(() => {
     if (!dragStartCell.value) return;
     if (dragStartCell.value.column?.id !== cell.column?.id) return;
 
-    const isDraggingTheFirstColumn = cell.column?.id === firstColumn.value?.id;
-
     const startRowIndex = dragStartCell.value.idx;
     const endRowIndex = cell.idx;
     const start = Math.min(startRowIndex, endRowIndex);
     const end = Math.max(startRowIndex, endRowIndex);
 
-    if (end > firstColumnsWithValue.value.length && !isDraggingTheFirstColumn) {
-      return;
-    }
-
     const selectedCells = [];
-
     for (let i = start; i <= end; i++) {
+      const rowData = getRowData(i, visibleColumns.value);
       selectedCells.push(
-        data.value[i].find((c) => c.column?.id === cell.column?.id),
+        rowData?.find((c) => c?.column?.id === cell.column?.id),
       );
     }
 
@@ -223,72 +210,59 @@ export const TableBody = component$(() => {
   });
 
   const fetchMoreData$ = $(
-    async ({
-      rangeStart,
-      pageSize,
-    }: {
-      rangeStart: number;
-      pageSize: number;
-    }) => {
+    async ({ start, end }: { start: number; end: number }) => {
       const dataset = activeDataset.value;
       if (!dataset) return;
 
-      const offset = rangeStart;
-      const limit = Math.min(pageSize, dataset.size - rangeStart);
+      if (start >= dataset.size) return;
 
+      currentRange.value = { start, end };
+
+      const offset = start;
+      const limit = end - start + 1;
+
+      if (offset < 0) return;
       if (limit <= 0) return;
 
-      const updatedColumns = await Promise.all(
-        dataset.columns.map(async (column) => {
-          const newCells = await server$(getColumnCells)({
-            column,
-            limit,
-            offset,
-          });
+      await server$(getColumnsCells)({
+        columns: visibleColumns.value,
+        offset,
+        limit,
+      }).then((columnsWithCells) => {
+        columnsWithCells.forEach(({ id, cells }) => {
+          const column = columns.value.find((c) => c.id === id);
+          if (!column) return;
 
-          column.cells = column.cells.concat(newCells);
+          // merge cells by removing duplicates
+          column.cells = column.cells.filter(
+            (existingCell) =>
+              !cells.find((newCell) => newCell.idx === existingCell.idx),
+          );
 
-          return column;
-        }),
-      );
+          column.cells = cells;
 
-      replaceColumns(updatedColumns);
+          updateColumn(column);
+        });
+      });
     },
   );
 
   const handleMouseMove$ = $(async (e: MouseEvent) => {
     if (e.buttons !== 1 /* Primary button not pressed */) return;
-    if (await isOverlayOpen()) return;
-
-    if (!dragStartCell.value) return;
-
-    const tableBeginning = window.innerHeight * 0.25;
-    const tableEnding = window.innerHeight * 0.9;
-
-    const currentY = e.clientY;
-
-    const endingScroll = currentY - tableEnding;
-    const beginningScroll = tableBeginning - currentY;
-
-    if (endingScroll > 0 && currentY > lastMove.value) {
-      scrollElement.value?.scrollBy(0, 20);
-    } else if (beginningScroll > 0 && currentY < lastMove.value) {
-      scrollElement.value?.scrollBy(0, -20);
-    }
-
-    lastMove.value = currentY;
   });
 
-  const itemRenderer = $(
+  const rowRenderer = $(
     (
       item: VirtualItem,
-      loadedData: Cell[],
       props: HTMLAttributes<HTMLElement>,
+      _isLoading: boolean,
     ) => {
-      const getBoundary = (cell: Cell) => {
+      const getBoundary = (i: number, j: number) => {
+        const column = visibleColumns.value[j];
+
         if (
           selectedCellToDrag.value.length === 0 ||
-          columns.value.find((c) => c.id === cell.column?.id)?.kind === 'static'
+          columns.value.find((c) => c.id === column?.id)?.kind === 'static'
         )
           return;
 
@@ -297,13 +271,13 @@ export const TableBody = component$(() => {
         const rowMax = Math.max(...rows);
 
         const isColumnSelected = selectedCellToDrag.value.some(
-          (c) => c.column?.id === cell.column?.id && c.idx === cell.idx,
+          (c) => c.column?.id === column?.id && c.idx === i,
         );
         const isRowSelected = selectedCellToDrag.value.some(
-          (c) => c.column?.id === cell.column?.id && cell.idx === rowMin,
+          (c) => c.column?.id === column?.id && i === rowMin,
         );
         const isRowMaxSelected = selectedCellToDrag.value.some(
-          (c) => c.column?.id === cell.column?.id && cell.idx === rowMax,
+          (c) => c.column?.id === column?.id && i === rowMax,
         );
 
         return cn({
@@ -328,6 +302,8 @@ export const TableBody = component$(() => {
             isColumnSelected,
         });
       };
+
+      const rowData = getRowData(item.index, visibleColumns.value);
 
       return (
         <tr
@@ -395,28 +371,36 @@ export const TableBody = component$(() => {
             </Popover.Root>
           </td>
 
-          {loadedData?.map((cell) => {
+          {rowData?.map((cell, columnIndex) => {
             return (
-              <Fragment key={`${cell.idx}-${cell.column!.id}`}>
+              <Fragment key={`${item.index}-${columnIndex}`}>
                 <td
-                  data-column-id={cell.column?.id}
+                  data-column-id={visibleColumns.value[columnIndex]?.id}
                   class={cn(
                     `relative transition-colors min-w-[142px] w-[326px] h-[${rowSize}px] break-words align-top border border-neutral-300 hover:bg-gray-50/50`,
                     {
                       'bg-blue-50 hover:bg-blue-100':
-                        cell.column!.id == columnId.value,
+                        visibleColumns.value[columnIndex]!.id == columnId.value,
                       'shadow-[inset_2px_0_0_theme(colors.primary.100),inset_-2px_0_0_theme(colors.primary.100)]':
-                        columnPreferences.value[cell.column!.id]?.aiButtonHover,
+                        columnPreferences.value[
+                          visibleColumns.value[columnIndex]!.id
+                        ]?.aiButtonHover,
                       'shadow-[inset_2px_0_0_theme(colors.primary.300),inset_-2px_0_0_theme(colors.primary.300)]':
-                        columnPreferences.value[cell.column!.id]?.aiPromptOpen,
+                        columnPreferences.value[
+                          visibleColumns.value[columnIndex]!.id
+                        ]?.aiPromptOpen,
                     },
-                    getBoundary(cell),
+                    getBoundary(item.index, columnIndex),
                   )}
                   style={{
-                    width: `${columnPreferences.value[cell.column!.id]?.width || 326}px`,
+                    width: `${columnPreferences.value[visibleColumns.value[columnIndex]!.id]?.width || 326}px`,
                   }}
-                  onMouseOver$={() => showAiButton(cell.column!.id)}
-                  onMouseLeave$={() => hideAiButton(cell.column!.id)}
+                  onMouseOver$={() =>
+                    showAiButton(visibleColumns.value[columnIndex]!.id)
+                  }
+                  onMouseLeave$={() =>
+                    hideAiButton(visibleColumns.value[columnIndex]!.id)
+                  }
                 >
                   <div
                     onMouseUp$={handleMouseUp$}
@@ -424,14 +408,20 @@ export const TableBody = component$(() => {
                     onMouseOver$={(e) => handleMouseOver$(cell, e)}
                     onMouseMove$={handleMouseMove$}
                   >
-                    <TableCell cell={cell} />
+                    <TableCell
+                      key={`${item.index}_${columnIndex}`}
+                      cell={cell}
+                    />
 
-                    {latestCellSelected.value?.column?.id === cell.column?.id &&
+                    {latestCellSelected.value?.column?.id ===
+                      visibleColumns.value[columnIndex]?.id &&
                       latestCellSelected.value &&
                       latestCellSelected.value?.idx === cell.idx && (
                         <div class="absolute bottom-1 right-7 w-3 h-3 z-10">
-                          {columns.value.find((c) => c.id === cell.column?.id)
-                            ?.kind !== 'static' && (
+                          {visibleColumns.value.find(
+                            (c) =>
+                              c.id === visibleColumns.value[columnIndex]?.id,
+                          )?.kind !== 'static' && (
                             <Button
                               size="sm"
                               look="ghost"
@@ -442,7 +432,8 @@ export const TableBody = component$(() => {
                             >
                               <Tooltip
                                 open={
-                                  firstColumn.value?.id === cell.column?.id &&
+                                  firstColumn.value?.id ===
+                                    visibleColumns.value[columnIndex]?.id &&
                                   item.index === 4
                                 }
                                 text="Drag down to generate cells"
@@ -465,7 +456,22 @@ export const TableBody = component$(() => {
   );
 
   useVisibleTask$(() => {
+    return () => {
+      dragStartCell.value = undefined;
+      selectedCellToDrag.value = [];
+      lastMove.value = 0;
+      selectedRows.value = [];
+      scrollElement.value = undefined;
+      currentRange.value = { start: -1, end: -1 };
+    };
+  });
+
+  useVisibleTask$(() => {
     scrollElement.value = document.querySelector('.scrollable') as HTMLElement;
+
+    return () => {
+      scrollElement.value = undefined;
+    };
   });
 
   if (!scrollElement.value) return null;
@@ -480,15 +486,14 @@ export const TableBody = component$(() => {
       <VirtualScrollContainer
         key={datasetId.value}
         totalCount={datasetSize.value}
-        loadedCount={loadedDataCount}
+        currentRange={currentRange}
         estimateSize={rowSize}
-        buffer={50}
-        pageSize={10}
-        overscan={10}
-        data={data}
-        itemRenderer={itemRenderer}
-        scrollElement={scrollElement}
+        buffer={buffer}
+        pageSize={pageSize}
+        overscan={1}
+        itemRenderer={rowRenderer}
         loadNextPage={fetchMoreData$}
+        scrollElement={scrollElement}
         debug={false}
       />
     </tbody>

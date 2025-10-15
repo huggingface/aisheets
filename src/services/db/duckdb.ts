@@ -38,9 +38,8 @@ await connectAndClose(async (db) => {
 
     LOAD gsheets;
     LOAD nanoarrow;
-
     
-    SET threads=4;
+    SET threads=2;
     SET temp_directory = '${duckDB}_duckdb_swap';
     SET memory_limit='128GB';
     SET max_temp_directory_size = '256GB';

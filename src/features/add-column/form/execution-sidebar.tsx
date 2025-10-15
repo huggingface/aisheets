@@ -36,10 +36,7 @@ export const ExecutionSidebar = component$(() => {
 
         <hr />
 
-        <div
-          class="flex-1 overflow-y-auto p-4"
-          key={`${column.value.id}-${Date.now()}`}
-        >
+        <div class="flex-1 overflow-y-auto p-4" key={column.value.id}>
           <ExecutionForm />
         </div>
       </div>

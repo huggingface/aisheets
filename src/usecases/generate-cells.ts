@@ -4,6 +4,7 @@ import { updateProcess } from '~/services';
 import { cacheGet, cacheSet } from '~/services/cache';
 import { MAX_SOURCE_SNIPPET_LENGTH } from '~/services/db/models/cell';
 import { imageTextToTextGeneration } from '~/services/inference/image-text-to-text';
+import { imageToImageGeneration } from '~/services/inference/image-to-image';
 import {
   type Example,
   type MaterializePromptParams,
@@ -136,8 +137,10 @@ export const generateCells = async function* ({
       columnsReferences && columnsReferences.length > 0;
     const isImageTextToText =
       process.task === 'image-text-to-text' && process.imageColumnId;
+    const isImageToImage =
+      process.task === 'image-to-image' && process.imageColumnId;
 
-    if (hasColumnReferences || isImageTextToText) {
+    if (hasColumnReferences || isImageTextToText || isImageToImage) {
       yield* generateCellsFromColumnsReferences({
         column,
         process,
@@ -413,6 +416,20 @@ async function singleCellGeneration({
 
       break;
     }
+    case 'image-to-image': {
+      const response = await generateImageToImage({
+        prompt,
+        args,
+        session,
+        process,
+      });
+
+      cell.value = response.value;
+      cell.error = response.error;
+      cell.generating = false;
+
+      break;
+    }
     default: {
       const response = await _generateText({
         column,
@@ -456,6 +473,7 @@ async function* cellGenerationInBatch({
 
     for (const cell of batch) {
       cell.generating = true;
+      await updateCell(cell);
       yield { cell };
     }
 
@@ -818,5 +836,61 @@ const generateImageTextToText = async ({
     value: response.value,
     error: response.error,
     sources,
+  };
+};
+
+const generateImageToImage = async ({
+  prompt,
+  args,
+  session,
+  process,
+}: {
+  prompt: string;
+  args: PromptExecutionParams;
+  session: Session;
+  process: Process;
+}): Promise<{
+  value?: Uint8Array;
+  error?: string;
+}> => {
+  const imageColumnId = process.imageColumnId;
+
+  if (!imageColumnId) {
+    return {
+      error: 'No image column selected for image-to-image processing',
+    };
+  }
+
+  const imageCell = await getColumnCellByIdx({
+    columnId: imageColumnId,
+    idx: args.idx || 0,
+  });
+
+  if (!imageCell || !imageCell.value) {
+    return {
+      error: 'No image data found in the selected image column',
+    };
+  }
+
+  let imageData: Uint8Array;
+
+  try {
+    imageData = convertToUint8Array(imageCell.value);
+  } catch (_error) {
+    return {
+      error: 'Unsupported image data format',
+    };
+  }
+
+  const response = await imageToImageGeneration({
+    ...args,
+    instruction: prompt,
+    imageData,
+    accessToken: session.token,
+  });
+
+  return {
+    value: response.value ? new Uint8Array(response.value) : undefined,
+    error: response.error,
   };
 };

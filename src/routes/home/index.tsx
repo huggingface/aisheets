@@ -3,6 +3,7 @@ import {
   component$,
   useSignal,
   useStore,
+  useTask$,
   useVisibleTask$,
 } from '@builder.io/qwik';
 import { server$, useNavigate } from '@builder.io/qwik-city';
@@ -18,7 +19,7 @@ import { DragAndDrop } from '~/features/import/drag-n-drop';
 import { MainSidebarButton } from '~/features/main-sidebar';
 import { Username } from '~/features/user/username';
 import { useSession } from '~/loaders';
-import { ActiveDatasetProvider } from '~/state';
+import { ActiveDatasetProvider, useDatasetsStore } from '~/state';
 import { runAutoDataset } from '~/usecases/run-autodataset';
 import { useTrendingModelsContext } from './layout';
 
@@ -46,6 +47,11 @@ export default component$(() => {
   const currentStep = useSignal('');
   const trendingModels = useTrendingModelsContext();
   const textAreaElement = useSignal<HTMLTextAreaElement>();
+  const { clearActiveDataset } = useDatasetsStore();
+
+  useTask$(() => {
+    clearActiveDataset();
+  });
 
   const creationFlow = useStore({
     datasetName: {
@@ -78,16 +84,15 @@ export default component$(() => {
     },
   });
 
-  const examples = [
+  const examples: Array<{ title: string; prompt: string; banner?: string }> = [
     {
       title: 'Webapp development',
       prompt:
         'dataset with two columns:\n # description\nIdentify one useful but implementable single-file web app, visualization, or UI feature\n #implementation\nCreate a complete, runnable HTML+JS file implementing {{description}}',
-      banner: 'Ideal for vibe testing',
     },
     {
       title: 'Isometric images of cities',
-      prompt: 'Isometric images of european capitals',
+      prompt: 'Isometric images of European capitals',
     },
   ];
 

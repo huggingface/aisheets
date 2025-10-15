@@ -19,6 +19,8 @@ export const DuplicateColumn = component$<{
       modelProvider: column.process?.modelProvider,
       endpointUrl: column.process?.endpointUrl,
       prompt: column.process?.prompt,
+      columnsReferences: column.process?.columnsReferences,
+      imageColumnId: column.process?.imageColumnId,
       task: column.process?.task,
     });
   });

@@ -84,7 +84,7 @@ export default component$(() => {
     },
   });
 
-  const examples = [
+  const examples: Array<{ title: string; prompt: string; banner?: string }> = [
     {
       title: 'Webapp development',
       prompt:

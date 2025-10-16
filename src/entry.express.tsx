@@ -57,7 +57,7 @@ const app = express();
 app.use(compression());
 
 // Enable cors
-app.use(cors());
+app.use(cors({ origin: '*', methods: ['GET', 'POST', 'OPTIONS'] }));
 
 // Static asset handlers
 // https://expressjs.com/en/starter/static-files.html

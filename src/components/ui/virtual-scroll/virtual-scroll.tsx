@@ -49,16 +49,15 @@ const { getSerializable: getVirtual, useSerializable: useVirtualScroll } =
               : undefined,
           onChange: (ev) => {
             ev._willUpdate();
-            const eventRange = ev.range!;
+            const eventRange = ev.range;
 
             if (
-              state.range?.startIndex !== eventRange.startIndex ||
-              state.range?.endIndex !== eventRange.endIndex
+              state.range?.startIndex !== eventRange?.startIndex ||
+              state.range?.endIndex !== eventRange?.endIndex
             ) {
-              state.range = eventRange;
+              state.range = eventRange!;
             }
 
-            state.range = eventRange;
             state.scrollOffset = ev.scrollOffset!;
           },
         });

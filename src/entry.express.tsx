@@ -18,8 +18,9 @@ import {
 } from '@builder.io/qwik-city/middleware/node';
 import qwikCityPlan from '@qwik-city-plan';
 import { manifest } from '@qwik-client-manifest';
+import compression from 'compression';
+import cors from 'cors';
 import express from 'express';
-
 import render from './entry.ssr';
 
 declare global {
@@ -53,7 +54,10 @@ const { router, notFound } = createQwikCity({
 const app = express();
 
 // Enable gzip compression
-// app.use(compression());
+app.use(compression());
+
+// Enable cors
+app.use(cors());
 
 // Static asset handlers
 // https://expressjs.com/en/starter/static-files.html

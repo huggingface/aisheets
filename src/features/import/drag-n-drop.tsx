@@ -99,34 +99,34 @@ export const DragAndDrop = component$(() => {
         );
       }
 
-      const formData = new FormData();
-      limitedImageFiles.forEach((file, index) => {
-        formData.append(`file_${index}`, file);
-      });
-      formData.append(
-        'folderName',
-        limitedImageFiles[0].webkitRelativePath?.split('/')[0] || 'images',
-      );
-      formData.append('fileCount', limitedImageFiles.length.toString());
+      const JSZip = (await import('jszip')).default;
+      const zip = new JSZip();
 
-      const response = await fetch('/api/upload-images-folder', {
+      limitedImageFiles.forEach((file) => {
+        const relativePath = file.webkitRelativePath || file.name;
+        zip.file(relativePath, file);
+      });
+
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+
+      const response = await fetch('/api/upload-file', {
         method: 'POST',
         headers: {
-          // 'Content-Type': 'multipart/form-data', // Let the browser set it
-          'X-File-Count': limitedImageFiles.length.toString(),
-          'X-Chunk-Size': '1', // To avoid preflight
-          'X-Folder-Name': formData.get('folderName') as string,
+          'Content-Type': 'application/zip',
+          'X-File-Name': encodeURIComponent('images.zip'),
+          'X-Chunk-Size': zipBlob.size.toString(),
         },
-        body: formData,
+        body: zipBlob,
       });
 
       if (!response.ok) {
-        uploadErrorMessage.value = 'Failed to upload folder';
+        uploadErrorMessage.value = 'Failed to upload images';
         return;
       }
 
       const { id } = await response.json();
       navigate('/home/dataset/' + id);
+      return;
     } else if (file.value) {
       const fileName = file.value.name;
       const fileExtension = file.value.name.split('.').pop();

@@ -109,8 +109,14 @@ export const DragAndDrop = component$(() => {
       );
       formData.append('fileCount', limitedImageFiles.length.toString());
 
-      const response = await fetch('/api/upload/folder', {
+      const response = await fetch('/api/upload-images-folder', {
         method: 'POST',
+        headers: {
+          // 'Content-Type': 'multipart/form-data', // Let the browser set it
+          'X-File-Count': limitedImageFiles.length.toString(),
+          'X-Chunk-Size': '1', // To avoid preflight
+          'X-Folder-Name': formData.get('folderName') as string,
+        },
         body: formData,
       });
 
@@ -139,7 +145,7 @@ export const DragAndDrop = component$(() => {
 
       const value = await file.value.arrayBuffer();
 
-      const response = await fetch('/api/upload', {
+      const response = await fetch('/api/upload-file', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/octet-stream',

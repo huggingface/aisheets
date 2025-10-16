@@ -19,6 +19,7 @@ import {
   LuFolderUp,
   LuImage,
 } from '@qwikest/icons/lucide';
+
 import { Button, buttonVariants, Popover } from '~/components';
 import { useClickOutside } from '~/components/hooks/click/outside';
 import { HFLogo } from '~/components/ui/logo/logo';
@@ -92,6 +93,9 @@ export const DragAndDrop = component$(() => {
 
       // Limit to maxRowsImport to save resources
       const limitedImageFiles = imageFiles.slice(0, MAX_ROWS_IMPORT);
+      const folderName = limitedImageFiles[0].webkitRelativePath
+        ? limitedImageFiles[0].webkitRelativePath.split('/')[0]
+        : 'images';
 
       if (imageFiles.length > MAX_ROWS_IMPORT) {
         console.warn(
@@ -109,11 +113,12 @@ export const DragAndDrop = component$(() => {
 
       const zipBlob = await zip.generateAsync({ type: 'blob' });
 
-      const response = await fetch('/api/upload-file', {
+      const response = await fetch('/api/upload-images', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/zip',
-          'X-File-Name': encodeURIComponent('images.zip'),
+          'X-Folder-Name': encodeURIComponent(folderName),
+          'X-Images-Count': limitedImageFiles.length.toString(),
           'X-Chunk-Size': zipBlob.size.toString(),
         },
         body: zipBlob,

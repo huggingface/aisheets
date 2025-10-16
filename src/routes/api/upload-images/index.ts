@@ -1,4 +1,5 @@
 import type { RequestHandler } from '@builder.io/qwik-city';
+import JSZip from 'jszip';
 import { appConfig } from '~/config';
 import { createColumn } from '~/services/repository/columns';
 import { createDataset } from '~/services/repository/datasets';
@@ -8,31 +9,47 @@ import { useServerSession } from '~/state';
 export const onPost: RequestHandler = async (event) => {
   const { request, json } = event;
   const numberOfRows = appConfig.data.maxRowsImport;
-  console.log('Max rows allowed for import:', numberOfRows);
 
   try {
     const session = useServerSession(event);
-    console.log('User session:', session);
-    const formData = await request.formData();
-    console.log('Received form data:', formData);
 
-    const folderName = (formData.get('folderName') as string) || 'Image Folder';
-    console.log('Folder name:', folderName);
-    const fileCount = parseInt(formData.get('fileCount') as string, 10) || 0;
-    console.log('Number of files to process:', fileCount);
+    const folderName = request.headers.get('X-Folder-Name') || 'images';
+    const fileCount = parseInt(
+      request.headers.get('X-Images-Count') || '0',
+      10,
+    );
 
     if (fileCount === 0) {
       json(400, { error: 'No files provided' });
       return;
     }
-    console.log('Creating dataset for folder upload...');
+
+    const imageData: [number, Uint8Array][] = [];
+    const filenameData: [number, string][] = [];
+
+    const zipData = await request.arrayBuffer();
+    const zip = await JSZip.loadAsync(zipData);
+
+    if (!zip) {
+      json(400, { error: 'No data provided' });
+      return;
+    }
+
+    let index = 0;
+    for (const [filename, fileObj] of Object.entries(zip.files)) {
+      if (index >= Math.min(fileCount, numberOfRows)) break;
+      if (fileObj.dir) continue; // skip directories
+
+      const fileData = await fileObj.async('uint8array');
+      imageData.push([index, fileData]);
+      filenameData.push([index, filename]);
+      index++;
+    }
 
     const dataset = await createDataset({
       name: folderName,
       createdBy: session.user.username,
     });
-
-    console.log('Dataset created with ID:', dataset.id);
 
     const imageColumn = await createColumn({
       name: 'image',
@@ -41,32 +58,12 @@ export const onPost: RequestHandler = async (event) => {
       dataset,
     });
 
-    console.log('Image column created with ID:', imageColumn.id);
-
     const filenameColumn = await createColumn({
       name: 'filename',
       type: 'text',
       kind: 'static',
       dataset,
     });
-
-    console.log('Filename column created with ID:', filenameColumn.id);
-
-    const imageData: [number, Uint8Array][] = [];
-    const filenameData: [number, string][] = [];
-
-    for (let i = 0; i < Math.min(fileCount, numberOfRows); i++) {
-      const file = formData.get(`file_${i}`) as File;
-      if (!file) continue;
-
-      const arrayBuffer = await file.arrayBuffer();
-      const binaryData = new Uint8Array(arrayBuffer);
-
-      imageData.push([i, binaryData]);
-      filenameData.push([i, file.name]);
-    }
-
-    console.log(`Prepared data for ${imageData.length} images.`);
 
     await upsertColumnValues({
       dataset,
@@ -78,8 +75,6 @@ export const onPost: RequestHandler = async (event) => {
       values: imageData,
     });
 
-    console.log('Image data inserted.');
-
     await upsertColumnValues({
       dataset,
       column: {
@@ -89,8 +84,6 @@ export const onPost: RequestHandler = async (event) => {
       },
       values: filenameData,
     });
-
-    console.log('Filename data inserted.');
 
     json(201, {
       id: dataset.id,
@@ -103,6 +96,6 @@ export const onPost: RequestHandler = async (event) => {
     });
   } catch (error) {
     console.error('Error uploading folder:', error);
-    json(500, { error: 'Failed to upload folder' });
+    json(500, { error: 'Failed to upload images' });
   }
 };

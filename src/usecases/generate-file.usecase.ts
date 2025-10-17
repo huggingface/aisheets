@@ -13,7 +13,7 @@ export const useGenerateFile = () =>
       format = 'csv',
     }: {
       dataset: Dataset;
-      format?: 'csv' | 'parquet';
+      format?: 'csv' | 'parquet' | 'zip';
     },
   ): Promise<any> {
     useServerSession(this);

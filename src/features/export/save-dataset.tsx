@@ -1,4 +1,4 @@
-import { component$ } from '@builder.io/qwik';
+import { component$, useComputed$ } from '@builder.io/qwik';
 
 import { cn } from '@qwik-ui/utils';
 import { LuDownload } from '@qwikest/icons/lucide';
@@ -12,6 +12,13 @@ import { FileDownload } from './file-download';
 export const SaveDataset = component$(() => {
   const { activeDataset } = useDatasetsStore();
   const session = useSession();
+
+  const hasImages = useComputed$(() => {
+    if (!activeDataset.value) return false;
+    return activeDataset.value.columns.some(
+      (col) => col.type === 'image' || col.type === 'images',
+    );
+  });
 
   return (
     <Popover.Root floating="bottom" gutter={14}>
@@ -35,7 +42,11 @@ export const SaveDataset = component$(() => {
             <hr class="border-t border-slate-200 dark:border-slate-700" />
           </>
         )}
-        <FileDownload format="csv" />
+        {hasImages.value ? (
+          <FileDownload format="zip" />
+        ) : (
+          <FileDownload format="csv" />
+        )}
         <hr class="border-t border-slate-200 dark:border-slate-700" />
         <FileDownload format="parquet" />
       </Popover.Panel>

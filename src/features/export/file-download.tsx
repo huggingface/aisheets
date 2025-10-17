@@ -2,13 +2,13 @@ import { $, component$, useComputed$, useSignal } from '@builder.io/qwik';
 import { LuDownload } from '@qwikest/icons/lucide';
 import { Button } from '~/components';
 import { Tooltip } from '~/components/ui/tooltip/tooltip';
-import { useColumnsStore, useDatasetsStore } from '~/state';
+import { useDatasetsStore } from '~/state';
 import { useGenerateFile } from '~/usecases/generate-file.usecase';
-import { hasBlobContent } from '../utils/columns';
 
 const FORMAT_DISPLAY_NAMES = {
   csv: 'CSV',
   parquet: 'Parquet',
+  zip: 'ZIP',
 } as const;
 
 const formatDisplayName = (
@@ -18,22 +18,19 @@ const formatDisplayName = (
 };
 
 export const FileDownload = component$<{
-  format: 'csv' | 'parquet';
+  format: 'csv' | 'parquet' | 'zip';
   showText?: boolean;
   toolTip?: string;
 }>(({ format = 'csv', showText = true, toolTip }) => {
   const generateFile = useGenerateFile();
 
   const { activeDataset } = useDatasetsStore();
-  const { columns } = useColumnsStore();
 
   const downloading = useSignal(false);
 
   const canDownloadFile = useComputed$(() => {
     if (!activeDataset.value) return false;
     if (activeDataset.value.columns.length === 0) return false;
-
-    if (format === 'csv' && columns.value.some(hasBlobContent)) return false;
 
     return true;
   });
@@ -42,13 +39,13 @@ export const FileDownload = component$<{
     downloading.value = true;
 
     try {
-      const csvContent = await generateFile({
+      const downloadContent = await generateFile({
         dataset: activeDataset.value,
         format,
       });
 
       // Create a blob and a download link
-      const blob = new Blob([csvContent], {
+      const blob = new Blob([downloadContent], {
         type: blobFormat(format),
       });
       const url = URL.createObjectURL(blob);
@@ -109,6 +106,8 @@ const blobFormat = (format: string) => {
       return 'text/csv;charset=utf-8;';
     case 'parquet':
       return 'application/octet-stream';
+    case 'zip':
+      return 'application/zip';
     default:
       throw new Error('Unsupported format');
   }

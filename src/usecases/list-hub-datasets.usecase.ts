@@ -12,13 +12,18 @@ export const useListHubDatasets = () =>
     const session = useServerSession(this);
     const query = searchQuery.trim();
 
-    const datasets = await listDatasets({
-      query,
-      accessToken: session.token,
-      limit: 10,
-    });
+    try {
+      const datasets = await listDatasets({
+        query,
+        accessToken: session.token,
+        limit: 10,
+      });
 
-    return datasets.map((dataset) => dataset.name);
+      return datasets.map((dataset) => dataset.name);
+    } catch (error) {
+      console.error('Error listing datasets:', error);
+      return [];
+    }
   });
 
 export const useListDatasetDataFiles = () =>

@@ -4,6 +4,7 @@ import {
   useComputed$,
   useSignal,
   useTask$,
+  useVisibleTask$,
 } from '@builder.io/qwik';
 import { Collapsible } from '@qwik-ui/headless';
 import { cn } from '@qwik-ui/utils';
@@ -15,6 +16,7 @@ import {
   LuImage,
   LuSquare,
 } from '@qwikest/icons/lucide';
+
 import { Button, Select, triggerLooks } from '~/components';
 import { useClickOutside } from '~/components/hooks/click/outside';
 import { nextTick } from '~/components/hooks/tick';
@@ -32,14 +34,15 @@ import {
 import { useExecution } from '~/features/add-column/form/execution';
 import { useGenerateColumn } from '~/features/execution';
 import { hasBlobContent, isImage } from '~/features/utils/columns';
-import type { Model } from '~/loaders/hub-models';
-import { useConfigContext, useModelsContext } from '~/routes/home/layout';
+import { useConfigContext } from '~/routes/home/layout';
+
 import {
   type Column,
   type TaskType,
   useColumnsStore,
   useDatasetsStore,
 } from '~/state';
+import { type Model, useHubModels } from '~/usecases/models-info.usecase';
 
 export class Models {
   constructor(private readonly models: Model[]) {}
@@ -58,7 +61,11 @@ export class Models {
   }
 
   getTextModels(): Model[] {
-    return this.models.filter((model) => model.supportedType === 'text');
+    return this.models.filter(
+      (model) =>
+        model.supportedType === 'text' ||
+        model.supportedType === 'image-text-to-text',
+    );
   }
 
   getImageModels(): Model[] {
@@ -249,14 +256,32 @@ export const ExecutionForm = component$(() => {
   const { activeDataset } = useDatasetsStore();
   const { columnId, column, mode } = useExecution();
   const { columns, updateColumn } = useColumnsStore();
-  const allModels = useModelsContext();
+  const fetchAllModels = useHubModels();
   const { DEFAULT_MODEL, DEFAULT_MODEL_PROVIDER } = useConfigContext();
   const { onGenerateColumn } = useGenerateColumn();
+  const allModels = useSignal<Model[]>([]);
+
+  const loadingModels = useSignal(false);
+
+  useVisibleTask$(async () => {
+    if (allModels.value.length === 0) {
+      try {
+        loadingModels.value = true;
+        allModels.value = await fetchAllModels();
+      } catch {
+        allModels.value = [];
+      } finally {
+        loadingModels.value = false;
+      }
+    }
+  });
 
   const models = useComputed$(() => {
     if (!column.value) return [];
 
-    return new Models(allModels).getModelsByTask(column.value.process?.task!);
+    return new Models(allModels.value).getModelsByTask(
+      column.value.process?.task!,
+    );
   });
 
   const filteredModels = useSignal<Model[]>(models.value);
@@ -378,6 +403,7 @@ export const ExecutionForm = component$(() => {
   useTask$(({ track }) => {
     track(columnId);
     track(() => column.value?.id);
+    track(models);
 
     if (!column.value) return;
     if (columnId.value != column.value.id) return;
@@ -541,10 +567,15 @@ export const ExecutionForm = component$(() => {
     } catch {}
   });
 
-  useTask$(() => {
+  useTask$(({ track }) => {
+    track(models);
+
+    if (models.value.length === 0) return;
+
     if (mode.value === 'add') {
       nextTick(() => {
         onGenerate();
+        mode.value = 'edit';
       }, 500);
     }
   });
@@ -686,194 +717,196 @@ export const ExecutionForm = component$(() => {
 
             <div class="px-3 pb-12 pt-2 bg-white border border-secondary-foreground rounded-sm">
               <div class="flex flex-col gap-4">
-                <div class="flex gap-4">
-                  <div
-                    class={cn({
-                      'w-1/2': showEndpointUrl.value,
-                      'flex-[2] w-3/4': !showEndpointUrl.value,
-                    })}
-                  >
-                    <Select.Root
-                      ref={modelSearchContainerRef}
-                      key={modelSearchQuery.value}
-                      bind:open={isModelDropdownOpen}
-                      value={selectedModelId.value}
+                {!loadingModels.value && (
+                  <div class="flex gap-4">
+                    <div
+                      class={cn({
+                        'w-1/2': showEndpointUrl.value,
+                        'flex-[2] w-3/4': !showEndpointUrl.value,
+                      })}
                     >
-                      <Select.Label>Model</Select.Label>
-                      <div
-                        class={cn(
-                          triggerLooks('default'),
-                          'flex text-xs items-center px-2 gap-2 font-mono',
-                        )}
-                      >
-                        {modelSearchQuery.value == selectedModelId.value && (
-                          <ModelImage
-                            model={
-                              models.value.find(
-                                (m) => m.id === selectedModelId.value,
-                              )!
-                            }
-                          />
-                        )}
-
-                        <input
-                          placeholder="Search models..."
-                          bind:value={modelSearchQuery}
-                          class="h-8 w-full outline-none font-mono text-xs"
-                          onFocusIn$={() => {
-                            if (
-                              selectedModelId.value === modelSearchQuery.value
-                            ) {
-                              modelSearchQuery.value = '';
-                            }
-                          }}
-                          onKeyDown$={() => {
-                            nextTick(() => {
-                              isModelDropdownOpen.value = false;
-                            });
-                          }}
-                          onClick$={() => {
-                            isModelDropdownOpen.value = false;
-                            nextTick(() => {
-                              isModelDropdownOpen.value = true;
-                            }, 100);
-                          }}
-                        />
-
-                        <Select.Trigger look="headless" />
-                      </div>
-                      <Select.Popover
+                      <Select.Root
+                        ref={modelSearchContainerRef}
                         key={modelSearchQuery.value}
-                        floating="bottom-end"
-                        gutter={8}
-                        class="border border-border max-h-[300px] overflow-y-auto overflow-x-hidden top-[100%] bottom-auto p-0 ml-9 mt-2 min-w-[450px]"
+                        bind:open={isModelDropdownOpen}
+                        value={selectedModelId.value}
                       >
-                        <div class="flex flex-col">
-                          {Object.entries(groupedModels.value).map(
-                            ([category, models], i) => {
-                              return (
-                                <div key={category}>
-                                  <Collapsible.Root
-                                    open={groupedModels.value.length <= 2}
-                                  >
-                                    <Collapsible.Trigger class="w-full">
-                                      <div
-                                        class={cn(
-                                          'text-[13px] w-full font-semibold flex items-center justify-between',
-                                          models.class,
-                                          {
-                                            'rounded-sm rounded-b-none':
-                                              i === 0,
-                                          },
-                                        )}
-                                      >
-                                        {models.label}
-                                        <LuChevronDown />
-                                      </div>
-                                    </Collapsible.Trigger>
-                                    <Collapsible.Content>
-                                      {models.models.map((model) => (
-                                        <Select.Item
-                                          key={model.id}
-                                          value={model.id}
-                                          class="text-foreground hover:bg-accent"
-                                          onClick$={() => {
-                                            isModelDropdownOpen.value = false;
+                        <Select.Label>Model</Select.Label>
+                        <div
+                          class={cn(
+                            triggerLooks('default'),
+                            'flex text-xs items-center px-2 gap-2 font-mono',
+                          )}
+                        >
+                          {modelSearchQuery.value == selectedModelId.value && (
+                            <ModelImage
+                              model={
+                                models.value.find(
+                                  (m) => m.id === selectedModelId.value,
+                                )!
+                              }
+                            />
+                          )}
 
-                                            selectedModelId.value = model.id;
-                                            modelSearchQuery.value = model.id;
-                                          }}
+                          <input
+                            placeholder="Search models..."
+                            bind:value={modelSearchQuery}
+                            class="h-8 w-full outline-none font-mono text-xs"
+                            onFocusIn$={() => {
+                              if (
+                                selectedModelId.value === modelSearchQuery.value
+                              ) {
+                                modelSearchQuery.value = '';
+                              }
+                            }}
+                            onKeyDown$={() => {
+                              nextTick(() => {
+                                isModelDropdownOpen.value = false;
+                              });
+                            }}
+                            onClick$={() => {
+                              isModelDropdownOpen.value = false;
+                              nextTick(() => {
+                                isModelDropdownOpen.value = true;
+                              }, 100);
+                            }}
+                          />
+
+                          <Select.Trigger look="headless" />
+                        </div>
+                        <Select.Popover
+                          key={modelSearchQuery.value}
+                          floating="bottom-end"
+                          gutter={8}
+                          class="border border-border max-h-[300px] overflow-y-auto overflow-x-hidden top-[100%] bottom-auto p-0 ml-9 mt-2 min-w-[450px]"
+                        >
+                          <div class="flex flex-col">
+                            {Object.entries(groupedModels.value || {}).map(
+                              ([category, models], i) => {
+                                return (
+                                  <div key={category}>
+                                    <Collapsible.Root
+                                      open={groupedModels.value.length <= 2}
+                                    >
+                                      <Collapsible.Trigger class="w-full">
+                                        <div
+                                          class={cn(
+                                            'text-[13px] w-full font-semibold flex items-center justify-between',
+                                            models.class,
+                                            {
+                                              'rounded-sm rounded-b-none':
+                                                i === 0,
+                                            },
+                                          )}
                                         >
-                                          <div class="flex text-xs items-center justify-between p-1 gap-2 font-mono w-full">
-                                            <div class="flex items-center gap-2">
-                                              <ModelImage model={model} />
-                                              <Select.ItemLabel>
-                                                {model.id}
-                                              </Select.ItemLabel>
+                                          {models.label}
+                                          <LuChevronDown />
+                                        </div>
+                                      </Collapsible.Trigger>
+                                      <Collapsible.Content>
+                                        {models.models.map((model) => (
+                                          <Select.Item
+                                            key={model.id}
+                                            value={model.id}
+                                            class="text-foreground hover:bg-accent"
+                                            onClick$={() => {
+                                              isModelDropdownOpen.value = false;
+
+                                              selectedModelId.value = model.id;
+                                              modelSearchQuery.value = model.id;
+                                            }}
+                                          >
+                                            <div class="flex text-xs items-center justify-between p-1 gap-2 font-mono w-full">
+                                              <div class="flex items-center gap-2">
+                                                <ModelImage model={model} />
+                                                <Select.ItemLabel>
+                                                  {model.id}
+                                                </Select.ItemLabel>
+                                              </div>
+
+                                              <ModelFlag model={model} />
                                             </div>
 
-                                            <ModelFlag model={model} />
-                                          </div>
-
-                                          {model.id ===
-                                            selectedModelId.value && (
-                                            // We cannot use the Select.ItemIndicator here
-                                            // because it doesn't work when the model list changes
-                                            <LuCheck class="h-4 w4 text-primary-500 absolute right-2 top-1/2 -translate-y-1/2" />
-                                          )}
-                                        </Select.Item>
-                                      ))}
-                                    </Collapsible.Content>
-                                  </Collapsible.Root>
-                                </div>
-                              );
-                            },
-                          )}
-                        </div>
-                      </Select.Popover>
-                    </Select.Root>
-                  </div>
-
-                  <div
-                    class={cn({
-                      'w-1/2': showEndpointUrl.value,
-                      'flex-1 w-1/4': !showEndpointUrl.value,
-                    })}
-                  >
-                    <Select.Root bind:value={selectedProvider}>
-                      <Select.Label>
-                        {showEndpointUrl.value
-                          ? 'Endpoint url'
-                          : 'Inference Providers'}
-                      </Select.Label>
-                      <Select.Trigger class="bg-white rounded-base border-neutral-300-foreground">
-                        <div class="flex text-xs items-center justify-between gap-2 font-mono w-40">
-                          <div class="flex items-center gap-2">
-                            <Provider name={selectedProvider.value} />
-
-                            <Select.DisplayValue
-                              class={cn('truncate w-fit', {
-                                'max-w-16': modelProviders.value.length > 1,
-                                'max-w-52': modelProviders.value.length === 1,
-                              })}
-                            />
+                                            {model.id ===
+                                              selectedModelId.value && (
+                                              // We cannot use the Select.ItemIndicator here
+                                              // because it doesn't work when the model list changes
+                                              <LuCheck class="h-4 w4 text-primary-500 absolute right-2 top-1/2 -translate-y-1/2" />
+                                            )}
+                                          </Select.Item>
+                                        ))}
+                                      </Collapsible.Content>
+                                    </Collapsible.Root>
+                                  </div>
+                                );
+                              },
+                            )}
                           </div>
+                        </Select.Popover>
+                      </Select.Root>
+                    </div>
 
-                          {modelProviders.value.length > 1 && (
-                            <ExtraProviders
-                              selected={selectedProvider.value}
-                              providers={modelProviders.value}
-                            />
-                          )}
-                        </div>
-                      </Select.Trigger>
+                    <div
+                      class={cn({
+                        'w-1/2': showEndpointUrl.value,
+                        'flex-1 w-1/4': !showEndpointUrl.value,
+                      })}
+                    >
+                      <Select.Root bind:value={selectedProvider}>
+                        <Select.Label>
+                          {showEndpointUrl.value
+                            ? 'Endpoint url'
+                            : 'Inference Providers'}
+                        </Select.Label>
+                        <Select.Trigger class="bg-white rounded-base border-neutral-300-foreground">
+                          <div class="flex text-xs items-center justify-between gap-2 font-mono w-40">
+                            <div class="flex items-center gap-2">
+                              <Provider name={selectedProvider.value} />
 
-                      <Select.Popover class="border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto mt-1 min-w-[200px]">
-                        {modelProviders.value.map((provider) => (
-                          <Select.Item
-                            key={provider}
-                            value={provider}
-                            class="text-foreground hover:bg-accent w-fit min-w-full"
-                            onClick$={() => {
-                              selectedProvider.value = provider; // Redundant but ensures the value is set sometimes does not work...
-                            }}
-                          >
-                            <div class="flex text-xs items-center p-1 gap-2 font-mono">
-                              <Provider name={provider} />
-
-                              <Select.ItemLabel>{provider}</Select.ItemLabel>
-                              {provider === selectedProvider.value && (
-                                // We cannot use the Select.ItemIndicator here
-                                // because it doesn't work when the model list changes
-                                <LuCheck class="h-4 w4 text-primary-500 absolute right-2 top-1/2 -translate-y-1/2" />
-                              )}
+                              <Select.DisplayValue
+                                class={cn('truncate w-fit', {
+                                  'max-w-16': modelProviders.value.length > 1,
+                                  'max-w-52': modelProviders.value.length === 1,
+                                })}
+                              />
                             </div>
-                          </Select.Item>
-                        ))}
-                      </Select.Popover>
-                    </Select.Root>
+
+                            {modelProviders.value.length > 1 && (
+                              <ExtraProviders
+                                selected={selectedProvider.value}
+                                providers={modelProviders.value}
+                              />
+                            )}
+                          </div>
+                        </Select.Trigger>
+
+                        <Select.Popover class="border border-border max-h-[300px] overflow-y-auto top-[100%] bottom-auto mt-1 min-w-[200px]">
+                          {modelProviders.value.map((provider) => (
+                            <Select.Item
+                              key={provider}
+                              value={provider}
+                              class="text-foreground hover:bg-accent w-fit min-w-full"
+                              onClick$={() => {
+                                selectedProvider.value = provider; // Redundant but ensures the value is set sometimes does not work...
+                              }}
+                            >
+                              <div class="flex text-xs items-center p-1 gap-2 font-mono">
+                                <Provider name={provider} />
+
+                                <Select.ItemLabel>{provider}</Select.ItemLabel>
+                                {provider === selectedProvider.value && (
+                                  // We cannot use the Select.ItemIndicator here
+                                  // because it doesn't work when the model list changes
+                                  <LuCheck class="h-4 w4 text-primary-500 absolute right-2 top-1/2 -translate-y-1/2" />
+                                )}
+                              </div>
+                            </Select.Item>
+                          ))}
+                        </Select.Popover>
+                      </Select.Root>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             </div>
             <ErrorInfo column={column.value} />

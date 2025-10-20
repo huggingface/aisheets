@@ -20,8 +20,11 @@ import { MainSidebarButton } from '~/features/main-sidebar';
 import { Username } from '~/features/user/username';
 import { useSession } from '~/loaders';
 import { ActiveDatasetProvider, useDatasetsStore } from '~/state';
+import {
+  type TrendingModel,
+  useTrendingHubModels,
+} from '~/usecases/models-info.usecase';
 import { runAutoDataset } from '~/usecases/run-autodataset';
-import { useTrendingModelsContext } from './layout';
 
 const runAutoDatasetAction = server$(async function* (
   instruction: string,
@@ -40,17 +43,24 @@ const runAutoDatasetAction = server$(async function* (
 });
 
 export default component$(() => {
+  const fetchTrendingModels = useTrendingHubModels();
   const session = useSession();
   const nav = useNavigate();
   const searchOnWeb = useSignal(false);
   const prompt = useSignal('');
   const currentStep = useSignal('');
-  const trendingModels = useTrendingModelsContext();
+
+  const trendingModels = useSignal<TrendingModel[]>([]);
+
   const textAreaElement = useSignal<HTMLTextAreaElement>();
   const { clearActiveDataset } = useDatasetsStore();
 
-  useTask$(() => {
+  useTask$(async () => {
     clearActiveDataset();
+
+    if (trendingModels.value.length === 0) {
+      trendingModels.value = await fetchTrendingModels();
+    }
   });
 
   const creationFlow = useStore({
@@ -354,7 +364,7 @@ export default component$(() => {
                 <p class="text-sm text-center w-full lg:text-left lg:w-fit">
                   Trending for vibe testing:
                 </p>
-                {trendingModels.map((model) => (
+                {trendingModels.value?.map((model) => (
                   <div
                     key={model.id}
                     class="flex items-center p-1 gap-1 font-mono"

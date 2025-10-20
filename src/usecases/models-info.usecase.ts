@@ -1,9 +1,5 @@
 import type { RequestEventBase } from '@builder.io/qwik-city';
-import {
-  type RequestEventLoader,
-  routeLoader$,
-  server$,
-} from '@builder.io/qwik-city';
+import { server$ } from '@builder.io/qwik-city';
 
 import { INFERENCE_PROVIDERS } from '@huggingface/inference';
 import { appConfig } from '~/config';
@@ -81,11 +77,15 @@ const fetchAvatar = async (modelId: string): Promise<string | undefined> => {
   return undefined;
 };
 
-const listTextGenerationModels = async (session: Session): Promise<Model[]> => {
-  const textModels = await Promise.all([
-    fetchModelsForPipeline(session, 'text-generation'),
-    fetchModelsForPipeline(session, 'image-text-to-text'),
-  ]);
+const listTextGenerationModels = async (
+  session: Session,
+  limit?: number,
+): Promise<Model[]> => {
+  const textModels = await fetchModelsForPipeline(
+    session,
+    'text-generation',
+    limit,
+  );
 
   return textModels
     .flat()
@@ -96,10 +96,33 @@ const listTextGenerationModels = async (session: Session): Promise<Model[]> => {
     .sort((a, b) => (b.trendingScore || 0) - (a.trendingScore || 0));
 };
 
-const listImageGenerationModels = async (
+const listAllImageTextToTextModels = async (
   session: Session,
+  limit?: number,
 ): Promise<Model[]> => {
-  const imageModels = await fetchModelsForPipeline(session, 'text-to-image');
+  const imageTextToTextModels = await fetchModelsForPipeline(
+    session,
+    'image-text-to-text',
+    limit,
+  );
+
+  return imageTextToTextModels
+    .map((model) => ({
+      ...model,
+      supportedType: 'image-text-to-text',
+    }))
+    .sort((a, b) => (b.trendingScore || 0) - (a.trendingScore || 0));
+};
+
+const listTextToImageModels = async (
+  session: Session,
+  limit?: number,
+): Promise<Model[]> => {
+  const imageModels = await fetchModelsForPipeline(
+    session,
+    'text-to-image',
+    limit,
+  );
 
   return imageModels
     .map((model) => ({
@@ -109,34 +132,38 @@ const listImageGenerationModels = async (
     .sort((a, b) => (b.trendingScore || 0) - (a.trendingScore || 0));
 };
 
-const listAllModels = server$(async function (
-  this: RequestEventBase<QwikCityPlatform>,
-): Promise<Model[]> {
-  const session = useServerSession(this);
-  if (!session) return [];
+const listImageToImageModels = async (
+  session: Session,
+  limit?: number,
+): Promise<Model[]> => {
+  const imageToImageModels = await fetchModelsForPipeline(
+    session,
+    'image-to-image',
+    limit,
+  );
 
+  return imageToImageModels
+    .map((model) => ({
+      ...model,
+      supportedType: 'image-to-image',
+    }))
+    .sort((a, b) => (b.trendingScore || 0) - (a.trendingScore || 0));
+};
+
+const listAllModels = async (session: Session): Promise<Model[]> => {
   // Fetch models for all supported generation types
+  const limit = 300;
   const models = await Promise.all([
     // All text generation models that support conversational
-    listTextGenerationModels(session),
+    listTextGenerationModels(session, limit),
     // All image-text-to-text models
-    fetchModelsForPipeline(session, 'image-text-to-text').then((models) =>
-      models.map((model) => ({
-        ...model,
-        supportedType: 'image-text-to-text',
-      })),
-    ),
+    listAllImageTextToTextModels(session, limit),
     // All image-to-image models
-    fetchModelsForPipeline(session, 'image-to-image').then((models) =>
-      models.map((model) => ({
-        ...model,
-        supportedType: 'image-to-image',
-      })),
-    ),
+    listImageToImageModels(session, limit),
     // All image generation models
     // TODO: Add pagination support since image generation models can be large
     // and we might want to fetch more than just the first 1000 models.
-    listImageGenerationModels(session),
+    listTextToImageModels(session, limit),
   ]);
 
   return await Promise.all(
@@ -145,15 +172,20 @@ const listAllModels = server$(async function (
       picture: await fetchAvatar(m.id),
     })),
   );
-});
+};
 
 const fetchModelsForPipeline = async (
   session: Session,
   kind: TaskType,
   limit?: number,
+  timeout: number = 1000,
 ): Promise<Model[]> => {
-  const cachedValue = cacheGet({ kind, limit, session });
-  if (cachedValue) return cachedValue as Model[];
+  const cacheKey = { kind, limit, session };
+  const cachedValue = cacheGet(cacheKey);
+
+  if (cachedValue) {
+    return cachedValue as Model[];
+  }
 
   const url = 'https://huggingface.co/api/models';
 
@@ -188,6 +220,7 @@ const fetchModelsForPipeline = async (
     const response = await fetch(`${url}?${params.toString()}`, {
       method: 'GET',
       headers,
+      signal: timeout ? AbortSignal.timeout(timeout) : undefined,
     });
 
     if (!response.ok) {
@@ -236,7 +269,7 @@ const fetchModelsForPipeline = async (
       return acc;
     }, []) as Model[];
 
-    cacheSet({ kind, limit }, models);
+    cacheSet(cacheKey, models);
 
     return models;
   } catch (error) {
@@ -245,80 +278,79 @@ const fetchModelsForPipeline = async (
   }
 };
 
-export const useHubModels = routeLoader$(async function (
-  this: RequestEventLoader,
-): Promise<Model[]> {
-  const { customModels = [] } = appConfig.inference.tasks.textGeneration;
-  // Remove this constant when we want tu support custom models and HF models at the same time
-  const hideHFModels = customModels.length > 0;
+export const useHubModels = () =>
+  server$(async function (
+    this: RequestEventBase<QwikCityPlatform>,
+  ): Promise<Model[]> {
+    const session = useServerSession(this);
+    if (!session) return [];
 
-  if (hideHFModels) {
-    const [imageModels, imageTextToTextModels] = await Promise.all([
-      listImageGenerationModels(useServerSession(this)!),
-      fetchModelsForPipeline(
-        useServerSession(this)!,
-        'image-text-to-text',
-      ).then((models) =>
-        models.map((model) => ({
-          ...model,
-          supportedType: 'image-text-to-text',
-        })),
-      ),
-    ]);
+    const { customModels = [] } = appConfig.inference.tasks.textGeneration;
+    // Remove this constant when we want tu support custom models and HF models at the same time
+    const hideHFModels = customModels.length > 0;
 
-    return [...customModels, ...imageModels, ...imageTextToTextModels];
-  }
+    if (hideHFModels) {
+      const limit = 100;
+      const [imageModels, imageTextToTextModels] = await Promise.all([
+        listTextToImageModels(session, limit),
+        listAllImageTextToTextModels(session, limit),
+      ]);
 
-  const models = await listAllModels();
+      return [...customModels, ...imageModels, ...imageTextToTextModels];
+    }
 
-  const {
-    inference: {
-      tasks: { textGeneration },
-    },
-  } = appConfig;
+    const models = await listAllModels(session);
 
-  if (models.length === 0) {
-    return [
-      {
-        id: textGeneration.defaultModel,
-        providers: [textGeneration.defaultProvider],
-        tags: ['conversational'],
-        safetensors: {},
-        pipeline_tag: 'text-generation',
-        supportedType: 'text',
+    const {
+      inference: {
+        tasks: { textGeneration },
       },
-      // TODO: Add default image model if needed
-    ];
-  }
+    } = appConfig;
 
-  return models;
-});
+    if (models.length === 0) {
+      return [
+        {
+          id: textGeneration.defaultModel,
+          providers: [textGeneration.defaultProvider],
+          tags: ['conversational'],
+          safetensors: {},
+          pipeline_tag: 'text-generation',
+          supportedType: 'text',
+        },
+        // TODO: Add default image model if needed
+      ];
+    }
 
-interface TrendingModel {
+    return models;
+  });
+
+export interface TrendingModel {
   id: string;
   picture?: string;
 }
 
-export const useTrendingHubModels = routeLoader$(async function (
-  this: RequestEventLoader,
-): Promise<TrendingModel[]> {
-  const session = useServerSession(this);
-  if (!session) return [];
+export const useTrendingHubModels = () =>
+  server$(async function (
+    this: RequestEventBase<QwikCityPlatform>,
+  ): Promise<TrendingModel[]> {
+    console.log('Fetching trending models... from url', this.request.url);
+    const session = useServerSession(this);
+    if (!session) return [];
 
-  const models = await Promise.all([
-    fetchModelsForPipeline(session, 'text-generation', 1),
-    fetchModelsForPipeline(session, 'text-to-image', 1),
-    fetchModelsForPipeline(session, 'image-text-to-text', 1),
-    fetchModelsForPipeline(session, 'image-to-image', 1),
-  ]);
+    const models = await Promise.all([
+      fetchModelsForPipeline(session, 'text-generation', 1),
+      fetchModelsForPipeline(session, 'text-to-image', 1),
+      fetchModelsForPipeline(session, 'image-text-to-text', 1),
+      fetchModelsForPipeline(session, 'image-to-image', 1),
+    ]);
 
-  return await Promise.all(
-    models
-      .flat()
-      .filter((m) => !!m)
-      .map(async (m) => ({
-        id: m.id,
-        picture: await fetchAvatar(m.id),
-      })),
-  );
-});
+    return await Promise.all(
+      models
+        .flat()
+        .filter((m) => !!m)
+        .map(async (m) => ({
+          id: m.id,
+          picture: await fetchAvatar(m.id),
+        })),
+    );
+  });

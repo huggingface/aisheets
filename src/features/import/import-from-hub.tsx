@@ -190,6 +190,12 @@ const DatasetSearch = component$(
       return await listHubDatasets(query);
     });
 
+    const noResultsFound = useComputed$(() => {
+      return (
+        searchQueryDebounced.value.length >= 3 && datasets.value.length === 0
+      );
+    });
+
     const handleChangeDataset$ = $((value: string | string[]) => {
       const selected = value as string;
       selectedDataset.value = selected ?? '';
@@ -277,6 +283,11 @@ const DatasetSearch = component$(
             ))}
           </Select.Popover>
         </Select.Root>
+        {noResultsFound.value && (
+          <div class="text-foreground text-sm mt-1">
+            No results found. Please, try another search query.
+          </div>
+        )}
       </div>
     );
   },

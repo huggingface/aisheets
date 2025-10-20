@@ -8,13 +8,7 @@ import {
 
 import { ModalsProvider } from '~/components';
 import { MainSidebar } from '~/features/main-sidebar';
-import {
-  type ClientConfig,
-  type Model,
-  useClientConfig,
-  useHubModels,
-  useTrendingHubModels,
-} from '~/loaders';
+import { type ClientConfig, useClientConfig } from '~/loaders';
 import { ActiveDatasetProvider } from '~/state';
 
 export * from '~/loaders';
@@ -25,28 +19,10 @@ export const useConfigContext = () => {
   return useContext(configContext);
 };
 
-export const modelsContext = createContextId<Model[]>('models.context');
-
-export const useModelsContext = () => {
-  return useContext(modelsContext);
-};
-
-export const trendingModelsContext = createContextId<Model[]>(
-  'trending-models.context',
-);
-
-export const useTrendingModelsContext = () => {
-  return useContext(trendingModelsContext);
-};
-
 export default component$(() => {
   const config = useClientConfig();
-  const models = useHubModels();
-  const trendingModels = useTrendingHubModels();
 
   useContextProvider(configContext, config.value);
-  useContextProvider(modelsContext, models.value);
-  useContextProvider(trendingModelsContext, trendingModels.value);
 
   return (
     <ModalsProvider>

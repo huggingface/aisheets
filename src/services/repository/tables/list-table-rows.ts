@@ -96,10 +96,11 @@ const readImageBuffer = (data: any): Uint8Array | undefined => {
     return new Uint8Array(imageData);
   } else if (
     imageData &&
+    // Hugging Face format
     typeof imageData === 'object' &&
-    'buffer' in imageData
+    'bytes' in imageData
   ) {
-    return new Uint8Array(imageData.buffer);
+    return new Uint8Array(imageData.bytes);
   } else {
     throw new Error(`Invalid image data format`);
   }

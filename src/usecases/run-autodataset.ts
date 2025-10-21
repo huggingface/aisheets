@@ -379,9 +379,7 @@ async function createDatasetWithColumns(
 
     // Use special model/provider for image columns
     const isImage = column.type === 'image';
-    const processModelName = isImage
-      ? 'black-forest-labs/FLUX.1-dev'
-      : modelName;
+    const processModelName = isImage ? 'Qwen/Qwen-Image' : modelName;
     const processModelProvider = isImage ? '' : modelProvider;
 
     const process = await createProcess({

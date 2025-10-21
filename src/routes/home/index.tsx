@@ -233,18 +233,27 @@ export default component$(() => {
           <BigTips>
             <h1 class="font-semibold text-xl">What is Sheets?</h1>
             <p>
-              Sheets is a tool to build and transform structured tables using AI
-              and web search. You can build tables from scratch or augment your
-              own spreadsheets by:
+              Sheets is a tool for building and transforming structured datasets
+              by combining your data, AI models, and web search. Start with your
+              own data — a structured dataset, a text file, or an image folder —
+              and enrich it with AI-powered operations such as:
             </p>
             <ul class="list-disc pl-5">
+              <li>Translating, extracting, or summarizing text</li>
               <li>
-                Expanding the number of examples by column (using drag and fill)
+                Detecting objects, generating descriptions, or creating styled
+                images
               </li>
-              <li>Translating, extracting, or summarizing specific columns</li>
               <li>Using different open models</li>
-              <li>Editing individual cells</li>
+              <li>
+                Editing individual cells to correct errors or refine outputs
+              </li>
             </ul>
+            <p>
+              You can also create tables from scratch by writing prompts. Once
+              you have refined examples, you can expand columns to scale the
+              dataset efficiently
+            </p>
             <h1 class="font-semibold text-xl">How can Sheets help you?</h1>
             <ul class="space-y-3">
               <li>
@@ -491,17 +500,13 @@ export default component$(() => {
       </div>
       <Tips id="home-tips">
         <p>
-          <b>Start with existing data:</b> Generating new content from
-          structured data helps improve accuracy. Import a file, then transform,
-          augment, or enrich its content to suit your use case.
+          <b>Start with your own data</b> to improve accuracy and contextual
+          relevance. If you don't have a structured dataset yet,{' '}
+          <b>upload an image folder</b> or a csv file.
         </p>
         <p>
-          <b>Write a good prompt:</b> Be detailed about the topic and content
-          you want.
-        </p>
-        <p>
-          <b>Activate "Search the web":</b> For deep research, fact-checking and
-          up-to-date info.
+          <b>No data</b> at all? Write a detailed prompt, e.g.: “Isometric
+          images of European capitals”.
         </p>
       </Tips>
     </ActiveDatasetProvider>

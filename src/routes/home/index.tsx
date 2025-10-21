@@ -502,12 +502,11 @@ export default component$(() => {
         <p>
           <b>Start with your own data</b> to improve accuracy and contextual
           relevance. If you don't have a structured dataset yet,{' '}
-          <b>upload an image folder</b> or a text list.
+          <b>upload an image folder</b> or a csv file.
         </p>
         <p>
-          <b>No data</b> at all? Write a detailed prompt, e.g.: “Recommended
-          online Natural History Museum experience”. Then enable <b>Search</b>{' '}
-          for deep research, fact-checking, and up-to-date information.
+          <b>No data</b> at all? Write a detailed prompt, e.g.: “Isometric
+          images of European capitals”.
         </p>
       </Tips>
     </ActiveDatasetProvider>

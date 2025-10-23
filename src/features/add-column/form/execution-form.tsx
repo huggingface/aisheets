@@ -174,7 +174,7 @@ class GroupedModels {
         tags: [this.tags.LIGHT, this.tags.EXPERIMENTATION],
       },
       {
-        id: 'Qwen/Qwen2.5-VL-7B-Instruct',
+        id: 'Qwen/Qwen3-VL-8B-Instruct',
         tags: [this.tags.LIGHT, this.tags.EXPERIMENTATION],
       },
       {
